@@ -120,8 +120,8 @@ namespace backend_api.Repository
             {
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, roles.FirstOrDefault()),
-                new Claim(JwtRegisteredClaimNames.Jti, jwtTokenId),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.Jti, jwtTokenId)
             };
             var token = new JwtSecurityToken(
                 issuer: _configuration["ApiSettings:JWT:ValidIssuer"],
