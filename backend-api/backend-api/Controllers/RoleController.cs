@@ -122,7 +122,7 @@ namespace backend_api.Controllers
             }
         }
 
-        [HttpDelete("{roleId}", Name = "GetRoleByName")]
+        [HttpDelete("{roleId}")]
         public async Task<IActionResult> DeleteRoleAsync(string roleId)
         {
 

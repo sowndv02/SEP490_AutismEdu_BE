@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using backend_api.Models.DTOs;
+using Microsoft.AspNetCore.Identity;
 
 namespace backend_api.Mapper
 {
@@ -6,7 +8,7 @@ namespace backend_api.Mapper
     {
         public MappingConfig()
         {
-            
+            CreateMap<RoleDTO, IdentityRole>().ReverseMap();
         }
     }
 }
