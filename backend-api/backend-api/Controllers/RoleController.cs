@@ -10,7 +10,7 @@ using System.Net;
 
 namespace backend_api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersionNeutral]
     public class RoleController : ControllerBase
@@ -122,8 +122,7 @@ namespace backend_api.Controllers
             }
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpDelete("{roleId}", Name = "GetRoleByName")]
         public async Task<IActionResult> DeleteRoleAsync(string roleId)
         {
 
