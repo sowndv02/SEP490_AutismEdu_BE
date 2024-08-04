@@ -16,5 +16,7 @@ namespace backend_api.Models
         public string Role { get; set; }
         [NotMapped]
         public string UserClaim { get; set; }
+        [NotMapped]
+        public bool IsLockedOut { get; set; }
     }
 }

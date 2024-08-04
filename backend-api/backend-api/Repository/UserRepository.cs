@@ -257,12 +257,52 @@ namespace backend_api.Repository
             MarkAllTokenInChainAsInValid(existingRefreshToken.UserId, existingRefreshToken.JwtTokenId);
         }
 
-        public async Task<IdentityUser> GetAsync(string userId)
+        public async Task<ApplicationUser> GetUserByEmailAsync(string email)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    // Get role if needed
+                    return _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Email == email).GetAwaiter().GetResult();
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<ApplicationUser> GetAsync(string userId)
         {
             try
             {
                 var user = await _userManager.FindByIdAsync(userId);
-                // Get role if needed
+                if (user != null)
+                {
+                    // Get role if needed
+                    return _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Id == userId).GetAwaiter().GetResult();
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<ApplicationUser> LockoutUser(string userId)
+        {
+            try
+            {
+                ApplicationUser user = _context.ApplicationUsers.FirstOrDefault(u => u.Id == userId);
+                if (user != null)
+                {
+                    user.LockoutEnd = DateTime.Now.AddYears(1000);
+                    await _context.SaveChangesAsync();
+                }
                 return user;
             }
             catch (Exception ex)
@@ -271,17 +311,17 @@ namespace backend_api.Repository
             }
         }
 
-        public async Task<IdentityUser> GetUserByEmailAsync(string email)
+        public async Task<ApplicationUser> UnlockUser(string userId)
         {
             try
             {
-                var user = await _userManager.FindByEmailAsync(email);
+                ApplicationUser user = _context.ApplicationUsers.FirstOrDefault(u => u.Id == userId);
                 if (user != null)
                 {
-                    // Get role if needed
-                    return user;
+                    user.LockoutEnd = DateTime.Now;
+                    await _context.SaveChangesAsync();
                 }
-                return null;
+                return user;
             }
             catch (Exception ex)
             {
@@ -289,27 +329,124 @@ namespace backend_api.Repository
             }
         }
 
-        public async Task<IdentityRole> GetRoleByUserId(IdentityUser user)
+        public async Task<ApplicationUser> UpdatePasswordAsync(UpdatePasswordRequestDTO updatePasswordRequestDTO)
+        {
+            var user = await _userManager.FindByEmailAsync(updatePasswordRequestDTO.UserName);
+
+            if (user == null)
+            {
+                throw new Exception("User not found.");
+            }
+
+            bool isValid = await _userManager.CheckPasswordAsync(user, updatePasswordRequestDTO.Password);
+
+            if (!isValid)
+            {
+                throw new Exception("Invalid current password.");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, updatePasswordRequestDTO.Password, updatePasswordRequestDTO.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception("Password change failed.");
+            }
+
+            return _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Email == updatePasswordRequestDTO.UserName).GetAwaiter().GetResult();
+        }
+
+        public async Task<ApplicationUser> UpdateAsync(ApplicationUser user)
         {
             try
             {
-                if (user != null)
-                {
-                    var roleIds = await _userManager.GetRolesAsync(user);
-                    var roleName = roleIds.FirstOrDefault();
-                    if (!string.IsNullOrEmpty(roleName))
-                    {
-                        var role = await _roleManager.FindByNameAsync(roleName);
-                        return role;
-                    }
-                    return null;
-                }
-                return null;
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                return user;
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        public async Task<ApplicationUser> CreateAsync(ApplicationUser user, string password)
+        {
+            ApplicationUser obj = new ApplicationUser
+            {
+                UserName = user.UserName,
+                PhoneNumber = user.PhoneNumber,
+                FullName = user.FullName,
+                PasswordHash = password,
+                Email = user.Email,
+                NormalizedEmail = user.Email,
+                LockoutEnabled = true,
+                LockoutEnd = user.IsLockedOut ? DateTime.MaxValue : null
+            };
+            var result = await _userManager.CreateAsync(obj, password);
+
+            if (result.Succeeded)
+            {
+                var roleId = user.RoleId;
+                if (roleId != null)
+                {
+                    user.Role = _roleManager.FindByIdAsync(roleId).GetAwaiter().GetResult().Name;
+                    if (user.Role != null)
+                    {
+                        await _userManager.AddToRoleAsync(obj, user.Role);
+                    }
+                    else
+                    {
+                        if (!_roleManager.RoleExistsAsync(SD.User).GetAwaiter().GetResult())
+                        {
+                            await _roleManager.CreateAsync(new IdentityRole(SD.User));
+                        }
+                        await _userManager.AddToRoleAsync(obj, SD.User);
+                    }
+                }
+                else
+                {
+                    if (!_roleManager.RoleExistsAsync(SD.User).GetAwaiter().GetResult())
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(SD.User));
+                    }
+                    await _userManager.AddToRoleAsync(obj, SD.User);
+                }
+                return _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
+            }
+            else
+            {
+                var mesg = result.Errors;
+            }
+            return null;
+        }
+
+        public async Task<bool> RemoveAsync(string userId)
+        {
+            try
+            {
+                var user = _context.ApplicationUsers.FirstOrDefault(u => u.Id == userId);
+                if (user == null)
+                    return false;
+
+                _context.ApplicationUsers.Remove(user);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<List<ApplicationUser>> GetAllAsync()
+        {
+            var users = await _context.ApplicationUsers.ToListAsync();
+            foreach(var user in users)
+            {
+                var user_role = await _userManager.GetRolesAsync(user) as List<string>;
+                user.Role = String.Join(",", user_role);
+            }
+            return users;
         }
     }
 }

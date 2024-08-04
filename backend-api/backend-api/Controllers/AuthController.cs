@@ -2,7 +2,9 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -112,10 +114,14 @@ namespace backend_api.Controllers
                 return Ok(_response);
             }
             _response.IsSuccess = false;
+            _response.StatusCode = HttpStatusCode.BadRequest;
             _response.Result = "Invalid Input";
             return BadRequest(_response);
 
         }
+
+        
+
 
     }
 }
