@@ -50,8 +50,8 @@ namespace backend_api.Swagger
                 options.SwaggerDoc(desc.GroupName, new OpenApiInfo
                 {
                     Version = desc.ApiVersion.ToString(),
-                    Title = $"Taskify API Version {desc.ApiVersion}",
-                    Description = "API to taskify",
+                    Title = $"SEP490 API Version {desc.ApiVersion}",
+                    Description = "API to SEP490",
                     TermsOfService = new Uri("https://example.com/terms"),
                     Contact = new OpenApiContact
                     {
