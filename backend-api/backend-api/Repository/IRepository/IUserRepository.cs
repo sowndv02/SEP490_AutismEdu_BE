@@ -8,7 +8,7 @@ namespace backend_api.Repository.IRepository
     {
         bool IsUniqueUser(string username);
         Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO, bool checkPassword = true);
-        Task<IdentityUser> Register(RegisterationRequestDTO registerationRequestDTO);
+        Task<ApplicationUser> Register(RegisterationRequestDTO registerationRequestDTO);
         Task<TokenDTO> RefreshAccessToken(TokenDTO tokenDTO);
         Task RevokeRefreshToken(TokenDTO tokenDTO);
 

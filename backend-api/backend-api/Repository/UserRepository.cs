@@ -16,12 +16,12 @@ namespace backend_api.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private string secretKey = string.Empty;
 
-        public UserRepository(ApplicationDbContext context, IConfiguration configuration, UserManager<IdentityUser> userManager, IMapper mapper, RoleManager<IdentityRole> roleManager)
+        public UserRepository(ApplicationDbContext context, IConfiguration configuration, UserManager<ApplicationUser> userManager, IMapper mapper, RoleManager<IdentityRole> roleManager)
         {
             _roleManager = roleManager;
             _mapper = mapper;
@@ -80,9 +80,9 @@ namespace backend_api.Repository
         }
 
 
-        public async Task<IdentityUser> Register(RegisterationRequestDTO registerationRequestDTO)
+        public async Task<ApplicationUser> Register(RegisterationRequestDTO registerationRequestDTO)
         {
-            IdentityUser user = new()
+            ApplicationUser user = new()
             {
                 UserName = registerationRequestDTO.UserName,
                 Email = registerationRequestDTO.UserName,
@@ -101,7 +101,7 @@ namespace backend_api.Repository
                     }
 
                     await _userManager.AddToRoleAsync(user, registerationRequestDTO.Role);
-                    return _context.Users.FirstOrDefault(u => u.UserName == registerationRequestDTO.UserName);
+                    return _context.ApplicationUsers.FirstOrDefault(u => u.UserName == registerationRequestDTO.UserName);
                 }
             }
             catch (Exception ex)
@@ -111,7 +111,7 @@ namespace backend_api.Repository
             return null;
         }
 
-        private async Task<string> GetAccessToken(IdentityUser user, string jwtTokenId)
+        private async Task<string> GetAccessToken(ApplicationUser user, string jwtTokenId)
         {
             var roles = await _userManager.GetRolesAsync(user);
             var authenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -175,7 +175,7 @@ namespace backend_api.Repository
             await MarkTokenAsInValid(existingRefreshToken);
 
             // generate new access token
-            var applicationUser = _context.Users.FirstOrDefault(x => x.Id == existingRefreshToken.UserId);
+            var applicationUser = _context.ApplicationUsers.FirstOrDefault(x => x.Id == existingRefreshToken.UserId);
             if (applicationUser == null)
                 return new TokenDTO();
 
