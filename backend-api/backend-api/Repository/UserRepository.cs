@@ -12,7 +12,7 @@ using System.Text;
 
 namespace backend_api.Repository
 {
-    public class UserRepository :IUserRepository
+    public class UserRepository : IUserRepository
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
@@ -115,7 +115,7 @@ namespace backend_api.Repository
         {
             var roles = await _userManager.GetRolesAsync(user);
             var authenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            
+
             var authClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email),
@@ -282,8 +282,12 @@ namespace backend_api.Repository
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user != null)
                 {
-                    // Get role if needed
-                    return _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Id == userId).GetAwaiter().GetResult();
+                    var appUser = await _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Id == userId);
+                    var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
+                    var user_role = await _userManager.GetRolesAsync(user) as List<string>;
+                    appUser.Role = String.Join(",", user_role);
+                    appUser.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
+                    return appUser;
                 }
                 return null;
             }
@@ -432,7 +436,7 @@ namespace backend_api.Repository
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -441,12 +445,16 @@ namespace backend_api.Repository
         public async Task<List<ApplicationUser>> GetAllAsync()
         {
             var users = await _context.ApplicationUsers.ToListAsync();
-            foreach(var user in users)
+            foreach (var user in users)
             {
                 var user_role = await _userManager.GetRolesAsync(user) as List<string>;
+                var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
+                user.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
                 user.Role = String.Join(",", user_role);
             }
             return users;
         }
+
+
     }
 }
