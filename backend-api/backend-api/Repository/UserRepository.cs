@@ -115,7 +115,7 @@ namespace backend_api.Repository
         {
             var roles = await _userManager.GetRolesAsync(user);
             var authenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-
+            var userClaims = await _userManager.GetClaimsAsync(user);
             var authClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email),
@@ -123,6 +123,7 @@ namespace backend_api.Repository
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 new Claim(JwtRegisteredClaimNames.Jti, jwtTokenId)
             };
+            authClaims.AddRange(userClaims);
             var token = new JwtSecurityToken(
                 issuer: _configuration["ApiSettings:JWT:ValidIssuer"],
                 audience: _configuration["ApiSettings:JWT:ValidAudience"],
@@ -279,15 +280,14 @@ namespace backend_api.Repository
         {
             try
             {
-                var user = await _userManager.FindByIdAsync(userId);
+                var user = await _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Id == userId);
                 if (user != null)
                 {
-                    var appUser = await _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Id == userId);
                     var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
                     var user_role = await _userManager.GetRolesAsync(user) as List<string>;
-                    appUser.Role = String.Join(",", user_role);
-                    appUser.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
-                    return appUser;
+                    user.Role = String.Join(",", user_role);
+                    user.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
+                    return user;
                 }
                 return null;
             }
