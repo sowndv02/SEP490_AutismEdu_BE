@@ -1,6 +1,7 @@
 ﻿using backend_api.Models;
 using backend_api.Models.DTOs;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace backend_api.Repository.IRepository
 {
@@ -13,6 +14,7 @@ namespace backend_api.Repository.IRepository
         Task RevokeRefreshToken(TokenDTO tokenDTO);
 
         Task<ApplicationUser> GetAsync(string userId);
+        Task<List<Claim>> GetClaimByUserIdAsync(string userId);
         Task<ApplicationUser> GetUserByEmailAsync(string email);
         Task<ApplicationUser> LockoutUser(string userId);
         Task<ApplicationUser> UnlockUser(string userId);
