@@ -8,7 +8,7 @@ namespace backend_api.Models
     {
         [Required]
         public string FullName { get; set; }
-        public DateTime DateCreated { get; set; }
+        public DateTime CreatedDate { get; set; }
 
         [NotMapped]
         public string RoleId { get; set; }

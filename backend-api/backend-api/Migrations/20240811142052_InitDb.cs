@@ -5,10 +5,26 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace backend_api.Migrations
 {
-    public partial class InitDbAndIdentity : Migration
+    public partial class InitDb : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "ApplicationClaims",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApplicationClaims", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "RefreshTokens",
                 columns: table => new
@@ -45,6 +61,9 @@ namespace backend_api.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Discriminator = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -171,6 +190,25 @@ namespace backend_api.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "ApplicationClaims",
+                columns: new[] { "Id", "ClaimType", "ClaimValue", "CreatedDate", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { 1, "Create", "True", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4385), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 2, "Delete", "True", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4395), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 3, "Update", "True", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4396), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 4, "Create", "Claim", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4397), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 5, "Delete", "Claim", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4398), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 6, "Update", "Claim", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4398), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 7, "Create", "Role", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4399), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 8, "Delete", "Role", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4400), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 9, "Update", "Role", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4401), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 10, "Create", "User", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4401), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 11, "Delete", "User", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4402), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 12, "Update", "User", new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4403), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_RoleClaims_RoleId",
                 table: "RoleClaims",
@@ -213,6 +251,9 @@ namespace backend_api.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "ApplicationClaims");
+
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
 
