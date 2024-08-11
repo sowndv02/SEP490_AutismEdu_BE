@@ -13,9 +13,9 @@ namespace backend_api.Services
         public int Get(string userId)
         {
             var user = _db.ApplicationUsers.FirstOrDefault(u => u.Id == userId);
-            if (user != null && user.DateCreated != DateTime.MinValue)
+            if (user != null && user.CreatedDate != DateTime.MinValue)
             {
-                return (DateTime.Today - user.DateCreated).Days;
+                return (DateTime.Today - user.CreatedDate).Days;
             }
             return 0;
         }

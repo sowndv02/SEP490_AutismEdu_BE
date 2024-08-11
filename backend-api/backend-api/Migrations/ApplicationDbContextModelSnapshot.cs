@@ -22,6 +22,131 @@ namespace backend_api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
+            modelBuilder.Entity("backend_api.Models.ApplicationClaim", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("ClaimType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ApplicationClaims");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ClaimType = "Create",
+                            ClaimValue = "True",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4385),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ClaimType = "Delete",
+                            ClaimValue = "True",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4395),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ClaimType = "Update",
+                            ClaimValue = "True",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4396),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ClaimType = "Create",
+                            ClaimValue = "Claim",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4397),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ClaimType = "Delete",
+                            ClaimValue = "Claim",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4398),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 6,
+                            ClaimType = "Update",
+                            ClaimValue = "Claim",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4398),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ClaimType = "Create",
+                            ClaimValue = "Role",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4399),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ClaimType = "Delete",
+                            ClaimValue = "Role",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4400),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9,
+                            ClaimType = "Update",
+                            ClaimValue = "Role",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4401),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 10,
+                            ClaimType = "Create",
+                            ClaimValue = "User",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4401),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 11,
+                            ClaimType = "Delete",
+                            ClaimValue = "User",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4402),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 12,
+                            ClaimType = "Update",
+                            ClaimValue = "User",
+                            CreatedDate = new DateTime(2024, 8, 11, 21, 20, 52, 99, DateTimeKind.Local).AddTicks(4403),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
+                });
+
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -261,7 +386,7 @@ namespace backend_api.Migrations
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
-                    b.Property<DateTime>("DateCreated")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("FullName")
