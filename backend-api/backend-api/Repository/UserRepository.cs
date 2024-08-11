@@ -265,8 +265,11 @@ namespace backend_api.Repository
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user != null)
                 {
-                    // Get role if needed
-                    return _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Email == email).GetAwaiter().GetResult();
+                    var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
+                    var user_role = await _userManager.GetRolesAsync(user) as List<string>;
+                    user.Role = String.Join(",", user_role);
+                    user.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
+                    return user;
                 }
                 return null;
             }
@@ -455,6 +458,23 @@ namespace backend_api.Repository
             return users;
         }
 
-
+        public async Task<List<Claim>> GetClaimByUserIdAsync(string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                
+                if (user != null)
+                {
+                    var userClaims = await _userManager.GetClaimsAsync(user);
+                    return userClaims.ToList();
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }
