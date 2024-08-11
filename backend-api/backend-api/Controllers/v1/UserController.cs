@@ -25,6 +25,38 @@ namespace backend_api.Controllers.v1
             _response = new();
         }
 
+       
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUserAsync(string id, ApplicationUserDTO updateDTO)
+        {
+            try
+            {
+                if (updateDTO == null || !id.Equals(updateDTO.Id))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Id invalid!" };
+                    return BadRequest(_response);
+                }
+
+                var model = await _userRepository.GetAsync(updateDTO.Id);
+                model.PhoneNumber = updateDTO.PhoneNumber;
+                model.FullName = updateDTO.FullName;
+                await _userRepository.UpdateAsync(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
         [HttpGet]
         public async Task<ActionResult<APIResponse>> GetAllAsync()
         {
