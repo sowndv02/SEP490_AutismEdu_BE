@@ -3,6 +3,7 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Drawing;
 using System.Net;
@@ -25,9 +26,35 @@ namespace backend_api.Controllers.v1
             _response = new();
         }
 
-       
+
+        
+        [HttpGet("claim/{id}")]
+        public async Task<ActionResult<APIResponse>> GetClaimByUserId(string id)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(id))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{id} is invalid!" };
+                    return BadRequest(_response);
+                }
+                var exsitingUserClaims = await _userRepository.GetClaimByUserIdAsync(id);
+                _response.Result = _mapper.Map<List<ClaimDTO>>(exsitingUserClaims);
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+        
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUserAsync(string id, ApplicationUserDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, ApplicationUserDTO updateDTO)
         {
             try
             {
