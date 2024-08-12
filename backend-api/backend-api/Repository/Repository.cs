@@ -51,21 +51,11 @@ namespace backend_api.Repository
             return await query.FirstOrDefaultAsync(filter);
         }
 
-        //public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null,
-        //    int pageSize = 0, int pageNumber = 1)
         public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null)
         {
             IQueryable<T> query = dbset;
             if (filter != null)
                 query = query.Where(filter);
-            //if (pageSize > 0)
-            //{
-            //    if (pageSize > 100)
-            //    {
-            //        pageSize = 100;
-            //    }
-            //    query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
-            //}
             if (includeProperties != null)
             {
                 var includeProps = includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();

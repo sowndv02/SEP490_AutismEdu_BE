@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Drawing;
 using System.Net;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace backend_api.Controllers.v1
 {
@@ -19,8 +20,10 @@ namespace backend_api.Controllers.v1
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
-        public UserController(IUserRepository userRepository, IMapper mapper)
+        protected int pageSize = 0;
+        public UserController(IUserRepository userRepository, IMapper mapper, IConfiguration configuration)
         {
+            pageSize = configuration.GetValue<int>("APIConfig:PageSize");
             _mapper = mapper;
             _userRepository = userRepository;
             _response = new();
@@ -66,7 +69,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var model = await _userRepository.GetAsync(updateDTO.Id);
+                var model = await _userRepository.GetAsync(x => x.Id == id);
                 model.PhoneNumber = updateDTO.PhoneNumber;
                 model.FullName = updateDTO.FullName;
                 await _userRepository.UpdateAsync(model);
@@ -85,11 +88,19 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync()
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, int pageNumber = 1)
         {
             try
             {
-                List<ApplicationUser> list = await _userRepository.GetAllAsync();
+                List<ApplicationUser> list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+
+                if (!string.IsNullOrEmpty(search))
+                {
+                    list = list.Where(u => u.FullName.ToLower().Contains(search)).ToList();
+                }
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = _userRepository.GetTotalUser() };
+
+                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = _mapper.Map<List<ApplicationUserDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
@@ -115,7 +126,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { $"{id} is invalid!" };
                     return BadRequest(_response);
                 }
-                ApplicationUser model = await _userRepository.GetAsync(id);
+                ApplicationUser model = await _userRepository.GetAsync(x => x.Id == id);
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
                 return Ok(_response);
             }
@@ -184,7 +195,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 if (string.IsNullOrEmpty(id)) return BadRequest();
-                var obj = await _userRepository.GetAsync(id);
+                var obj = await _userRepository.GetAsync(x => x.Id == id);
 
                 if (obj == null) return NotFound();
 
