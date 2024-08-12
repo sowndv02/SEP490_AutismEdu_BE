@@ -9,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Linq.Expressions;
+using System.Diagnostics;
 
 namespace backend_api.Repository
 {
@@ -279,11 +281,25 @@ namespace backend_api.Repository
             }
         }
 
-        public async Task<ApplicationUser> GetAsync(string userId)
+        public async Task<ApplicationUser> GetAsync(Expression<Func<ApplicationUser, bool>> filter = null, bool tracked = true, string? includeProperties = null)
         {
             try
             {
-                var user = await _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Id == userId);
+                IQueryable<ApplicationUser> query = _context.ApplicationUsers;
+                if (!tracked)
+                    query = query.AsNoTracking();
+
+                if (filter != null)
+                    query = query.Where(filter);
+
+                if (includeProperties != null)
+                {
+                    foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        query = query.Include(includeProperty);
+                    }
+                }
+                var user = query.FirstOrDefault();
                 if (user != null)
                 {
                     var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
@@ -445,17 +461,33 @@ namespace backend_api.Repository
             }
         }
 
-        public async Task<List<ApplicationUser>> GetAllAsync()
+        public async Task<List<ApplicationUser>> GetAllAsync(Expression<Func<ApplicationUser, bool>>? filter = null, string? includeProperties = null,
+            int pageSize = 10, int pageNumber = 1)
         {
-            var users = await _context.ApplicationUsers.ToListAsync();
-            foreach (var user in users)
+
+            IQueryable<ApplicationUser> query = _context.ApplicationUsers;
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (includeProperties != null)
+            {
+                foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty);
+                }
+            }
+            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+            foreach (var user in query)
             {
                 var user_role = await _userManager.GetRolesAsync(user) as List<string>;
                 var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
-                user.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
+                var claimString = user_claim.Select(x => x.Type);
+                user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
                 user.Role = String.Join(",", user_role);
             }
-            return users;
+            return query.ToList();
         }
 
         public async Task<List<Claim>> GetClaimByUserIdAsync(string userId)
@@ -470,6 +502,18 @@ namespace backend_api.Repository
                     return userClaims.ToList();
                 }
                 return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public int GetTotalUser()
+        {
+            try
+            {
+                return _context.ApplicationUsers.ToList().Count();
             }
             catch (Exception ex)
             {

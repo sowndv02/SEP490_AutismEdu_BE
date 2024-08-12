@@ -1,6 +1,8 @@
 ﻿using backend_api.Models;
 using backend_api.Models.DTOs;
 using Microsoft.AspNetCore.Identity;
+using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Security.Claims;
 
 namespace backend_api.Repository.IRepository
@@ -13,7 +15,7 @@ namespace backend_api.Repository.IRepository
         Task<TokenDTO> RefreshAccessToken(TokenDTO tokenDTO);
         Task RevokeRefreshToken(TokenDTO tokenDTO);
 
-        Task<ApplicationUser> GetAsync(string userId);
+        Task<ApplicationUser> GetAsync(Expression<Func<ApplicationUser, bool>>? filter = null, bool tracked = true, string? includeProperties = null);
         Task<List<Claim>> GetClaimByUserIdAsync(string userId);
         Task<ApplicationUser> GetUserByEmailAsync(string email);
         Task<ApplicationUser> LockoutUser(string userId);
@@ -22,6 +24,7 @@ namespace backend_api.Repository.IRepository
         Task<ApplicationUser> UpdateAsync(ApplicationUser user);
         Task<ApplicationUser> CreateAsync(ApplicationUser user, string password);
         Task<bool> RemoveAsync(string userId);
-        Task<List<ApplicationUser>> GetAllAsync();
+        int GetTotalUser();
+        Task<List<ApplicationUser>> GetAllAsync(Expression<Func<ApplicationUser, bool>>? filter = null, string? includeProperties = null, int pageSize = 10, int pageNumber = 1);
     }
 }
