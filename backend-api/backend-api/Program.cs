@@ -45,6 +45,7 @@ builder.Services.AddResponseCaching();
 // Add DI
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IClaimRepository, ClaimRepository>();
 
 
 // Add DI requirement authorization handler
