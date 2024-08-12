@@ -267,6 +267,9 @@ namespace backend_api.Repository
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user != null)
                 {
+                    if (user.LockoutEnd <= DateTime.Now)
+                        user.IsLockedOut = false;
+                    else user.IsLockedOut = true;
                     var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
                     var user_role = await _userManager.GetRolesAsync(user) as List<string>;
                     user.Role = String.Join(",", user_role);
@@ -299,9 +302,12 @@ namespace backend_api.Repository
                         query = query.Include(includeProperty);
                     }
                 }
-                var user = query.FirstOrDefault();
+                var user = await query.FirstOrDefaultAsync();
                 if (user != null)
                 {
+                    if (user.LockoutEnd <= DateTime.Now)
+                        user.IsLockedOut = false;
+                    else user.IsLockedOut = true;
                     var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
                     var user_role = await _userManager.GetRolesAsync(user) as List<string>;
                     user.Role = String.Join(",", user_role);
@@ -325,7 +331,11 @@ namespace backend_api.Repository
                 {
                     user.LockoutEnd = DateTime.Now.AddYears(1000);
                     await _context.SaveChangesAsync();
+                    if (user.LockoutEnd <= DateTime.Now)
+                        user.IsLockedOut = false;
+                    else user.IsLockedOut = true;
                 }
+                
                 return user;
             }
             catch (Exception ex)
@@ -343,7 +353,11 @@ namespace backend_api.Repository
                 {
                     user.LockoutEnd = DateTime.Now;
                     await _context.SaveChangesAsync();
+                    if (user.LockoutEnd <= DateTime.Now)
+                        user.IsLockedOut = false;
+                    else user.IsLockedOut = true;
                 }
+                
                 return user;
             }
             catch (Exception ex)
@@ -374,8 +388,17 @@ namespace backend_api.Repository
             {
                 throw new Exception("Password change failed.");
             }
+            var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
 
-            return _context.ApplicationUsers.FirstOrDefaultAsync(x => x.Email == updatePasswordRequestDTO.UserName).GetAwaiter().GetResult();
+            if (objReturn.LockoutEnd <= DateTime.Now)
+                objReturn.IsLockedOut = false;
+            else objReturn.IsLockedOut = true;
+            var user_role = await _userManager.GetRolesAsync(user) as List<string>;
+            var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
+            var claimString = user_claim.Select(x => x.Type);
+            user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
+            user.Role = String.Join(",", user_role);
+            return objReturn;
         }
 
         public async Task<ApplicationUser> UpdateAsync(ApplicationUser user)
@@ -384,6 +407,9 @@ namespace backend_api.Repository
             {
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();
+                if (user.LockoutEnd <= DateTime.Now)
+                    user.IsLockedOut = false;
+                else user.IsLockedOut = true;
                 return user;
             }
             catch (Exception ex)
@@ -434,7 +460,18 @@ namespace backend_api.Repository
                     }
                     await _userManager.AddToRoleAsync(obj, SD.User);
                 }
-                return _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
+                var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
+
+                if (objReturn.LockoutEnd <= DateTime.Now)
+                    objReturn.IsLockedOut = false;
+                else objReturn.IsLockedOut = true;
+
+                var user_role = await _userManager.GetRolesAsync(user) as List<string>;
+                var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
+                var claimString = user_claim.Select(x => x.Type);
+                user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
+                user.Role = String.Join(",", user_role);
+                return objReturn;
             }
             else
             {
@@ -478,16 +515,19 @@ namespace backend_api.Repository
                 }
             }
             query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
-
-            foreach (var user in query)
+            var users = await query.ToListAsync();
+            foreach (var user in users)
             {
+                if (user.LockoutEnd <= DateTime.Now)
+                    user.IsLockedOut = false;
+                else user.IsLockedOut = true;
                 var user_role = await _userManager.GetRolesAsync(user) as List<string>;
                 var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
                 var claimString = user_claim.Select(x => x.Type);
                 user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
                 user.Role = String.Join(",", user_role);
             }
-            return query.ToList();
+            return users;
         }
 
         public async Task<List<Claim>> GetClaimByUserIdAsync(string userId)
