@@ -30,7 +30,56 @@ namespace backend_api.Controllers.v1
         }
 
 
-        
+        [HttpPost]
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] UserCreateDTO createDTO)
+        {
+            try
+            {
+
+                if (createDTO == null) return BadRequest(createDTO);
+
+                ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
+                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                if (createDTO.Image != null)
+                {
+                    if (!string.IsNullOrEmpty(model.ImageLocalPathUrl))
+                    {
+                        var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), model.ImageLocalPathUrl);
+                        FileInfo file = new FileInfo(oldFilePathDirectory);
+                        if (file.Exists)
+                        {
+                            file.Delete();
+                        }
+                    }
+                    Guid guid = Guid.NewGuid();
+                    string fileName = guid.ToString() + Path.GetExtension(createDTO.Image.FileName);
+                    string filePath = @"wwwroot\UserImages\" + fileName;
+
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+
+                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                    {
+                        createDTO.Image.CopyTo(fileStream);
+                    }
+                    model.ImageUrl = baseUrl + $"/{SD.UrlImageUser}/" + fileName;
+                    model.ImageLocalPathUrl = filePath;
+                }
+                model.UserName = model.Email;
+                await _userRepository.CreateAsync(model, createDTO.Password);
+                _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                _response.StatusCode = HttpStatusCode.Created;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
         [HttpGet("claim/{id}")]
         public async Task<ActionResult<APIResponse>> GetClaimByUserId(string id)
         {
@@ -57,7 +106,7 @@ namespace backend_api.Controllers.v1
         }
         
         [HttpPut("{id}")]
-        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, ApplicationUserDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, [FromForm]ApplicationUserDTO updateDTO)
         {
             try
             {
@@ -70,6 +119,30 @@ namespace backend_api.Controllers.v1
                 }
 
                 var model = await _userRepository.GetAsync(x => x.Id == id);
+                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                if (updateDTO.Image != null)
+                {
+                    if (!string.IsNullOrEmpty(model.ImageLocalPathUrl))
+                    {
+                        var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), model.ImageLocalPathUrl);
+                        FileInfo file = new FileInfo(oldFilePathDirectory);
+                        if (file.Exists)
+                        {
+                            file.Delete();
+                        }
+                    }
+                    string fileName = updateDTO.Id + Path.GetExtension(updateDTO.Image.FileName);
+                    string filePath = @"wwwroot\UserImage\" + fileName;
+
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+
+                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                    {
+                        updateDTO.Image.CopyTo(fileStream);
+                    }
+                    model.ImageUrl = baseUrl + $"/{SD.UrlImageUser}/" + fileName;
+                    model.ImageLocalPathUrl = filePath;
+                }
                 model.PhoneNumber = updateDTO.PhoneNumber;
                 model.FullName = updateDTO.FullName;
                 await _userRepository.UpdateAsync(model);
