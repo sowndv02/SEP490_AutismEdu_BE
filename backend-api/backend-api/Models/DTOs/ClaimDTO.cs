@@ -6,6 +6,6 @@
         public string ClaimType { get; set; }
         public string ClaimValue { get; set; }
         public DateTime CreatedDate { get; set; }
-        public DateTime UpdatedDate { get; set;}
+        public DateTime UpdatedDate { get; set; }
     }
 }
