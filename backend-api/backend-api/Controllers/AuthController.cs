@@ -74,6 +74,7 @@ namespace backend_api.Controllers
             var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
             user.ImageUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
             user.ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
+            user.CreatedDate = DateTime.Now;
             await _userRepository.UpdateAsync(user);
             _response.StatusCode = HttpStatusCode.OK;
             _response.IsSuccess = true;

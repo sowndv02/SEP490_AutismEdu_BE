@@ -11,7 +11,7 @@
         public string? ImageUrl { get; set; }
         public string? ImageLocalPathUrl { get; set; }
         public IFormFile? Image { get; set; }
-        public DateTime? DateCreated { get; set; }
+        public DateTime? CreatedDate { get; set; }
         public bool IsLockedOut { get; set; }
     }
 }

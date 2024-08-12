@@ -39,6 +39,7 @@ namespace backend_api.Controllers.v1
                 if (createDTO == null) return BadRequest(createDTO);
 
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
+                model.CreatedDate = DateTime.Now;
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
                 if (createDTO.Image != null)
                 {
