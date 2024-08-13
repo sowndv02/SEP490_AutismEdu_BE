@@ -29,5 +29,16 @@ namespace backend_api.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        public int GetTotalClaim()
+        {
+            try
+            {
+                return _context.ApplicationClaims.Count();
+            }catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }

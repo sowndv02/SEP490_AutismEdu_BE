@@ -8,5 +8,7 @@ namespace backend_api.Repository.IRepository
     public interface IClaimRepository : IRepository<ApplicationClaim>
     {
         Task<ApplicationClaim> UpdateAsync(ApplicationClaim claim);
+        int GetTotalClaim();
+
     }
 }
