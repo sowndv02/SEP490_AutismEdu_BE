@@ -3,7 +3,7 @@ import Home from '~/pages/Home'
 import DashBoard from '~/pages/Admin/DashBoard'
 import UserManagement from '~/pages/Admin/UserManagement'
 
-const routes = [
+const publicRoutes = [
     {
         path: '/',
         element: Home
@@ -11,7 +11,10 @@ const routes = [
     {
         path: '/login',
         element: Login
-    },
+    }
+]
+
+const adminRoutes = [
     {
         path: PAGES.DASHBOARD,
         element: DashBoard
@@ -21,7 +24,7 @@ const routes = [
         element: UserManagement
     }
 ]
-
-export default {
-    routes
+export {
+    publicRoutes,
+    adminRoutes
 }

@@ -2,6 +2,7 @@ import { IconButton, Menu, MenuItem } from '@mui/material'
 import React from 'react'
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import UserClaimModal from '../UserClaimModal';
+import UserRoleModal from '../UserRoleModal';
 function ActionMenu() {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
@@ -37,8 +38,8 @@ function ActionMenu() {
                     horizontal: 'left',
                 }}
             >
-                <UserClaimModal />
-                <MenuItem onClick={handleClose}>Manage Role</MenuItem>
+                <UserClaimModal handleCloseMenu={handleClose}/>
+                <UserRoleModal handleCloseMenu={handleClose} />
             </Menu>
         </div>
     )

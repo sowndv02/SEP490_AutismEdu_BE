@@ -5,7 +5,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
 import * as React from 'react';
-function DeleteClaimDialog() {
+function DeleteRoleDialog() {
     const [open, setOpen] = React.useState(false);
 
     const handleClickOpen = () => {
@@ -40,4 +40,4 @@ function DeleteClaimDialog() {
     )
 }
 
-export default DeleteClaimDialog
+export default DeleteRoleDialog

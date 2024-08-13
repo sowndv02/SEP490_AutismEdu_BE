@@ -1,8 +1,8 @@
 const PAGES = {
     HOME: '/',
     LOGIN: '/login',
-    DASHBOARD: '/dashboard',
-    USERMANAGEMENT: '/user-management'
+    DASHBOARD: '/admin/dashboard',
+    USERMANAGEMENT: '/admin/user-management'
   };
   
   export default PAGES;

@@ -1,7 +1,6 @@
-import { Box, Button, FormControl, IconButton, InputLabel, MenuItem, Modal, Select, Typography } from '@mui/material';
-import React, { useState } from 'react'
-import RemoveIcon from '@mui/icons-material/Remove';
-import DeleteClaimDialog from './DeleteClaimDialog';
+import { Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, Typography } from '@mui/material';
+import { useState } from 'react';
+import DeleteRoleDialog from './DeleteRoleDialog';
 const style = {
     position: 'absolute',
     top: '50%',
@@ -12,45 +11,16 @@ const style = {
     boxShadow: 24,
     p: 4,
 };
-function UserClaimModal({ handleCloseMenu }) {
+function UserRoleModal({ handleCloseMenu }) {
     const [open, setOpen] = useState(false);
     const [claim, setClaim] = useState('');
     const listClaim = [
-        {
-            type: "Create",
-            value: "User information"
-        },
-        {
-            type: "View",
-            value: "User information"
-        },
-        {
-            type: "Delete",
-            value: "User information"
-        },
-        {
-            type: "Edit",
-            value: "User information"
-        },
+        "Admin",
+        "Customer"
     ]
 
     const listMyClaim = [
-        {
-            type: "Create",
-            value: "User information"
-        },
-        {
-            type: "View",
-            value: "User information"
-        },
-        {
-            type: "Delete",
-            value: "User information"
-        },
-        {
-            type: "Edit",
-            value: "User information"
-        },
+        "Admin"
     ]
     const handleOpen = () => {
         setOpen(true)
@@ -59,12 +29,13 @@ function UserClaimModal({ handleCloseMenu }) {
         handleCloseMenu()
         setOpen(false);
     }
+
     const handleChange = (event) => {
         setClaim(event.target.value);
     };
     return (
         <div>
-            <MenuItem onClick={handleOpen}>Manage Claim</MenuItem>
+            <MenuItem onClick={handleOpen}>Manage Role</MenuItem>
             <Modal
                 open={open}
                 onClose={handleClose}
@@ -73,11 +44,11 @@ function UserClaimModal({ handleCloseMenu }) {
             >
                 <Box sx={style} >
                     <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Claim of Khai Dao
+                        Roles of Khai Dao
                     </Typography>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }} mt="20px">
                         <FormControl size="small" sx={{ width: "80%" }}>
-                            <InputLabel id="demo-simple-select-label">Claim</InputLabel>
+                            <InputLabel id="demo-simple-select-label">Roles</InputLabel>
                             <Select
                                 labelId="demo-simple-select-label"
                                 id="demo-simple-select"
@@ -87,12 +58,12 @@ function UserClaimModal({ handleCloseMenu }) {
                             >
                                 {listClaim.map((l, index) => {
                                     return (
-                                        <MenuItem key={index} value={10}>{l.type} - {l.value}</MenuItem>
+                                        <MenuItem key={index} value={10}>{l}</MenuItem>
                                     )
                                 })}
                             </Select>
                         </FormControl>
-                        <Button variant='contained' sx={{ alignSelf: "end", height: "40px", fontSize: "11px" }}>Add Claim</Button>
+                        <Button variant='contained' sx={{ alignSelf: "end", height: "40px", fontSize: "11px" }}>Add Role</Button>
                     </Box>
                     <Box mt="20px">
                         {
@@ -108,9 +79,9 @@ function UserClaimModal({ handleCloseMenu }) {
                                         py: "10px",
                                     }}>
                                         <Box>
-                                            {l.type} - {l.value}
+                                            {l}
                                         </Box>
-                                        <DeleteClaimDialog />
+                                        <DeleteRoleDialog />
                                     </Box>
                                 )
                             })
@@ -122,4 +93,4 @@ function UserClaimModal({ handleCloseMenu }) {
     )
 }
 
-export default UserClaimModal
+export default UserRoleModal
