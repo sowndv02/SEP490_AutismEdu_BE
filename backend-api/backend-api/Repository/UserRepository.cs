@@ -33,6 +33,38 @@ namespace backend_api.Repository
             secretKey = configuration.GetValue<string>("ApiSettings:JWT:Secret");
         }
 
+        public async Task<string> GeneratePasswordResetTokenAsync(ApplicationUser user)
+        {
+            try
+            {
+                return await _userManager.GeneratePasswordResetTokenAsync(user);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(ApplicationUser user, string code, string password)
+        {
+            try
+            {
+                var result =  await _userManager.ResetPasswordAsync(user, code, password);
+                if (result.Succeeded)
+                {
+                    return true;
+                }
+                else
+                {
+                    throw new Exception(result.Errors.FirstOrDefault().ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<bool> AddClaimToUser(string userId, List<int> claimIds)
         {
             try
@@ -148,14 +180,25 @@ namespace backend_api.Repository
                     }
 
                     await _userManager.AddToRoleAsync(user, registerationRequestDTO.Role);
-                    return _context.ApplicationUsers.FirstOrDefault(u => u.UserName == registerationRequestDTO.UserName);
+                    ApplicationUser objReturn = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email == user.Email);
+                    if (objReturn.LockoutEnd <= DateTime.Now)
+                        objReturn.IsLockedOut = false;
+                    else objReturn.IsLockedOut = true;
+                    var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
+                    var user_role = await _userManager.GetRolesAsync(user) as List<string>;
+                    user.Role = String.Join(",", user_role);
+                    user.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
+                    return objReturn;
+                }
+                else
+                {
+                    throw new Exception(result.Errors.FirstOrDefault().ToString());
                 }
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
-            return null;
         }
 
         private async Task<string> GetAccessToken(ApplicationUser user, string jwtTokenId)
