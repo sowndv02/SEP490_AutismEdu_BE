@@ -8,6 +8,8 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import TrelloIcon from '~/assets/trello.svg?react';
 import GoogleIcon from '@mui/icons-material/Google';
+import { Link } from 'react-router-dom';
+import PAGES from '~/utils/pages';
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState(null);
@@ -112,11 +114,11 @@ function Login() {
             </FormControl>
           </Box>
           <Box sx={{ width: "100%", textAlign: "end", marginTop: "15px" }}>
-            <a href='' style={{ color: "#666cff" }}>Forgot Password?</a>
+            <Link to={PAGES.FORGOTPASSWORD} style={{ color: "#666cff" }}>Forgot Password?</Link>
           </Box>
           <Button variant='contained' sx={{ width: "100%", marginTop: "20px" }}>Sign In</Button>
 
-          <Typography sx={{ textAlign: "center", mt: "20px" }}>New on our platform? <a href='' style={{ color: "#666cff" }}>Create an account</a></Typography>
+          <Typography sx={{ textAlign: "center", mt: "20px" }}>New on our platform? <Link to={PAGES.FORGOTPASSWORD} style={{ color: "#666cff" }}>Create an account</Link></Typography>
           <Divider sx={{ mt: "15px" }}>or</Divider>
           <Box sx={{ display: "flex", justifyContent: "center" }}>
             <IconButton>

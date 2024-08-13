@@ -30,7 +30,14 @@ const theme = createTheme({
               text-decoration: none;
             }
           `
-        }
+        },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    textTransform: "none"
+                }
+            }
+        },
     }
 });
 
