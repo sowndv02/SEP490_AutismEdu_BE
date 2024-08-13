@@ -6,16 +6,23 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import StarBorder from '@mui/icons-material/StarBorder';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 function AdminLeftBar() {
     const [open, setOpen] = useState(false);
-
+    const location = useLocation();
     const handleClick = () => {
         setOpen(!open);
     };
-
     const [selectedIndex, setSelectedIndex] = useState(0);
 
+    useEffect(() => {
+        if (location.pathname.includes("/dashboard")) {
+            setSelectedIndex(0);
+        } else if (location.pathname.includes("/user-management")) {
+            setSelectedIndex(1);
+        }
+    }, [])
     const handleListItemClick = (event, index) => {
         setSelectedIndex(index);
     };
@@ -32,22 +39,36 @@ function AdminLeftBar() {
                     component="nav"
                     aria-labelledby="nested-list-subheader"
                 >
-                    <ListItemButton
-                        selected={selectedIndex === 0}
-                        onClick={(event) => handleListItemClick(event, 0)}>
-                        <ListItemIcon>
-                            <DashboardIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Dashboard" />
-                    </ListItemButton>
-                    <ListItemButton
-                        selected={selectedIndex === 1}
-                        onClick={(event) => handleListItemClick(event, 1)}>
-                        <ListItemIcon>
-                            <PeopleIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="User Management" />
-                    </ListItemButton>
+                    <Link to="/admin/dashboard">
+                        <ListItemButton
+                            selected={selectedIndex === 0}
+                            onClick={(event) => handleListItemClick(event, 0)}>
+                            <ListItemIcon>
+                                <DashboardIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Dashboard" />
+                        </ListItemButton>
+                    </Link>
+                    <Link to="/admin/user-management">
+                        <ListItemButton
+                            selected={selectedIndex === 1}
+                            onClick={(event) => handleListItemClick(event, 1)}>
+                            <ListItemIcon>
+                                <PeopleIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="User Management" />
+                        </ListItemButton>
+                    </Link>
+                    <Link to="/admin/user-management">
+                        <ListItemButton
+                            selected={selectedIndex === 2}
+                            onClick={(event) => handleListItemClick(event, 1)}>
+                            <ListItemIcon>
+                                <PeopleIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Claims & Roles" />
+                        </ListItemButton>
+                    </Link>
                     <ListItemButton onClick={handleClick}>
                         <ListItemIcon>
                             <InboxIcon />

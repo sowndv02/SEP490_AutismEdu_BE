@@ -20,7 +20,17 @@ const theme = createTheme({
         text: {
             primary: '#676b7b',
             secondary: '#3b4056'
-        },
+        }
+    },
+    components: {
+        MuiCssBaseline: {
+            styleOverrides: `
+            a {
+              color: #3b4056;
+              text-decoration: none;
+            }
+          `
+        }
     }
 });
 
