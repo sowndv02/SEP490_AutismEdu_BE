@@ -43,8 +43,11 @@ namespace backend_api.Controllers.v1
                         case "type":
                             list = list.Where(u => u.ClaimType.ToLower().Contains(search.ToLower())).ToList();
                             break;
-                        default:
+                        case "value":
                             list = list.Where(u => u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
+                            break;
+                        default:
+                            list = list.Where(u => u.ClaimValue.ToLower().Contains(search.ToLower()) || u.ClaimType.ToLower().Contains(search.ToLower())).ToList();
                             break;
                     }
                 }
