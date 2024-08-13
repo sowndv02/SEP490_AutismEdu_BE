@@ -22,6 +22,9 @@ function AdminLeftBar() {
         } else if (location.pathname.includes("/user-management")) {
             setSelectedIndex(1);
         }
+        else if (location.pathname.includes("/role-claim-management")) {
+            setSelectedIndex(2);
+        }
     }, [])
     const handleListItemClick = (event, index) => {
         setSelectedIndex(index);
@@ -59,10 +62,10 @@ function AdminLeftBar() {
                             <ListItemText primary="User Management" />
                         </ListItemButton>
                     </Link>
-                    <Link to="/admin/user-management">
+                    <Link to="/admin/role-claim-management">
                         <ListItemButton
                             selected={selectedIndex === 2}
-                            onClick={(event) => handleListItemClick(event, 1)}>
+                            onClick={(event) => handleListItemClick(event, 2)}>
                             <ListItemIcon>
                                 <PeopleIcon />
                             </ListItemIcon>
