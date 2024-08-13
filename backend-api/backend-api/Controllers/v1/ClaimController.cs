@@ -40,11 +40,17 @@ namespace backend_api.Controllers.v1
                 {
                     switch (searchType.ToLower())
                     {
-                        case "type":
-                            list = list.Where(u => u.ClaimType.ToLower().Contains(search.ToLower())).ToList();
+                        case "create":
+                            list = list.Where(u => u.ClaimType.ToLower().Equals("create") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
                             break;
-                        case "value":
-                            list = list.Where(u => u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
+                        case "update":
+                            list = list.Where(u => u.ClaimValue.ToLower().Equals("update") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
+                            break;
+                        case "delete":
+                            list = list.Where(u => u.ClaimValue.ToLower().Equals("delete") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
+                            break;
+                        case "view":
+                            list = list.Where(u => u.ClaimValue.ToLower().Equals("view") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
                             break;
                         default:
                             list = list.Where(u => u.ClaimValue.ToLower().Contains(search.ToLower()) || u.ClaimType.ToLower().Contains(search.ToLower())).ToList();
