@@ -5,13 +5,8 @@ using System.Linq.Expressions;
 
 namespace backend_api.Repository.IRepository
 {
-    public interface IClaimRepository
+    public interface IClaimRepository : IRepository<ApplicationClaim>
     {
-        Task<ApplicationClaim> GetAsync(int claimId);
-        Task<ApplicationClaim> CreateAsync(ApplicationClaim claim);
         Task<ApplicationClaim> UpdateAsync(ApplicationClaim claim);
-        Task<ApplicationClaim> GetByIdAsync(int id);
-        Task<bool> RemoveAsync(ApplicationClaim claim);
-        Task<List<ApplicationClaim>> GetAllAsync();
     }
 }
