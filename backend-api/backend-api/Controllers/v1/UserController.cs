@@ -29,6 +29,77 @@ namespace backend_api.Controllers.v1
             _response = new();
         }
 
+        [HttpDelete("claim/{userId}")]
+        public async Task<ActionResult<APIResponse>> RemoveClaimByUserId(string userId, UserClaimDTO userClaimDTO)
+        {
+            try
+            {
+                if (!userId.Equals(userClaimDTO.UserId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    return BadRequest(_response);
+                }
+                var result = await _userRepository.RemoveClaimByUserId(userId, userClaimDTO.UserClaimIds);
+                if (!result)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    _response.IsSuccess = true;
+                    _response.StatusCode = HttpStatusCode.OK;
+                    return Ok(_response);
+                }
+            }catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPost("claim/{userId}")]
+        public async Task<ActionResult<APIResponse>> AddClaimToUser(string userId, UserClaimDTO userClaimDTO)
+        {
+            try
+            {
+                if (!userId.Equals(userClaimDTO.UserId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    return BadRequest(_response);
+                }
+                var result = await _userRepository.AddClaimToUser(userId, userClaimDTO.UserClaimIds);
+                if (!result)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    _response.IsSuccess = true;
+                    _response.StatusCode = HttpStatusCode.OK;
+                    return Ok(_response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
 
         [HttpPost]
         public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] UserCreateDTO createDTO)

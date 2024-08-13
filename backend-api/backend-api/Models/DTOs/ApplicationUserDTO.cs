@@ -13,5 +13,6 @@
         public IFormFile? Image { get; set; }
         public DateTime? CreatedDate { get; set; }
         public bool IsLockedOut { get; set; }
+        public int UserClaimId {  get; set; }
     }
 }

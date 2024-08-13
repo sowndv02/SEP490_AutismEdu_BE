@@ -26,5 +26,8 @@ namespace backend_api.Repository.IRepository
         Task<bool> RemoveAsync(string userId);
         int GetTotalUser();
         Task<List<ApplicationUser>> GetAllAsync(Expression<Func<ApplicationUser, bool>>? filter = null, string? includeProperties = null, int pageSize = 10, int pageNumber = 1);
+        Task<List<ApplicationUser>> GetListUserByClaim(ApplicationClaim claim);
+        Task<bool> RemoveClaimByUserId(string userId, List<int> userClaimIds);
+        Task<bool> AddClaimToUser(string userId, List<int> claimIds);
     }
 }
