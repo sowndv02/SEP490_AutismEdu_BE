@@ -5,8 +5,10 @@ using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using System.Drawing;
 using System.Net;
+using System.Text.Json;
 
 namespace backend_api.Controllers.v1
 {
@@ -18,20 +20,38 @@ namespace backend_api.Controllers.v1
         private readonly IClaimRepository _claimRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
+        protected int pageSize = 0;
 
-        public ClaimController(IClaimRepository claimRepository, IMapper mapper)
+        public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration)
         {
+            pageSize = configuration.GetValue<int>("APIConfig:PageSize");
             _claimRepository = claimRepository;
             _mapper = mapper;
             _response = new();
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllClaimsAsync()
+        public async Task<ActionResult<APIResponse>> GetAllClaimsAsync([FromQuery] string? search, string? searchType, int pageNumber = 1)
         {
             try
             {
-                List<ApplicationClaim> list = await _claimRepository.GetAllAsync();
+                List<ApplicationClaim> list = await _claimRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                if (!string.IsNullOrEmpty(search) && !string.IsNullOrEmpty(searchType))
+                {
+                    switch (searchType.ToLower())
+                    {
+                        case "type":
+                            list = list.Where(u => u.ClaimType.ToLower().Contains(search.ToLower())).ToList();
+                            break;
+                        default:
+                            list = list.Where(u => u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
+                            break;
+                    }
+                }
+
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = _claimRepository.GetTotalClaim() };
+
+                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination)); 
                 _response.Result = _mapper.Map<List<ClaimDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
@@ -58,7 +78,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                ApplicationClaim model = await _claimRepository.GetAsync(id);
+                ApplicationClaim model = await _claimRepository.GetAsync(x => x.Id == id);
 
                 if (model == null)
                 {
@@ -107,7 +127,8 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                if (claimDTO == null || id != claimDTO.Id)
+                var claim = await _claimRepository.GetAsync(x => x.Id == id);
+                if (claimDTO == null || id != claimDTO.Id || claim == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -115,9 +136,10 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
-                await _claimRepository.UpdateAsync(model);
+                var result = await _claimRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
+                _response.Result = result;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -135,7 +157,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 if (id == 0) return BadRequest();
-                var obj = await _claimRepository.GetAsync(id);
+                var obj = await _claimRepository.GetAsync(x => x.Id == id);
 
                 if (obj == null) return NotFound();
 
