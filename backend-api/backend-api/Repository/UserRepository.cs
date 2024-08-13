@@ -33,6 +33,51 @@ namespace backend_api.Repository
             secretKey = configuration.GetValue<string>("ApiSettings:JWT:Secret");
         }
 
+        public async Task<bool> AddClaimToUser(string userId, List<int> claimIds)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                List<ApplicationClaim> claims = _context.ApplicationClaims.Where(c => claimIds.Contains(c.Id)).ToList();
+                var result = await _userManager.AddClaimsAsync(user, claims.Select(y => new Claim(y.ClaimType, y.ClaimValue)));
+                if (!result.Succeeded) return false;
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> RemoveClaimByUserId(string userId, List<int> userClaimIds)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                var userClaims = _context.UserClaims.Where(c => userClaimIds.Contains(c.Id)).ToList();
+                var result = await _userManager.RemoveClaimsAsync(user, userClaims.Select(x => new Claim(x.ClaimType, x.ClaimValue)));
+                if (!result.Succeeded) return false;
+                return true;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<List<ApplicationUser>> GetListUserByClaim(ApplicationClaim claim)
+        {
+            try
+            {
+                var users = await _userManager.GetUsersForClaimAsync(new Claim(claim.ClaimType, claim.ClaimValue));
+                return users.ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
         public bool IsUniqueUser(string username)
         {
             var user = _context.Users.FirstOrDefault(x => x.UserName == username);
