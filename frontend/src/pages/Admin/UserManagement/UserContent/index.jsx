@@ -1,5 +1,4 @@
 import { Box, Button, TextField, Typography } from '@mui/material'
-import React from 'react'
 import UserTable from './UserTable'
 
 function UserContent() {

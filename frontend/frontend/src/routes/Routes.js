@@ -2,6 +2,7 @@ import Login from '~/pages/Auth/Login'
 import Home from '~/pages/Home'
 import DashBoard from '~/pages/Admin/DashBoard'
 import UserManagement from '~/pages/Admin/UserManagement'
+import RoleClaimManagement from '~/pages/Admin/RoleClaimManagement'
 
 const publicRoutes = [
     {
@@ -22,6 +23,10 @@ const adminRoutes = [
     {
         path: PAGES.USERMANAGEMENT,
         element: UserManagement
+    },
+    {
+        path: PAGES.ROLECLAIMMANAGEMENT,
+        element: RoleClaimManagement
     }
 ]
 export {
