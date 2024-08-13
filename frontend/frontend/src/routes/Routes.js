@@ -3,6 +3,7 @@ import Home from '~/pages/Home'
 import DashBoard from '~/pages/Admin/DashBoard'
 import UserManagement from '~/pages/Admin/UserManagement'
 import RoleClaimManagement from '~/pages/Admin/RoleClaimManagement'
+import ForgotPassword from '~/pages/Auth/ForgotPassword'
 
 const publicRoutes = [
     {
@@ -12,6 +13,10 @@ const publicRoutes = [
     {
         path: '/login',
         element: Login
+    },
+    {
+        path: PAGES.FORGOTPASSWORD,
+        element: ForgotPassword
     }
 ]
 
