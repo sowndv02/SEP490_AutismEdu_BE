@@ -1,21 +1,28 @@
-import { Typography } from "@mui/material"
-import { BrowserRouter, Route, Routes } from "react-router-dom"
-import routes from "./routes/Routes"
-
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import AdminLayout from "./layout/AdminLayout";
+import { adminRoutes, publicRoutes } from "./routes/Routes";
 
 function App() {
-
   return (
     <>
       <BrowserRouter>
         <Routes>
-          {routes.routes.map((route) => (
+          {publicRoutes.map((route) => (
             <Route
               key={route.path}
               path={route.path}
               element={<route.element />}
             />
           ))}
+          <Route path="/admin" element={<AdminLayout />}>
+            {adminRoutes.map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={<route.element/>}
+              />
+            ))}
+          </Route>
         </Routes>
       </BrowserRouter>
     </>
