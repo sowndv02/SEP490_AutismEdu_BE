@@ -29,5 +29,8 @@ namespace backend_api.Repository.IRepository
         Task<List<ApplicationUser>> GetListUserByClaim(ApplicationClaim claim);
         Task<bool> RemoveClaimByUserId(string userId, List<int> userClaimIds);
         Task<bool> AddClaimToUser(string userId, List<int> claimIds);
+        Task<string> GeneratePasswordResetTokenAsync(ApplicationUser user);
+        Task<bool> ResetPasswordAsync(ApplicationUser user, string code, string password);
+
     }
 }
