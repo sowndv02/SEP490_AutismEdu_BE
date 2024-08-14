@@ -11,7 +11,7 @@ if (token != undefined && token.length != 0) {
 }
 
 const axiosInstance = axios.create({
-  baseURL: process.env.VUE_APP_API_URL,
+  baseURL: "https://api.restful-api.dev/", // replace project base url later
   timeout: 80000,
   headers,
 });

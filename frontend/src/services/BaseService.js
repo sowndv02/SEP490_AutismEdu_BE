@@ -5,7 +5,7 @@ let prefix = '';
 
 // Initializes the service with an axios instance and prefix
 const initializeService = (axiosInstance, prefixValue) => {
-  api = axiosInstance;
+  api = axiosInstance.axiosInstance;
   prefix = prefixValue;
 };
 
@@ -102,7 +102,7 @@ const urlParse = (obj, query = false) => {
   return query ? `?${str.join('&')}&${query}` : `?${str.join('&')}`;
 };
 
-export const method = {
+export {
   initializeService,
   get,
   post,
