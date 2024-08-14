@@ -1,10 +1,21 @@
 {
   "dependencies": {
     "apis1": {
+      "ignored": "true",
       "type": "apis"
     },
+    "identityapp1": {
+      "ignored": "true",
+      "type": "identityapp"
+    },
+    "mssql1": {
+      "ignored": "true",
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:DefaultSQLConnection"
+    },
     "apis2": {
-      "type": "apis"
+      "ignored": "true",
+      "type": "apis.azure"
     }
   }
 }

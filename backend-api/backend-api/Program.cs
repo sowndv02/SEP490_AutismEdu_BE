@@ -156,7 +156,7 @@ app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "SEP490");
-    //options.RoutePrefix = string.Empty;
+    options.RoutePrefix = string.Empty;
 });
 
 
