@@ -44,16 +44,16 @@ namespace backend_api.Controllers.v1
                             list = list.Where(u => u.ClaimType.ToLower().Equals("create") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
                             break;
                         case "update":
-                            list = list.Where(u => u.ClaimValue.ToLower().Equals("update") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
+                            list = list.Where(u => u.ClaimType.ToLower().Equals("update") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
                             break;
                         case "delete":
-                            list = list.Where(u => u.ClaimValue.ToLower().Equals("delete") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
+                            list = list.Where(u => u.ClaimType.ToLower().Equals("delete") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
                             break;
                         case "view":
-                            list = list.Where(u => u.ClaimValue.ToLower().Equals("view") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
+                            list = list.Where(u => u.ClaimType.ToLower().Equals("view") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
                             break;
                         default:
-                            list = list.Where(u => u.ClaimValue.ToLower().Contains(search.ToLower()) || u.ClaimType.ToLower().Contains(search.ToLower())).ToList();
+                            list = list.Where(u => u.ClaimType.ToLower().Contains(search.ToLower()) || u.ClaimType.ToLower().Contains(search.ToLower())).ToList();
                             break;
                     }
                 }
@@ -136,7 +136,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var claim = await _claimRepository.GetAsync(x => x.Id == id);
+                var claim = await _claimRepository.GetAsync(x => x.Id == id, false);
                 if (claimDTO == null || id != claimDTO.Id || claim == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -166,7 +166,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 if (id == 0) return BadRequest();
-                var obj = await _claimRepository.GetAsync(x => x.Id == id);
+                var obj = await _claimRepository.GetAsync(x => x.Id == id, false);
 
                 if (obj == null) return NotFound();
 
