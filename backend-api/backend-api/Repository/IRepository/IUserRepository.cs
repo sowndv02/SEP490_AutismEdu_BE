@@ -16,7 +16,7 @@ namespace backend_api.Repository.IRepository
         Task RevokeRefreshToken(TokenDTO tokenDTO);
 
         Task<ApplicationUser> GetAsync(Expression<Func<ApplicationUser, bool>>? filter = null, bool tracked = true, string? includeProperties = null);
-        Task<List<Claim>> GetClaimByUserIdAsync(string userId);
+        Task<List<UserClaim>> GetClaimByUserIdAsync(string userId);
         Task<ApplicationUser> GetUserByEmailAsync(string email);
         Task<ApplicationUser> LockoutUser(string userId);
         Task<ApplicationUser> UnlockUser(string userId);
