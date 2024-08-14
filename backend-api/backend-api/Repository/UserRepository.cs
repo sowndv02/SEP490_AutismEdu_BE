@@ -618,7 +618,7 @@ namespace backend_api.Repository
             return users;
         }
 
-        public async Task<List<Claim>> GetClaimByUserIdAsync(string userId)
+        public async Task<List<UserClaim>> GetClaimByUserIdAsync(string userId)
         {
             try
             {
@@ -626,8 +626,8 @@ namespace backend_api.Repository
                 
                 if (user != null)
                 {
-                    var userClaims = await _userManager.GetClaimsAsync(user);
-                    return userClaims.ToList();
+                    var userClaims = await _context.UserClaims.Where(x => x.UserId == userId).ToListAsync();
+                    return _mapper.Map<List<UserClaim>>(userClaims);
                 }
                 return null;
             }
