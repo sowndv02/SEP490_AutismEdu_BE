@@ -5,6 +5,7 @@ import DashBoard from '~/pages/Admin/DashBoard'
 import UserManagement from '~/pages/Admin/UserManagement'
 import RoleClaimManagement from '~/pages/Admin/RoleClaimManagement'
 import ForgotPassword from '~/pages/Auth/ForgotPassword'
+import Register from '~/pages/Auth/Register'
 
 const publicRoutes = [
     {
@@ -18,6 +19,10 @@ const publicRoutes = [
     {
         path: PAGES.FORGOTPASSWORD,
         element: ForgotPassword
+    },
+    {
+        path: PAGES.REGISTER,
+        element: Register
     }
 ]
 
