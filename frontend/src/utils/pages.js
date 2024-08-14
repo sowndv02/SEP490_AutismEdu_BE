@@ -5,6 +5,7 @@ const PAGES = {
   USERMANAGEMENT: '/admin/user-management',
   ROLECLAIMMANAGEMENT: '/admin/role-claim-management',
   FORGOTPASSWORD: '/forgot-password',
+  REGISTER: '/register',
 };
 
 export default PAGES;
