@@ -10,6 +10,7 @@ import TrelloIcon from '~/assets/trello.svg?react';
 import GoogleIcon from '@mui/icons-material/Google';
 import { Link } from 'react-router-dom';
 import PAGES from '~/utils/pages';
+import services from '~/plugins/services';
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState(null);
@@ -49,7 +50,6 @@ function Login() {
     }
   }
   const handleSubmit = () => {
-
   }
   return (
     <Box sx={{ bgcolor: "#f7f7f9", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -118,7 +118,7 @@ function Login() {
           </Box>
           <Button variant='contained' sx={{ width: "100%", marginTop: "20px" }}>Sign In</Button>
 
-          <Typography sx={{ textAlign: "center", mt: "20px" }}>New on our platform? <Link to={PAGES.FORGOTPASSWORD} style={{ color: "#666cff" }}>Create an account</Link></Typography>
+          <Typography sx={{ textAlign: "center", mt: "20px" }}>New on our platform? <Link to={PAGES.REGISTER} style={{ color: "#666cff" }}>Create an account</Link></Typography>
           <Divider sx={{ mt: "15px" }}>or</Divider>
           <Box sx={{ display: "flex", justifyContent: "center" }}>
             <IconButton>
