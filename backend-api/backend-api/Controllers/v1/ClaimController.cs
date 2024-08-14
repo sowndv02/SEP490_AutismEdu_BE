@@ -136,8 +136,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var claim = await _claimRepository.GetAsync(x => x.Id == id);
-                if (claimDTO == null || id != claimDTO.Id || claim == null)
+                if (claimDTO == null || id != claimDTO.Id)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -145,10 +144,8 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
-                var result = await _claimRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
-                _response.Result = result;
                 return Ok(_response);
             }
             catch (Exception ex)
