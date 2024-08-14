@@ -8,11 +8,13 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import TrelloIcon from '~/assets/trello.svg?react';
 import GoogleIcon from '@mui/icons-material/Google';
+import service from '~/plugins/services'
+
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState(null);
   const [passwordError, setPasswordError] = useState(null);
-  const [email, setEmail] = useState()
+  const [email, setEmail] = useState([]);
   const INPUT_CSS = {
     width: "100%",
     borderRadius: "15px",
@@ -47,7 +49,12 @@ function Login() {
     }
   }
   const handleSubmit = () => {
-
+    service.AuthenticationAPI.getData({}, (res) => {  
+      console.log("data", res);
+      
+    }, (err) => {
+      console.log(err);
+    })
   }
   return (
     <Box sx={{ bgcolor: "#f7f7f9", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -114,7 +121,7 @@ function Login() {
           <Box sx={{ width: "100%", textAlign: "end", marginTop: "15px" }}>
             <a href='' style={{ color: "#666cff" }}>Forgot Password?</a>
           </Box>
-          <Button variant='contained' sx={{ width: "100%", marginTop: "20px" }}>Sign In</Button>
+          <Button variant='contained' sx={{ width: "100%", marginTop: "20px" }} onClick={handleSubmit}>Sign In</Button>
 
           <Typography sx={{ textAlign: "center", mt: "20px" }}>New on our platform? <a href='' style={{ color: "#666cff" }}>Create an account</a></Typography>
           <Divider sx={{ mt: "15px" }}>or</Divider>
