@@ -3,8 +3,6 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -32,7 +30,7 @@ namespace backend_api.Controllers
 
         [HttpPost("reset-password")]
         [AllowAnonymous]
-        public async Task<IActionResult> ForgotPassword(ResetPasswordDTO model)
+        public async Task<IActionResult> ResetPassword(ResetPasswordDTO model)
         {
 
             try
@@ -41,7 +39,7 @@ namespace backend_api.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages.Add("Data invalid.");
+                    _response.ErrorMessages = new List<string>() { "Data invalid." };
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetUserByEmailAsync(model.Email);
@@ -49,7 +47,7 @@ namespace backend_api.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages.Add($"User not found with email is {model.Email} invalid.");
+                    _response.ErrorMessages = new List<string>() { $"User not found with email is {model.Email} invalid." };
                     return BadRequest(_response);
                 }
                 var result = await _userRepository.ResetPasswordAsync(user, model.Code, model.Password);
@@ -77,32 +75,28 @@ namespace backend_api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordDTO forgotPasswordDTO)
         {
-            
+
             try
             {
                 if (forgotPasswordDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages.Add("Data invalid.");
+                    _response.ErrorMessages = new List<string>() { "Data invalid." };
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetUserByEmailAsync(forgotPasswordDTO.Email);
-                if(user == null)
+                if (user == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages.Add($"User not found with email is {forgotPasswordDTO.Email} invalid.");
+                    _response.ErrorMessages = new List<string>() { $"User not found with email is {forgotPasswordDTO.Email} invalid." };
                     return BadRequest(_response);
                 }
                 var code = await _userRepository.GeneratePasswordResetTokenAsync(user);
 
-                // TODO: UPDATE callback url
-                var callbackUrl = Url.Action("ResetPassword", "Account", new
-                {
-                    userId = user.Id,
-                    code
-                }, protocol: HttpContext.Request.Scheme);
+                var callbackUrl = $"{SD.URL_FE}/reset-password?userId={user.Id}&code={code}";
+
                 await _emailSender.SendEmailAsync(forgotPasswordDTO.Email, "Reset password", $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
 
                 _response.StatusCode = HttpStatusCode.OK;
@@ -128,14 +122,14 @@ namespace backend_api.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages.Add("User is currently locked out.");
+                    _response.ErrorMessages = new List<string>() { "User is currently locked out." };
                     return BadRequest(_response);
                 }
                 if (string.IsNullOrEmpty(tokenDto.AccessToken))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages.Add("Username or password is incorrect");
+                    _response.ErrorMessages = new List<string>() { "Username or password is incorrect" };
                     return BadRequest(_response);
                 }
                 _response.StatusCode = HttpStatusCode.OK;
@@ -163,7 +157,7 @@ namespace backend_api.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages.Add("Username already exists");
+                    _response.ErrorMessages = new List<string>() { "Username already exists" };
                     return BadRequest(_response);
                 }
 
@@ -172,7 +166,7 @@ namespace backend_api.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages.Add("Error while registering");
+                    _response.ErrorMessages = new List<string>() { "Error while registering" };
                     return BadRequest(_response);
                 }
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
@@ -183,7 +177,8 @@ namespace backend_api.Controllers
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
@@ -204,7 +199,7 @@ namespace backend_api.Controllers
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
-                        _response.ErrorMessages.Add("Token Invalid");
+                        _response.ErrorMessages = new List<string>() { "Token Invalid" };
                         return BadRequest(_response);
                     }
                     _response.StatusCode = HttpStatusCode.OK;
@@ -216,7 +211,7 @@ namespace backend_api.Controllers
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages.Add("Error while refresh token");
+                    _response.ErrorMessages = new List<string>() { "Error while refresh token" };
                     return BadRequest(_response);
                 }
             }
@@ -243,7 +238,7 @@ namespace backend_api.Controllers
                 }
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.Result = "Invalid Input";
+                _response.ErrorMessages = new List<string> { "Invalid Input" };
                 return BadRequest(_response);
             }
             catch (Exception ex)
@@ -255,7 +250,7 @@ namespace backend_api.Controllers
             }
         }
 
-        
+
 
 
     }

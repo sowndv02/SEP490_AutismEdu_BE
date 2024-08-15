@@ -1,24 +1,22 @@
+using backend_api;
+using backend_api.Authorize;
 using backend_api.Data;
-using backend_api.Repository.IRepository;
-using backend_api.Repository;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using backend_api.Mapper;
+using backend_api.Models;
+using backend_api.Repository;
+using backend_api.Repository.IRepository;
+using backend_api.Services;
+using backend_api.Services.IServices;
+using backend_api.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
-using backend_api.Swagger;
-using backend_api.Models;
-using backend_api.Services;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using backend_api;
-using backend_api.Services.IServices;
-using backend_api.Authorize;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +31,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins("http://localhost:5173")
+            builder.WithOrigins(SD.URL_FE)
                    .AllowAnyHeader()
                    .AllowAnyMethod();
         });

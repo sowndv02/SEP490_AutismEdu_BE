@@ -8,5 +8,6 @@
         public const string UrlImageUser = "UserImages";
         public const string UrlImageDefault = "https://placehold.co/600x400";
         public const string UrlImageAvatarDefault = "default-avatar.png";
+        public const string URL_FE = "http://localhost:5173";
     }
 }
