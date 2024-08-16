@@ -1,0 +1,31 @@
+name: sep-api
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v4.0.0
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore ./backend-api/backend-api.csproj
+
+      - name: Build the project
+        run: dotnet build ./backend-api/backend-api.csproj --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test ./backend-api/backend-api.csproj --no-build --verbosity normal
