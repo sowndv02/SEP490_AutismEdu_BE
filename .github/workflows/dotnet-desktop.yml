@@ -22,10 +22,10 @@ jobs:
           dotnet-version: 6.0.x
 
       - name: Restore dependencies
-        run: dotnet restore SEP490/tree/main/backend-api/backend-api/backend-api.csproj
+        run: dotnet restore ./backend-api//backend-apibackend-api.csproj
 
       - name: Build the project
-        run: dotnet build SEP490/tree/main/backend-api/backend-api/backend-api.csproj --no-restore --configuration Release
+        run: dotnet build ./backend-api/backend-api/backend-api.csproj --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test SEP490/tree/main/backend-api/backend-api/backend-api.csproj --no-build --verbosity normal
+        run: dotnet test ./backend-api/backend-api/backend-api.csproj --no-build --verbosity normal
