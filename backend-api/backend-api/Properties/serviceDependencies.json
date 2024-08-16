@@ -14,8 +14,7 @@
       "connectionId": "ConnectionStrings:DefaultSQLConnection"
     },
     "apis2": {
-      "ignored": "true",
-      "type": "apis.azure"
+      "type": "apis"
     }
   }
 }
