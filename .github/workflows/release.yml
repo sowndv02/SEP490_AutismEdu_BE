@@ -27,13 +27,13 @@ jobs:
         run: dotnet build ./backend-api/backend-api/backend-api.csproj --no-restore --configuration Release
 
       - name: Publish the project
-        run: dotnet publish ./backend-api/backend-api/backend-api.csproj -o ${{ github.workspace }}/api --no-build
+        run: dotnet publish ./backend-api/backend-api/backend-api.csproj -o ${{ env.DOTNET_ROOT }}/api --no-build
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.3.1
         with:
           name: api-artifact
-          path: ${{ github.workspace }}/api
+          path: ${{ env.DOTNET_ROOT }}/api
 
   deploy-dev:
     runs-on: ubuntu-latest
