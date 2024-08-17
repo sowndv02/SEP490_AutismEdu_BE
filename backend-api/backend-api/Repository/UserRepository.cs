@@ -33,6 +33,97 @@ namespace backend_api.Repository
             secretKey = configuration.GetValue<string>("ApiSettings:JWT:Secret");
         }
 
+
+        public async Task<List<IdentityRole>> GetRoleByUserIdAsync(string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+
+                if (user != null)
+                {
+                    var roleNames = await _userManager.GetRolesAsync(user);
+                    var roles = new List<IdentityRole>();
+
+                    foreach (var roleName in roleNames)
+                    {
+                        var role = await _roleManager.FindByNameAsync(roleName);
+                        if (role != null)
+                        {
+                            roles.Add(role);
+                        }
+                    }
+
+                    return roles;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> RemoveRoleByUserId(string userId, List<string> userRoleIds)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return false;
+                }
+
+                foreach (var roleId in userRoleIds)
+                {
+                    var role = await _roleManager.FindByIdAsync(roleId);
+                    if (role == null)
+                    {
+                        continue;
+                    }
+
+                    var result = await _userManager.RemoveFromRoleAsync(user, role.Name);
+                    if (!result.Succeeded)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> AddRoleToUser(string userId, List<string> roleIds)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                foreach (var roleId in roleIds)
+                {
+                    var role = await _roleManager.FindByIdAsync(roleId);
+                    if (role == null)
+                    {
+                        continue;
+                    }
+
+                    var result = await _userManager.AddToRoleAsync(user, role.Name);
+                    if (!result.Succeeded)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<string> GeneratePasswordResetTokenAsync(ApplicationUser user)
         {
             try
@@ -648,5 +739,7 @@ namespace backend_api.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        
     }
 }

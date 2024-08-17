@@ -29,6 +29,103 @@ namespace backend_api.Controllers.v1
             _response = new();
         }
 
+        [HttpGet("role/{id}")]
+        public async Task<ActionResult<APIResponse>> GetRoleByUserId(string id)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(id))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{id} is invalid!" };
+                    return BadRequest(_response);
+                }
+                var exsitingUserRoles = await _userRepository.GetRoleByUserIdAsync(id);
+                _response.Result = _mapper.Map<List<RoleDTO>>(exsitingUserRoles);
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpDelete("role/{userId}")]
+        public async Task<ActionResult<APIResponse>> RemoveRoleByUserId(string userId, UserRoleDTO userRoleDTO)
+        {
+            try
+            {
+                if (!userId.Equals(userRoleDTO.UserId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    return BadRequest(_response);
+                }
+                var result = await _userRepository.RemoveRoleByUserId(userId, userRoleDTO.UserRoleIds);
+                if (!result)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    _response.IsSuccess = true;
+                    _response.StatusCode = HttpStatusCode.OK;
+                    return Ok(_response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPost("role/{userId}")]
+        public async Task<ActionResult<APIResponse>> AddRoleToUser(string userId, UserRoleDTO userRoleDTO)
+        {
+            try
+            {
+                if (!userId.Equals(userRoleDTO.UserId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    return BadRequest(_response);
+                }
+                var result = await _userRepository.AddRoleToUser(userId, userRoleDTO.UserRoleIds);
+                if (!result)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    _response.IsSuccess = true;
+                    _response.StatusCode = HttpStatusCode.OK;
+                    return Ok(_response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
         [HttpDelete("claim/{userId}")]
         public async Task<ActionResult<APIResponse>> RemoveClaimByUserId(string userId, UserClaimDTO userClaimDTO)
         {
