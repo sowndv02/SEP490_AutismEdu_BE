@@ -1,5 +1,6 @@
 using backend_api;
 using backend_api.Authorize;
+using backend_api.Authorize.Requirements;
 using backend_api.Data;
 using backend_api.Mapper;
 using backend_api.Models;
@@ -50,6 +51,8 @@ builder.Services.AddScoped<IClaimRepository, ClaimRepository>();
 builder.Services.AddScoped<INumberOfDaysForAccount, NumberOfDaysForAccount>();
 builder.Services.AddScoped<IAuthorizationHandler, AdminWithOver1000DaysHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, FirstNameAuthHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, AssignRoleHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, AssignClaimHandler>();
 
 
 
@@ -134,6 +137,13 @@ builder.Services.AddAuthorization(option =>
     // requirement is claim 
     option.AddPolicy("FirstNameAuth", p => p.Requirements.Add(new FirstNameAuthRequirement("test")));
 
+    // Define policy for checking assign-role
+    option.AddPolicy("AssignRolePolicy", policy =>
+        policy.Requirements.Add(new AssignRoleRequirement("Assign", "Role")));
+
+    // Define policy for checking assign-claim
+    option.AddPolicy("AssignClaimPolicy", policy =>
+        policy.Requirements.Add(new AssignClaimRequirement("Assign", "Claim")));
 
 });
 
