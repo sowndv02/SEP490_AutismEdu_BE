@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace backend_api.Controllers
 {
@@ -27,6 +28,49 @@ namespace backend_api.Controllers
             _emailSender = emailSender;
         }
 
+
+        [HttpPost("confirm-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(ConfirmEmailDTO model)
+        {
+
+            try
+            {
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Data invalid." };
+                    return BadRequest(_response);
+                }
+                var user = await _userRepository.GetAsync(x => x.Id == model.UserId);
+                if (user == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { $"User not found with email is {model.UserId} invalid." };
+                    return BadRequest(_response);
+                }
+                var result = await _userRepository.ConfirmEmailAsync(user, model.Code);
+                if (!result)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Internal server error!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
         [HttpPost("reset-password")]
         [AllowAnonymous]
@@ -174,6 +218,11 @@ namespace backend_api.Controllers
                 user.ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
                 user.CreatedDate = DateTime.Now;
                 await _userRepository.UpdateAsync(user);
+                string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
+
+                var callbackUrl = $"{SD.URL_FE}/confirm-register?userId={user.Id}&code={code}";
+                await _emailSender.SendEmailAsync(user.Email, "Confirm Email", $"Please confirm email by clicking here: <a href='{callbackUrl}'>link</a>");
+
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
