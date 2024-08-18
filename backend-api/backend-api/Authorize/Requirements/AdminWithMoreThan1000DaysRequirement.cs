@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace backend_api.Authorize
+namespace backend_api.Authorize.Requirements
 {
     public class AdminWithMoreThan1000DaysRequirement : IAuthorizationRequirement
     {
