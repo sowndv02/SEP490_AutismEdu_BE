@@ -30,7 +30,9 @@ namespace backend_api.Repository.IRepository
         Task<bool> RemoveClaimByUserId(string userId, List<int> userClaimIds);
         Task<bool> AddClaimToUser(string userId, List<int> claimIds);
         Task<string> GeneratePasswordResetTokenAsync(ApplicationUser user);
+        Task<string> GenerateEmailConfirmationTokenAsync(ApplicationUser user);
         Task<bool> ResetPasswordAsync(ApplicationUser user, string code, string password);
+        Task<bool> ConfirmEmailAsync(ApplicationUser user, string code);
 
     }
 }
