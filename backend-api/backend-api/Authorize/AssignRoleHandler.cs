@@ -5,12 +5,12 @@ using System.Security.Claims;
 
 namespace backend_api.Authorize
 {
-    public class AdminWithOver1000DaysHandler : AuthorizationHandler<AdminWithMoreThan1000DaysRequirement>
+    public class AssignRoleHandler : AuthorizationHandler<AssignRoleHandler>
     {
 
         private readonly INumberOfDaysForAccount _numberOfDaysForAccount;
 
-        public AdminWithOver1000DaysHandler(INumberOfDaysForAccount numberOfDaysForAccount)
+        public AssignRoleHandler(INumberOfDaysForAccount numberOfDaysForAccount)
         {
             _numberOfDaysForAccount = numberOfDaysForAccount;
         }

@@ -92,5 +92,21 @@ namespace backend_api.Controllers
         {
             return Ok();
         }
+
+
+        [HttpGet("assign-role")]
+        [Authorize(Policy = "AssignRolePolicy")]
+        public IActionResult AssignRoleAccess()
+        {
+            return Ok();
+        }
+
+        [HttpGet("assign-claim")]
+        [Authorize(Policy = "AssignClaimPolicy")]
+        public IActionResult AssignClaimAccess()
+        {
+            return Ok();
+        }
+
     }
 }
