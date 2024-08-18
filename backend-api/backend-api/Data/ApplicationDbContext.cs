@@ -50,7 +50,9 @@ namespace backend_api.Data
 
                 new ApplicationClaim { Id = 10, ClaimType = "Create", ClaimValue = "User", CreatedDate = DateTime.Now },
                 new ApplicationClaim { Id = 11, ClaimType = "Delete", ClaimValue = "User", CreatedDate = DateTime.Now },
-                new ApplicationClaim { Id = 12, ClaimType = "Update", ClaimValue = "User", CreatedDate = DateTime.Now }
+                new ApplicationClaim { Id = 12, ClaimType = "Update", ClaimValue = "User", CreatedDate = DateTime.Now },
+                new ApplicationClaim { Id = 13, ClaimType = "Assign", ClaimValue = "Role", CreatedDate = DateTime.Now },
+                new ApplicationClaim { Id = 13, ClaimType = "Assign", ClaimValue = "Claim", CreatedDate = DateTime.Now }
             );
            
         }
