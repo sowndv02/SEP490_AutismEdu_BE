@@ -33,6 +33,38 @@ namespace backend_api.Repository
             secretKey = configuration.GetValue<string>("ApiSettings:JWT:Secret");
         }
 
+        public async Task<bool> ConfirmEmailAsync(ApplicationUser user, string code)
+        {
+            try
+            {
+                var result = await _userManager.ConfirmEmailAsync(user, code);
+                if (result.Succeeded)
+                {
+                    return true;
+                }
+                else
+                {
+                    throw new Exception(result.Errors.FirstOrDefault().Description);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<string> GenerateEmailConfirmationTokenAsync(ApplicationUser user)
+        {
+            try
+            {
+                return await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<string> GeneratePasswordResetTokenAsync(ApplicationUser user)
         {
             try
@@ -56,7 +88,7 @@ namespace backend_api.Repository
                 }
                 else
                 {
-                    throw new Exception(result.Errors.FirstOrDefault().ToString());
+                    throw new Exception(result.Errors.FirstOrDefault().Description);
                 }
             }
             catch (Exception ex)
@@ -192,7 +224,7 @@ namespace backend_api.Repository
                 }
                 else
                 {
-                    throw new Exception(result.Errors.FirstOrDefault().ToString());
+                    throw new Exception(result.Errors.FirstOrDefault().Description);
                 }
             }
             catch (Exception ex)

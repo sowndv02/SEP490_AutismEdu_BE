@@ -75,7 +75,7 @@ builder.Services.Configure<IdentityOptions>(opt =>
     opt.Password.RequireNonAlphanumeric = false;
     opt.Lockout.MaxFailedAccessAttempts = 5;
     opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
-    opt.SignIn.RequireConfirmedEmail = false;
+    opt.SignIn.RequireConfirmedEmail = true;
 });
 
 
