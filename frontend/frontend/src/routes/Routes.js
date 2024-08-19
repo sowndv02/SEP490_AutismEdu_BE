@@ -5,6 +5,7 @@ import UserManagement from '~/pages/Admin/UserManagement'
 import RoleClaimManagement from '~/pages/Admin/RoleClaimManagement'
 import ForgotPassword from '~/pages/Auth/ForgotPassword'
 import Register from '~/pages/Auth/Register'
+import ResetPassword from '~/pages/Auth/ResetPassword'
 
 const publicRoutes = [
     {
@@ -22,6 +23,10 @@ const publicRoutes = [
     {
         path: PAGES.REGISTER,
         element: Register
+    },
+    {
+        path: PAGES.RESETPASSWORD,
+        element: ResetPassword
     }
 ]
 

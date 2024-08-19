@@ -10,7 +10,8 @@ import TrelloIcon from '~/assets/trello.svg?react';
 import GoogleIcon from '@mui/icons-material/Google';
 import { Link } from 'react-router-dom';
 import PAGES from '~/utils/pages';
-import services from '~/plugins/services';
+import service from '~/plugins/services'
+
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState(null);
@@ -50,6 +51,11 @@ function Login() {
     }
   }
   const handleSubmit = () => {
+    service.AuthenticationAPI.getData({}, (res) => {
+      console.log("data", res);
+    }, (err) => {
+      console.log(err);
+    })
   }
   return (
     <Box sx={{ bgcolor: "#f7f7f9", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -84,7 +90,7 @@ function Login() {
               }
             </FormControl>
             <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
-              <InputLabel htmlFor="password">Password</InputLabel>
+              <InputLabel htmlFor="password">New Password</InputLabel>
               <OutlinedInput
                 error={passwordError}
                 id="password"
