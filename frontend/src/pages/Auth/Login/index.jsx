@@ -10,12 +10,13 @@ import TrelloIcon from '~/assets/trello.svg?react';
 import GoogleIcon from '@mui/icons-material/Google';
 import { Link } from 'react-router-dom';
 import PAGES from '~/utils/pages';
-import services from '~/plugins/services';
+import service from '~/plugins/services'
+
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState(null);
   const [passwordError, setPasswordError] = useState(null);
-  const [email, setEmail] = useState()
+  const [email, setEmail] = useState([]);
   const INPUT_CSS = {
     width: "100%",
     borderRadius: "15px",
@@ -50,6 +51,11 @@ function Login() {
     }
   }
   const handleSubmit = () => {
+    service.AuthenticationAPI.getData({}, (res) => {
+      console.log("data", res);
+    }, (err) => {
+      console.log(err);
+    })
   }
   return (
     <Box sx={{ bgcolor: "#f7f7f9", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -84,7 +90,7 @@ function Login() {
               }
             </FormControl>
             <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
-              <InputLabel htmlFor="password">Password</InputLabel>
+              <InputLabel htmlFor="password">New Password</InputLabel>
               <OutlinedInput
                 error={passwordError}
                 id="password"
@@ -116,7 +122,7 @@ function Login() {
           <Box sx={{ width: "100%", textAlign: "end", marginTop: "15px" }}>
             <Link to={PAGES.FORGOTPASSWORD} style={{ color: "#666cff" }}>Forgot Password?</Link>
           </Box>
-          <Button variant='contained' sx={{ width: "100%", marginTop: "20px" }}>Sign In</Button>
+          <Button variant='contained' sx={{ width: "100%", marginTop: "20px" }} onClick={handleSubmit}>Sign In</Button>
 
           <Typography sx={{ textAlign: "center", mt: "20px" }}>New on our platform? <Link to={PAGES.REGISTER} style={{ color: "#666cff" }}>Create an account</Link></Typography>
           <Divider sx={{ mt: "15px" }}>or</Divider>

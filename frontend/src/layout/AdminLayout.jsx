@@ -1,7 +1,7 @@
-import { Box } from '@mui/material'
-import AdminHeader from '~/components/AdminHeader'
-import AdminLeftBar from '~/components/AdminLeftBar'
+import { Box } from '@mui/material';
 import { Outlet } from 'react-router-dom';
+import AdminHeader from '~/components/AdminHeader';
+import AdminLeftBar from '~/components/AdminHeader';
 function AdminLayout() {
     return (
         <Box sx={{ bgcolor: "#f7f7f9", height: "100vh", display: "flex", gap: "2" }}>
