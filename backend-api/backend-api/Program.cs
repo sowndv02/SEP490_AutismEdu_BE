@@ -189,6 +189,7 @@ void ApplyMigration()
         {
             _db.Database.Migrate();
         }
+        _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
     }
 }
 
@@ -200,3 +201,5 @@ bool AdminRole_CreateEditDeleteClaim_ORSuperAdminRole(AuthorizationHandlerContex
         && context.User.HasClaim(c => c.Type == "Delete" && c.Value == "True")
     ) || context.User.IsInRole(SD.SuperAdmin);
 }
+
+public partial class Program { }
