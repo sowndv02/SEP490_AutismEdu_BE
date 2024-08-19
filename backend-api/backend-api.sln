@@ -5,8 +5,6 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "backend-api", "backend-api\backend-api.csproj", "{D0ABEBF1-1DD7-4164-BE16-AD60E4E27BE5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "backend-api.Tests", "backend-api.Tests\backend-api.Tests.csproj", "{62A0BC8B-7E2D-4870-87FA-D68B219604D8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{D0ABEBF1-1DD7-4164-BE16-AD60E4E27BE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0ABEBF1-1DD7-4164-BE16-AD60E4E27BE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0ABEBF1-1DD7-4164-BE16-AD60E4E27BE5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{62A0BC8B-7E2D-4870-87FA-D68B219604D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{62A0BC8B-7E2D-4870-87FA-D68B219604D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{62A0BC8B-7E2D-4870-87FA-D68B219604D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{62A0BC8B-7E2D-4870-87FA-D68B219604D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
