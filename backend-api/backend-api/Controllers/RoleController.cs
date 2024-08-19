@@ -57,6 +57,13 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 IdentityRole model = await _roleRepository.GetByNameAsync(name);
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{name} is not found!" };
+                    return NotFound(_response);
+                }
                 _response.Result = _mapper.Map<RoleDTO>(model);
                 return Ok(_response);
             }
@@ -76,12 +83,19 @@ namespace backend_api.Controllers
             {
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { $"{userId} is null or empty!" };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 IdentityRole model = await _roleRepository.GetRoleByUserId(userId);
+                if(model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{userId} is not in role!" };
+                    return BadRequest(_response);
+                }
                 _response.Result = _mapper.Map<RoleDTO>(model);
                 return Ok(_response);
             }
