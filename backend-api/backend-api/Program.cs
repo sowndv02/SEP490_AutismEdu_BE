@@ -9,6 +9,7 @@ using backend_api.Repository.IRepository;
 using backend_api.Services;
 using backend_api.Services.IServices;
 using backend_api.Swagger;
+using backend_api.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -60,7 +61,7 @@ builder.Services.AddScoped<IAuthorizationHandler, AssignClaimHandler>();
 var mailsettings = builder.Configuration.GetSection("MailSettings");
 builder.Services.Configure<MailSettings>(mailsettings);
 builder.Services.AddTransient<IEmailSender, SendMailService>();
-
+builder.Services.AddSingleton<DateTimeEncryption>();
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 builder.Services.AddApiVersioning(options =>
