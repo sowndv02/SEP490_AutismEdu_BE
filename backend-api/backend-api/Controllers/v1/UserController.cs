@@ -165,7 +165,8 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
                 var exsitingUserClaims = await _userRepository.GetClaimByUserIdAsync(id);
-                _response.Result = _mapper.Map<List<ClaimDTO>>(exsitingUserClaims);
+                //_response.Result = _mapper.Map<List<ClaimDTO>>(exsitingUserClaims);
+                _response.Result = exsitingUserClaims;
                 return Ok(_response);
             }
             catch (Exception ex)

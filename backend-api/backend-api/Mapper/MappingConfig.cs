@@ -11,6 +11,7 @@ namespace backend_api.Mapper
         public MappingConfig()
         {
             CreateMap<RoleDTO, IdentityRole>().ReverseMap();
+            CreateMap<UserClaim, ClaimDTO>().ReverseMap();
 
             CreateMap<ApplicationClaim, ClaimDTO>()
                 .ForMember(dest => dest.ClaimType, opt => opt.MapFrom(src => src.ClaimType))

@@ -11,13 +11,13 @@ using System.Security.Claims;
 using System.Text;
 using System.Linq.Expressions;
 using System.Diagnostics;
+using System.Linq;
 
 namespace backend_api.Repository
 {
     public class UserRepository : IUserRepository
     {
         private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -25,11 +25,10 @@ namespace backend_api.Repository
         private string secretKey = string.Empty;
 
         public UserRepository(ApplicationDbContext context, IConfiguration configuration, UserManager<ApplicationUser> userManager, 
-            IMapper mapper, RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager)
+            RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager)
         {
             _signInManager = signInManager; 
             _roleManager = roleManager;
-            _mapper = mapper;
             _userManager = userManager;
             _context = context;
             _configuration = configuration;
@@ -105,9 +104,36 @@ namespace backend_api.Repository
             try
             {
                 var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    throw new ArgumentException("User not found");
+                }
+
                 List<ApplicationClaim> claims = _context.ApplicationClaims.Where(c => claimIds.Contains(c.Id)).ToList();
-                var result = await _userManager.AddClaimsAsync(user, claims.Select(y => new Claim(y.ClaimType, y.ClaimValue)));
-                if (!result.Succeeded) return false;
+
+                // Get the user's current claims
+                var currentClaims = await _userManager.GetClaimsAsync(user);
+
+                // Determine which claims are missing
+                var existingClaims = currentClaims
+                    .Select(c => new { ClaimType = c.Type, ClaimValue = c.Value })
+                    .ToHashSet();
+
+                // Use a HashSet for efficient lookup
+                var missingClaims = claims
+                    .Where(c => !existingClaims.Contains(new { c.ClaimType, c.ClaimValue }))
+                    .Select(c => new Claim(c.ClaimType, c.ClaimValue))
+                    .ToList();
+
+
+                if (missingClaims.Any())
+                {
+                    var result = await _userManager.AddClaimsAsync(user, missingClaims);
+                    if (!result.Succeeded)
+                    {
+                        return false;
+                    }
+                }
                 return true;
 
             }
@@ -122,6 +148,10 @@ namespace backend_api.Repository
             try
             {
                 var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    throw new ArgumentException("User not found");
+                }
                 var userClaims = _context.UserClaims.Where(c => userClaimIds.Contains(c.Id)).ToList();
                 var result = await _userManager.RemoveClaimsAsync(user, userClaims.Select(x => new Claim(x.ClaimType, x.ClaimValue)));
                 if (!result.Succeeded) return false;
@@ -674,8 +704,15 @@ namespace backend_api.Repository
                 
                 if (user != null)
                 {
-                    var userClaims = await _context.UserClaims.Where(x => x.UserId == userId).ToListAsync();
-                    return _mapper.Map<List<UserClaim>>(userClaims);
+                    var userClaims = await _context.UserClaims.Where(x => x.UserId == userId).
+                        Select(c => new UserClaim
+                        {
+                            Id = c.Id,
+                            UserId = c.UserId,
+                            ClaimType = c.ClaimType,
+                            ClaimValue = c.ClaimValue
+                        }).ToListAsync();
+                    return userClaims;
                 }
                 return null;
             }
