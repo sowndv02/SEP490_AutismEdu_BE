@@ -32,13 +32,13 @@ const logError = (e, error) => {
 
       const errors = e.response.data.errors
         ? Object.fromEntries(
-            Object.entries(e.response.data.errors).map(([key, value]) => [key, value[0]])
-          )
+          Object.entries(e.response.data.errors).map(([key, value]) => [key, value[0]])
+        )
         : [];
       error({
-        code: e.response.status,
-        error: errors,
-        responseCode: e.response.data.responseCode,
+        code: e.response.data.statusCode,
+        error: e.response.data.errorMessages,
+        isSuccess: e.response.data.isSuccess
       });
     }
   }
