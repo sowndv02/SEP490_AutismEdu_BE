@@ -28,4 +28,4 @@ jobs:
         run: dotnet build ./backend-api/backend-api/backend-api.csproj --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test
+        run: dotnet test ./backend-api/backend-api/backend-api.csproj --no-build --verbosity normal
