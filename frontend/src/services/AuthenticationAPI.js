@@ -1,4 +1,4 @@
-import {post, get} from '~/services/BaseService';
+import { post, get } from '~/services/BaseService';
 import API_CODE from '~/utils/api_code';
 
 // Function to handle login
@@ -15,8 +15,14 @@ const logout = async (params, success, error) => {
   await post(API_CODE.API_002, params, success, error);
 };
 
+
+const forgotPassword = async (params, success, error) => {
+  await post(API_CODE.API_004, params, success, error);
+}
+
 export const AuthenticationAPI = {
   login,
   logout,
   getData,
+  forgotPassword
 };

@@ -1,17 +1,23 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import { Box, FormControl, FormHelperText, InputLabel, OutlinedInput, SvgIcon } from '@mui/material';
+import { Box, FormControl, FormHelperText, InputLabel, OutlinedInput, Snackbar, SvgIcon } from '@mui/material';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import TrelloIcon from '~/assets/trello.svg?react';
 import PAGES from '~/utils/pages';
+import service from '~/plugins/services'
+import LoadingButton from '@mui/lab/LoadingButton';
+import { useSnackbar } from 'notistack';
 function ForgotPassword() {
     const [emailError, setEmailError] = useState(null);
     const [submited, setSubmited] = useState(false);
-    const [email, setEmail] = useState("")
+    const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
+    const { enqueueSnackbar } = useSnackbar();
+
     const INPUT_CSS = {
         width: "100%",
         borderRadius: "15px",
@@ -21,17 +27,40 @@ function ForgotPassword() {
     };
 
     const checkValid = (e) => {
-        if (e.target.value === "") {
-            setEmailError("Please enter email / username")
-        } else if (e.target.value.length < 6) {
-            setEmailError("Username must be more than 6 characters")
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (e === "") {
+            setEmailError("Please enter email");
+            return false;
+        } else if (e.length < 6) {
+            setEmailError("Username must be more than 6 characters");
+            return false;
+        } else if (!emailRegex.test(e)) {
+            setEmailError("Email is not valid");
+            return false;
         } else {
-            setEmailError(null)
+            setEmailError(null);
+            return true;
         }
-        setEmail(e.target.value)
     }
-    const handleSubmit = () => {
-        setSubmited(true);
+
+    useEffect(() => {
+        if (loading) {
+            handleSubmit();
+        }
+    }, [loading])
+
+    const handleSubmit = async () => {
+        if (emailError === null) {
+            await service.AuthenticationAPI.forgotPassword({
+                email: email
+            }, (res) => {
+                setSubmited(true);
+            }, (err) => {
+                enqueueSnackbar("Email is not valid", { variant: "error" });
+                setLoading(false)
+            })
+            setLoading(false)
+        }
     }
     return (
         <Box sx={{ bgcolor: "#f7f7f9", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -57,8 +86,11 @@ function ForgotPassword() {
                                     <FormControl sx={{ ...INPUT_CSS }} variant="outlined">
                                         <InputLabel htmlFor="email">Email</InputLabel>
                                         <OutlinedInput id="email" label="Email" variant="outlined" type='email'
-                                            onChange={(e) => { checkValid(e) }}
-                                            error={emailError}
+                                            onChange={(e) => {
+                                                checkValid(e.target.value);
+                                                setEmail(e.target.value)
+                                            }}
+                                            error={!!emailError}
                                             value={email}
                                         />
                                         {
@@ -70,10 +102,16 @@ function ForgotPassword() {
                                         }
                                     </FormControl>
                                 </Box>
-                                <Button variant='contained' sx={{ width: "100%", marginTop: "20px" }}
-                                    onClick={handleSubmit}>
+                                <LoadingButton loading={loading} loadingIndicator="Sending..." variant='contained'
+                                    sx={{ width: "100%", marginTop: "20px" }}
+                                    onClick={() => {
+                                        const isValidEmail = checkValid(email);
+                                        if (isValidEmail) {
+                                            setLoading(true);
+                                        }
+                                    }}>
                                     Send Reset Link
-                                </Button>
+                                </LoadingButton>
                             </>
                         )
                     }
@@ -81,8 +119,15 @@ function ForgotPassword() {
                         submited === true && (
                             <>
                                 <Typography mt={"12px"}>The reset link has been sent to email <span style={{ color: "#3795BD" }}>{email}</span></Typography>
-                                <Button>Resent</Button>
-                                <Button onClick={() => setSubmited(false)}>Change email</Button>
+                                <LoadingButton loading={loading} loadingIndicator="Sending..."
+                                    onClick={() => {
+                                        setLoading(true);
+                                    }}>
+                                    Resend
+                                </LoadingButton>
+                                <Button onClick={() => {
+                                    setSubmited(false)
+                                }}>Change email</Button>
                             </>
                         )
                     }
