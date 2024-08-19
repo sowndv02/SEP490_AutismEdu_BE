@@ -19,12 +19,15 @@ namespace backend_api.Repository
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private string secretKey = string.Empty;
 
-        public UserRepository(ApplicationDbContext context, IConfiguration configuration, UserManager<ApplicationUser> userManager, IMapper mapper, RoleManager<IdentityRole> roleManager)
+        public UserRepository(ApplicationDbContext context, IConfiguration configuration, UserManager<ApplicationUser> userManager, 
+            IMapper mapper, RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager)
         {
+            _signInManager = signInManager; 
             _roleManager = roleManager;
             _mapper = mapper;
             _userManager = userManager;
@@ -163,14 +166,25 @@ namespace backend_api.Repository
                     RefreshToken = ""
                 };
             }
-            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
+
+            // Check if the user's email is confirmed
+            if (!user.EmailConfirmed)
             {
-                return null;
+                throw new Exception("Email is not confirmed.");
             }
+
+            // Check if the user is locked out
+            if (user.LockoutEnd != null && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
+            {
+                throw new Exception("User account is locked out.");
+            }
+
             bool isValid = false;
             if (checkPassword)
                 isValid = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
-            else isValid = true;
+            else
+                isValid = true;
+
             if (!isValid)
             {
                 return new TokenDTO()
@@ -178,6 +192,7 @@ namespace backend_api.Repository
                     AccessToken = ""
                 };
             }
+
             var jwtTokenId = $"JTI{Guid.NewGuid()}";
             var accessToken = await GetAccessToken(user, jwtTokenId);
             var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
@@ -189,6 +204,7 @@ namespace backend_api.Repository
             };
             return tokenDTO;
         }
+
 
 
         public async Task<ApplicationUser> Register(RegisterationRequestDTO registerationRequestDTO)

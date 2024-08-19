@@ -135,7 +135,7 @@ namespace backend_api.Controllers
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { $"User not found with email is {forgotPasswordDTO.Email} invalid." };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 var code = await _userRepository.GeneratePasswordResetTokenAsync(user);
 
@@ -231,7 +231,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
