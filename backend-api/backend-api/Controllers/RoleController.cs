@@ -39,7 +39,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -71,7 +71,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -103,7 +103,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -131,7 +131,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -174,7 +174,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

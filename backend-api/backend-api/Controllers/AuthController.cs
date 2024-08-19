@@ -2,6 +2,7 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -15,17 +16,60 @@ namespace backend_api.Controllers
     [ApiVersionNeutral]
     public class AuthController : ControllerBase
     {
+        private readonly DateTimeEncryption _dateTimeEncryption;
         private readonly IUserRepository _userRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
         private string audience = string.Empty;
         private readonly IEmailSender _emailSender;
-        public AuthController(IUserRepository userRepository, IMapper mapper, IConfiguration configuration, IEmailSender emailSender)
+        private static int ValidateTime = 0;
+        public AuthController(IUserRepository userRepository, IMapper mapper, 
+            IConfiguration configuration, IEmailSender emailSender, DateTimeEncryption dateTimeEncryption)
         {
+            ValidateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
+            _dateTimeEncryption = dateTimeEncryption;
             _mapper = mapper;
             _userRepository = userRepository;
             _response = new();
             _emailSender = emailSender;
+        }
+
+        [HttpPost("resend-confirm-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResendConfirmEmail(ResendConfirmEmailDTO model)
+        {
+
+            try
+            {
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Data invalid." };
+                    return BadRequest(_response);
+                }
+                var user = await _userRepository.GetUserByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { $"User not found with email is {model.Email} invalid." };
+                    return BadRequest(_response);
+                }
+                string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
+                var callbackUrl = $"{SD.URL_FE}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
+                await _emailSender.SendEmailAsync(user.Email, "Confirm Email", $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>");
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
         }
 
 
@@ -51,6 +95,14 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string>() { $"User not found with email is {model.UserId} invalid." };
                     return BadRequest(_response);
                 }
+                DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
+                if(security > security.AddMinutes(ValidateTime))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Link Expired." };
+                    return BadRequest(_response);
+                }
                 var result = await _userRepository.ConfirmEmailAsync(user, model.Code);
                 if (!result)
                 {
@@ -67,7 +119,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -94,6 +146,14 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string>() { $"User not found with email is {model.Email} invalid." };
                     return BadRequest(_response);
                 }
+                DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
+                if (security > security.AddMinutes(ValidateTime))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Link Expired." };
+                    return BadRequest(_response);
+                }
                 var result = await _userRepository.ResetPasswordAsync(user, model.Code, model.Password);
                 if (!result)
                 {
@@ -110,7 +170,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -139,9 +199,9 @@ namespace backend_api.Controllers
                 }
                 var code = await _userRepository.GeneratePasswordResetTokenAsync(user);
 
-                var callbackUrl = $"{SD.URL_FE}/reset-password?userId={user.Id}&code={code}";
+                var callbackUrl = $"{SD.URL_FE}/reset-password?userId={user.Id}&code={code}&security={_dateTimeEncryption.DecryptDateTime(DateTime.Now.ToString())}";
 
-                await _emailSender.SendEmailAsync(forgotPasswordDTO.Email, "Reset password", $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
+                await _emailSender.SendEmailAsync(forgotPasswordDTO.Email, "Reset password", $"Expiration time 5 minutes. \nPlease reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
 
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -151,7 +211,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -181,11 +241,18 @@ namespace backend_api.Controllers
                 _response.Result = tokenDto;
                 return Ok(_response);
             }
+            catch (MissingMemberException e)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.NotAcceptable;
+                _response.ErrorMessages = new List<string>() { e.Message };
+                return BadRequest(_response);
+            }
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -218,10 +285,10 @@ namespace backend_api.Controllers
                 user.ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
                 user.CreatedDate = DateTime.Now;
                 await _userRepository.UpdateAsync(user);
-                string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
 
-                var callbackUrl = $"{SD.URL_FE}/confirm-register?userId={user.Id}&code={code}";
-                await _emailSender.SendEmailAsync(user.Email, "Confirm Email", $"Please confirm email by clicking here: <a href='{callbackUrl}'>link</a>");
+                string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
+                var callbackUrl = $"{SD.URL_FE}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
+                await _emailSender.SendEmailAsync(user.Email, "Confirm Email", $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>");
 
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -268,7 +335,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -294,7 +361,7 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

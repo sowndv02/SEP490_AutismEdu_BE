@@ -5,6 +5,7 @@ namespace backend_api.Models.DTOs
     public class ResetPasswordDTO
     {
         public string Code { get; set; }
+        public string Security {  get; set; }
         [Required]
         [EmailAddress]
         public string Email { get; set; }
