@@ -170,7 +170,7 @@ namespace backend_api.Repository
             // Check if the user's email is confirmed
             if (!user.EmailConfirmed)
             {
-                throw new Exception("Email is not confirmed.");
+                throw new MissingMemberException("Email is not confirmed.");
             }
 
             // Check if the user is locked out
