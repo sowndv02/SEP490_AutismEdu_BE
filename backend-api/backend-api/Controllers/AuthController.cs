@@ -199,7 +199,7 @@ namespace backend_api.Controllers
                 }
                 var code = await _userRepository.GeneratePasswordResetTokenAsync(user);
 
-                var callbackUrl = $"{SD.URL_FE}/reset-password?userId={user.Id}&code={code}&security={_dateTimeEncryption.DecryptDateTime(DateTime.Now.ToString())}";
+                var callbackUrl = $"{SD.URL_FE}/reset-password?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now.ToString())}";
 
                 await _emailSender.SendEmailAsync(forgotPasswordDTO.Email, "Reset password", $"Expiration time 5 minutes. \nPlease reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
 
