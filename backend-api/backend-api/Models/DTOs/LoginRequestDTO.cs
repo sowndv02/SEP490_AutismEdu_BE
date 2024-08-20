@@ -1,8 +1,13 @@
-﻿namespace backend_api.Models.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace backend_api.Models.DTOs
 {
     public class LoginRequestDTO
     {
-        public string UserName { get; set; }
+        [EmailAddress]
+        [Required]
+        public string Email { get; set; }
+        [Required]
         public string Password { get; set; }
 
     }
