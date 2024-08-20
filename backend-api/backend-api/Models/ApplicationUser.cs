@@ -11,6 +11,7 @@ namespace backend_api.Models
         public DateTime CreatedDate { get; set; }
         public string? ImageUrl { get; set; }
         public string? ImageLocalPathUrl { get; set; }
+        public string? ImageLocalUrl { get; set; }
         [NotMapped]
         public string RoleId { get; set; }
         [NotMapped]
