@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Linq.Expressions;
 using System.Diagnostics;
+using Google.Apis.Auth;
 
 namespace backend_api.Repository
 {
@@ -694,6 +695,18 @@ namespace backend_api.Repository
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(string token)
+        {
+            try
+            {
+                return await GoogleJsonWebSignature.ValidateAsync(token);
+            }
+            catch (Exception)
+            {
+                return null; //Invalid token or error
             }
         }
     }
