@@ -1,5 +1,6 @@
 ﻿using backend_api.Models;
 using backend_api.Models.DTOs;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using System.Diagnostics;
 using System.Linq.Expressions;
@@ -33,6 +34,6 @@ namespace backend_api.Repository.IRepository
         Task<string> GenerateEmailConfirmationTokenAsync(ApplicationUser user);
         Task<bool> ResetPasswordAsync(ApplicationUser user, string code, string password);
         Task<bool> ConfirmEmailAsync(ApplicationUser user, string code);
-
+        Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(string token);
     }
 }

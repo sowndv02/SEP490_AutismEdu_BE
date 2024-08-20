@@ -367,8 +367,87 @@ namespace backend_api.Controllers
             }
         }
 
+        [HttpPost("external-login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ExternalLogin([FromBody] ExternalLoginRequestDTO model)
+        {
+            try
+            {
+                var payload = await _userRepository.VerifyGoogleToken(model.Token);
+
+                if (payload == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Invalid Google token." };
+                    return BadRequest(_response);
+                }
+
+                var user = await _userRepository.GetUserByEmailAsync(payload.Email);
+
+                if (user == null)
+                {
+                    user = await _userRepository.Register(new RegisterationRequestDTO()
+                    {
+                        UserName = payload.Email,
+                        Password = PasswordGenerator.GeneratePassword(),
+                        Role = SD.User
+                    });
+
+                    if (user == null)
+                    {
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string>() { "Error while registering" };
+                        return BadRequest(_response);
+                    }
+
+                    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                    user.ImageUrl = payload.Picture;
+                    user.ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
+                    user.CreatedDate = DateTime.Now;
+
+                    user.FullName = payload.Name;
+                    user.EmailConfirmed = true;
+
+                    await _userRepository.UpdateAsync(user);           
+                }
+
+                var tokenDto = await _userRepository.Login(new LoginRequestDTO()
+                {
+                    UserName = user.UserName,
+                    Password = user.PasswordHash
+                }, false);
 
 
+                if (tokenDto == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "User is currently locked out." };
+                    return BadRequest(_response);
+                }
 
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = user;
+                return Ok(_response);
+            }
+            catch (MissingMemberException e)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.NotAcceptable;
+                _response.ErrorMessages = new List<string>() { e.Message };
+                return BadRequest(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+            
+        }
     }
 }
