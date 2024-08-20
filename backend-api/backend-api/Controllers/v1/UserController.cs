@@ -18,15 +18,18 @@ namespace backend_api.Controllers.v1
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
-        public UserController(IUserRepository userRepository, IMapper mapper, IConfiguration configuration)
+        public UserController(IUserRepository userRepository, IMapper mapper, 
+            IConfiguration configuration, IBlobStorageRepository blobStorageRepository)
         {
             pageSize = configuration.GetValue<int>("APIConfig:PageSize");
             _mapper = mapper;
             _userRepository = userRepository;
             _response = new();
+            _blobStorageRepository = blobStorageRepository;
         }
 
         [HttpDelete("claim/{userId}")]
@@ -133,7 +136,8 @@ namespace backend_api.Controllers.v1
                     {
                         createDTO.Image.CopyTo(fileStream);
                     }
-                    model.ImageUrl = baseUrl + $"/{SD.UrlImageUser}/" + fileName;
+                    model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                    model.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
                     model.ImageLocalPathUrl = filePath;
                 }
                 model.UserName = model.Email;
@@ -213,8 +217,10 @@ namespace backend_api.Controllers.v1
                     {
                         updateDTO.Image.CopyTo(fileStream);
                     }
-                    model.ImageUrl = baseUrl + $"/{SD.UrlImageUser}/" + fileName;
                     model.ImageLocalPathUrl = filePath;
+                    model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                    using var stream = updateDTO.Image.OpenReadStream();
+                    model.ImageUrl = await _blobStorageRepository.UploadImg(stream, fileName);
                 }
                 model.PhoneNumber = updateDTO.PhoneNumber;
                 model.FullName = updateDTO.FullName;

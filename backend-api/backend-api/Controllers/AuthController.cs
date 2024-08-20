@@ -138,12 +138,12 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string>() { "Data invalid." };
                     return BadRequest(_response);
                 }
-                var user = await _userRepository.GetUserByEmailAsync(model.Email);
+                var user = await _userRepository.GetAsync(x => x.Id == model.UserId);
                 if (user == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { $"User not found with email is {model.Email} invalid." };
+                    _response.ErrorMessages = new List<string>() { $"User not found with UserId is {model.UserId} invalid." };
                     return BadRequest(_response);
                 }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
@@ -263,7 +263,7 @@ namespace backend_api.Controllers
         {
             try
             {
-                bool ifUserNameUnique = _userRepository.IsUniqueUser(model.UserName);
+                bool ifUserNameUnique = _userRepository.IsUniqueUser(model.Email);
                 if (!ifUserNameUnique)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -281,7 +281,8 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                user.ImageUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                user.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                user.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
                 user.ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
                 user.CreatedDate = DateTime.Now;
                 await _userRepository.UpdateAsync(user);

@@ -6,9 +6,7 @@ namespace backend_api.Models.DTOs
     {
         public string Code { get; set; }
         public string Security {  get; set; }
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; }
+        public string UserId { get; set; }
         [Required]
         [Display(Name = "Password")]
         [DataType(DataType.Password)]

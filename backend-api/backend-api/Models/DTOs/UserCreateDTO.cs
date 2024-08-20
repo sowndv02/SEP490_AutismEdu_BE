@@ -11,6 +11,7 @@ namespace backend_api.Models.DTOs
         public string? Address { get; set; }
         public string? ImageUrl { get; set; }
         public string? ImageLocalPathUrl { get; set; }
+        public string? ImageLocalUrl { get; set; }
         public IFormFile? Image { get; set; }
         public string Password { get; set; }
         [DataType(DataType.Password)]

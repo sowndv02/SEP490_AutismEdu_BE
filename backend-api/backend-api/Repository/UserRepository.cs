@@ -187,7 +187,7 @@ namespace backend_api.Repository
 
         public async Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO, bool checkPassword = true)
         {
-            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName.ToLower() == loginRequestDTO.UserName.ToLower());
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName.ToLower() == loginRequestDTO.Email.ToLower());
             if (user == null)
             {
                 return new TokenDTO()
@@ -241,9 +241,9 @@ namespace backend_api.Repository
         {
             ApplicationUser user = new()
             {
-                UserName = registerationRequestDTO.UserName,
-                Email = registerationRequestDTO.UserName,
-                NormalizedEmail = registerationRequestDTO.UserName,
+                UserName = registerationRequestDTO.Email,
+                Email = registerationRequestDTO.Email,
+                NormalizedEmail = registerationRequestDTO.Email,
                 PasswordHash = registerationRequestDTO.Password,
                 LockoutEnabled = true
             };
@@ -534,7 +534,7 @@ namespace backend_api.Repository
 
         public async Task<ApplicationUser> UpdatePasswordAsync(UpdatePasswordRequestDTO updatePasswordRequestDTO)
         {
-            var user = await _userManager.FindByEmailAsync(updatePasswordRequestDTO.UserName);
+            var user = await _userManager.FindByEmailAsync(updatePasswordRequestDTO.Email);
 
             if (user == null)
             {

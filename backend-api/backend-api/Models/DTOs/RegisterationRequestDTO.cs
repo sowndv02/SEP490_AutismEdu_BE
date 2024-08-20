@@ -7,11 +7,11 @@ namespace backend_api.Models.DTOs
     {
         [Required]
         [EmailAddress]
-        public string UserName { get; set; }
+        public string Email { get; set; }
         [Required]
         [PasswordPropertyText]
         public string Password { get; set; }
         [Required]
-        public string Role { get; set; } = "client";
+        public string Role { get; set; } = SD.User;
     }
 }
