@@ -389,7 +389,7 @@ namespace backend_api.Controllers
                 {
                     user = await _userRepository.Register(new RegisterationRequestDTO()
                     {
-                        UserName = payload.Email,
+                        Email = payload.Email,
                         Password = PasswordGenerator.GeneratePassword(),
                         Role = SD.User
                     });
@@ -405,6 +405,7 @@ namespace backend_api.Controllers
                     var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
                     user.ImageUrl = payload.Picture;
                     user.ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
+                    user.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
                     user.CreatedDate = DateTime.Now;
 
                     user.FullName = payload.Name;
@@ -415,7 +416,7 @@ namespace backend_api.Controllers
 
                 var tokenDto = await _userRepository.Login(new LoginRequestDTO()
                 {
-                    UserName = user.UserName,
+                    Email = user.UserName,
                     Password = user.PasswordHash
                 }, false);
 
