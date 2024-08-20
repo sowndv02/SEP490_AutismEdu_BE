@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -184,14 +185,14 @@ app.Run();
 
 void ApplyMigration()
 {
-    using (var scope = app.Services.CreateScope())
+    using (var scope = app.Services.GetService<IServiceScopeFactory>().CreateScope())
     {
-        var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        if (_db.Database.GetPendingMigrations().Count() > 0)
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        if (context.Database.GetPendingMigrations().Count() > 0)
         {
-            _db.Database.Migrate();
+            context.Database.Migrate();
         }
-        _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
+        context.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
     }
 }
 
