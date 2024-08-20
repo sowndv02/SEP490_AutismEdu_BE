@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -185,14 +184,30 @@ app.Run();
 
 void ApplyMigration()
 {
-    using (var scope = app.Services.GetService<IServiceScopeFactory>().CreateScope())
+    try
     {
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        if (context.Database.GetPendingMigrations().Count() > 0)
+        using (var scope = app.Services.CreateScope())
         {
-            context.Database.Migrate();
+            var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            // Check for pending migrations and apply them if any
+            var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
+            if (pendingMigrations.Count > 0)
+            {
+                Console.WriteLine($"Applying {pendingMigrations.Count} pending migrations...");
+                _db.Database.Migrate();
+                Console.WriteLine("Migrations applied successfully.");
+            }
+
+            // Seed the database if it’s empty
+            _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
         }
-        context.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
+    }
+    catch (Exception ex)
+    {
+        // Log the error and handle it appropriately
+        Console.WriteLine($"An error occurred while applying migrations: {ex.Message}");
+        throw; // Re-throw the exception or handle it as needed
     }
 }
 
