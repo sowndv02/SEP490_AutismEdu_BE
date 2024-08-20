@@ -33,20 +33,20 @@ namespace backend_api.Data
             if (!ApplicationClaims.Any())
             {
                 ApplicationClaims.AddRange(
-                    new ApplicationClaim { Id = 1, ClaimType = "Create", ClaimValue = "True", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 2, ClaimType = "Delete", ClaimValue = "True", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 3, ClaimType = "Update", ClaimValue = "True", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 4, ClaimType = "Create", ClaimValue = "Claim", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 5, ClaimType = "Delete", ClaimValue = "Claim", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 6, ClaimType = "Update", ClaimValue = "Claim", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 7, ClaimType = "Create", ClaimValue = "Role", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 8, ClaimType = "Delete", ClaimValue = "Role", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 9, ClaimType = "Update", ClaimValue = "Role", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 10, ClaimType = "Create", ClaimValue = "User", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 11, ClaimType = "Delete", ClaimValue = "User", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 12, ClaimType = "Update", ClaimValue = "User", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 13, ClaimType = "Assign", ClaimValue = "Role", CreatedDate = DateTime.Now },
-                    new ApplicationClaim { Id = 14, ClaimType = "Assign", ClaimValue = "Claim", CreatedDate = DateTime.Now }
+                    new ApplicationClaim { ClaimType = "Create", ClaimValue = "True", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Delete", ClaimValue = "True", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Update", ClaimValue = "True", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Create", ClaimValue = "Claim", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Delete", ClaimValue = "Claim", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Update", ClaimValue = "Claim", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Create", ClaimValue = "Role", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Delete", ClaimValue = "Role", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Update", ClaimValue = "Role", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Create", ClaimValue = "User", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Delete", ClaimValue = "User", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Update", ClaimValue = "User", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Assign", ClaimValue = "Role", CreatedDate = DateTime.Now },
+                    new ApplicationClaim { ClaimType = "Assign", ClaimValue = "Claim", CreatedDate = DateTime.Now }
                 );
 
                 await SaveChangesAsync();
