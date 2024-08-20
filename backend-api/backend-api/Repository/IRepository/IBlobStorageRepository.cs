@@ -2,7 +2,7 @@
 {
     public interface IBlobStorageRepository
     {
-        Task<string> UploadImg(Stream data, string filename);
+        Task<string> UploadImg(Stream data, string filename, bool isPrivate = false);
 
         string GetBlobSasUrl(string? blobUrl);
     }
