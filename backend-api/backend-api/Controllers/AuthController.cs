@@ -96,7 +96,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
-                if(security > security.AddMinutes(ValidateTime))
+                if(DateTime.Now > security.AddMinutes(ValidateTime))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -154,7 +154,7 @@ namespace backend_api.Controllers
                     return NotFound(_response);
                 }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
-                if (security > security.AddMinutes(ValidateTime))
+                if (DateTime.Now > security.AddMinutes(ValidateTime))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
