@@ -600,7 +600,7 @@ namespace backend_api.Repository
                 ImageUrl = user.ImageUrl,
                 ImageLocalPathUrl = user.ImageLocalPathUrl,
                 ImageLocalUrl = user.ImageLocalUrl,
-                Discriminator = user.Discriminator,
+                UserType = user.UserType,
                 CreatedDate = DateTime.Now,
                 EmailConfirmed = user.EmailConfirmed,
             };
