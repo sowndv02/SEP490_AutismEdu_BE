@@ -382,17 +382,29 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string>() { "Invalid Google token." };
                     return BadRequest(_response);
                 }
-
+                if(payload.ExpirationTimeSeconds == 0)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { "Token google expired." };
+                    return BadRequest(_response);
+                }
                 var user = await _userRepository.GetUserByEmailAsync(payload.Email);
-
+                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
                 if (user == null)
                 {
-                    user = await _userRepository.Register(new RegisterationRequestDTO()
+                    user = await _userRepository.CreateAsync(new ApplicationUser
                     {
                         Email = payload.Email,
-                        Password = PasswordGenerator.GeneratePassword(),
-                        Role = SD.User
-                    });
+                        Role = SD.User,
+                        Discriminator = SD.GOOGLE_USER,
+                        ImageUrl = payload.Picture,
+                        ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault,
+                        ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault,
+                        FullName = payload.Name,
+                        EmailConfirmed = true,
+                        IsLockedOut = false
+                    }, PasswordGenerator.GeneratePassword());
 
                     if (user == null)
                     {
@@ -401,16 +413,6 @@ namespace backend_api.Controllers
                         _response.ErrorMessages = new List<string>() { "Error while registering" };
                         return BadRequest(_response);
                     }
-
-                    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                    user.ImageUrl = payload.Picture;
-                    user.ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
-                    user.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
-                    user.CreatedDate = DateTime.Now;
-
-                    user.FullName = payload.Name;
-                    user.EmailConfirmed = true;
-
                     await _userRepository.UpdateAsync(user);           
                 }
 
@@ -431,7 +433,7 @@ namespace backend_api.Controllers
 
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
-                _response.Result = user;
+                _response.Result = tokenDto;
                 return Ok(_response);
             }
             catch (MissingMemberException e)

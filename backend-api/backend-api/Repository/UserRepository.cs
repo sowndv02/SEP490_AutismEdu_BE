@@ -589,14 +589,20 @@ namespace backend_api.Repository
         {
             ApplicationUser obj = new ApplicationUser
             {
-                UserName = user.UserName,
+                UserName = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 FullName = user.FullName,
                 PasswordHash = password,
                 Email = user.Email,
                 NormalizedEmail = user.Email,
                 LockoutEnabled = true,
-                LockoutEnd = user.IsLockedOut ? DateTime.MaxValue : null
+                LockoutEnd = user.IsLockedOut ? DateTime.MaxValue : null,
+                ImageUrl = user.ImageUrl,
+                ImageLocalPathUrl = user.ImageLocalPathUrl,
+                ImageLocalUrl = user.ImageLocalUrl,
+                Discriminator = user.Discriminator,
+                CreatedDate = DateTime.Now,
+                EmailConfirmed = user.EmailConfirmed,
             };
             var result = await _userManager.CreateAsync(obj, password);
 
