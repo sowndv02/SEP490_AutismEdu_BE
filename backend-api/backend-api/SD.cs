@@ -11,6 +11,6 @@
         public const string URL_FE = "http://localhost:5173";
 		public const string URL_IMAGE_DEFAULT_BLOB = "https://sondvstorage.blob.core.windows.net/logos-public/default-avatar.png";
         public const string APPLICATION_USER = "ApplicationUser";
-		public const string GoogleUser = "GoogleUser";
+		public const string GOOGLE_USER = "GoogleUser";
     }
 }
