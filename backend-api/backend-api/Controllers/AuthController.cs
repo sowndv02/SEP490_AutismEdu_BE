@@ -146,6 +146,13 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string>() { $"User not found with UserId is {model.UserId} invalid." };
                     return BadRequest(_response);
                 }
+                else if (user.UserType == SD.GOOGLE_USER)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { $"User gooogle cannot forgot password." };
+                    return NotFound(_response);
+                }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
                 if (security > security.AddMinutes(ValidateTime))
                 {
@@ -195,6 +202,13 @@ namespace backend_api.Controllers
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { $"User not found with email is {forgotPasswordDTO.Email} invalid." };
+                    return NotFound(_response);
+                }
+                else if(user.UserType == SD.GOOGLE_USER)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { $"User gooogle cannot forgot password." };
                     return NotFound(_response);
                 }
                 var code = await _userRepository.GeneratePasswordResetTokenAsync(user);
@@ -285,6 +299,7 @@ namespace backend_api.Controllers
                 user.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
                 user.ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
                 user.CreatedDate = DateTime.Now;
+                user.UserType = SD.APPLICATION_USER;
                 await _userRepository.UpdateAsync(user);
 
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
@@ -397,7 +412,7 @@ namespace backend_api.Controllers
                     {
                         Email = payload.Email,
                         Role = SD.User,
-                        Discriminator = SD.GOOGLE_USER,
+                        UserType = SD.GOOGLE_USER,
                         ImageUrl = payload.Picture,
                         ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault,
                         ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault,

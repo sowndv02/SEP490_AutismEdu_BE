@@ -20,6 +20,6 @@ namespace backend_api.Models
         public string UserClaim { get; set; }
         [NotMapped]
         public bool IsLockedOut { get; set; }
-        public string Discriminator { get; set; } = SD.APPLICATION_USER;
+        public string UserType { get; set; } = SD.APPLICATION_USER;
     }
 }

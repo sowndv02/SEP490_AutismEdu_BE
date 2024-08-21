@@ -141,7 +141,7 @@ namespace backend_api.Controllers.v1
                     model.ImageLocalPathUrl = filePath;
                 }
                 model.UserName = model.Email;
-                model.Discriminator = SD.APPLICATION_USER;
+                model.UserType = SD.APPLICATION_USER;
                 model.LockoutEnabled = true;
                 model.IsLockedOut = false;
                 model.EmailConfirmed = true;
