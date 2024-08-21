@@ -602,7 +602,7 @@ namespace backend_api.Repository
                 ImageLocalUrl = user.ImageLocalUrl,
                 UserType = user.UserType,
                 CreatedDate = DateTime.Now,
-                EmailConfirmed = user.EmailConfirmed,
+                EmailConfirmed = user.UserType == SD.GOOGLE_USER ? true : false,
             };
             var result = await _userManager.CreateAsync(obj, password);
 
