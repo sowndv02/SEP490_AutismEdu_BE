@@ -39,7 +39,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
     const handleClickShowPassword = () => setShowPassword((show) => !show);
 
     const checkValid = (value, field) => {
-        const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%]).+$/
+        const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%@]).+$/
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (field === 1) {
             if (value === "") {

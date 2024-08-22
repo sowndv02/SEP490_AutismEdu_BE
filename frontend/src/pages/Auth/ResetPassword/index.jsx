@@ -44,7 +44,7 @@ function ResetPassword() {
     const handleClickShowPassword = () => setShowPassword((show) => !show);
 
     const checkValid = (value, field) => {
-        const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%]).+$/
+        const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%@]).+$/
         if (field === 1) {
             if (value === "") {
                 setPasswordError("Please enter password");
