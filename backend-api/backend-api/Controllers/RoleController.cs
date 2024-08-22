@@ -6,6 +6,7 @@ using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Net;
 
 namespace backend_api.Controllers
@@ -16,13 +17,17 @@ namespace backend_api.Controllers
     public class RoleController : ControllerBase
     {
         private readonly IRoleRepository _roleRepository;
+        private readonly IUserRepository _userRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
-        public RoleController(IRoleRepository roleRepository, IMapper mapper)
+        protected int takeValue = 0;
+        public RoleController(IRoleRepository roleRepository, IMapper mapper, IUserRepository userRepository, IConfiguration configuration)
         {
+            takeValue = configuration.GetValue<int>("APIConfig:TakeValue");
             _response = new();
             _mapper = mapper;
             _roleRepository = roleRepository;
+            _userRepository = userRepository;
         }
 
         [HttpGet]
@@ -31,7 +36,14 @@ namespace backend_api.Controllers
             try
             {
                 List<IdentityRole> list = await _roleRepository.GetAllAsync();
-                _response.Result = _mapper.Map<List<RoleDTO>>(list);
+                var result = _mapper.Map<List<RoleDTO>>(list);
+                foreach (var role in result)
+                {
+                    var (totalCount, users) = await _userRepository.GetUsersInRole(role.Name, takeValue);
+                    role.TotalUsersInRole = totalCount;
+                    role.Users = _mapper.Map<List<ApplicationUserDTO>>(users);
+                }
+                _response.Result = result;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
@@ -44,27 +56,32 @@ namespace backend_api.Controllers
             }
         }
 
-        [HttpGet("{name}", Name = "GetRoleByName")]
-        public async Task<ActionResult<APIResponse>> GetRoleByNameAsync(string name)
+        [HttpGet("{id}", Name = "GetRoleById")]
+        public async Task<ActionResult<APIResponse>> GetRoleByIdAsync(string id)
         {
             try
             {
-                if (string.IsNullOrEmpty(name))
+                if (string.IsNullOrEmpty(id))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{name} is null or empty!" };
+                    _response.ErrorMessages = new List<string> { $"{id} is null or empty!" };
                     return BadRequest(_response);
                 }
-                IdentityRole model = await _roleRepository.GetByNameAsync(name);
+                IdentityRole model = await _roleRepository.GetByIdAsync(id);
                 if (model == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{name} is not found!" };
+                    _response.ErrorMessages = new List<string> { $"{id} is not found!" };
                     return NotFound(_response);
                 }
-                _response.Result = _mapper.Map<RoleDTO>(model);
+                var result = _mapper.Map<RoleDTO>(model);
+                
+                var (totalCount, users) = await _userRepository.GetUsersInRole(model.Name, takeValue);
+                result.TotalUsersInRole = totalCount;
+                result.Users = _mapper.Map<List<ApplicationUserDTO>>(users);
+                _response.Result = result;
                 return Ok(_response);
             }
             catch (Exception ex)

@@ -35,5 +35,7 @@ namespace backend_api.Repository.IRepository
         Task<bool> ResetPasswordAsync(ApplicationUser user, string code, string password);
         Task<bool> ConfirmEmailAsync(ApplicationUser user, string code);
         Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(string token);
+        Task<(int TotalCount, List<ApplicationUser> Users)> GetUsersForClaimAsync(int claimId, int takeValue = 4, int pageSize = 0, int pageNumber = 0);
+        Task<(int TotalCount, List<ApplicationUser> Users)> GetUsersInRole(string roleName, int takeValue = 4, int pageSize = 0, int pageNumber = 0);
     }
 }

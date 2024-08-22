@@ -23,17 +23,60 @@ namespace backend_api.Repository
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
+        private readonly IClaimRepository _claimRepository;
         private string secretKey = string.Empty;
 
         public UserRepository(ApplicationDbContext context, IConfiguration configuration, UserManager<ApplicationUser> userManager, 
-            RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager)
+            RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager, IClaimRepository claimRepository)
         {
+            _claimRepository = claimRepository;
             _signInManager = signInManager; 
             _roleManager = roleManager;
             _userManager = userManager;
             _context = context;
             _configuration = configuration;
             secretKey = configuration.GetValue<string>("ApiSettings:JWT:Secret");
+        }
+
+        public async Task<(int TotalCount, List<ApplicationUser> Users)> GetUsersForClaimAsync(int claimId, int takeValue = 4, int pageSize = 0, int pageNumber = 0)
+        {
+            try
+            {
+                var claim = await _claimRepository.GetAsync(x => x.Id == claimId);
+                var list = await _userManager.GetUsersForClaimAsync(new Claim(claim.ClaimType, claim.ClaimValue));
+                if(pageSize == 0 && pageNumber == 0)
+                {
+                    return (list.Count, list.Take(takeValue).ToList());
+                }
+                else
+                {
+                    return (list.Count, list.Skip(pageSize * (pageNumber - 1)).Take(pageSize).ToList());
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<(int TotalCount, List<ApplicationUser> Users)> GetUsersInRole(string roleName, int takeValue = 4, int pageSize = 0, int pageNumber = 0)
+        {
+            try
+            {
+                var list = await _userManager.GetUsersInRoleAsync(roleName);
+                if (pageSize == 0 && pageNumber == 0)
+                {
+                    return (list.Count, list.Take(takeValue).ToList());
+                }
+                else
+                {
+                    return (list.Count, list.Skip(pageSize * (pageNumber - 1)).Take(pageSize).ToList());
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public async Task<bool> ConfirmEmailAsync(ApplicationUser user, string code)
@@ -260,13 +303,13 @@ namespace backend_api.Repository
 
                     await _userManager.AddToRoleAsync(user, registerationRequestDTO.Role);
                     ApplicationUser objReturn = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email == user.Email);
-                    if (objReturn.LockoutEnd <= DateTime.Now)
+                    if (objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
                         objReturn.IsLockedOut = false;
                     else objReturn.IsLockedOut = true;
                     var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
                     var user_role = await _userManager.GetRolesAsync(user) as List<string>;
                     user.Role = String.Join(",", user_role);
-                    user.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
+                    user.UserClaim = String.Join(",", user_claim.Select(x => $"{x.Type}-{x.Value}").ToList());
                     return objReturn;
                 }
                 else
@@ -434,13 +477,13 @@ namespace backend_api.Repository
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user != null)
                 {
-                    if (user.LockoutEnd <= DateTime.Now)
+                    if (user.LockoutEnd == null || user.LockoutEnd <= DateTime.Now)
                         user.IsLockedOut = false;
                     else user.IsLockedOut = true;
                     var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
                     var user_role = await _userManager.GetRolesAsync(user) as List<string>;
                     user.Role = String.Join(",", user_role);
-                    user.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
+                    user.UserClaim = String.Join(",", user_claim.Select(x => $"{x.Type}-{x.Value}").ToList());
                     return user;
                 }
                 return null;
@@ -472,13 +515,13 @@ namespace backend_api.Repository
                 var user = await query.FirstOrDefaultAsync();
                 if (user != null)
                 {
-                    if (user.LockoutEnd <= DateTime.Now)
+                    if (user.LockoutEnd == null || user.LockoutEnd <= DateTime.Now)
                         user.IsLockedOut = false;
                     else user.IsLockedOut = true;
                     var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
                     var user_role = await _userManager.GetRolesAsync(user) as List<string>;
                     user.Role = String.Join(",", user_role);
-                    user.UserClaim = String.Join(",", user_claim.Select(x => x.Type));
+                    user.UserClaim = String.Join(",", user_claim.Select(x => $"{x.Type}-{x.Value}").ToList());
                     return user;
                 }
                 return null;
@@ -498,7 +541,7 @@ namespace backend_api.Repository
                 {
                     user.LockoutEnd = DateTime.Now.AddYears(1000);
                     await _context.SaveChangesAsync();
-                    if (user.LockoutEnd <= DateTime.Now)
+                    if (user.LockoutEnd ==null ||user.LockoutEnd <= DateTime.Now)
                         user.IsLockedOut = false;
                     else user.IsLockedOut = true;
                 }
@@ -520,7 +563,7 @@ namespace backend_api.Repository
                 {
                     user.LockoutEnd = DateTime.Now;
                     await _context.SaveChangesAsync();
-                    if (user.LockoutEnd <= DateTime.Now)
+                    if (user.LockoutEnd == null || user.LockoutEnd <= DateTime.Now)
                         user.IsLockedOut = false;
                     else user.IsLockedOut = true;
                 }
@@ -557,12 +600,12 @@ namespace backend_api.Repository
             }
             var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
 
-            if (objReturn.LockoutEnd <= DateTime.Now)
+            if ( objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
                 objReturn.IsLockedOut = false;
             else objReturn.IsLockedOut = true;
             var user_role = await _userManager.GetRolesAsync(user) as List<string>;
             var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
-            var claimString = user_claim.Select(x => x.Type);
+            var claimString = user_claim.Select(x => $"{x.Type}-{x.Value}").ToList();
             user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
             user.Role = String.Join(",", user_role);
             return objReturn;
@@ -635,13 +678,13 @@ namespace backend_api.Repository
                 }
                 var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
 
-                if (objReturn.LockoutEnd <= DateTime.Now)
+                if (objReturn.LockoutEnd == null ||objReturn.LockoutEnd <= DateTime.Now)
                     objReturn.IsLockedOut = false;
                 else objReturn.IsLockedOut = true;
 
                 var user_role = await _userManager.GetRolesAsync(user) as List<string>;
                 var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
-                var claimString = user_claim.Select(x => x.Type);
+                var claimString = user_claim.Select(x => $"{x.Type}-{x.Value}").ToList();
                 user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
                 user.Role = String.Join(",", user_role);
                 return objReturn;
@@ -691,12 +734,12 @@ namespace backend_api.Repository
             var users = await query.ToListAsync();
             foreach (var user in users)
             {
-                if (user.LockoutEnd <= DateTime.Now)
+                if (user.LockoutEnd == null || user.LockoutEnd <= DateTime.Now)
                     user.IsLockedOut = false;
                 else user.IsLockedOut = true;
                 var user_role = await _userManager.GetRolesAsync(user) as List<string>;
                 var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
-                var claimString = user_claim.Select(x => x.Type);
+                var claimString = user_claim.Select(x => $"{x.Type}-{x.Value}").ToList();
                 user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
                 user.Role = String.Join(",", user_role);
             }
