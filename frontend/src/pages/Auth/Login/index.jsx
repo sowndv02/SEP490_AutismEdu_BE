@@ -73,7 +73,7 @@ function Login() {
               My App
             </Typography>
           </Box>
-          <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Welcome to MyApp! 👋</Typography>
+          <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Welcome to MyApp! ??</Typography>
           <Typography sx={{ mt: "10px" }}>Please sign-in to your account and start the adventure</Typography>
           <Box mt="30px">
             <FormControl sx={{ ...INPUT_CSS }} variant="outlined">

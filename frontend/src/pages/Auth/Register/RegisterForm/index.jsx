@@ -1,51 +1,59 @@
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import GoogleIcon from '@mui/icons-material/Google';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { LoadingButton } from '@mui/lab';
-import { Box, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput, SvgIcon } from '@mui/material';
+import { Box, Divider, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput, SvgIcon } from '@mui/material';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { enqueueSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import TrelloIcon from '~/assets/trello.svg?react';
 import HtmlTooltip from '~/components/HtmlTooltip';
 import service from '~/plugins/services';
 import PAGES from '~/utils/pages';
-function ResetPassword() {
+function RegisterForm({ setVerify, setEmailVerify }) {
     const [showPassword, setShowPassword] = useState(false);
-    const [passwordError, setPasswordError] = useState(null);
+    const [emailError, setEmailError] = useState(null);
     const [passwordConfirmError, setPasswordConfirmError] = useState(null);
+    const [passwordError, setPasswordError] = useState(null);
+    const [email, setEmail] = useState()
     const [password, setPassword] = useState("");
     const [cfPassword, setCfPassword] = useState("");
-    const location = useLocation();
-    const urlParams = new URLSearchParams(location.search);
-    const userId = urlParams.get('userId');
-    const code = urlParams.get('code').replaceAll(" ", "+");
-    const security = urlParams.get('security').replaceAll(" ", "+");
     const [loading, setLoading] = useState(false);
-    const nav = useNavigate();
     const INPUT_CSS = {
         width: "100%",
-        borderRadius: "15px"
-    };
-
-    useEffect(() => {
-        if (loading) {
-            handleSubmit();
+        borderRadius: "15px",
+        ".MuiFormHelperText-root": {
+            color: "red"
         }
-    }, [loading])
+    };
 
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
+
+    const nav = useNavigate();
     const handleClickShowPassword = () => setShowPassword((show) => !show);
 
     const checkValid = (value, field) => {
         const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%]).+$/
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (field === 1) {
+            if (value === "") {
+                setEmailError("Please enter email");
+                return false;
+            } else if (!emailRegex.test(value)) {
+                setEmailError("Email is not valid");
+                return false;
+            } else {
+                setEmailError(null);
+                return true;
+            }
+        }
+        if (field === 2) {
             if (value === "") {
                 setPasswordError("Please enter password");
                 return false;
@@ -58,7 +66,8 @@ function ResetPassword() {
             } else if (!rgPassword.test(value)) {
                 setPasswordError("Password is invalid!");
                 return false;
-            } else {
+            }
+            else {
                 if (passwordConfirmError === "Confirm password doesn't match with the password" && value === cfPassword) {
                     setPasswordConfirmError(null);
                 }
@@ -66,7 +75,7 @@ function ResetPassword() {
                 return true;
             }
         }
-        if (field === 2) {
+        if (field === 3) {
             if (value === "") {
                 setPasswordConfirmError("Please enter confirm password");
                 return false;
@@ -79,29 +88,34 @@ function ResetPassword() {
             }
         }
     }
+    useEffect(() => {
+        if (loading) {
+            handleSubmit();
+        }
+    }, [loading])
     const handleSubmit = async () => {
-        if (passwordError !== null || passwordConfirmError !== null) {
+        if (emailError !== null || passwordError !== null || passwordConfirmError !== null) {
             setLoading(false);
             return;
         } else {
-            const checkPw = checkValid(password, 1);
-            const checkCfPw = checkValid(cfPassword, 2);
-            if (!checkPw || !checkCfPw) {
+            const checkPw = checkValid(password, 2);
+            const checkCfPw = checkValid(cfPassword, 3);
+            const checkEmail = checkValid(email, 1);
+            if (!checkPw || !checkCfPw || !checkEmail) {
                 setLoading(false);
                 return;
             } else {
-                await service.AuthenticationAPI.resetPassword({
-                    code,
-                    security,
-                    userId,
+                await service.AuthenticationAPI.register({
+                    email,
                     password,
-                    confirmPassword: cfPassword
+                    role: "user"
                 }, (res) => {
-                    enqueueSnackbar("Reset password successfully!", { variant: "success" });
-                    nav("/login");
+                    enqueueSnackbar("Register Successfully!", { variant: "success" });
+                    setVerify(true);
+                    setEmailVerify(email);
                 }, (err) => {
                     if (err.code === 500) {
-                        enqueueSnackbar("Failed to reset password!", { variant: "error" });
+                        enqueueSnackbar("Failed to register!", { variant: "error" });
                     }
                     else enqueueSnackbar(err.error[0], { variant: "error" });
                 })
@@ -124,22 +138,29 @@ function ResetPassword() {
                             My App
                         </Typography>
                     </Box>
-                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Reset Password 🔒</Typography>
-                    <Typography sx={{ mt: "10px" }}>Your new password must be different from previously used passwords</Typography>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Adventure starts here 🚀</Typography>
+                    <Typography sx={{ mt: "10px" }}>Make your app management easy and fun!</Typography>
                     <Box mt="30px">
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
-                            <InputLabel htmlFor="new-password">New Password</InputLabel>
+                            <InputLabel htmlFor="email">Email</InputLabel>
+                            <OutlinedInput id="email" label="Email" variant="outlined" type='email'
+                                onChange={(e) => { checkValid(e.target.value, 1); setEmail(e.target.value) }}
+                                error={emailError} />
+                            {
+                                emailError && (
+                                    <FormHelperText error id="accountId-error">
+                                        {emailError}
+                                    </FormHelperText>
+                                )
+                            }
+                        </FormControl>
+                        <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
+                            <InputLabel htmlFor="password">Password</InputLabel>
                             <OutlinedInput
-                                error={!!passwordError}
-                                value={password}
-                                id="new-password"
+                                error={passwordError}
+                                id="password"
                                 type={showPassword ? 'text' : 'password'}
-                                onChange={(e) => {
-                                    if (!e.target.value.includes(" ")) {
-                                        checkValid(e.target.value, 1);
-                                        setPassword(e.target.value);
-                                    }
-                                }}
+                                onChange={(e) => { checkValid(e.target.value, 2); setPassword(e.target.value) }}
                                 endAdornment={
                                     <InputAdornment position="end">
                                         <IconButton
@@ -192,7 +213,7 @@ function ResetPassword() {
                                 onChange={(e) => {
                                     if (!e.target.value.includes(" ")) {
                                         setCfPassword(e.target.value);
-                                        checkValid(e.target.value, 2);
+                                        checkValid(e.target.value, 3);
                                     }
                                 }}
                                 endAdornment={
@@ -218,20 +239,25 @@ function ResetPassword() {
                             }
                         </FormControl>
                     </Box>
-                    <LoadingButton variant='contained' sx={{ width: "100%", marginTop: "20px" }} onClick={() => setLoading(true)}
-                        loading={loading} loadingIndicator="Sending...">
-                        Set New Password
+                    <LoadingButton variant='contained' sx={{ width: "100%", marginTop: "20px" }}
+                        loading={loading} loadingIndicator="Sending..."
+                        onClick={() => {
+                            setLoading(true);
+                        }}>
+                        Sign Up
                     </LoadingButton>
-                    <Typography textAlign={'center'} mt="20px">
-                        <Link to={PAGES.LOGIN} style={{ color: "#666cff" }}>
-                            <ArrowBackIosNewIcon sx={{ fontSize: "12px" }} /> Back to login
-                        </Link>
-                    </Typography>
 
+                    <Typography sx={{ textAlign: "center", mt: "20px" }}>Already have an account? <Link to={PAGES.LOGIN} style={{ color: "#666cff" }}>Sign in instead</Link></Typography>
+                    <Divider sx={{ mt: "15px" }}>or</Divider>
+                    <Box sx={{ display: "flex", justifyContent: "center" }}>
+                        <IconButton>
+                            <GoogleIcon sx={{ color: "#dd4b39 " }} />
+                        </IconButton>
+                    </Box>
                 </CardContent>
             </Card>
         </Box>
     );
 }
 
-export default ResetPassword;
+export default RegisterForm;
