@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.Net;
 using System.Text.Json;
@@ -18,16 +21,19 @@ namespace backend_api.Controllers.v1
     public class ClaimController : ControllerBase
     {
         private readonly IClaimRepository _claimRepository;
+        private readonly IUserRepository _userRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
         protected int pageSize = 0;
-
-        public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration)
+        protected int takeValue = 0;
+        public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration, IUserRepository userRepository)
         {
+            _userRepository = userRepository;
             pageSize = configuration.GetValue<int>("APIConfig:PageSize");
             _claimRepository = claimRepository;
             _mapper = mapper;
             _response = new();
+            takeValue = configuration.GetValue<int>("APIConfig:TakeValue");
         }
 
         [HttpGet]
@@ -62,10 +68,38 @@ namespace backend_api.Controllers.v1
                 }
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = _claimRepository.GetTotalClaim() };
-
-                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination)); 
-                _response.Result = _mapper.Map<List<ClaimDTO>>(list);
+                var result = _mapper.Map<List<ClaimDTO>>(list);
+                foreach (var claim in result)
+                {
+                    var (totalCount, users) = await _userRepository.GetUsersForClaimAsync(claim.Id, takeValue);
+                    claim.TotalUser = totalCount;
+                    claim.Users = _mapper.Map<List<ApplicationUserDTO>>(users);
+                }
+                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
+                _response.Result = result;
                 _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet("type")]
+        public async Task<ActionResult<APIResponse>> GetAllClaimTypesAsync()
+        {
+            try
+            {
+                List<ApplicationClaim> list = await _claimRepository.GetAllAsync(null, null, null);
+                var distinctClaimTypes = list.Select(c => c.ClaimType).Distinct().ToList();
+                _response.Result = distinctClaimTypes;
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -99,8 +133,14 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { $"Claim with ID {id} not found." };
                     return NotFound(_response);
                 }
-
-                _response.Result = _mapper.Map<ClaimDTO>(model);
+                var result = _mapper.Map<ClaimDTO>(model);
+               
+                var (totalCount, users) = await _userRepository.GetUsersForClaimAsync(result.Id, takeValue);
+                result.TotalUser = totalCount;
+                result.Users = _mapper.Map<List<ApplicationUserDTO>>(users);
+                _response.Result = result;
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)

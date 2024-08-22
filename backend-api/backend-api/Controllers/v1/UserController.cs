@@ -244,17 +244,50 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? searchValue, string? searchType, string? searchTypeId,int pageNumber = 1)
         {
             try
             {
-                List<ApplicationUser> list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
-
-                if (!string.IsNullOrEmpty(search))
+                int totalCount = 0;
+                List<ApplicationUser> list = new();
+                if (!string.IsNullOrEmpty(searchType))
                 {
-                    list = list.Where(u => u.FullName.ToLower().Contains(search)).ToList();
+                    switch (searchType.ToLower().Trim()) 
+                    {
+                        case "all":
+                            list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                            totalCount = _userRepository.GetTotalUser();
+                            break;
+                        case "claim":
+                            if (!string.IsNullOrEmpty(searchTypeId))
+                            {
+                                var (total, users) = await _userRepository.GetUsersForClaimAsync(int.Parse(searchTypeId), pageSize, pageNumber);
+                                list = users;
+                                totalCount = total; 
+                            }
+                            break;
+                        case "role":
+                            if (!string.IsNullOrEmpty(searchTypeId))
+                            {
+                                var (total, users) = await _userRepository.GetUsersInRole(searchTypeId, pageSize, pageNumber);
+                                list = users;
+                                totalCount = total;
+                            }
+                            break;
+                        default:
+                            list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                            totalCount = _userRepository.GetTotalUser();
+                            break;
+
+                    }
+
                 }
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = _userRepository.GetTotalUser() };
+
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    list = list.Where(u => u.FullName.ToLower().Contains(searchValue)).ToList();
+                }
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
 
                 Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = _mapper.Map<List<ApplicationUserDTO>>(list);
