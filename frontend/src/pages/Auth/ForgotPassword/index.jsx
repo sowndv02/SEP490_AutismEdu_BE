@@ -56,6 +56,7 @@ function ForgotPassword() {
             }, (res) => {
                 setSubmited(true);
             }, (err) => {
+                console.log(err);
                 enqueueSnackbar("Email is not valid", { variant: "error" });
                 setLoading(false)
             })

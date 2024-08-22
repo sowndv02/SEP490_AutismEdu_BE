@@ -7,6 +7,7 @@ const PAGES = {
   FORGOTPASSWORD: '/forgot-password',
   REGISTER: '/register',
   RESETPASSWORD: '/reset-password',
+  CONFIRMREGISTER: '/confirm-register',
 };
 
 export default PAGES;
