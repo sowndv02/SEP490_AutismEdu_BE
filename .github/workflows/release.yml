@@ -47,5 +47,5 @@ jobs:
       - name: Azure WebApp
         uses: Azure/webapps-deploy@v3.0.0
         with:
-          app-name: 'sep490-backend'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+          app-name: 'backend-api20240823212838'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
