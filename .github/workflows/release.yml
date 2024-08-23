@@ -49,18 +49,3 @@ jobs:
         with:
           app-name: 'sep-backend'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
-
-  deploy-prod:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Download a Build Artifact
-        uses: actions/download-artifact@v4.1.3
-        with:
-          name: api-artifact
-
-      - name: Azure WebApp
-        uses: Azure/webapps-deploy@v3.0.0
-        with:
-          app-name: 'sep490-backend'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
