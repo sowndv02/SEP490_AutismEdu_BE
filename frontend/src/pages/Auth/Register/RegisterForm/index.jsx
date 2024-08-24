@@ -14,6 +14,7 @@ import TrelloIcon from '~/assets/trello.svg?react';
 import HtmlTooltip from '~/components/HtmlTooltip';
 import service from '~/plugins/services';
 import PAGES from '~/utils/pages';
+import checkValid from '~/utils/auth_form_verify';
 function RegisterForm({ setVerify, setEmailVerify }) {
     const [showPassword, setShowPassword] = useState(false);
     const [emailError, setEmailError] = useState(null);
@@ -37,57 +38,6 @@ function RegisterForm({ setVerify, setEmailVerify }) {
 
     const nav = useNavigate();
     const handleClickShowPassword = () => setShowPassword((show) => !show);
-
-    const checkValid = (value, field) => {
-        const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%]).+$/
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (field === 1) {
-            if (value === "") {
-                setEmailError("Please enter email");
-                return false;
-            } else if (!emailRegex.test(value)) {
-                setEmailError("Email is not valid");
-                return false;
-            } else {
-                setEmailError(null);
-                return true;
-            }
-        }
-        if (field === 2) {
-            if (value === "") {
-                setPasswordError("Please enter password");
-                return false;
-            } else if (value.length < 8) {
-                setPasswordError("Password must be more than 8 characters");
-                return false;
-            } else if (value.length > 15) {
-                setPasswordError("Password must be less than 15 characters");
-                return false;
-            } else if (!rgPassword.test(value)) {
-                setPasswordError("Password is invalid!");
-                return false;
-            }
-            else {
-                if (passwordConfirmError === "Confirm password doesn't match with the password" && value === cfPassword) {
-                    setPasswordConfirmError(null);
-                }
-                setPasswordError(null);
-                return true;
-            }
-        }
-        if (field === 3) {
-            if (value === "") {
-                setPasswordConfirmError("Please enter confirm password");
-                return false;
-            } else if (value !== password) {
-                setPasswordConfirmError("Confirm password doesn't match with the password");
-                return false;
-            } else {
-                setPasswordConfirmError(null);
-                return true;
-            }
-        }
-    }
     useEffect(() => {
         if (loading) {
             handleSubmit();
@@ -98,9 +48,9 @@ function RegisterForm({ setVerify, setEmailVerify }) {
             setLoading(false);
             return;
         } else {
-            const checkPw = checkValid(password, 2);
-            const checkCfPw = checkValid(cfPassword, 3);
-            const checkEmail = checkValid(email, 1);
+            const checkPw = checkValid(password, 2, setPasswordError);
+            const checkCfPw = checkValid(cfPassword, 3, setPasswordConfirmError, password);
+            const checkEmail = checkValid(email, 1, setEmailError);
             if (!checkPw || !checkCfPw || !checkEmail) {
                 setLoading(false);
                 return;
@@ -144,8 +94,8 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
                             <InputLabel htmlFor="email">Email</InputLabel>
                             <OutlinedInput id="email" label="Email" variant="outlined" type='email'
-                                onChange={(e) => { checkValid(e.target.value, 1); setEmail(e.target.value) }}
-                                error={emailError} />
+                                onChange={(e) => { checkValid(e.target.value, 1, setEmailError); setEmail(e.target.value) }}
+                                error={!!emailError} />
                             {
                                 emailError && (
                                     <FormHelperText error id="accountId-error">
@@ -157,10 +107,10 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
                             <InputLabel htmlFor="password">Password</InputLabel>
                             <OutlinedInput
-                                error={passwordError}
+                                error={!!passwordError}
                                 id="password"
                                 type={showPassword ? 'text' : 'password'}
-                                onChange={(e) => { checkValid(e.target.value, 2); setPassword(e.target.value) }}
+                                onChange={(e) => { checkValid(e.target.value, 2, setPasswordError); setPassword(e.target.value) }}
                                 endAdornment={
                                     <InputAdornment position="end">
                                         <IconButton
@@ -213,7 +163,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                                 onChange={(e) => {
                                     if (!e.target.value.includes(" ")) {
                                         setCfPassword(e.target.value);
-                                        checkValid(e.target.value, 3);
+                                        checkValid(e.target.value, 3, setPasswordConfirmError, password);
                                     }
                                 }}
                                 endAdornment={

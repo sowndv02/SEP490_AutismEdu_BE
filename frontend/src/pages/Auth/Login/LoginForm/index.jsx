@@ -7,13 +7,14 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import TrelloIcon from '~/assets/trello.svg?react';
-import GoogleIcon from '@mui/icons-material/Google';
+import Cookies from 'js-cookie';
 import { Link, useNavigate } from 'react-router-dom';
 import PAGES from '~/utils/pages';
 import service from '~/plugins/services'
 import { LoadingButton } from '@mui/lab';
 import { enqueueSnackbar } from 'notistack';
-
+import GoogleLogin from '../GoogleLogin';
+import checkValid from '~/utils/auth_form_verify';
 function LoginForm({ setVerify, setEmailVerify }) {
     const [showPassword, setShowPassword] = useState(false);
     const [emailError, setEmailError] = useState(null);
@@ -39,47 +40,14 @@ function LoginForm({ setVerify, setEmailVerify }) {
             handleSubmit();
         }
     }, [loading])
-    const checkValid = (value, field) => {
-        const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%]).+$/
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (field === 1) {
-            if (value === "") {
-                setEmailError("Please enter email");
-                return false;
-            } else if (!emailRegex.test(value)) {
-                setEmailError("Email is not valid");
-                return false;
-            } else {
-                setEmailError(null);
-                return true;
-            }
-        }
-        if (field === 2) {
-            if (value === "") {
-                setPasswordError("Please enter password");
-                return false;
-            } else if (value.length < 8) {
-                setPasswordError("Password must be more than 8 characters");
-                return false;
-            } else if (value.length > 15) {
-                setPasswordError("Password must be less than 15 characters");
-                return false;
-            } else if (!rgPassword.test(value)) {
-                setPasswordError("Password is invalid!");
-                return false;
-            } else {
-                setPasswordError(null);
-                return true;
-            }
-        }
-    }
+
     const handleSubmit = async () => {
         if (passwordError !== null || emailError !== null) {
             setLoading(false);
             return;
         } else {
-            const checkEmail = checkValid(email, 1);
-            const checkPw = checkValid(password, 2);
+            const checkEmail = checkValid(email, 1, setEmailError);
+            const checkPw = checkValid(password, 2, setPasswordError);
             if (!checkEmail || !checkPw) {
                 setLoading(false);
                 return;
@@ -88,6 +56,9 @@ function LoginForm({ setVerify, setEmailVerify }) {
                     email,
                     password
                 }, (res) => {
+                    console.log(res);
+                    Cookies.set('access_token', res.result.accessToken, { expires: 30 })
+                    Cookies.set('refresh_token', res.result.refreshToken, { expires: 365 })
                     enqueueSnackbar("Login successfully!", { variant: "success" });
                 }, (err) => {
                     console.log(err);
@@ -95,7 +66,6 @@ function LoginForm({ setVerify, setEmailVerify }) {
                         enqueueSnackbar("Failed to reset password!", { variant: "error" });
                     } else if (err.code === 406) {
                         enqueueSnackbar(err.error[0], { variant: "error" });
-                        // nav(`/verify-email/${email}/${false}`);
                         setVerify(true);
                         setEmailVerify(email);
                     }
@@ -132,7 +102,7 @@ function LoginForm({ setVerify, setEmailVerify }) {
                                 onChange={(e) => {
                                     if (!e.target.value.includes(" ")) {
                                         console.log("zoday");
-                                        checkValid(e.target.value, 1);
+                                        checkValid(e.target.value, 1, setEmailError);
                                         setEmail(e.target.value);
                                     }
                                 }}
@@ -154,7 +124,7 @@ function LoginForm({ setVerify, setEmailVerify }) {
                                 value={password}
                                 onChange={(e) => {
                                     if (!e.target.value.includes(" ")) {
-                                        checkValid(e.target.value, 2);
+                                        checkValid(e.target.value, 2, setPasswordError);
                                         setPassword(e.target.value);
                                     }
                                 }}
@@ -192,11 +162,7 @@ function LoginForm({ setVerify, setEmailVerify }) {
 
                     <Typography sx={{ textAlign: "center", mt: "20px" }}>New on our platform? <Link to={PAGES.REGISTER} style={{ color: "#666cff" }}>Create an account</Link></Typography>
                     <Divider sx={{ mt: "15px" }}>or</Divider>
-                    <Box sx={{ display: "flex", justifyContent: "center" }}>
-                        <IconButton>
-                            <GoogleIcon sx={{ color: "#dd4b39 " }} />
-                        </IconButton>
-                    </Box>
+                    <GoogleLogin />
                 </CardContent>
             </Card>
         </Box>
