@@ -3,10 +3,13 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace backend_api.Controllers
@@ -23,10 +26,14 @@ namespace backend_api.Controllers
         private string audience = string.Empty;
         private readonly IEmailSender _emailSender;
         private static int ValidateTime = 0;
+        private static string clientId = string.Empty;
+        private static string clientSecret = string.Empty;
         public AuthController(IUserRepository userRepository, IMapper mapper, 
             IConfiguration configuration, IEmailSender emailSender, DateTimeEncryption dateTimeEncryption)
         {
             ValidateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
+            clientId = configuration.GetValue<string>("Authentication:Google:ClientId");
+            clientSecret = configuration.GetValue<string>("Authentication:Google:ClientSecret");
             _dateTimeEncryption = dateTimeEncryption;
             _mapper = mapper;
             _userRepository = userRepository;
@@ -466,6 +473,140 @@ namespace backend_api.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
             
+        }
+
+        [HttpPost("get-token-external")]
+        public async Task<IActionResult> GetToken([FromBody] ExternalLoginRequestDTO model)
+        {
+
+            try
+            {
+
+                var tokenRequestUri = "https://oauth2.googleapis.com/token";
+                var client = new HttpClient();
+                var requestBody = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("code", model.Token),
+                    new KeyValuePair<string, string>("client_id", clientId),
+                    new KeyValuePair<string, string>("client_secret", clientSecret),
+                    new KeyValuePair<string, string>("redirect_uri", SD.URL_FE),
+                    new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                });
+
+                // Send the request
+                var response = await client.PostAsync(tokenRequestUri, requestBody);
+
+                // Log the request and response
+                var requestContent = await requestBody.ReadAsStringAsync();
+                Console.WriteLine("Request Content: " + requestContent);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Response Content: " + responseContent);
+                var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent);
+                if (tokenResponse == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Invalid Google token." };
+                    return BadRequest(_response);
+                }
+                var payload = await _userRepository.VerifyGoogleToken(tokenResponse.IdToken);
+
+                if (payload == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Invalid Google token." };
+                    return BadRequest(_response);
+                }
+                if (payload.ExpirationTimeSeconds == 0)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { "Token google expired." };
+                    return BadRequest(_response);
+                }
+                var user = await _userRepository.GetUserByEmailAsync(payload.Email);
+                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                if (user == null)
+                {
+                    user = await _userRepository.CreateAsync(new ApplicationUser
+                    {
+                        Email = payload.Email,
+                        Role = SD.User,
+                        UserType = SD.GOOGLE_USER,
+                        ImageUrl = payload.Picture,
+                        ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault,
+                        ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault,
+                        FullName = payload.Name,
+                        EmailConfirmed = true,
+                        IsLockedOut = false
+                    }, PasswordGenerator.GeneratePassword());
+
+                    if (user == null)
+                    {
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string>() { "Error while registering" };
+                        return BadRequest(_response);
+                    }
+                    await _userRepository.UpdateAsync(user);
+                }
+
+                var tokenDto = await _userRepository.Login(new LoginRequestDTO()
+                {
+                    Email = user.UserName,
+                    Password = user.PasswordHash
+                }, false);
+
+
+                if (tokenDto == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "User is currently locked out." };
+                    return BadRequest(_response);
+                }
+
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = tokenDto;
+                return Ok(_response);
+            }
+            catch (MissingMemberException e)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.NotAcceptable;
+                _response.ErrorMessages = new List<string>() { e.Message };
+                return BadRequest(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
+        [HttpGet("test-external")]
+        public async Task<object> GetUserInfo(string accessToken)
+        {
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                var response = await client.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+                if (response.IsSuccessStatusCode)
+                {
+                    var userInfo = await response.Content.ReadAsStringAsync();
+                    return Ok(userInfo);
+                }
+                else
+                {
+                    return BadRequest("Invalid access token.");
+                }
+            }
         }
     }
 }
