@@ -2,10 +2,10 @@ name: sep-api-cd
 
 on:
   push:
-    branches: [ production ]
+    branches: [ main ]
   pull_request:
     branches:
-      - production
+      - main
   workflow_dispatch:
 
 jobs:
