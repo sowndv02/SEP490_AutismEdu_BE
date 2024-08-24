@@ -30,6 +30,13 @@ const confirmEmail = async (params, success, error) => {
 const register = async (params, success, error) => {
   await post(API_CODE.API_007, params, success, error);
 }
+const loginGoogle = async (params, success, error) => {
+  await post(API_CODE.API_008, params, success, error);
+}
+
+const getData = async (success, error, params) => {
+  await get(API_CODE.API_009, success, error, params);
+}
 
 export const AuthenticationAPI = {
   login,
@@ -38,5 +45,7 @@ export const AuthenticationAPI = {
   forgotPassword,
   verifyAccount,
   confirmEmail,
-  register
+  register,
+  loginGoogle,
+  getData
 };
