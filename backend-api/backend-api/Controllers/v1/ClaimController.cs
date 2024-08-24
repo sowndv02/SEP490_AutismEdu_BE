@@ -79,6 +79,7 @@ namespace backend_api.Controllers.v1
                 _response.Result = result;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
+                _response.Pagination = pagination;
                 return Ok(_response);
             }
             catch (Exception ex)

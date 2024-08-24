@@ -248,7 +248,7 @@ namespace backend_api.Repository
             }
 
             // Check if the user is locked out
-            if (user.LockoutEnd != null && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
+            if (user.LockoutEnd != null && user.LockoutEnd.Value > DateTime.Now)
             {
                 throw new Exception("User account is locked out.");
             }
@@ -339,7 +339,7 @@ namespace backend_api.Repository
             var token = new JwtSecurityToken(
                 issuer: _configuration["ApiSettings:JWT:ValidIssuer"],
                 audience: _configuration["ApiSettings:JWT:ValidAudience"],
-                expires: DateTime.Now.AddMinutes(20),
+                expires: DateTime.UtcNow.AddMinutes(1),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authenKey, SecurityAlgorithms.HmacSha512Signature)
             );
@@ -374,7 +374,7 @@ namespace backend_api.Repository
 
 
             // If jus expired then mark as invalid and return empty
-            if (existingRefreshToken.ExpiresAt < DateTime.UtcNow)
+            if (existingRefreshToken.ExpiresAt < DateTime.Now)
             {
                 await MarkTokenAsInValid(existingRefreshToken);
                 return new TokenDTO();
@@ -407,7 +407,7 @@ namespace backend_api.Repository
                 IsValid = true,
                 UserId = userId,
                 JwtTokenId = tokenId,
-                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                ExpiresAt = DateTime.Now.AddDays(100),
                 Refresh_Token = Guid.NewGuid() + "-" + Guid.NewGuid()
             };
 
