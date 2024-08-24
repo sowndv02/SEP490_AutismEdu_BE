@@ -2,11 +2,8 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 const headers = {
-  'x-locale': Cookies.get('CurrentLanguage') || 'ja',
-  "Content-Type": "application/json",
-  "Access-Control-Allow-Headers": "*",
+  'x-locale': Cookies.get('CurrentLanguage') || 'ja'
 };
-
 
 const token = Cookies.get('access_token');
 if (token != undefined && token.length != 0) {
@@ -18,101 +15,14 @@ const axiosInstance = axios.create({
   headers,
 });
 
-axiosInstance.defaults.withCredentials = true;
-
-
-let isRefreshing = false;
-let refreshSubscribers = [];
-
-const onRrefreshed = (newToken) => {
-  refreshSubscribers.map((callback) => callback(newToken));
-  refreshSubscribers = [];
-};
-
-const addRefreshSubscriber = (callback) => {
-  refreshSubscribers.push(callback);
-};
-
-
-axiosInstance.interceptors.request.use(
-  (request) => {
-    if (token !== undefined) {
-      request.headers.Authorization = `Bearer ${token}`;
-      console.log(request.headers);
-    }
-    return request;
-  },
-  (error) => {
-    return Promise.reject(error);
+axiosInstance.interceptors.request.use(request => {
+  if (token !== undefined) {
+    request.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return request;
+});
 
-axiosInstance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    console.log(error);
-    const originalRequest = error.config;
-
-    // Kiểm tra nếu lỗi là 401 và không phải là yêu cầu làm mới token
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        console.log("test lan 2");
-        // Nếu đang làm mới token, thêm yêu cầu vào hàng đợi
-        return new Promise((resolve) => {
-          addRefreshSubscriber((newToken) => {
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            resolve(axiosInstance(originalRequest));
-          });
-        });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-      console.log("test lan 3");
-      // Gọi API để làm mới token
-      return new Promise((resolve, reject) => {
-        axios
-          .post('https://backend-api20240823212838.azurewebsites.net/api/v1/Auth/refresh', {
-            accessToken: Cookies.get("access_token"),
-            refresh: Cookies.get("refresh_token")
-          }) // Thay thế URL và payload phù hợp với API của bạn
-          .then((res) => {
-            if (res.status === 200) {
-              const newAccessToken = res.data.result.accessToken;
-              Cookies.set('access_token', newAccessToken);
-              console.log(res.data);
-              axiosInstance.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
-              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-              onRrefreshed(newAccessToken);
-              resolve(axiosInstance(originalRequest));
-            } else {
-              // Nếu làm mới token thất bại, thực hiện logout
-              Cookies.remove('access_token');
-              Cookies.remove('refresh_token');
-              window.location.href = '/login';
-              reject(error);
-            }
-          })
-          .catch((err) => {
-            Cookies.remove('access_token');
-            Cookies.remove('refresh_token');
-            window.location.href = '/login';
-            reject(err);
-          })
-          .finally(() => {
-            isRefreshing = false;
-          });
-      });
-    }
-
-    return Promise.reject(error);
-  }
-);
-
-const setHeaders = function (headers) {
+const setHeaders = function(headers) {
   axiosInstance.defaults.headers.common = { ...axiosInstance.defaults.headers.common, ...headers };
 }
 
