@@ -3,6 +3,7 @@ using backend_api.Authorize;
 using backend_api.Authorize.Requirements;
 using backend_api.Data;
 using backend_api.Mapper;
+using backend_api.Middlewares;
 using backend_api.Models;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
@@ -28,7 +29,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"));
 });
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-builder.Services.AddCors();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:5173") // Replace with your frontend URL
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .AllowCredentials();
+        });
+});
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
 builder.Services.AddResponseCaching();
@@ -168,19 +179,15 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "SEP490");
     //options.RoutePrefix = string.Empty;
 });
+app.UseCors("AllowSpecificOrigin");
 
+app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors(builder =>
-{
-    builder.AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader();
-});
 
 app.MapControllers();
 ApplyMigration();
