@@ -3,7 +3,6 @@ import services from '~/plugins/services'
 
 function Home() {
     const handleGetData = async () => {
-        console.log("run test");
         await services.AuthenticationAPI.getData(
             (res) => {
                 console.log(res);

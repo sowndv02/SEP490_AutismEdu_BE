@@ -21,11 +21,7 @@ const logError = (e, error) => {
     if (e.response?.status) {
       if (e.response.status === 401) {
         Cookies.remove('access_token');
-        Cookies.remove('role');
-        const previousUserId = Cookies.get('user_id') || '';
-        const queryString = `${window.location.pathname}${window.location.search}`;
-        Cookies.set('previous_user_id', previousUserId, { expires: 90 });
-        Cookies.set('redirectPath', queryString, { expires: 90 });
+        Cookies.remove('refresh_token');
         window.location.href = '/login';
         return;
       }
