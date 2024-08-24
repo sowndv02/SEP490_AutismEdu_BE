@@ -28,16 +28,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"));
 });
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigin",
-        builder =>
-        {
-            builder.WithOrigins(SD.URL_FE)
-                   .AllowAnyHeader()
-                   .AllowAnyMethod();
-        });
-});
+builder.Services.AddCors();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
 builder.Services.AddResponseCaching();
@@ -103,6 +94,8 @@ builder.Services.AddAuthentication(options =>
     options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero,
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidAudience = builder.Configuration["ApiSettings:JWT:ValidAudience"],
@@ -113,6 +106,8 @@ builder.Services.AddAuthentication(options =>
 {
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    options.Scope.Add("https://www.googleapis.com/auth/drive");
+    options.SaveTokens = true;
 });
 
 
@@ -180,7 +175,12 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("AllowSpecificOrigin");
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader();
+});
 
 app.MapControllers();
 ApplyMigration();
