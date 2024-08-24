@@ -292,6 +292,7 @@ namespace backend_api.Controllers.v1
                 Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = _mapper.Map<List<ApplicationUserDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;
                 return Ok(_response);
             }
             catch (Exception ex)
