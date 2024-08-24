@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using backend_api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace backend_api.Controllers
 {
@@ -10,9 +12,10 @@ namespace backend_api.Controllers
     [Authorize]
     public class AccessCheckerController : ControllerBase
     {
+        protected APIResponse _response;
         public AccessCheckerController()
         {
-            
+            _response = new();
         }
 
         //Anyone can access this
@@ -20,7 +23,9 @@ namespace backend_api.Controllers
         [AllowAnonymous]
         public IActionResult AllAccess()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
 
@@ -28,7 +33,9 @@ namespace backend_api.Controllers
         [HttpGet("authorized-access")]
         public IActionResult AuthorizedAccess()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
         [HttpGet("user-or-admin-role-access")]
@@ -36,7 +43,9 @@ namespace backend_api.Controllers
         //account with role of user or admin can access
         public IActionResult UserORAdminRoleAccess()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
         [HttpGet("admin-and-user")]
@@ -44,7 +53,9 @@ namespace backend_api.Controllers
         //account with role of user or admin can access
         public IActionResult UserANDAdminRoleAccess()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
         [HttpGet("admin")]
@@ -52,7 +63,9 @@ namespace backend_api.Controllers
         //account with role of admin can access
         public IActionResult AdminRoleAccess()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
         [HttpGet("admin-role-create-claim")]
@@ -60,7 +73,9 @@ namespace backend_api.Controllers
         //account with admin role and create Claim can access
         public IActionResult Admin_CreateAccess()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
         [HttpGet("admin-role-create-edit-delete-claim")]
@@ -68,7 +83,9 @@ namespace backend_api.Controllers
         //account with admin role and (create & Edit & Delete) Claim can access (AND NOT OR)
         public IActionResult Admin_Create_Edit_DeleteAccess()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
         [HttpGet("admin-role-create-edit-delete-claim-or-supperadmin")]
@@ -76,21 +93,27 @@ namespace backend_api.Controllers
         //account with admin role and (create & Edit & Delete) Claim can access (AND NOT OR)
         public IActionResult Admin_Create_Edit_DeleteAccess_OR_SuperAdminRole()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
         [HttpGet("admin-with-more-than-1000days")]
         [Authorize(Policy = "AdminWithMoreThan1000Days")]
         public IActionResult OnlyBhrugen()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
         [HttpGet("first-name-auth")]
         [Authorize(Policy = "FirstNameAuth")]
         public IActionResult FirstNameAuth()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
 
@@ -98,14 +121,18 @@ namespace backend_api.Controllers
         [Authorize(Policy = "AssignRolePolicy")]
         public IActionResult AssignRoleAccess()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
         [HttpGet("assign-claim")]
         [Authorize(Policy = "AssignClaimPolicy")]
         public IActionResult AssignClaimAccess()
         {
-            return Ok();
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
     }
