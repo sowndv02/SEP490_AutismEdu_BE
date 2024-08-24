@@ -3,6 +3,7 @@ using backend_api.Authorize;
 using backend_api.Authorize.Requirements;
 using backend_api.Data;
 using backend_api.Mapper;
+using backend_api.Middlewares;
 using backend_api.Models;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
@@ -178,7 +179,9 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "SEP490");
     options.RoutePrefix = string.Empty;
 });
+app.UseCors("AllowSpecificOrigin");
 
+app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();
