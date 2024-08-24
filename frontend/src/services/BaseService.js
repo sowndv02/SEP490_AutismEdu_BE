@@ -12,13 +12,13 @@ const initializeService = (axiosInstance, prefixValue) => {
 // Processes the response, returning the 'data' property if it exists
 const processResponse = (response) => {
   const data = response.data;
-  return data.hasOwnProperty('data') ? data.data : data;
+  return data?.data ? data.data : data;
 };
 
 // Logs and handles errors, specifically handling 401 unauthorized status
 const logError = (e, error) => {
   if (error && e.response) {
-    if (e.response.hasOwnProperty('status')) {
+    if (e.response?.status) {
       if (e.response.status === 401) {
         Cookies.remove('access_token');
         Cookies.remove('role');
@@ -30,11 +30,11 @@ const logError = (e, error) => {
         return;
       }
 
-      const errors = e.response.data.errors
-        ? Object.fromEntries(
-          Object.entries(e.response.data.errors).map(([key, value]) => [key, value[0]])
-        )
-        : [];
+      // const errors = e.response.data.errors
+      //   ? Object.fromEntries(
+      //     Object.entries(e.response.data.errors).map(([key, value]) => [key, value[0]])
+      //   )
+      //   : [];
       error({
         code: e.response.data.statusCode,
         error: e.response.data.errorMessages,

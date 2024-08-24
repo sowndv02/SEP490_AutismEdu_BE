@@ -11,6 +11,7 @@ import PAGES from '~/utils/pages';
 import service from '~/plugins/services'
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useSnackbar } from 'notistack';
+import checkValid from '~/utils/auth_form_verify';
 function ForgotPassword() {
     const [emailError, setEmailError] = useState(null);
     const [submited, setSubmited] = useState(false);
@@ -25,24 +26,6 @@ function ForgotPassword() {
             color: "red"
         }
     };
-
-    const checkValid = (e) => {
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (e === "") {
-            setEmailError("Please enter email");
-            return false;
-        } else if (e.length < 6) {
-            setEmailError("Username must be more than 6 characters");
-            return false;
-        } else if (!emailRegex.test(e)) {
-            setEmailError("Email is not valid");
-            return false;
-        } else {
-            setEmailError(null);
-            return true;
-        }
-    }
-
     useEffect(() => {
         if (loading) {
             handleSubmit();
@@ -88,7 +71,7 @@ function ForgotPassword() {
                                         <InputLabel htmlFor="email">Email</InputLabel>
                                         <OutlinedInput id="email" label="Email" variant="outlined" type='email'
                                             onChange={(e) => {
-                                                checkValid(e.target.value);
+                                                checkValid(e.target.value, 1, setEmailError);
                                                 setEmail(e.target.value)
                                             }}
                                             error={!!emailError}
@@ -106,7 +89,7 @@ function ForgotPassword() {
                                 <LoadingButton loading={loading} loadingIndicator="Sending..." variant='contained'
                                     sx={{ width: "100%", marginTop: "20px" }}
                                     onClick={() => {
-                                        const isValidEmail = checkValid(email);
+                                        const isValidEmail = checkValid(email, 1, setEmailError);
                                         if (isValidEmail) {
                                             setLoading(true);
                                         }

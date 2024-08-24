@@ -14,6 +14,7 @@ import TrelloIcon from '~/assets/trello.svg?react';
 import HtmlTooltip from '~/components/HtmlTooltip';
 import service from '~/plugins/services';
 import PAGES from '~/utils/pages';
+import checkValid from '~/utils/auth_form_verify';
 function RegisterForm({ setVerify, setEmailVerify }) {
     const [showPassword, setShowPassword] = useState(false);
     const [emailError, setEmailError] = useState(null);
@@ -98,9 +99,9 @@ function RegisterForm({ setVerify, setEmailVerify }) {
             setLoading(false);
             return;
         } else {
-            const checkPw = checkValid(password, 2);
-            const checkCfPw = checkValid(cfPassword, 3);
-            const checkEmail = checkValid(email, 1);
+            const checkPw = checkValid(password, 2, setPasswordError);
+            const checkCfPw = checkValid(cfPassword, 3, setPasswordConfirmError, password);
+            const checkEmail = checkValid(email, 1, setEmailError);
             if (!checkPw || !checkCfPw || !checkEmail) {
                 setLoading(false);
                 return;
@@ -144,8 +145,8 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
                             <InputLabel htmlFor="email">Email</InputLabel>
                             <OutlinedInput id="email" label="Email" variant="outlined" type='email'
-                                onChange={(e) => { checkValid(e.target.value, 1); setEmail(e.target.value) }}
-                                error={emailError} />
+                                onChange={(e) => { checkValid(e.target.value, 1, setEmailError); setEmail(e.target.value) }}
+                                error={!!emailError} />
                             {
                                 emailError && (
                                     <FormHelperText error id="accountId-error">
@@ -157,10 +158,10 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
                             <InputLabel htmlFor="password">Password</InputLabel>
                             <OutlinedInput
-                                error={passwordError}
+                                error={!!passwordError}
                                 id="password"
                                 type={showPassword ? 'text' : 'password'}
-                                onChange={(e) => { checkValid(e.target.value, 2); setPassword(e.target.value) }}
+                                onChange={(e) => { checkValid(e.target.value, 2, setPasswordError); setPassword(e.target.value) }}
                                 endAdornment={
                                     <InputAdornment position="end">
                                         <IconButton
@@ -213,7 +214,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                                 onChange={(e) => {
                                     if (!e.target.value.includes(" ")) {
                                         setCfPassword(e.target.value);
-                                        checkValid(e.target.value, 3);
+                                        checkValid(e.target.value, 3, setPasswordConfirmError, password);
                                     }
                                 }}
                                 endAdornment={
