@@ -35,7 +35,8 @@ builder.Services.AddCors(options =>
         {
             builder.WithOrigins(SD.URL_FE)
                    .AllowAnyHeader()
-                   .AllowAnyMethod();
+                   .AllowAnyMethod()
+                   .AllowCredentials();
         });
 }); 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
@@ -169,7 +170,7 @@ builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwa
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
+app.UseCors("AllowSpecificOrigin");
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>
@@ -183,8 +184,6 @@ app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseCors("AllowSpecificOrigin");
 app.MapControllers();
 ApplyMigration();
 app.Run();
