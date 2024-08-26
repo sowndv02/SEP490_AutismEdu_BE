@@ -60,11 +60,14 @@ builder.Services.AddScoped<IAuthorizationHandler, AssignClaimHandler>();
 
 
 
-// Add DI SendMail Service
+// Add DI other Service
 var mailsettings = builder.Configuration.GetSection("MailSettings");
 builder.Services.Configure<MailSettings>(mailsettings);
 builder.Services.AddTransient<IEmailSender, SendMailService>();
 builder.Services.AddSingleton<DateTimeEncryption>();
+//builder.Services.AddHostedService<RefreshTokenCleanupService>();
+
+
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingConfig));
