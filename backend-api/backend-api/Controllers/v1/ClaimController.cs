@@ -1,15 +1,9 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
 using System.Data;
-using System.Drawing;
 using System.Net;
 using System.Text.Json;
 
@@ -129,13 +123,14 @@ namespace backend_api.Controllers.v1
 
                 if (model == null)
                 {
+                    //throw new NotFoundException(nameof(GetClaimByIdAsync), id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { $"Claim with ID {id} not found." };
                     return NotFound(_response);
                 }
                 var result = _mapper.Map<ClaimDTO>(model);
-               
+
                 var (totalCount, users) = await _userRepository.GetUsersForClaimAsync(result.Id, takeValue);
                 result.TotalUser = totalCount;
                 result.Users = _mapper.Map<List<ApplicationUserDTO>>(users);
