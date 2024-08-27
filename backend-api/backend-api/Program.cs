@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
 
@@ -29,6 +30,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"));
 });
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+// Add Loging
+Log.Logger = new LoggerConfiguration().MinimumLevel.Debug()
+    .WriteTo.File("log/seplogs.txt", rollingInterval: RollingInterval.Day).CreateLogger();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
@@ -125,6 +131,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 
+builder.Host.UseSerilog();
 // Config Authorization with policy
 
 builder.Services.AddAuthorization(option =>
