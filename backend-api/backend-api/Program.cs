@@ -48,7 +48,11 @@ builder.Services.AddCors(options =>
 }); 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
-builder.Services.AddResponseCaching();
+builder.Services.AddResponseCaching(options =>
+{
+    options.MaximumBodySize = 1024;
+    options.UseCaseSensitivePaths = true;
+});
 
 // Add DI
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -192,9 +196,27 @@ app.UseSwaggerUI(options =>
 app.UseCors("AllowSpecificOrigin");
 
 app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
+app.UseMiddleware<RequestTimeLoggingMidleware>();
+app.UseMiddleware<ExceptionMiddleware>();
+
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();
+app.UseResponseCaching();
+
+// Add cache for response
+app.Use(async (context, next) =>
+{
+    context.Response.GetTypedHeaders().CacheControl =
+    new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
+    {
+        Public = true,
+        MaxAge = TimeSpan.FromSeconds(10)
+    };
+    context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] = new string[] { "Accept-Encoding" };
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
