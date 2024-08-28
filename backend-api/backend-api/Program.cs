@@ -45,7 +45,7 @@ builder.Services.AddCors(options =>
                    .AllowAnyMethod()
                    .AllowCredentials();
         });
-}); 
+});
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
 builder.Services.AddResponseCaching(options =>
@@ -232,8 +232,7 @@ void ApplyMigration()
         {
             var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            // Seed the database if it’s empty
-            _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
+
             // Check for pending migrations and apply them if any
             var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
             if (pendingMigrations.Count > 0)
@@ -242,7 +241,8 @@ void ApplyMigration()
                 _db.Database.Migrate();
                 Console.WriteLine("Migrations applied successfully.");
             }
-
+            // Seed the database if it’s empty
+            _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
         }
     }
     catch (Exception ex)
