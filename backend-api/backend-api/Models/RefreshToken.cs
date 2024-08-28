@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_api.Models
 {
@@ -7,6 +8,8 @@ namespace backend_api.Models
         [Key]
         public int Id { get; set; }
         public string UserId { get; set; }
+        [ForeignKey(nameof(UserId))]
+        public ApplicationUser User { get; set; }
         public string JwtTokenId { get; set; }
         public string Refresh_Token { get; set; }
         public bool IsValid { get; set; }

@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_api.Models
 {
-    public class ApplicationUser :IdentityUser
+    public class ApplicationUser : IdentityUser
     {
         [Required]
         public string FullName { get; set; }
@@ -21,5 +21,8 @@ namespace backend_api.Models
         [NotMapped]
         public bool IsLockedOut { get; set; }
         public string UserType { get; set; } = SD.APPLICATION_USER;
+
+        //public List<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        //public List<ApplicationClaim> ApplicationClaims { get; set; } = new List<ApplicationClaim>();
     }
 }

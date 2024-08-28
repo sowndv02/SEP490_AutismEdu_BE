@@ -5,6 +5,7 @@ using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Net;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace backend_api.Controllers.v1
@@ -156,6 +157,7 @@ namespace backend_api.Controllers.v1
             {
                 if (claimDTO == null) return BadRequest(claimDTO);
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
+                model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 await _claimRepository.CreateAsync(model);
                 _response.Result = _mapper.Map<ClaimDTO>(model);
                 _response.StatusCode = HttpStatusCode.Created;
