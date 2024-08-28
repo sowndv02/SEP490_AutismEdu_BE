@@ -234,6 +234,8 @@ void ApplyMigration()
         {
             var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+            // Seed the database if it’s empty
+            _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
             // Check for pending migrations and apply them if any
             var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
             if (pendingMigrations.Count > 0)
@@ -243,8 +245,6 @@ void ApplyMigration()
                 Console.WriteLine("Migrations applied successfully.");
             }
 
-            // Seed the database if it’s empty
-            _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
         }
     }
     catch (Exception ex)
