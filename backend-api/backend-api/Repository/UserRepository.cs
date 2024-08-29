@@ -301,6 +301,7 @@ namespace backend_api.Repository
             var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
             if(!string.IsNullOrEmpty(refreshTokenGoogle) && !checkPassword)
             {
+                await RevokeRefreshTokenGoogleAsync(user.Id);
                 await SaveRefreshTokenGoogleAsync(new RefreshToken()
                 {
                     UserId = user.Id,
@@ -310,7 +311,6 @@ namespace backend_api.Repository
                     JwtTokenId = jwtTokenId,
                     TokenType = SD.GOOGLE_REFRESH_TOKEN
                 });
-                await RevokeRefreshTokenGoogleAsync(user.Id);
             }
             TokenDTO tokenDTO = new()
             {
