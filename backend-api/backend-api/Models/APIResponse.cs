@@ -12,6 +12,6 @@ namespace backend_api.Models
         public bool IsSuccess { get; set; } = true;
         public List<string> ErrorMessages { get; set; }
         public object Result { get; set; }
-        public Pagination Pagination { get; set; }
+        public Pagination? Pagination { get; set; }
     }
 }
