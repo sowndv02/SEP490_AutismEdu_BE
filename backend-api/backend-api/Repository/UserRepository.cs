@@ -6,6 +6,7 @@ using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
 using System.Security.Claims;
@@ -33,6 +34,37 @@ namespace backend_api.Repository
             _context = context;
             _configuration = configuration;
             secretKey = configuration.GetValue<string>("ApiSettings:JWT:Secret");
+        }
+
+        public async Task RevokeRefreshTokenGoogleAsync(string userId)
+        {
+            try
+            {
+                var list = await _context.RefreshTokens.Where(x => x.UserId == userId && x.TokenType == SD.GOOGLE_REFRESH_TOKEN && x.IsValid).ToListAsync();
+                foreach (var item in list) 
+                {
+                    item.IsValid = false;
+                }
+                _context.RefreshTokens.UpdateRange(list);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        public async Task<string> SaveRefreshTokenGoogleAsync(RefreshToken refreshToken)
+        {
+            try
+            {
+                await _context.RefreshTokens.AddAsync(refreshToken);
+                await _context.SaveChangesAsync();
+                return refreshToken.Refresh_Token;
+            }
+            catch (Exception ex) 
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public async Task<(int TotalCount, List<ApplicationUser> Users)> GetUsersForClaimAsync(int claimId, int takeValue = 4, int pageSize = 0, int pageNumber = 0)
@@ -226,7 +258,7 @@ namespace backend_api.Repository
             return false;
         }
 
-        public async Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO, bool checkPassword = true)
+        public async Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO, bool checkPassword = true, string refreshTokenGoogle = null)
         {
             var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName.ToLower() == loginRequestDTO.Email.ToLower());
             if (user == null)
@@ -267,7 +299,19 @@ namespace backend_api.Repository
             var jwtTokenId = $"JTI{Guid.NewGuid()}";
             var accessToken = await GetAccessToken(user, jwtTokenId);
             var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
-
+            if(!string.IsNullOrEmpty(refreshTokenGoogle) && !checkPassword)
+            {
+                await SaveRefreshTokenGoogleAsync(new RefreshToken()
+                {
+                    UserId = user.Id,
+                    Refresh_Token = refreshTokenGoogle,
+                    ExpiresAt = DateTime.Now.AddYears(1),
+                    IsValid = true,
+                    JwtTokenId = jwtTokenId,
+                    TokenType = SD.GOOGLE_REFRESH_TOKEN
+                });
+                await RevokeRefreshTokenGoogleAsync(user.Id);
+            }
             TokenDTO tokenDTO = new()
             {
                 AccessToken = accessToken,
@@ -397,6 +441,7 @@ namespace backend_api.Repository
             };
         }
 
+
         private async Task<string> CreateNewRefreshToken(string userId, string tokenId)
         {
             RefreshToken refreshToken = new()
@@ -405,7 +450,8 @@ namespace backend_api.Repository
                 UserId = userId,
                 JwtTokenId = tokenId,
                 ExpiresAt = DateTime.Now.AddDays(100),
-                Refresh_Token = Guid.NewGuid() + "-" + Guid.NewGuid()
+                Refresh_Token = Guid.NewGuid() + "-" + Guid.NewGuid(),
+                TokenType = SD.APPLICATION_REFRESH_TOKEN
             };
 
             await _context.RefreshTokens.AddAsync(refreshToken);
@@ -786,6 +832,21 @@ namespace backend_api.Repository
             try
             {
                 return await GoogleJsonWebSignature.ValidateAsync(token);
+            }
+            catch (Exception)
+            {
+                return null; //Invalid token or error
+            }
+        }
+        public async Task<string> GetRefreshTokenGoogleValid(string userId)
+        {
+            try
+            {
+                var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.IsValid && x.TokenType == SD.GOOGLE_REFRESH_TOKEN && x.UserId == userId);
+
+                if (refreshToken == null) return null;
+
+                return refreshToken.Refresh_Token;
             }
             catch (Exception)
             {
