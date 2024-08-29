@@ -3,14 +3,12 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace backend_api.Controllers
 {
@@ -28,7 +26,7 @@ namespace backend_api.Controllers
         private static int ValidateTime = 0;
         private static string clientId = string.Empty;
         private static string clientSecret = string.Empty;
-        public AuthController(IUserRepository userRepository, IMapper mapper, 
+        public AuthController(IUserRepository userRepository, IMapper mapper,
             IConfiguration configuration, IEmailSender emailSender, DateTimeEncryption dateTimeEncryption)
         {
             ValidateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
@@ -103,7 +101,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
-                if(DateTime.Now > security.AddMinutes(ValidateTime))
+                if (DateTime.Now > security.AddMinutes(ValidateTime))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -211,7 +209,7 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string>() { $"User not found with email is {forgotPasswordDTO.Email} invalid." };
                     return NotFound(_response);
                 }
-                else if(user.UserType == SD.GOOGLE_USER)
+                else if (user.UserType == SD.GOOGLE_USER)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
@@ -404,7 +402,7 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string>() { "Invalid Google token." };
                     return BadRequest(_response);
                 }
-                if(payload.ExpirationTimeSeconds == 0)
+                if (payload.ExpirationTimeSeconds == 0)
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -435,7 +433,7 @@ namespace backend_api.Controllers
                         _response.ErrorMessages = new List<string>() { "Error while registering" };
                         return BadRequest(_response);
                     }
-                    await _userRepository.UpdateAsync(user);           
+                    await _userRepository.UpdateAsync(user);
                 }
 
                 var tokenDto = await _userRepository.Login(new LoginRequestDTO()
@@ -472,7 +470,7 @@ namespace backend_api.Controllers
                 _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
-            
+
         }
 
         [HttpPost("get-token-external")]
