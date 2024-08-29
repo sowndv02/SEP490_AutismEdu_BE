@@ -15,6 +15,6 @@ namespace backend_api.Models
         public string Refresh_Token { get; set; }
         public bool IsValid { get; set; }
         public DateTime ExpiresAt { get; set; }
-        public TokenType TokenType { get; set; } = TokenType.Application;
+        public string TokenType { get; set; } = SD.APPLICATION_REFRESH_TOKEN;
     }
 }
