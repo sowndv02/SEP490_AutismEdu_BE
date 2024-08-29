@@ -18,6 +18,7 @@ namespace backend_api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly DateTimeEncryption _dateTimeEncryption;
+        private readonly TokenEcryption _tokenEncryption;
         private readonly IUserRepository _userRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
@@ -27,7 +28,7 @@ namespace backend_api.Controllers
         private static string clientId = string.Empty;
         private static string clientSecret = string.Empty;
         public AuthController(IUserRepository userRepository, IMapper mapper,
-            IConfiguration configuration, IEmailSender emailSender, DateTimeEncryption dateTimeEncryption)
+            IConfiguration configuration, IEmailSender emailSender, DateTimeEncryption dateTimeEncryption, TokenEcryption tokenEncryption)
         {
             ValidateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
             clientId = configuration.GetValue<string>("Authentication:Google:ClientId");
@@ -37,6 +38,7 @@ namespace backend_api.Controllers
             _userRepository = userRepository;
             _response = new();
             _emailSender = emailSender;
+            _tokenEncryption = tokenEncryption;
         }
 
         [HttpPost("resend-confirm-email")]
@@ -325,7 +327,7 @@ namespace backend_api.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> GetNewTokenFromRefreshToken([FromBody] TokenDTO model)
+        public async Task<IActionResult> GetNewTokenFromRefreshToken([FromBody] TokenDTO model, [FromRoute] bool isRequiredGoogle = false)
         {
             try
             {
@@ -338,6 +340,36 @@ namespace backend_api.Controllers
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string>() { "Token Invalid" };
                         return BadRequest(_response);
+                    }
+                    if(isRequiredGoogle &&  model.AccessTokenGoogle != null)
+                    {
+                        var payload = await _userRepository.VerifyGoogleToken(_tokenEncryption.DecryptToken(model.AccessTokenGoogle));
+
+                        if (payload == null)
+                        {
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            _response.IsSuccess = false;
+                            _response.ErrorMessages = new List<string>() { "Invalid Google token." };
+                            return BadRequest(_response);
+                        }
+                        var user = await _userRepository.GetUserByEmailAsync(payload.Email);
+                        if(user == null)
+                        {
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            _response.IsSuccess = false;
+                            _response.ErrorMessages = new List<string>() { "Invalid Google User." };
+                            return BadRequest(_response);
+                        }
+                        var refreshToken = await _userRepository.GetRefreshTokenGoogleValid(user.Id);
+                        if (refreshToken == null)
+                        {
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            _response.IsSuccess = false;
+                            _response.ErrorMessages = new List<string>() { "User dont have any refresh token google valid." };
+                            return BadRequest(_response);
+                        }
+                        var newAccessToken = await GetNewAccessTokenUsingRefreshTokenGoogle(refreshToken);
+                        tokenDTOResponse.AccessTokenGoogle = _tokenEncryption.EncryptToken(newAccessToken);
                     }
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -479,28 +511,8 @@ namespace backend_api.Controllers
 
             try
             {
+                var tokenResponse = await GetTokenFromCode(model.Token);
 
-                var tokenRequestUri = "https://oauth2.googleapis.com/token";
-                var client = new HttpClient();
-                var requestBody = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("code", model.Token),
-                    new KeyValuePair<string, string>("client_id", clientId),
-                    new KeyValuePair<string, string>("client_secret", clientSecret),
-                    new KeyValuePair<string, string>("redirect_uri", SD.URL_FE),
-                    new KeyValuePair<string, string>("grant_type", "authorization_code"),
-                });
-
-                // Send the request
-                var response = await client.PostAsync(tokenRequestUri, requestBody);
-
-                // Log the request and response
-                var requestContent = await requestBody.ReadAsStringAsync();
-                Console.WriteLine("Request Content: " + requestContent);
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Response Content: " + responseContent);
-                var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent);
                 if (tokenResponse == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -555,7 +567,7 @@ namespace backend_api.Controllers
                 {
                     Email = user.UserName,
                     Password = user.PasswordHash
-                }, false);
+                }, false, tokenResponse.RefreshToken);
 
 
                 if (tokenDto == null)
@@ -566,6 +578,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
 
+                tokenDto.AccessTokenGoogle = _tokenEncryption.EncryptToken(tokenResponse.AccessToken);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 _response.Result = tokenDto;
@@ -585,26 +598,97 @@ namespace backend_api.Controllers
                 _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
-        }
+        } 
 
-
-        [HttpGet("test-external")]
-        public async Task<object> GetUserInfo(string accessToken)
+        [HttpPost("get-new-access-token-external")]
+        public async Task<IActionResult> GetNewAccessTokenGoogle([FromBody]string userId)
         {
-            using (var client = new HttpClient())
+            try
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                var response = await client.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+                var refreshToken = await _userRepository.GetRefreshTokenGoogleValid(userId);
+                if(refreshToken == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "User dont have any refresh token google valid." };
+                    return BadRequest(_response);
+                }
+                var newAccessToken = await GetNewAccessTokenUsingRefreshTokenGoogle(refreshToken);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = _tokenEncryption.EncryptToken(newAccessToken);
+                return Ok(_response);
+            }
+            catch (Exception ex) 
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+        private async Task<string> GetNewAccessTokenUsingRefreshTokenGoogle(string refreshToken)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var requestBody = new Dictionary<string, string>
+                {
+                    { "client_id", clientId },
+                    { "client_secret", clientSecret },
+                    { "refresh_token", refreshToken },
+                    { "grant_type", "refresh_token" }
+                };
+
+                var requestContent = new FormUrlEncodedContent(requestBody);
+
+                var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", requestContent);
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var userInfo = await response.Content.ReadAsStringAsync();
-                    return Ok(userInfo);
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent);
+                    return tokenResponse.AccessToken;
                 }
                 else
                 {
-                    return BadRequest("Invalid access token.");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Error refreshing token: {errorContent}");
                 }
             }
         }
+
+        private async Task<GoogleTokenResponse> GetTokenFromCode(string code)
+        {
+            try
+            {
+                var tokenRequestUri = "https://oauth2.googleapis.com/token";
+                var client = new HttpClient();
+                var requestBody = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("code", code),
+                    new KeyValuePair<string, string>("client_id", clientId),
+                    new KeyValuePair<string, string>("client_secret", clientSecret),
+                    new KeyValuePair<string, string>("redirect_uri", SD.URL_FE),
+                    new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                });
+
+                // Send the request
+                var response = await client.PostAsync(tokenRequestUri, requestBody);
+
+                // Log the request and response
+                var requestContent = await requestBody.ReadAsStringAsync();
+                Console.WriteLine("Request Content: " + requestContent);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Response Content: " + responseContent);
+                var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent);
+                return tokenResponse;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
     }
 }
