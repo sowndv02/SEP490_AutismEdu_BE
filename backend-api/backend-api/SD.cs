@@ -13,5 +13,10 @@
         public const string APPLICATION_USER = "ApplicationUser";
         public const string GOOGLE_USER = "GoogleUser";
         public const string FOLDER_NAME_LOG_EMAIL = "MailSave";
+
+        public enum TokenType
+        {
+            Application, Google
+        }
     }
 }

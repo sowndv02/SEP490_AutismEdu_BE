@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using static backend_api.SD;
 
 namespace backend_api.Models
 {
@@ -14,5 +15,6 @@ namespace backend_api.Models
         public string Refresh_Token { get; set; }
         public bool IsValid { get; set; }
         public DateTime ExpiresAt { get; set; }
+        public TokenType TokenType { get; set; } = TokenType.Application;
     }
 }
