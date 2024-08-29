@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace backend_api.Controllers
 {
@@ -511,7 +512,27 @@ namespace backend_api.Controllers
 
             try
             {
-                var tokenResponse = await GetTokenFromCode(model.Token);
+                var tokenRequestUri = "https://oauth2.googleapis.com/token";
+                var client = new HttpClient();
+                var requestBody = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("code", model.Token),
+                    new KeyValuePair<string, string>("client_id", clientId),
+                    new KeyValuePair<string, string>("client_secret", clientSecret),
+                    new KeyValuePair<string, string>("redirect_uri", SD.URL_FE),
+                    new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                });
+
+                // Send the request
+                var response = await client.PostAsync(tokenRequestUri, requestBody);
+
+                // Log the request and response
+                var requestContent = await requestBody.ReadAsStringAsync();
+                Console.WriteLine("Request Content: " + requestContent);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Response Content: " + responseContent);
+                var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent);
 
                 if (tokenResponse == null)
                 {
