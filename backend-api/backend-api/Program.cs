@@ -76,7 +76,7 @@ builder.Services.Configure<MailSettings>(mailsettings);
 builder.Services.AddTransient<IEmailSender, SendMailService>();
 builder.Services.AddSingleton<DateTimeEncryption>();
 builder.Services.AddSingleton<TokenEcryption>();
-//builder.Services.AddHostedService<RefreshTokenCleanupService>();
+builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
 
 
