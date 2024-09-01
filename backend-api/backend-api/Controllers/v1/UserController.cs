@@ -2,12 +2,8 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Drawing;
 using System.Net;
-using System.Security.Claims;
 using System.Text.Json;
 
 namespace backend_api.Controllers.v1
@@ -22,7 +18,7 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
-        public UserController(IUserRepository userRepository, IMapper mapper, 
+        public UserController(IUserRepository userRepository, IMapper mapper,
             IConfiguration configuration, IBlobStorageRepository blobStorageRepository)
         {
             pageSize = configuration.GetValue<int>("APIConfig:PageSize");
@@ -58,7 +54,8 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.OK;
                     return Ok(_response);
                 }
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
@@ -115,31 +112,11 @@ namespace backend_api.Controllers.v1
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
                 model.CreatedDate = DateTime.Now;
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                if (createDTO.Image != null)
-                {
-                    if (!string.IsNullOrEmpty(model.ImageLocalPathUrl))
-                    {
-                        var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), model.ImageLocalPathUrl);
-                        FileInfo file = new FileInfo(oldFilePathDirectory);
-                        if (file.Exists)
-                        {
-                            file.Delete();
-                        }
-                    }
-                    Guid guid = Guid.NewGuid();
-                    string fileName = guid.ToString() + Path.GetExtension(createDTO.Image.FileName);
-                    string filePath = @"wwwroot\UserImages\" + fileName;
+                string filePath = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
+                model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                model.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
+                model.ImageLocalPathUrl = filePath;
 
-                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
-
-                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
-                    {
-                        createDTO.Image.CopyTo(fileStream);
-                    }
-                    model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
-                    model.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
-                    model.ImageLocalPathUrl = filePath;
-                }
                 model.UserName = model.Email;
                 model.UserType = SD.APPLICATION_USER;
                 model.LockoutEnabled = true;
@@ -185,9 +162,9 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
-        
+
         [HttpPut("{id}")]
-        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, [FromForm]ApplicationUserDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, [FromForm] ApplicationUserDTO updateDTO)
         {
             try
             {
@@ -244,7 +221,7 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? searchValue, string? searchType, string? searchTypeId,int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? searchValue, string? searchType, string? searchTypeId, int pageNumber = 1)
         {
             try
             {
@@ -252,7 +229,7 @@ namespace backend_api.Controllers.v1
                 List<ApplicationUser> list = new();
                 if (!string.IsNullOrEmpty(searchType))
                 {
-                    switch (searchType.ToLower().Trim()) 
+                    switch (searchType.ToLower().Trim())
                     {
                         case "all":
                             list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
@@ -263,7 +240,7 @@ namespace backend_api.Controllers.v1
                             {
                                 var (total, users) = await _userRepository.GetUsersForClaimAsync(int.Parse(searchTypeId), pageSize, pageNumber);
                                 list = users;
-                                totalCount = total; 
+                                totalCount = total;
                             }
                             break;
                         case "role":
