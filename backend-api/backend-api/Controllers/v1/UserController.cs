@@ -106,7 +106,6 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-
                 if (createDTO == null) return BadRequest(createDTO);
 
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
