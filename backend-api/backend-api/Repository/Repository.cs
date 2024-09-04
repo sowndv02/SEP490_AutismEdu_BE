@@ -2,11 +2,10 @@
 using backend_api.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using System.Linq;
 
 namespace backend_api.Repository
 {
-   
+
     public class Repository<T> : IRepository<T> where T : class
     {
         private readonly ApplicationDbContext _context;
@@ -84,10 +83,6 @@ namespace backend_api.Repository
                 query = query.Where(filter);
             if (pageSize > 0)
             {
-                if (pageSize > 100)
-                {
-                    pageSize = 100;
-                }
                 query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
             }
             if (includeProperties != null)
