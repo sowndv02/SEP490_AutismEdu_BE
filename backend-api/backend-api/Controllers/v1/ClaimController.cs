@@ -32,11 +32,17 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllClaimsAsync([FromQuery] string? search, string? searchType, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllClaimsAsync([FromQuery] string? search, string? searchType, int pageNumber = 1, string? userId = null)
         {
             try
             {
-                List<ApplicationClaim> list = await _claimRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                List<UserClaim> userClaims = null;
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    userClaims = await _userRepository.GetClaimByUserIdAsync(userId);
+                }
+                List<ApplicationClaim> list = await _claimRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, userClaims: userClaims);
+
                 if (!string.IsNullOrEmpty(search) && !string.IsNullOrEmpty(searchType))
                 {
                     switch (searchType.ToLower())
