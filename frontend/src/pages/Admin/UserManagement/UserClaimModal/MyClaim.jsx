@@ -1,20 +1,29 @@
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { Box, Checkbox, IconButton, Typography } from '@mui/material';
-import DeleteClaimDialog from './DeleteClaimDialog';
+import { Box, Checkbox, Typography } from '@mui/material';
+import { enqueueSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
-import services from '~/plugins/services';
 import LoadingComponent from '~/components/LoadingComponent';
-function MyClaim({ open, currentUser }) {
-    const [selectedClaims, setSelectedClaims] = useState(null);
+import services from '~/plugins/services';
+import DeleteClaimDialog from './DeleteClaimDialog';
+function MyClaim({ currentUser }) {
+    const [selectedClaims, setSelectedClaims] = useState([]);
     const [myClaim, setMyClaim] = useState(null);
     const [loading, setLoading] = useState(false);
-
+    const [apiCall, setApiCall] = useState(null);
     useEffect(() => {
-        setLoading(true);
+        setApiCall(1);
     }, []);
 
     useEffect(() => {
-        handleGetData();
+        if (apiCall !== null)
+            setLoading(true);
+    }, [apiCall]);
+
+    useEffect(() => {
+        if (apiCall === 1) {
+            handleGetData();
+        } else if (apiCall === 2) {
+            handleDelete();
+        }
     }, [loading])
     const handleGetData = async () => {
         try {
@@ -26,41 +35,74 @@ function MyClaim({ open, currentUser }) {
                 console.log(err);
             });
             setLoading(false);
+            setApiCall(null);
         } catch (error) {
             console.log(error);
             setLoading(false);
         }
     }
+    const handleDelete = async () => {
+        try {
+            await services.UserManagementAPI.removeUserClaims(currentUser.id,
+                {
+                    userId: currentUser.id,
+                    userClaimIds: selectedClaims
+                }, (res) => {
+                    enqueueSnackbar("Remove claim successfully!", { variant: "success" });
+                    const updatedClaim = myClaim.filter((m) => {
+                        return !selectedClaims.includes(m.id);
+                    });
+                    setMyClaim(updatedClaim);
+                }, (err) => {
+                    enqueueSnackbar("Remove claim failed!", { variant: "error" });
+                    console.log(err);
+                });
+            setLoading(false);
+            setApiCall(null);
+        } catch (error) {
+            console.log(error);
+            setLoading(false);
+        }
+    }
+
     const checkedClaim = (e, id) => {
         if (e.target.checked) {
-            if (selectedClaims === null) setSelectedClaims([id]);
-            else setSelectedClaims([id, ...selectedClaims])
+            setSelectedClaims([id, ...selectedClaims])
         } else if (selectedClaims.length !== 1) {
             const filteredClaim = selectedClaims.filter((s) => {
                 return s !== id;
             })
             setSelectedClaims(filteredClaim);
         } else {
-            setSelectedClaims(null);
+            setSelectedClaims([]);
         }
     }
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedClaims([0, 1, 2, 3]);
+            const ids = myClaim.map((m) => {
+                return m.id
+            })
+            setSelectedClaims(ids);
         } else {
-            setSelectedClaims(null);
+            setSelectedClaims([]);
         }
     }
     return (
-        <Box mt="20px">
+        <Box mt="20px" sx={{maxHeight:"500px", overflow:"auto"}}>
             <Box>
                 {
-                    myClaim === null ? (
+                    (myClaim === null || myClaim.lenght !== 0) ? (
                         <Typography>This user has not been assigned any claims yet.</Typography>
                     ) : (
                         <>
                             <Box sx={{ display: "flex", alignItems: "center" }}>
-                                <Checkbox onClick={(e) => { handleSelectAll(e) }} /> <IconButton ><DeleteOutlineIcon /></IconButton>
+                                <Checkbox onClick={(e) => { handleSelectAll(e) }}
+                                    checked={Array.isArray(selectedClaims) && selectedClaims.length === myClaim?.length || 0} />
+                                {
+                                    Array.isArray(selectedClaims) && selectedClaims.length > 0 &&
+                                    <DeleteClaimDialog setApiCall={setApiCall} numberClaim={selectedClaims.length} />
+                                }
+
                             </Box>
                             {
                                 myClaim?.map((l, index) => {
@@ -75,9 +117,8 @@ function MyClaim({ open, currentUser }) {
                                             py: "10px",
                                         }}>
                                             <Box>
-                                                <Checkbox onChange={(e) => checkedClaim(e, index)} checked={!!selectedClaims?.includes(index)} /> {l.claimType} - {l.claimValue}
+                                                <Checkbox onChange={(e) => checkedClaim(e, l.id)} checked={!!selectedClaims?.includes(l.id)} /> {l.claimType} - {l.claimValue}
                                             </Box>
-                                            <DeleteClaimDialog />
                                         </Box>
                                     )
                                 })

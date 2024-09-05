@@ -16,6 +16,7 @@ const API_CODE = {
   API_UNLOCK_USERS: '/v1/User/unlock/',
   API_GET_USER_CLAIMS: '/v1/User/claim/',
   API_ASSIGN_CLAIMS: '/v1/User/claim/',
+  API_REMOVE_USER_CLAIM: '/v1/User/claim/',
 
   //Claim management
   API_GET_CLAIM: '/v1/Claim',
