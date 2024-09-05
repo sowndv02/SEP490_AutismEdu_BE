@@ -48,24 +48,6 @@ namespace backend_api.Repository
                 throw new Exception(ex.Message);
             }
         }
-        public async Task<IdentityRole> GetRoleByUserId(string userId)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(userId))
-                {
-                    var user = await _userManager.FindByIdAsync(userId);
-                    var roleIds = await _userManager.GetRolesAsync(user);
-                    var role = await _roleManager.FindByNameAsync(roleIds.FirstOrDefault());
-                    return role;
-                }
-                return null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
         public async Task<IdentityRole> GetByNameAsync(string name)
         {
             try

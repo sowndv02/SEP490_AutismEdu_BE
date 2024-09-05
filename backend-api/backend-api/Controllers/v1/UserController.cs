@@ -2,6 +2,7 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
@@ -27,6 +28,79 @@ namespace backend_api.Controllers.v1
             _response = new();
             _blobStorageRepository = blobStorageRepository;
         }
+
+        [HttpDelete("role/{userId}")]
+        public async Task<ActionResult<APIResponse>> RemoveRoleByUserId(string userId, UserRoleDTO userRoleDTO)
+        {
+            try
+            {
+                if (!userId.Equals(userRoleDTO.UserId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    return BadRequest(_response);
+                }
+                var result = await _userRepository.RemoveRoleByUserId(userId, userRoleDTO.UserRoleIds);
+                if (!result)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    _response.IsSuccess = true;
+                    _response.StatusCode = HttpStatusCode.NoContent;
+                    return Ok(_response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPost("role/{userId}")]
+        public async Task<ActionResult<APIResponse>> AddRoleToUser(string userId, UserRoleDTO userRoleDTO)
+        {
+            try
+            {
+                if (!userId.Equals(userRoleDTO.UserId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    return BadRequest(_response);
+                }
+                var result = await _userRepository.AddRoleToUser(userId, userRoleDTO.UserRoleIds);
+                if (!result)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    _response.IsSuccess = true;
+                    _response.StatusCode = HttpStatusCode.Created;
+                    return Ok(_response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
 
         [HttpDelete("claim/{userId}")]
         public async Task<ActionResult<APIResponse>> RemoveClaimByUserId(string userId, UserClaimDTO userClaimDTO)
@@ -389,5 +463,39 @@ namespace backend_api.Controllers.v1
             }
         }
 
+
+
+        [HttpGet("role/{userId}", Name = "GetRoleByUserId")]
+        public async Task<ActionResult<APIResponse>> GetRoleByUserIdAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{userId} is null or empty!" };
+                    return NotFound(_response);
+                }
+                List<IdentityRole> model = await _userRepository.GetRoleByUserId(userId);
+                if (model == null || model.Count == 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{userId} is not in role!" };
+                    return BadRequest(_response);
+                }
+                _response.Result = _mapper.Map<List<RoleDTO>>(model);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
     }
 }
