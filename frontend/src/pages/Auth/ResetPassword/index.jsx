@@ -44,42 +44,6 @@ function ResetPassword() {
     };
     const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-    const checkValid = (value, field) => {
-        const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%@]).+$/
-        if (field === 1) {
-            if (value === "") {
-                setPasswordError("Please enter password");
-                return false;
-            } else if (value.length < 8) {
-                setPasswordError("Password must be more than 8 characters");
-                return false;
-            } else if (value.length > 15) {
-                setPasswordError("Password must be less than 15 characters");
-                return false;
-            } else if (!rgPassword.test(value)) {
-                setPasswordError("Password is invalid!");
-                return false;
-            } else {
-                if (passwordConfirmError === "Confirm password doesn't match with the password" && value === cfPassword) {
-                    setPasswordConfirmError(null);
-                }
-                setPasswordError(null);
-                return true;
-            }
-        }
-        if (field === 2) {
-            if (value === "") {
-                setPasswordConfirmError("Please enter confirm password");
-                return false;
-            } else if (value !== password) {
-                setPasswordConfirmError("Confirm password doesn't match with the password");
-                return false;
-            } else {
-                setPasswordConfirmError(null);
-                return true;
-            }
-        }
-    }
     const handleSubmit = async () => {
         if (passwordError !== null || passwordConfirmError !== null) {
             setLoading(false);

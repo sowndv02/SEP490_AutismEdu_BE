@@ -1,11 +1,19 @@
 import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material'
 import ClaimTable from './ClaimTable'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ClaimModal from '../RoleClaimModal/ClaimModal';
+import services from '~/plugins/services';
+import LoadingComponent from '~/components/LoadingComponent';
 
 function ClaimManagement() {
     const [claim, setClaim] = useState('');
-
+    useEffect(() => {
+        services.ClaimManagementAPI.getClaims((res) => {
+            console.log(res);
+        }, (err) => {
+            console.log(err);
+        })
+    }, [])
     const handleChange = (event) => {
         setClaim(event.target.value);
     };
@@ -13,7 +21,8 @@ function ClaimManagement() {
         <Box sx={{
             width: "100%", bgcolor: "white", p: "20px",
             borderRadius: "10px",
-            boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px"
+            boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px",
+            position:"relative"
         }}>
             <Typography variant='h6'>Claims</Typography>
             <Box sx={{

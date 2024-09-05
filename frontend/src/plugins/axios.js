@@ -11,7 +11,7 @@ if (token != undefined && token.length != 0) {
 }
 
 const axiosInstance = axios.create({
-  baseURL: "https://localhost:5000/", // replace project base url later
+  baseURL: "https://backend-api20240823212838.azurewebsites.net/", // replace project base url later
   headers
 });
 

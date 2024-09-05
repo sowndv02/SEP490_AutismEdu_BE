@@ -1,11 +1,34 @@
 import { Box, Button, TextField, Typography } from '@mui/material'
 import UserTable from './UserTable'
-
+import { useEffect, useState } from 'react'
+import services from '~/plugins/services'
+import LoadingComponent from '~/components/LoadingComponent';
 function UserContent() {
+    const [users, setUsers] = useState(null);
+    const [pagination, setPagination] = useState(null);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        services.UserManagementAPI.getUsers((res) => {
+            const updatedResult = res.result.map((r) => {
+                let splitedRole = r.role.split(" ");
+                r.role = splitedRole;
+                return r;
+            })
+            setUsers(updatedResult);
+            res.pagination.currentSize = updatedResult.length
+            setPagination(res.pagination);
+            setLoading(false);
+        }, (err) => {
+            setLoading(false);
+        }, {
+            searchType: "all"
+        })
+    }, [])
     return (
         <Box sx={{
             height: (theme) => `calc(100vh - ${theme.myapp.adminHeaderHeight})`,
             width: "100%",
+            position: "relative",
             marginTop: (theme) => theme.myapp.adminHeaderHeight
         }}>
             <Box sx={{
@@ -28,9 +51,10 @@ function UserContent() {
                     <Button variant="contained">Add new user</Button>
                 </Box>
                 <Box>
-                    <UserTable />
+                    <UserTable users={users} pagination={pagination} setPagination={setPagination} setUsers={setUsers} />
                 </Box>
             </Box>
+            <LoadingComponent open={loading} setLoading={setLoading} />
         </Box>
     )
 }

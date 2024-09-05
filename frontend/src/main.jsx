@@ -14,7 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Provider store={store}>
-        <GoogleOAuthProvider clientId="284134545636-8tqdps21ukl8494tqu7ean9fn5o4s9tk.apps.googleusercontent.com">
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
           <SnackbarProvider anchorOrigin={{
             vertical: 'top',
             horizontal: 'right'
