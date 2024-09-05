@@ -5,7 +5,9 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
 import * as React from 'react';
-function DeleteClaimDialog() {
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import services from '~/plugins/services';
+function DeleteClaimDialog({ setApiCall, numberClaim}) {
     const [open, setOpen] = React.useState(false);
 
     const handleClickOpen = () => {
@@ -15,10 +17,15 @@ function DeleteClaimDialog() {
     const handleClose = () => {
         setOpen(false);
     };
+
+    const handleDelete = () => {
+        setApiCall(2);
+        handleClose();
+    }
     return (
         <React.Fragment>
             <IconButton onClick={handleClickOpen}>
-                <RemoveIcon sx={{ color: "#FF8343" }} />
+                <DeleteOutlineIcon />
             </IconButton>
             <Dialog
                 open={open}
@@ -27,10 +34,10 @@ function DeleteClaimDialog() {
                 aria-describedby="alert-dialog-description"
             >
                 <DialogTitle id="alert-dialog-title">
-                    {"Do you want remove this claim"}
+                    {`Do you want remove ${numberClaim} claim`}
                 </DialogTitle>
                 <DialogActions>
-                    <Button onClick={handleClose}>Delete</Button>
+                    <Button onClick={handleDelete}>Delete</Button>
                     <Button onClick={handleClose} autoFocus>
                         Cancle
                     </Button>

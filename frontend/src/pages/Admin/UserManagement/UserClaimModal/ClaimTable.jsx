@@ -164,6 +164,7 @@ function ClaimTable({ claims, setClaims, userId, pagination, setPagination,
                     enqueueSnackbar("Assign claim successfully!", { variant: "success" });
                 }, (err) => {
                     console.log(err);
+                    enqueueSnackbar("Assign claim failed!", { variant: "error" });
                 }
             )
             setLoading(false);
