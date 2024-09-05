@@ -6,7 +6,6 @@ using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
 using System.Security.Claims;
@@ -41,7 +40,7 @@ namespace backend_api.Repository
             try
             {
                 var list = await _context.RefreshTokens.Where(x => x.UserId == userId && x.TokenType == SD.GOOGLE_REFRESH_TOKEN && x.IsValid).ToListAsync();
-                foreach (var item in list) 
+                foreach (var item in list)
                 {
                     item.IsValid = false;
                 }
@@ -61,7 +60,7 @@ namespace backend_api.Repository
                 await _context.SaveChangesAsync();
                 return refreshToken.Refresh_Token;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -299,7 +298,7 @@ namespace backend_api.Repository
             var jwtTokenId = $"JTI{Guid.NewGuid()}";
             var accessToken = await GetAccessToken(user, jwtTokenId);
             var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
-            if(!string.IsNullOrEmpty(refreshTokenGoogle) && !checkPassword)
+            if (!string.IsNullOrEmpty(refreshTokenGoogle) && !checkPassword)
             {
                 await RevokeRefreshTokenGoogleAsync(user.Id);
                 await SaveRefreshTokenGoogleAsync(new RefreshToken()
@@ -851,6 +850,93 @@ namespace backend_api.Repository
             catch (Exception)
             {
                 return null; //Invalid token or error
+            }
+        }
+
+        public async Task<bool> RemoveRoleByUserId(string userId, List<string> userRoleIds)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    throw new ArgumentException("User not found");
+                }
+                var roles = new List<IdentityRole>();
+                var userRoles = _context.UserRoles.Where(c => userRoleIds.Contains(c.RoleId)).ToList();
+                foreach (var roleId in userRoleIds)
+                {
+                    roles.Add(await _roleManager.FindByIdAsync(roleId));
+                }
+                var result = await _userManager.RemoveFromRolesAsync(user, roles.Select(x => x.Name));
+                if (!result.Succeeded) return false;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> AddRoleToUser(string userId, List<string> roleIds)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    throw new ArgumentException("User not found");
+                }
+
+                List<IdentityRole> roles = _roleManager.Roles.Where(c => roleIds.Contains(c.Id)).ToList();
+
+                var currentRoles = await _userManager.GetRolesAsync(user);
+
+                var missingRoles = roles
+                    .Where(c => !currentRoles.Contains(c.Name))
+                    .Select(c => c.Name)
+                    .ToList();
+
+
+                if (missingRoles.Any())
+                {
+                    var result = await _userManager.AddToRolesAsync(user, missingRoles);
+                    if (!result.Succeeded)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+
+        public async Task<List<IdentityRole>> GetRoleByUserId(string userId)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    List<IdentityRole> roles = new List<IdentityRole>();
+                    var user = await _userManager.FindByIdAsync(userId);
+                    if (user == null) throw new Exception("user not found");
+                    var roleIds = await _userManager.GetRolesAsync(user);
+                    foreach (var id in roleIds)
+                    {
+                        roles.Add(await _roleManager.FindByNameAsync(id));
+                    }
+                    return roles;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
         }
     }
