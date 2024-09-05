@@ -91,39 +91,6 @@ namespace backend_api.Controllers
             }
         }
 
-        [HttpGet("user/{userId}", Name = "GetRoleByUserId")]
-        public async Task<ActionResult<APIResponse>> GetRoleByUserIdAsync(string userId)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{userId} is null or empty!" };
-                    return NotFound(_response);
-                }
-                IdentityRole model = await _roleRepository.GetRoleByUserId(userId);
-                if (model == null)
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{userId} is not in role!" };
-                    return BadRequest(_response);
-                }
-                _response.Result = _mapper.Map<RoleDTO>(model);
-                _response.StatusCode = HttpStatusCode.OK;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
         [HttpPost]
         public async Task<ActionResult<APIResponse>> CreateRoleAsync(RoleDTO roleDTO)
         {

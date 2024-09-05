@@ -8,8 +8,13 @@ namespace backend_api.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
-        public ApplicationDbContext(DbContextOptions options)
-          : base(options) { }
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public ApplicationDbContext(DbContextOptions options, IHttpContextAccessor httpContextAccessor)
+          : base(options)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
@@ -41,11 +46,19 @@ namespace backend_api.Data
             var adminUser = ApplicationUsers.FirstOrDefault(x => x.Email.Equals("admin@admin.com"));
             if (!Roles.Any() || roleAdmin == null)
             {
-                roleAdmin = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.Admin };
+                roleAdmin = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.Admin, NormalizedName = SD.Admin.ToUpper() };
                 Roles.Add(roleAdmin);
             }
             if (!ApplicationUsers.Any() || adminUser == null)
             {
+                string baseUrl = string.Empty;
+
+                // Ensure HttpContext is available (if in a web context)
+                if (_httpContextAccessor.HttpContext != null)
+                {
+                    var httpContext = _httpContextAccessor.HttpContext;
+                    baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}{httpContext.Request.PathBase.Value}";
+                }
                 adminUser = new ApplicationUser
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -54,6 +67,9 @@ namespace backend_api.Data
                     PasswordHash = PasswordGenerator.GeneratePassword(),
                     UserName = "admin@admin.com",
                     CreatedDate = DateTime.Now,
+                    ImageLocalPathUrl = @"wwwroot\UserImages\default-avatar.png",
+                    ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault,
+                    ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB
                 };
 
                 ApplicationUsers.Add(adminUser);
@@ -68,8 +84,20 @@ namespace backend_api.Data
             if (!ApplicationClaims.Any())
             {
                 ApplicationClaims.AddRange(
-                    new ApplicationClaim { ClaimType = "Create", ClaimValue = "True", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Delete", ClaimValue = "True", CreatedDate = DateTime.Now, UserId = adminUser.Id },
+                    new ApplicationClaim
+                    {
+                        ClaimType = "Create",
+                        ClaimValue = "True",
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = "Delete",
+                        ClaimValue = "True",
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
                     new ApplicationClaim { ClaimType = "Update", ClaimValue = "True", CreatedDate = DateTime.Now, UserId = adminUser.Id },
                     new ApplicationClaim { ClaimType = "Create", ClaimValue = "Claim", CreatedDate = DateTime.Now, UserId = adminUser.Id },
                     new ApplicationClaim { ClaimType = "Delete", ClaimValue = "Claim", CreatedDate = DateTime.Now, UserId = adminUser.Id },
