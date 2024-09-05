@@ -1,11 +1,46 @@
-import { Avatar, Box, IconButton, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockPersonIcon from '@mui/icons-material/LockPerson';
-import ActionMenu from './ActionMenu';
+import PersonIcon from '@mui/icons-material/Person';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-function UserTable() {
-
-    const arr = [1, 2, 3, 4, 5, 6]
+import { Avatar, Box, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import { enqueueSnackbar } from 'notistack';
+import TablePagging from '~/components/TablePagging';
+import services from '~/plugins/services';
+import ActionMenu from './ActionMenu';
+function UserTable({ users, setPagination, setUsers, pagination }) {
+    const handleChangeUserStatus = (id, status) => {
+        if (status) {
+            services.UserManagementAPI.unLockUsers(id, (res) => {
+                const updatedUser = users.map((u) => {
+                    if (u.id !== id) return u;
+                    else {
+                        u.isLockedOut = false;
+                        return u;
+                    }
+                })
+                setUsers(updatedUser);
+                enqueueSnackbar("Unlock user successfully!", { variant: "success" });
+            }, (err) => {
+                enqueueSnackbar("Unlock user failed!", { variant: "error" });
+            })
+        } else {
+            services.UserManagementAPI.lockUsers(id, (res) => {
+                const updatedUser = users.map((u) => {
+                    if (u.id !== id) return u;
+                    else {
+                        u.isLockedOut = true;
+                        return u;
+                    }
+                })
+                setUsers(updatedUser);
+                enqueueSnackbar("Lock user successfully!", { variant: "success" });
+            }, (err) => {
+                console.log(err);
+                enqueueSnackbar("Lock user failed!", { variant: "error" });
+            })
+        }
+    }
     return (
         <TableContainer component={Paper} sx={{ mt: "20px" }}>
             <Table>
@@ -20,35 +55,35 @@ function UserTable() {
                 </TableHead>
                 <TableBody>
                     {
-                        arr.map((a) => {
+                        users?.map((user) => {
                             return (
-                                <TableRow key={a}>
-                                    <TableCell>{a}</TableCell>
+                                <TableRow key={user.id}>
+                                    <TableCell>{user.id}</TableCell>
                                     <TableCell>
                                         <Box sx={{ display: "flex", gap: 1 }}>
-                                            <Avatar alt="Remy Sharp" src="https://scontent.fhan19-1.fna.fbcdn.net/v/t39.30808-1/268142468_3035907700072578_4829229204736514171_n.jpg?stp=dst-jpg_p200x200&_nc_cat=100&ccb=1-7&_nc_sid=0ecb9b&_nc_eui2=AeFe_w7HSGpqFDepgviEP4pyq9KSuRzAWe6r0pK5HMBZ7pEuCwmHx3H-gP4TXxRF640CJIZj8zT62i8cDsbhFZrr&_nc_ohc=WJypldhpSngQ7kNvgErul0X&_nc_ht=scontent.fhan19-1.fna&oh=00_AYAXYXl0i8-GvgyLRWATXg3YJjpAKiDfJvvb5WG7g12V5w&oe=66BF9C45" />
+                                            <Avatar alt="Remy Sharp" src={user.imageLocalUrl} />
                                             <Box>
-                                                <Typography sx={{ fontWeight: "bold" }}>Khai dao</Typography>
-                                                <Typography sx={{ fontSize: "12px" }}>daoquangkhai2002@gmail.com</Typography>
+                                                <Typography sx={{ fontWeight: "bold" }}>{user.fullName}</Typography>
+                                                <Typography sx={{ fontSize: "12px" }}>{user.email}</Typography>
                                             </Box>
                                         </Box>
                                     </TableCell>
                                     <TableCell>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, fontSize: "16px" }}>
-                                            <AdminPanelSettingsIcon sx={{ color: "#ff4d49" }} />
-                                            Admin
-                                        </Box>
+                                        {user.role.includes("Admin") && <AdminPanelSettingsIcon sx={{ color: "#ff4d49" }} />}
+                                        {user.role.includes("user") && <PersonIcon sx={{ color: "#2196f3" }} />}
                                     </TableCell>
-                                    <TableCell>True</TableCell>
+                                    <TableCell>{user.isLockedOut ? "True" : "False"}</TableCell>
                                     <TableCell>
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
-                                            <IconButton aria-label="delete">
-                                                <LockPersonIcon />
+                                            <IconButton aria-label="status" onClick={() => handleChangeUserStatus(user.id, user.isLockedOut)}>
+                                                {
+                                                    user.isLockedOut ? <LockOpenIcon /> : <LockPersonIcon />
+                                                }
                                             </IconButton>
                                             <IconButton>
                                                 <VisibilityIcon />
                                             </IconButton>
-                                            <ActionMenu />
+                                            <ActionMenu currentUser={user} />
                                         </Box>
                                     </TableCell>
                                 </TableRow>
@@ -57,10 +92,7 @@ function UserTable() {
                     }
                 </TableBody>
             </Table>
-            <Box sx={{ p: "10px", display: "flex", justifyContent: "space-between" }}>
-                <Typography>Showing 1 to 10 of 47 enteries</Typography>
-                <Pagination count={10} color="primary" />
-            </Box>
+            <TablePagging pagination={pagination} setPaggination={setPagination} />
         </TableContainer >
     )
 }

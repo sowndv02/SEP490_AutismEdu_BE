@@ -40,40 +40,6 @@ function LoginForm({ setVerify, setEmailVerify }) {
             handleSubmit();
         }
     }, [loading])
-    const checkValid = (value, field) => {
-        const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%@]).+$/
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (field === 1) {
-            if (value === "") {
-                setEmailError("Please enter email");
-                return false;
-            } else if (!emailRegex.test(value)) {
-                setEmailError("Email is not valid");
-                return false;
-            } else {
-                setEmailError(null);
-                return true;
-            }
-        }
-        if (field === 2) {
-            if (value === "") {
-                setPasswordError("Please enter password");
-                return false;
-            } else if (value.length < 8) {
-                setPasswordError("Password must be more than 8 characters");
-                return false;
-            } else if (value.length > 15) {
-                setPasswordError("Password must be less than 15 characters");
-                return false;
-            } else if (!rgPassword.test(value)) {
-                setPasswordError("Password is invalid!");
-                return false;
-            } else {
-                setPasswordError(null);
-                return true;
-            }
-        }
-    }
     const handleSubmit = async () => {
         if (passwordError !== null || emailError !== null) {
             setLoading(false);

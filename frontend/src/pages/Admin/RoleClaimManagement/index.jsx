@@ -1,7 +1,5 @@
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material'
-import ClaimTable from './ClaimManagement/ClaimTable'
-import { useState } from 'react';
-import AddIcon from '@mui/icons-material/Add';
+import { Box } from '@mui/material';
+import LoadingComponent from '~/components/LoadingComponent';
 import ClaimManagement from './ClaimManagement';
 import RoleManagement from './RoleManagement';
 function RoleClaimManagement() {
@@ -9,10 +7,12 @@ function RoleClaimManagement() {
         <Box sx={{
             height: (theme) => `calc(100vh - ${theme.myapp.adminHeaderHeight})`,
             width: "100%",
-            marginTop: (theme) => theme.myapp.adminHeaderHeight
+            marginTop: (theme) => theme.myapp.adminHeaderHeight,
+            position: 'relative'
         }}>
             <ClaimManagement />
             <RoleManagement />
+            <LoadingComponent />
         </Box>
     )
 }

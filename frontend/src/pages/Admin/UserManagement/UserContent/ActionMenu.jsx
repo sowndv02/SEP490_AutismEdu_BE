@@ -3,7 +3,7 @@ import React from 'react'
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import UserClaimModal from '../UserClaimModal';
 import UserRoleModal from '../UserRoleModal';
-function ActionMenu() {
+function ActionMenu({ currentUser }) {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
     const handleClick = (event) => {
@@ -38,7 +38,7 @@ function ActionMenu() {
                     horizontal: 'left',
                 }}
             >
-                <UserClaimModal handleCloseMenu={handleClose}/>
+                <UserClaimModal handleCloseMenu={handleClose} currentUser={currentUser} />
                 <UserRoleModal handleCloseMenu={handleClose} />
             </Menu>
         </div>

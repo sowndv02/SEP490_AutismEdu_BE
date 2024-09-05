@@ -26,11 +26,6 @@ const logError = (e, error) => {
         return;
       }
 
-      // const errors = e.response.data.errors
-      //   ? Object.fromEntries(
-      //     Object.entries(e.response.data.errors).map(([key, value]) => [key, value[0]])
-      //   )
-      //   : [];
       error({
         code: e.response.data.statusCode,
         error: e.response.data.errorMessages,

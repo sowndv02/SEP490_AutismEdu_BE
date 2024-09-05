@@ -35,60 +35,8 @@ function RegisterForm({ setVerify, setEmailVerify }) {
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
-
-    const nav = useNavigate();
     const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-    const checkValid = (value, field) => {
-        const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%@]).+$/
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (field === 1) {
-            if (value === "") {
-                setEmailError("Please enter email");
-                return false;
-            } else if (!emailRegex.test(value)) {
-                setEmailError("Email is not valid");
-                return false;
-            } else {
-                setEmailError(null);
-                return true;
-            }
-        }
-        if (field === 2) {
-            if (value === "") {
-                setPasswordError("Please enter password");
-                return false;
-            } else if (value.length < 8) {
-                setPasswordError("Password must be more than 8 characters");
-                return false;
-            } else if (value.length > 15) {
-                setPasswordError("Password must be less than 15 characters");
-                return false;
-            } else if (!rgPassword.test(value)) {
-                setPasswordError("Password is invalid!");
-                return false;
-            }
-            else {
-                if (passwordConfirmError === "Confirm password doesn't match with the password" && value === cfPassword) {
-                    setPasswordConfirmError(null);
-                }
-                setPasswordError(null);
-                return true;
-            }
-        }
-        if (field === 3) {
-            if (value === "") {
-                setPasswordConfirmError("Please enter confirm password");
-                return false;
-            } else if (value !== password) {
-                setPasswordConfirmError("Confirm password doesn't match with the password");
-                return false;
-            } else {
-                setPasswordConfirmError(null);
-                return true;
-            }
-        }
-    }
     useEffect(() => {
         if (loading) {
             handleSubmit();
