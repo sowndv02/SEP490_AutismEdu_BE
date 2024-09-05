@@ -91,7 +91,7 @@ function MyClaim({ currentUser }) {
         <Box mt="20px" sx={{maxHeight:"500px", overflow:"auto"}}>
             <Box>
                 {
-                    (myClaim === null || myClaim.lenght !== 0) ? (
+                    (myClaim === null || myClaim.lenght === 0) ? (
                         <Typography>This user has not been assigned any claims yet.</Typography>
                     ) : (
                         <>
