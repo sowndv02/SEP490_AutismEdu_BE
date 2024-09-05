@@ -1,12 +1,9 @@
 ﻿using AutoMapper;
-using backend_api.Data;
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.Net;
 
 namespace backend_api.Controllers
@@ -77,11 +74,12 @@ namespace backend_api.Controllers
                     return NotFound(_response);
                 }
                 var result = _mapper.Map<RoleDTO>(model);
-                
+
                 var (totalCount, users) = await _userRepository.GetUsersInRole(model.Name, takeValue);
                 result.TotalUsersInRole = totalCount;
                 result.Users = _mapper.Map<List<ApplicationUserDTO>>(users);
                 _response.Result = result;
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -106,7 +104,7 @@ namespace backend_api.Controllers
                     return NotFound(_response);
                 }
                 IdentityRole model = await _roleRepository.GetRoleByUserId(userId);
-                if(model == null)
+                if (model == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -114,6 +112,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 _response.Result = _mapper.Map<RoleDTO>(model);
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -166,8 +165,7 @@ namespace backend_api.Controllers
                     if (result)
                     {
                         _response.IsSuccess = true;
-                        _response.StatusCode = HttpStatusCode.OK;
-                        _response.ErrorMessages = new List<string>() { $"Remove role successful!" };
+                        _response.StatusCode = HttpStatusCode.NoContent;
                         return Ok(_response);
                     }
                     else
@@ -185,7 +183,7 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string>() { $"Not found with role id is: {roleId}" };
                     return Ok(_response);
                 }
-                
+
             }
             catch (Exception ex)
             {

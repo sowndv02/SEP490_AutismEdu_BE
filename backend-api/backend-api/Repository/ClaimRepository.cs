@@ -28,11 +28,15 @@ namespace backend_api.Repository
             }
         }
 
-        public int GetTotalClaim()
+        public int GetTotalClaim(List<UserClaim> userClaims = null)
         {
             try
             {
-                return _context.ApplicationClaims.Count();
+                if (userClaims == null || userClaims.Count == 0)
+                    return _context.ApplicationClaims.Count();
+                var result = _context.ApplicationClaims.ToList();
+                result = result.Where(claim => !userClaims.Any(uc => uc.ClaimType == claim.ClaimType && uc.ClaimValue == claim.ClaimValue)).ToList();
+                return result.Count;
             }
             catch (Exception ex)
             {

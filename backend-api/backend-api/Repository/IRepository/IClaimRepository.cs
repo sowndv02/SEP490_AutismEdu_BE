@@ -8,6 +8,6 @@ namespace backend_api.Repository.IRepository
         Task<List<ApplicationClaim>> GetAllAsync(Expression<Func<ApplicationClaim, bool>>? filter = null,
             string? includeProperties = null, int pageSize = 10, int pageNumber = 1, List<UserClaim> userClaims = null);
         Task<ApplicationClaim> UpdateAsync(ApplicationClaim claim);
-        int GetTotalClaim();
+        int GetTotalClaim(List<UserClaim> userClaims = null);
     }
 }

@@ -3,10 +3,9 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace backend_api.Controllers.v1
 {
@@ -32,41 +31,53 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllClaimsAsync([FromQuery] string? search, string? searchType, int pageNumber = 1, string? userId = null)
+        public async Task<ActionResult<APIResponse>> GetAllClaimsAsync([FromQuery] string? searchValue, string? searchType, int pageNumber = 1, string? userId = null)
         {
             try
             {
+                Expression<Func<ApplicationClaim, bool>>? filter = u => true;
+
+                if (!string.IsNullOrEmpty(searchType))
+                {
+                    switch (searchType.ToLower().Trim())
+                    {
+                        case "create":
+                            filter = u => u.ClaimType.ToLower().Equals("create");
+                            break;
+                        case "update":
+                            filter = u => u.ClaimType.ToLower().Equals("update");
+                            break;
+                        case "delete":
+                            filter = u => u.ClaimType.ToLower().Equals("delete");
+                            break;
+                        case "view":
+                            filter = u => u.ClaimType.ToLower().Equals("view");
+                            break;
+                        case "assign":
+                            filter = u => u.ClaimType.ToLower().Equals("assign");
+                            break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    Expression<Func<ApplicationClaim, bool>> searchFilter = u => u.ClaimValue.ToLower().Contains(searchValue.ToLower());
+
+                    var combinedFilter = Expression.Lambda<Func<ApplicationClaim, bool>>(
+                        Expression.AndAlso(filter.Body, Expression.Invoke(searchFilter, filter.Parameters)),
+                        filter.Parameters
+                    );
+
+                    filter = combinedFilter;
+                }
+
+
                 List<UserClaim> userClaims = null;
                 if (!string.IsNullOrEmpty(userId))
                 {
                     userClaims = await _userRepository.GetClaimByUserIdAsync(userId);
                 }
-                List<ApplicationClaim> list = await _claimRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, userClaims: userClaims);
-
-                if (!string.IsNullOrEmpty(search) && !string.IsNullOrEmpty(searchType))
-                {
-                    switch (searchType.ToLower())
-                    {
-                        case "create":
-                            list = list.Where(u => u.ClaimType.ToLower().Equals("create") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
-                            break;
-                        case "update":
-                            list = list.Where(u => u.ClaimType.ToLower().Equals("update") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
-                            break;
-                        case "delete":
-                            list = list.Where(u => u.ClaimType.ToLower().Equals("delete") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
-                            break;
-                        case "view":
-                            list = list.Where(u => u.ClaimType.ToLower().Equals("view") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
-                            break;
-                        case "assign":
-                            list = list.Where(u => u.ClaimType.ToLower().Equals("assign") && u.ClaimValue.ToLower().Contains(search.ToLower())).ToList();
-                            break;
-                        default:
-                            list = list.Where(u => u.ClaimType.ToLower().Contains(search.ToLower()) || u.ClaimType.ToLower().Contains(search.ToLower())).ToList();
-                            break;
-                    }
-                }
+                List<ApplicationClaim> list = await _claimRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, userClaims: userClaims);
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = _claimRepository.GetTotalClaim() };
                 var result = _mapper.Map<List<ClaimDTO>>(list);
@@ -76,7 +87,7 @@ namespace backend_api.Controllers.v1
                     claim.TotalUser = totalCount;
                     claim.Users = _mapper.Map<List<ApplicationUserDTO>>(users);
                 }
-                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
+                //Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = result;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -167,7 +178,7 @@ namespace backend_api.Controllers.v1
                 await _claimRepository.CreateAsync(model);
                 _response.Result = _mapper.Map<ClaimDTO>(model);
                 _response.StatusCode = HttpStatusCode.Created;
-                return CreatedAtRoute("GetClaimById", new { model.Id }, _response);
+                return Ok(_response);
             }
             catch (Exception ex)
             {

@@ -51,7 +51,7 @@ namespace backend_api.Controllers.v1
                 else
                 {
                     _response.IsSuccess = true;
-                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.StatusCode = HttpStatusCode.NoContent;
                     return Ok(_response);
                 }
             }
@@ -87,7 +87,7 @@ namespace backend_api.Controllers.v1
                 else
                 {
                     _response.IsSuccess = true;
-                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
             }
@@ -151,6 +151,7 @@ namespace backend_api.Controllers.v1
                 var exsitingUserClaims = await _userRepository.GetClaimByUserIdAsync(id);
                 //_response.Result = _mapper.Map<List<ClaimDTO>>(exsitingUserClaims);
                 _response.Result = exsitingUserClaims;
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -256,8 +257,13 @@ namespace backend_api.Controllers.v1
                             break;
 
                     }
-
                 }
+                else
+                {
+                    list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                    totalCount = _userRepository.GetTotalUser();
+                }
+
 
                 if (!string.IsNullOrEmpty(searchValue))
                 {
@@ -294,6 +300,7 @@ namespace backend_api.Controllers.v1
                 }
                 ApplicationUser model = await _userRepository.GetAsync(x => x.Id == id);
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -319,6 +326,7 @@ namespace backend_api.Controllers.v1
                 }
                 ApplicationUser model = await _userRepository.LockoutUser(userId);
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -344,6 +352,7 @@ namespace backend_api.Controllers.v1
                 }
                 ApplicationUser model = await _userRepository.UnlockUser(userId);
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -374,6 +383,7 @@ namespace backend_api.Controllers.v1
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
