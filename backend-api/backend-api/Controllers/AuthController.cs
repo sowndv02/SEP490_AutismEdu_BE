@@ -27,7 +27,8 @@ namespace backend_api.Controllers
         private static string clientId = string.Empty;
         private static string clientSecret = string.Empty;
         public AuthController(IUserRepository userRepository, IMapper mapper,
-            IConfiguration configuration, IEmailSender emailSender, DateTimeEncryption dateTimeEncryption, TokenEcryption tokenEncryption)
+            IConfiguration configuration, IEmailSender emailSender, DateTimeEncryption dateTimeEncryption, 
+            TokenEcryption tokenEncryption)
         {
             ValidateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
             clientId = configuration.GetValue<string>("Authentication:Google:ClientId");

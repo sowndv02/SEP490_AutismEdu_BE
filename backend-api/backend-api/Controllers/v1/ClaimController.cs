@@ -2,6 +2,7 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Utils;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -17,11 +18,13 @@ namespace backend_api.Controllers.v1
     {
         private readonly IClaimRepository _claimRepository;
         private readonly IUserRepository _userRepository;
+        private readonly FormatString _formatString;
         protected APIResponse _response;
         private readonly IMapper _mapper;
         protected int pageSize = 0;
         protected int takeValue = 0;
-        public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration, IUserRepository userRepository)
+        public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration, 
+            IUserRepository userRepository, FormatString formatString)
         {
             _userRepository = userRepository;
             pageSize = configuration.GetValue<int>("APIConfig:PageSize");
@@ -29,6 +32,7 @@ namespace backend_api.Controllers.v1
             _mapper = mapper;
             _response = new();
             takeValue = configuration.GetValue<int>("APIConfig:TakeValue");
+            _formatString = formatString;
         }
 
         [HttpGet]
@@ -176,6 +180,9 @@ namespace backend_api.Controllers.v1
                 if (claimDTO == null) return BadRequest(claimDTO);
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
                 model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //TODO: Check Claim exist
+                model.ClaimValue = _formatString.FormatStringUpperCaseFirstChar(model.ClaimValue);
+                model.ClaimType = _formatString.FormatStringUpperCaseFirstChar(model.ClaimType);
                 await _claimRepository.CreateAsync(model);
                 _response.Result = _mapper.Map<ClaimDTO>(model);
                 _response.StatusCode = HttpStatusCode.Created;
@@ -203,6 +210,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string>() { "Id invalid!" };
                     return BadRequest(_response);
                 }
+                //TODO: Update Claim User and store base Claim
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
                 var result = await _claimRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
