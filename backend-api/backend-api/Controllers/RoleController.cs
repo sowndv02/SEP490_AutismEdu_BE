@@ -2,6 +2,7 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -14,17 +15,20 @@ namespace backend_api.Controllers
     public class RoleController : ControllerBase
     {
         private readonly IRoleRepository _roleRepository;
+        private readonly FormatString _formatString;
         private readonly IUserRepository _userRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
         protected int takeValue = 0;
-        public RoleController(IRoleRepository roleRepository, IMapper mapper, IUserRepository userRepository, IConfiguration configuration)
+        public RoleController(IRoleRepository roleRepository, IMapper mapper, IUserRepository userRepository, 
+            IConfiguration configuration, FormatString formatString)
         {
             takeValue = configuration.GetValue<int>("APIConfig:TakeValue");
             _response = new();
             _mapper = mapper;
             _roleRepository = roleRepository;
             _userRepository = userRepository;
+            _formatString = formatString;
         }
 
         [HttpGet]
@@ -96,7 +100,7 @@ namespace backend_api.Controllers
         {
             try
             {
-                if (await _roleRepository.GetByNameAsync(roleDTO.Name) != null)
+                if (await _roleRepository.GetByNameAsync(roleDTO.Name.Trim()) != null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -104,6 +108,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 if (roleDTO == null) return BadRequest(roleDTO);
+                roleDTO.Name = _formatString.FormatStringUpperCaseFirstChar(roleDTO.Name);
                 IdentityRole model = _mapper.Map<IdentityRole>(roleDTO);
                 await _roleRepository.CreateAsync(model);
                 _response.Result = _mapper.Map<RoleDTO>(model);

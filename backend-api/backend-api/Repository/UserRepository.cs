@@ -925,10 +925,11 @@ namespace backend_api.Repository
                     List<IdentityRole> roles = new List<IdentityRole>();
                     var user = await _userManager.FindByIdAsync(userId);
                     if (user == null) throw new Exception("user not found");
-                    var roleIds = await _userManager.GetRolesAsync(user);
-                    foreach (var id in roleIds)
+                    var roleNames = await _userManager.GetRolesAsync(user);
+                    foreach (var name in roleNames)
                     {
-                        roles.Add(await _roleManager.FindByNameAsync(id));
+                        var r = await _roleManager.FindByNameAsync(name);
+                        roles.Add(r);
                     }
                     return roles;
                 }
