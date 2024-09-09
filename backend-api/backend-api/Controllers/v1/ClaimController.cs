@@ -22,7 +22,7 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         protected int pageSize = 0;
         protected int takeValue = 0;
-        public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration, 
+        public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration,
             IUserRepository userRepository, FormatString formatString)
         {
             _userRepository = userRepository;

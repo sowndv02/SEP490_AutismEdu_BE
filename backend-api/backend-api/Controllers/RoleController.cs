@@ -20,7 +20,7 @@ namespace backend_api.Controllers
         protected APIResponse _response;
         private readonly IMapper _mapper;
         protected int takeValue = 0;
-        public RoleController(IRoleRepository roleRepository, IMapper mapper, IUserRepository userRepository, 
+        public RoleController(IRoleRepository roleRepository, IMapper mapper, IUserRepository userRepository,
             IConfiguration configuration, FormatString formatString)
         {
             takeValue = configuration.GetValue<int>("APIConfig:TakeValue");
