@@ -6,7 +6,7 @@ namespace backend_api.Authorize
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, OnlySuperAdminChecker requirement)
         {
-            if (context.User.IsInRole(SD.SuperAdmin))
+            if (context.User.IsInRole(SD.ADMIN_ROLE))
             {
                 context.Succeed(requirement);
                 return Task.CompletedTask;
