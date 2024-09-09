@@ -16,17 +16,19 @@ namespace backend_api.Controllers.v1
     {
         private readonly IUserRepository _userRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
+        private readonly ILogger<UserController> _logger;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
         public UserController(IUserRepository userRepository, IMapper mapper,
-            IConfiguration configuration, IBlobStorageRepository blobStorageRepository)
+            IConfiguration configuration, IBlobStorageRepository blobStorageRepository, ILogger<UserController> logger)
         {
             pageSize = configuration.GetValue<int>("APIConfig:PageSize");
             _mapper = mapper;
             _userRepository = userRepository;
             _response = new();
             _blobStorageRepository = blobStorageRepository;
+            _logger = logger;
         }
 
         [HttpDelete("role/{userId}")]
@@ -347,7 +349,7 @@ namespace backend_api.Controllers.v1
                     list = list.Where(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue))).ToList();
                 }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-
+                _logger.LogInformation($"GetAlllUser: \n SearchValue: {searchValue} \n SearchType: {searchType} \n searchTypeId: {searchTypeId}\n pageNumber: {pageNumber}");
                 Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = _mapper.Map<List<ApplicationUserDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
