@@ -703,20 +703,20 @@ namespace backend_api.Repository
                     }
                     else
                     {
-                        if (!_roleManager.RoleExistsAsync(SD.User).GetAwaiter().GetResult())
+                        if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
                         {
-                            await _roleManager.CreateAsync(new IdentityRole(SD.User));
+                            await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
                         }
-                        await _userManager.AddToRoleAsync(obj, SD.User);
+                        await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
                     }
                 }
                 else
                 {
-                    if (!_roleManager.RoleExistsAsync(SD.User).GetAwaiter().GetResult())
+                    if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(SD.User));
+                        await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
                     }
-                    await _userManager.AddToRoleAsync(obj, SD.User);
+                    await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
                 }
                 var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
 
