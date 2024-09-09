@@ -284,6 +284,7 @@ namespace backend_api.Controllers.v1
                 await _userRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
+                _response.Result = model;
                 return Ok(_response);
             }
             catch (Exception ex)
