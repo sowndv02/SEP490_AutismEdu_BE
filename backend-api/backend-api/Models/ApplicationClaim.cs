@@ -12,6 +12,8 @@ namespace backend_api.Models
         public string ClaimType { get; set; }
         [Required]
         public string ClaimValue { get; set; }
+        public string DefaultClaimValue { get; set; }
+        public string DefaultClaimType { get; set; }
         public string UserId { get; set; }
         [ForeignKey(nameof(UserId))]
         public ApplicationUser User { get; set; }
