@@ -185,8 +185,8 @@ namespace backend_api.Controllers.v1
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
                 model.CreatedDate = DateTime.Now;
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                string filePath = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
-                model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                string filePath = @"wwwroot\UserImages\" + SD.IMAGE_DEFAULT_AVATAR_NAME;
+                model.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                 model.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
                 model.ImageLocalPathUrl = filePath;
 
@@ -273,7 +273,7 @@ namespace backend_api.Controllers.v1
                         updateDTO.Image.CopyTo(fileStream);
                     }
                     model.ImageLocalPathUrl = filePath;
-                    model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                    model.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                     using var stream = updateDTO.Image.OpenReadStream();
                     model.ImageUrl = await _blobStorageRepository.UploadImg(stream, fileName);
                 }
@@ -342,7 +342,7 @@ namespace backend_api.Controllers.v1
 
                 if (!string.IsNullOrEmpty(searchValue))
                 {
-                    list = list.Where(u => u.FullName.ToLower().Contains(searchValue)).ToList();
+                    list = list.Where(u => u.FullName.ToLower().Contains(searchValue.ToLower())).ToList();
                 }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
 
