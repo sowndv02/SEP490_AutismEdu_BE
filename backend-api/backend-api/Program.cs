@@ -144,13 +144,13 @@ builder.Services.AddAuthorization(option =>
 {
 
     // Authorization with policy using role requirement
-    option.AddPolicy("Admin", policy => policy.RequireRole(SD.Admin));
+    option.AddPolicy("Admin", policy => policy.RequireRole(SD.ADMIN_ROLE));
     // Authorization with policy using role requirement using condition and
-    option.AddPolicy("AdminAndUser", policy => policy.RequireRole(SD.Admin).RequireRole(SD.User));
+    option.AddPolicy("AdminAndUser", policy => policy.RequireRole(SD.ADMIN_ROLE).RequireRole(SD.USER_ROLE));
     // Authorization with policy using single claim requirement
-    option.AddPolicy("AdminRole_CreateClaim", policy => policy.RequireRole(SD.Admin).RequireClaim("Create", "True"));
+    option.AddPolicy("AdminRole_CreateClaim", policy => policy.RequireRole(SD.ADMIN_ROLE).RequireClaim("Create", "True"));
     // Authorization with policy using multiple claim requirement
-    option.AddPolicy("AdminRole_CreateEditDeleteClaim", policy => policy.RequireRole(SD.Admin)
+    option.AddPolicy("AdminRole_CreateEditDeleteClaim", policy => policy.RequireRole(SD.ADMIN_ROLE)
                                             .RequireClaim("Create", "True")
                                             .RequireClaim("Delete", "True")
                                             .RequireClaim("Edit", "True")
@@ -258,10 +258,10 @@ void ApplyMigration()
 
 bool AdminRole_CreateEditDeleteClaim_ORSuperAdminRole(AuthorizationHandlerContext context)
 {
-    return (context.User.IsInRole(SD.Admin) && context.User.HasClaim(c => c.Type == "Create" && c.Value == "True")
+    return (context.User.IsInRole(SD.ADMIN_ROLE) && context.User.HasClaim(c => c.Type == "Create" && c.Value == "True")
         && context.User.HasClaim(c => c.Type == "Edit" && c.Value == "True")
         && context.User.HasClaim(c => c.Type == "Delete" && c.Value == "True")
-    ) || context.User.IsInRole(SD.SuperAdmin);
+    ) || context.User.IsInRole(SD.ADMIN_ROLE);
 }
 
 public partial class Program { }

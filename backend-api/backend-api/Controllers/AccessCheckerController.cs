@@ -1,7 +1,5 @@
-﻿using backend_api.Middlewares;
-using backend_api.Models;
+﻿using backend_api.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -62,7 +60,7 @@ namespace backend_api.Controllers
         }
 
         [HttpGet("user-or-admin-role-access")]
-        [Authorize(Roles = $"{SD.Admin},{SD.User}")]
+        [Authorize(Roles = $"{SD.ADMIN_ROLE},{SD.USER_ROLE}")]
         //account with role of user or admin can access
         public IActionResult UserORAdminRoleAccess()
         {
