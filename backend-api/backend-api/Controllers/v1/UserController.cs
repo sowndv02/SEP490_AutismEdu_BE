@@ -90,6 +90,7 @@ namespace backend_api.Controllers.v1
                 else
                 {
                     _response.IsSuccess = true;
+                    _response.Result = _userRepository.GetAsync(x => x.Id == userId);
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
@@ -163,6 +164,7 @@ namespace backend_api.Controllers.v1
                 else
                 {
                     _response.IsSuccess = true;
+                    _response.Result = await _userRepository.GetAsync(x => x.Id == userId);
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
@@ -344,7 +346,7 @@ namespace backend_api.Controllers.v1
 
                 if (!string.IsNullOrEmpty(searchValue))
                 {
-                    list = list.Where(u => u.FullName.ToLower().Contains(searchValue.ToLower())).ToList();
+                    list = list.Where(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower()))).ToList();
                 }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _logger.LogInformation($"GetAlllUser: \n SearchValue: {searchValue} \n SearchType: {searchType} \n searchTypeId: {searchTypeId}\n pageNumber: {pageNumber}");
