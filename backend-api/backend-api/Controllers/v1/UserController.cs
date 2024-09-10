@@ -90,6 +90,7 @@ namespace backend_api.Controllers.v1
                 else
                 {
                     _response.IsSuccess = true;
+                    _response.Result = _userRepository.GetAsync(x => x.Id == userId);
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
@@ -163,6 +164,7 @@ namespace backend_api.Controllers.v1
                 else
                 {
                     _response.IsSuccess = true;
+                    _response.Result = await _userRepository.GetAsync(x => x.Id == userId);
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
