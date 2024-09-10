@@ -42,11 +42,11 @@ namespace backend_api.Data
         //Seeding
         public async Task SeedDataIfEmptyAsync()
         {
-            var roleAdmin = Roles.FirstOrDefault(x => x.Name.Equals(SD.Admin));
+            var roleAdmin = Roles.FirstOrDefault(x => x.Name.Equals(SD.ADMIN_ROLE));
             var adminUser = ApplicationUsers.FirstOrDefault(x => x.Email.Equals("admin@admin.com"));
             if (!Roles.Any() || roleAdmin == null)
             {
-                roleAdmin = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.Admin, NormalizedName = SD.Admin.ToUpper() };
+                roleAdmin = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.ADMIN_ROLE, NormalizedName = SD.ADMIN_ROLE.ToUpper() };
                 Roles.Add(roleAdmin);
             }
             if (!ApplicationUsers.Any() || adminUser == null)
@@ -68,7 +68,7 @@ namespace backend_api.Data
                     UserName = "admin@admin.com",
                     CreatedDate = DateTime.Now,
                     ImageLocalPathUrl = @"wwwroot\UserImages\default-avatar.png",
-                    ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault,
+                    ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME,
                     ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB
                 };
 
@@ -86,30 +86,130 @@ namespace backend_api.Data
                 ApplicationClaims.AddRange(
                     new ApplicationClaim
                     {
-                        ClaimType = "Create",
-                        ClaimValue = "True",
+                        ClaimType = SD.DEFAULT_CREATE_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_CREATE_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_CREATE_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_CREATE_CLAIM_VALUE,
                         CreatedDate = DateTime.Now,
                         UserId = adminUser.Id
                     },
                     new ApplicationClaim
                     {
-                        ClaimType = "Delete",
-                        ClaimValue = "True",
+                        ClaimType = SD.DEFAULT_DELETE_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_DELETE_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_DELETE_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_DELETE_CLAIM_VALUE,
                         CreatedDate = DateTime.Now,
                         UserId = adminUser.Id
                     },
-                    new ApplicationClaim { ClaimType = "Update", ClaimValue = "True", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Create", ClaimValue = "Claim", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Delete", ClaimValue = "Claim", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Update", ClaimValue = "Claim", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Create", ClaimValue = "Role", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Delete", ClaimValue = "Role", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Update", ClaimValue = "Role", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Create", ClaimValue = "User", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Delete", ClaimValue = "User", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Update", ClaimValue = "User", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Assign", ClaimValue = "Role", CreatedDate = DateTime.Now, UserId = adminUser.Id },
-                    new ApplicationClaim { ClaimType = "Assign", ClaimValue = "Claim", CreatedDate = DateTime.Now, UserId = adminUser.Id }
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_UPDATE_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_UPDATE_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_UPDATE_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_UPDATE_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_CREATE_CLAIM_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_CREATE_CLAIM_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_CREATE_CLAIM_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_CREATE_CLAIM_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_DELETE_CLAIM_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_DELETE_CLAIM_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_DELETE_CLAIM_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_DELETE_CLAIM_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_UPDATE_CLAIM_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_UPDATE_CLAIM_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_UPDATE_CLAIM_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_UPDATE_CLAIM_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_CREATE_ROLE_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_CREATE_ROLE_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_CREATE_ROLE_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_CREATE_ROLE_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_DELETE_ROLE_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_DELETE_ROLE_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_DELETE_ROLE_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_DELETE_ROLE_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_UPDATE_ROLE_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_UPDATE_ROLE_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_UPDATE_ROLE_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_UPDATE_ROLE_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_CREATE_USER_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_CREATE_USER_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_CREATE_USER_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_CREATE_USER_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_DELETE_USER_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_DELETE_USER_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_DELETE_USER_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_DELETE_USER_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_UPDATE_USER_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_UPDATE_USER_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_UPDATE_USER_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_UPDATE_USER_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_ASSIGN_ROLE_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_ASSIGN_ROLE_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_ASSIGN_ROLE_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_ASSIGN_ROLE_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_ASSIGN_CLAIM_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_ASSIGN_CLAIM_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_ASSIGN_CLAIM_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_ASSIGN_CLAIM_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    }
                 );
 
                 await SaveChangesAsync();

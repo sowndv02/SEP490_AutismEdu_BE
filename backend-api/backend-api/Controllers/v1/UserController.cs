@@ -16,17 +16,19 @@ namespace backend_api.Controllers.v1
     {
         private readonly IUserRepository _userRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
+        private readonly ILogger<UserController> _logger;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
         public UserController(IUserRepository userRepository, IMapper mapper,
-            IConfiguration configuration, IBlobStorageRepository blobStorageRepository)
+            IConfiguration configuration, IBlobStorageRepository blobStorageRepository, ILogger<UserController> logger)
         {
             pageSize = configuration.GetValue<int>("APIConfig:PageSize");
             _mapper = mapper;
             _userRepository = userRepository;
             _response = new();
             _blobStorageRepository = blobStorageRepository;
+            _logger = logger;
         }
 
         [HttpDelete("role/{userId}")]
@@ -187,8 +189,8 @@ namespace backend_api.Controllers.v1
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
                 model.CreatedDate = DateTime.Now;
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                string filePath = @"wwwroot\UserImages\" + SD.UrlImageAvatarDefault;
-                model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                string filePath = @"wwwroot\UserImages\" + SD.IMAGE_DEFAULT_AVATAR_NAME;
+                model.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                 model.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
                 model.ImageLocalPathUrl = filePath;
 
@@ -275,7 +277,7 @@ namespace backend_api.Controllers.v1
                         updateDTO.Image.CopyTo(fileStream);
                     }
                     model.ImageLocalPathUrl = filePath;
-                    model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                    model.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                     using var stream = updateDTO.Image.OpenReadStream();
                     model.ImageUrl = await _blobStorageRepository.UploadImg(stream, fileName);
                 }
@@ -284,6 +286,7 @@ namespace backend_api.Controllers.v1
                 await _userRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
+                _response.Result = model;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -343,10 +346,10 @@ namespace backend_api.Controllers.v1
 
                 if (!string.IsNullOrEmpty(searchValue))
                 {
-                    list = list.Where(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue))).ToList();
+                    list = list.Where(u => u.FullName.ToLower().Contains(searchValue.ToLower())).ToList();
                 }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-
+                _logger.LogInformation($"GetAlllUser: \n SearchValue: {searchValue} \n SearchType: {searchType} \n searchTypeId: {searchTypeId}\n pageNumber: {pageNumber}");
                 Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = _mapper.Map<List<ApplicationUserDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;

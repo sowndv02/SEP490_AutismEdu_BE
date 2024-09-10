@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace backend_api.Models.DTOs
 {
@@ -12,6 +12,6 @@ namespace backend_api.Models.DTOs
         [PasswordPropertyText]
         public string Password { get; set; }
         [Required]
-        public string Role { get; set; } = SD.User;
+        public string Role { get; set; } = SD.USER_ROLE;
     }
 }

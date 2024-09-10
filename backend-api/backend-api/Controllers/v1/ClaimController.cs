@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace backend_api.Controllers.v1
 {
@@ -23,7 +22,7 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         protected int pageSize = 0;
         protected int takeValue = 0;
-        public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration, 
+        public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration,
             IUserRepository userRepository, FormatString formatString)
         {
             _userRepository = userRepository;
@@ -180,9 +179,17 @@ namespace backend_api.Controllers.v1
                 if (claimDTO == null) return BadRequest(claimDTO);
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
                 model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //TODO: Check Claim exist
+                var claimExist = await _claimRepository.GetAsync(x => x.ClaimType == claimDTO.ClaimType && x.ClaimValue == claimDTO.ClaimValue, false);
+                if (claimExist != null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Claim Type or Claim value exist!" };
+                    return BadRequest(_response);
+                }
                 model.ClaimValue = _formatString.FormatStringUpperCaseFirstChar(model.ClaimValue);
                 model.ClaimType = _formatString.FormatStringUpperCaseFirstChar(model.ClaimType);
+                model.CreatedDate = DateTime.Now;
                 await _claimRepository.CreateAsync(model);
                 _response.Result = _mapper.Map<ClaimDTO>(model);
                 _response.StatusCode = HttpStatusCode.Created;
@@ -210,8 +217,18 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string>() { "Id invalid!" };
                     return BadRequest(_response);
                 }
-                //TODO: Update Claim User and store base Claim
+                var claimExist = await _claimRepository.GetAsync(x => x.ClaimType == claimDTO.ClaimType && x.ClaimValue == claimDTO.ClaimValue, false);
+                if (claimExist != null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Claim Type or Claim value exist!" };
+                    return BadRequest(_response);
+                }
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
+                model.ClaimValue = _formatString.FormatStringUpperCaseFirstChar(model.ClaimValue);
+                model.ClaimType = _formatString.FormatStringUpperCaseFirstChar(model.ClaimType);
+                model.UpdatedDate = DateTime.Now;
                 var result = await _claimRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
