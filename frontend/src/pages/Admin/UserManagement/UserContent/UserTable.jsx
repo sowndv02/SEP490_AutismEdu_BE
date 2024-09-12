@@ -8,6 +8,7 @@ import { enqueueSnackbar } from 'notistack';
 import TablePagging from '~/components/TablePagging';
 import services from '~/plugins/services';
 import ActionMenu from './ActionMenu';
+import UserProfileModal from '../UserProfileModal';
 function UserTable({ users, setPagination, setUsers, pagination }) {
     const handleChangeUserStatus = (id, status) => {
         if (status) {
@@ -81,7 +82,7 @@ function UserTable({ users, setPagination, setUsers, pagination }) {
                                                 }
                                             </IconButton>
                                             <IconButton>
-                                                <VisibilityIcon />
+                                                <UserProfileModal currentUser={user} />
                                             </IconButton>
                                             <ActionMenu currentUser={user} />
                                         </Box>

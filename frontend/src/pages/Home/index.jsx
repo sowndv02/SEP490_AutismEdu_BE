@@ -14,8 +14,8 @@ function Home() {
     }
     return (
         <>
-            <Typography variant='h1'>This is homepage</Typography>
-            <Typography>{import.meta.env.VITE_BASE_URL }</Typography>
+            <Typography variant='h1' sx={{ color: "secondary.main" }}>This is homepage</Typography>
+            <Typography>{import.meta.env.VITE_BASE_URL}</Typography>
             <button onClick={handleGetData}>
                 get data
             </button>

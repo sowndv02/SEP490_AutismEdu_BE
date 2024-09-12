@@ -39,7 +39,7 @@ function ActionMenu({ currentUser }) {
                 }}
             >
                 <UserClaimModal handleCloseMenu={handleClose} currentUser={currentUser} />
-                <UserRoleModal handleCloseMenu={handleClose} />
+                <UserRoleModal handleCloseMenu={handleClose} currentUser={currentUser}/>
             </Menu>
         </div>
     )
