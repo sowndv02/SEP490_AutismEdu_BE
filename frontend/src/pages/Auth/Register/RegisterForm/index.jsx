@@ -177,7 +177,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                                         </IconButton>
                                     </InputAdornment>
                                 }
-                                label="Password"
+                                label="Confirm Password"
                             />
                             {
                                 passwordConfirmError && (

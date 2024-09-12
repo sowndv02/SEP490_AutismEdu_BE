@@ -2,6 +2,7 @@ import { createTheme } from '@mui/material/styles';
 import { red } from '@mui/material/colors';
 
 // Create a theme instance.
+const labelFontSize = "12px";
 const theme = createTheme({
     myapp: {
         adminHeaderHeight: '70px',
@@ -68,7 +69,7 @@ const theme = createTheme({
                     textTransform: "none"
                 }
             }
-        },
+        }
     }
 });
 
