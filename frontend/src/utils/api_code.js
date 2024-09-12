@@ -17,10 +17,14 @@ const API_CODE = {
   API_GET_USER_CLAIMS: '/v1/User/claim/',
   API_ASSIGN_CLAIMS: '/v1/User/claim/',
   API_REMOVE_USER_CLAIM: '/v1/User/claim/',
-
+  API_ASSIGN_ROLES: '/v1/User/role/',
+  API_GET_USER_ROLES: '/v1/User/role/',
+  API_REMOVE_USER_ROLES: '/v1/User/role/',
   //Claim management
   API_GET_CLAIM: '/v1/Claim',
 
+  //role management
+  API_GET_ROLE: '/v1/Role'
 };
 
 export default API_CODE;

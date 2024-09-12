@@ -172,7 +172,7 @@ function ResetPassword() {
                                         </IconButton>
                                     </InputAdornment>
                                 }
-                                label="Password"
+                                label="Confirm Password"
                             />
                             {
                                 passwordConfirmError && (

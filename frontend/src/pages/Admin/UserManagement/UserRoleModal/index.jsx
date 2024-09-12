@@ -1,6 +1,9 @@
-import { Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, Typography } from '@mui/material';
-import { useState } from 'react';
+import { Box, Button, Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Modal, OutlinedInput, Select, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 import DeleteRoleDialog from './DeleteRoleDialog';
+import services from '~/plugins/services';
+import { enqueueSnackbar } from 'notistack';
+import LoadingComponent from '~/components/LoadingComponent';
 const style = {
     position: 'absolute',
     top: '50%',
@@ -9,19 +12,54 @@ const style = {
     width: 600,
     bgcolor: 'background.paper',
     boxShadow: 24,
-    p: 4,
+    p: 4
 };
-function UserRoleModal({ handleCloseMenu }) {
-    const [open, setOpen] = useState(false);
-    const [claim, setClaim] = useState('');
-    const listClaim = [
-        "Admin",
-        "Customer"
-    ]
 
-    const listMyClaim = [
-        "Admin"
-    ]
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+    PaperProps: {
+        style: {
+            maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+            width: 250,
+        }
+    }
+};
+function UserRoleModal({ currentUser, handleCloseMenu }) {
+    const [open, setOpen] = useState(false);
+    const [roles, setRoles] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [selectedRoles, setSelectedRoles] = useState([]);
+    const [userRoles, setUserRoles] = useState([]);
+    useEffect(() => {
+        if (open) {
+            getRoles();
+        }
+    }, [open])
+    const getRoles = async () => {
+        try {
+            setLoading(true);
+            await Promise.all([
+                services.UserManagementAPI.getUserRoles(currentUser.id, (res) => {
+                    setUserRoles(res.result);
+                }, (err) => {
+                    console.log(err);
+                }),
+                services.RoleManagementAPI.getRoles((res) => {
+                    const filteredRoles = res.result.filter((role) => {
+                        return !currentUser.role.includes(role.name)
+                    })
+                    setRoles(filteredRoles);
+                }, (err) => {
+                    console.log(err);
+                })
+            ])
+            setLoading(false);
+        } catch (error) {
+            console.log(error);
+            setLoading(false);
+        }
+    }
     const handleOpen = () => {
         setOpen(true)
     };
@@ -29,10 +67,63 @@ function UserRoleModal({ handleCloseMenu }) {
         handleCloseMenu()
         setOpen(false);
     }
-
     const handleChange = (event) => {
-        setClaim(event.target.value);
+        const {
+            target: { value },
+        } = event;
+        setSelectedRoles(
+            typeof value === 'string' ? value.split(',') : value,
+        );
     };
+
+    const handleSubmit = async () => {
+        try {
+            setLoading(true);
+            const submitRoles = selectedRoles.map((role) => {
+                const selectedRole = roles.find((r) => r.name === role);
+                return selectedRole.id;
+            })
+            console.log(submitRoles);
+            await services.RoleManagementAPI.assignRoles(currentUser.id, {
+                userId: currentUser.id,
+                userRoleIds: submitRoles
+            }, (res) => {
+                console.log(res);
+                enqueueSnackbar("Assign role successfully!", { variant: "success" });
+            }, (error) => {
+                enqueueSnackbar("Assign role failed!", { variant: "error" });
+            })
+            setLoading(false);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    const handleRemoveRole = async (id) => {
+        try {
+            setLoading(true);
+            if (id) {
+                await services.UserManagementAPI.removeUserRoles(currentUser.id, {
+                    userId: currentUser.id,
+                    userRoleIds: [id]
+                }, (res) => {
+                    enqueueSnackbar("Remove role successfully!", { variant: "success" });
+                }, (error) => {
+                    enqueueSnackbar("Remove role failed!", { variant: "error" });
+                })
+                setLoading(false);
+                const filteredRoles = userRoles.filter((u) => {
+                    return u.id !== id;
+                })
+                setUserRoles(filteredRoles);
+            }
+            else {
+                enqueueSnackbar("Remove role failed!", { variant: "error" });
+            }
+            setLoading(false);
+        } catch (error) {
+            console.log(error);
+        }
+    }
     return (
         <div>
             <MenuItem onClick={handleOpen}>Manage Role</MenuItem>
@@ -44,32 +135,36 @@ function UserRoleModal({ handleCloseMenu }) {
             >
                 <Box sx={style} >
                     <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Roles of Khai Dao
+                        Roles of {currentUser?.fullName}
                     </Typography>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }} mt="20px">
                         <FormControl size="small" sx={{ width: "80%" }}>
-                            <InputLabel id="demo-simple-select-label">Roles</InputLabel>
+                            <InputLabel id="roles">Roles</InputLabel>
                             <Select
-                                labelId="demo-simple-select-label"
-                                id="demo-simple-select"
-                                value={claim}
-                                label="Claim"
+                                labelId="roles"
+                                id="multiple-roles"
+                                multiple
+                                value={selectedRoles}
                                 onChange={handleChange}
+                                input={<OutlinedInput label="Roles" />}
+                                renderValue={(selected) => selected.join(', ')}
+                                MenuProps={MenuProps}
                             >
-                                {listClaim.map((l, index) => {
-                                    return (
-                                        <MenuItem key={index} value={10}>{l}</MenuItem>
-                                    )
-                                })}
+                                {roles?.map((role) => (
+                                    <MenuItem key={role.id} value={role.name}>
+                                        <Checkbox checked={selectedRoles.indexOf(role.name) > -1} />
+                                        <ListItemText primary={role.name} />
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
-                        <Button variant='contained' sx={{ alignSelf: "end", height: "40px", fontSize: "11px" }}>Add Role</Button>
+                        <Button variant='contained' sx={{ alignSelf: "end", height: "40px", fontSize: "11px" }} onClick={handleSubmit}>Add Role</Button>
                     </Box>
                     <Box mt="20px">
                         {
-                            listMyClaim.map((l, index) => {
+                            userRoles?.map((l) => {
                                 return (
-                                    <Box key={index} sx={{
+                                    <Box key={l?.id} sx={{
                                         display: "flex", alignItems: "center", justifyContent: "space-between",
                                         height: "60px",
                                         '&:hover': {
@@ -79,14 +174,15 @@ function UserRoleModal({ handleCloseMenu }) {
                                         py: "10px",
                                     }}>
                                         <Box>
-                                            {l}
+                                            {l?.name}
                                         </Box>
-                                        <DeleteRoleDialog />
+                                        <DeleteRoleDialog handleRemoveRole={handleRemoveRole} id={l?.id} />
                                     </Box>
                                 )
                             })
                         }
                     </Box>
+                    <LoadingComponent open={loading} setLoading={setLoading} />
                 </Box>
             </Modal>
         </div>
