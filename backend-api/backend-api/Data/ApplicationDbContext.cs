@@ -3,6 +3,7 @@ using backend_api.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -19,6 +20,14 @@ namespace backend_api.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<ApplicationClaim> ApplicationClaims { get; set; }
+        public DbSet<Center> Centers { get; set; }
+        public DbSet<Class> Classes { get; set; }
+        public DbSet<ClassMember> ClassMembers { get; set; }
+        public DbSet<Licence> Licences { get; set; }
+        public DbSet<LicenceMedia> LicenceMedias { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<ReportMedia> ReportMedias { get; set; }
+        public DbSet<Review> Reviews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -28,6 +37,30 @@ namespace backend_api.Data
             //    .WithMany(u => u.ApplicationClaims)
             //    .HasForeignKey(a => a.UserId)
             //    .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Review>()
+                .HasOne(r => r.Reviewer)
+                .WithMany()
+                .HasForeignKey(r => r.ReviewerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Review>()
+                .HasOne(r => r.Reviewee)
+                .WithMany()
+                .HasForeignKey(r => r.RevieweeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ClassMember>()
+                .HasOne(cm => cm.Class)
+                .WithMany()
+                .HasForeignKey(cm => cm.ClassId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ClassMember>()
+                .HasOne(cm => cm.User)
+                .WithMany()
+                .HasForeignKey(cm => cm.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             foreach (var entityType in builder.Model.GetEntityTypes())
             {
