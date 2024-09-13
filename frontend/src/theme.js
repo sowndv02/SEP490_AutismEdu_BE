@@ -22,14 +22,45 @@ const theme = createTheme({
             secondary: '#3b4056'
         }
     },
+
+    typography: {
+        h1: {
+            fontWeight: 'bold',
+            color: '#192335'
+        },
+        h2: {
+            fontWeight: 'bold',
+            color: '#192335'
+        },
+        h3: {
+            fontWeight: 'bold',
+            color: '#192335'
+        },
+        h4: {
+            fontWeight: 'bold',
+            color: '#192335'
+        },
+        h5: {
+            fontWeight: 'bold',
+            color: '#192335'
+        },
+        h6: {
+            fontWeight: 'bold',
+            color: '#192335'
+        },
+    },
     components: {
         MuiCssBaseline: {
-            styleOverrides: `
-            a {
-              color: #3b4056;
-              text-decoration: none;
+            styleOverrides: {
+                a: {
+                    color: '#3b4056',
+                    textDecoration: 'none',
+                },
+                'h1, h2, h3, h4, h5, h6': {
+                    fontWeight: 'bold',
+                    color: '#192335'
+                },
             }
-          `
         },
         MuiButton: {
             styleOverrides: {
