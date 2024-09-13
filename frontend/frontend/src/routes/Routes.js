@@ -7,6 +7,7 @@ import ForgotPassword from '~/pages/Auth/ForgotPassword'
 import Register from '~/pages/Auth/Register'
 import ResetPassword from '~/pages/Auth/ResetPassword'
 import ConfirmRegister from '~/pages/Auth/ConfirmRegister'
+import SearchCenter from '~/pages/Center/SearchCenter'
 
 const publicRoutes = [
     {
@@ -32,6 +33,10 @@ const publicRoutes = [
     {
         path: PAGES.CONFIRMREGISTER,
         element: ConfirmRegister
+    },
+    {
+        path: PAGES.LISTCENTER,
+        element: SearchCenter
     },
 ]
 

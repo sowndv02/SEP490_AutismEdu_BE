@@ -8,6 +8,7 @@ const PAGES = {
   REGISTER: '/register',
   RESETPASSWORD: '/reset-password',
   CONFIRMREGISTER: '/confirm-register',
+  LISTCENTER:'/list-center',
 };
 
 export default PAGES;
