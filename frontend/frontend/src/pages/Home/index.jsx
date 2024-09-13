@@ -1,25 +1,26 @@
-import { Typography } from '@mui/material'
-import services from '~/plugins/services'
-
+import React, { useState } from 'react';
+import { AppBar, Tabs, Tab, Box } from '@mui/material';
+import CarouselComponent from './CarouselComponent';
+import BigCity from './BigCity';
+import Center from './Center';
+import TutorComponent from './Tutor';
+import Blog from './Blog';
+import AboutMe from './AboutMe';
 function Home() {
-    const handleGetData = async () => {
-        await services.AuthenticationAPI.getData(
-            (res) => {
-                console.log(res);
-            },
-            (err) => {
-                console.log(err);
-            }, {}
-        )
-    }
+    const [value, setValue] = useState(0);
+
+    const handleChange = (event, newValue) => {
+        setValue(newValue);
+    };
     return (
-        <>
-            <Typography variant='h1'>This is homepage</Typography>
-            <Typography>{import.meta.env.VITE_BASE_URL }</Typography>
-            <button onClick={handleGetData}>
-                get data
-            </button>
-        </>
+        <Box>
+            <CarouselComponent />
+            <BigCity />
+            <Center />
+            <TutorComponent />
+            <Blog />
+            <AboutMe />
+        </Box>
     )
 }
 
