@@ -9,7 +9,9 @@ function BigCity() {
         <Container sx={{ mt: "30px", width: "100vw", paddingBottom: "30px" }}>
             <ChipComponent text="THÀNH PHỐ LỚN" bgColor="#e4e9fd" color="#2f57ef" />
             <Box textAlign={'center'} sx={{ marginBottom: "50px" }}>
-                <Typography variant='h3' sx={{fontSize: "44px", width: "70%", margin: "auto", color: "#192335", fontWeight: "bold" }}>
+                <Typography variant='h2' sx={{
+                    width: "70%", margin: "auto", color: "#192335", fontWeight: "bold"
+                }}>
                     Tìm Trung Tâm Và Gia Sư Ở Các Thành Phố Lớn
                 </Typography>
             </Box>

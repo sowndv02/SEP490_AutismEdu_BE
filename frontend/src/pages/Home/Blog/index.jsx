@@ -1,24 +1,16 @@
-import { Box, Button, Card, CardActions, CardContent, CardMedia, Chip, Grid, IconButton, Typography } from '@mui/material'
-import React from 'react'
-import ChipComponent from '~/components/ChipComponent'
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import LocalPhoneOutlinedIcon from '@mui/icons-material/LocalPhoneOutlined';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import SubdirectoryArrowLeftIcon from '@mui/icons-material/SubdirectoryArrowLeft';
+import { Box, Button, Card, CardActions, CardContent, CardMedia, Chip, Grid, Stack, Typography } from '@mui/material';
+import ButtonIcon from '~/components/ButtonComponent/ButtonIcon';
 function Blog() {
-
-    const formatter = new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-        minimumFractionDigits: 0, // Số chữ số thập phân sau dấu chấm
-        maximumFractionDigits: 0, // Số chữ số thập phân sau dấu chấm
-    });
     return (
         <Box sx={{ width: "100vw", py: "100px", textAlign: 'center', bgcolor: "#b08fd8" }}>
-            <Grid container mb={5}>
-                <Grid item xs={2}></Grid>
-                <Grid item xs={8}>
+            <Stack direction='row' sx={{ justifyContent: "center", width: "100vw" }}>
+                <Box sx={{
+                    width: {
+                        xl: "70%",
+                        lg: "90%"
+                    }
+                }}>
                     <Grid container m={0} mb={5} spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }} textAlign={"left"}>
                         <Grid item xs={12} md={6} >
                             <Chip
@@ -32,16 +24,18 @@ function Blog() {
                                 }}
                             />
                             <Typography variant='h3' sx={{ fontSize: "44px", color: "#192335", fontWeight: "bold" }} mt={3}>
-                                Bài Viết Phổ Biến.
+                                Bài Viết Mới Nhất.
                             </Typography>
                         </Grid>
                         <Grid item xs={12} md={6} textAlign={"right"}>
-                            <Button variant='contained'>LEARN MORE</Button>
+                            <ButtonIcon text={"ĐỌC THÊM"} />
                         </Grid>
                     </Grid>
                     <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }} textAlign={"left"}>
-                        <Grid item xs={12} md={6} >
+                        <Grid item xs={12} md={6} sx={{ height: "500px" }}>
                             <Card sx={{
+                                height: "100%",
+                                paddingBottom: '20px',
                                 transition: "transform 0.3s ease, box-shadow 0.3s ease",
                                 '&:hover': {
                                     transform: "scale(1.02) translateY(-10px)",
@@ -51,11 +45,11 @@ function Blog() {
                             }}>
                                 <CardMedia
                                     component="img"
-                                    sx={{ height: 300 }}
+                                    sx={{ height: "60%" }}
                                     image="https://rainbowthemes.net/themes/histudy/wp-content/uploads/2023/12/girl-looking-laptop-1.webp"
                                     alt="Live from space album cover"
                                 />
-                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', height: "40%" }}>
                                     <CardContent sx={{ flex: '1 0 auto' }}>
                                         <Typography component="div" variant="h4">
                                             Difficult Things About Education.
@@ -69,7 +63,6 @@ function Blog() {
                                         }}>
                                             HiStudy Education Theme của Rainbow là một công cụ WordPress thân thiện  được thiết kế cho HiStudy Education Theme của Rainbow là một công cụ WordPress thân thiện  được thiết kế cho
                                         </Typography>
-
                                     </CardContent>
                                     <CardActions>
                                         <Button sx={{ fontSize: "20px" }} endIcon={<ArrowForwardIcon />}>Tìm hiểu thêm </Button>
@@ -78,7 +71,7 @@ function Blog() {
 
                             </Card>
                         </Grid>
-                        <Grid item xs={12} md={6} sx={{ height: "510px" }}>
+                        <Grid item xs={12} md={6}>
                             <Grid container m={0} spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }} textAlign={"left"} sx={{ height: "100%" }}>
                                 <Grid item xs={12} sx={{ height: "33%" }}>
                                     <Card sx={{
@@ -162,9 +155,8 @@ function Blog() {
                             </Grid>
                         </Grid>
                     </Grid>
-                </Grid>
-                <Grid item xs={2}></Grid>
-            </Grid >
+                </Box>
+            </Stack >
         </Box >
     )
 }

@@ -4,6 +4,8 @@ import Logo from '../Logo'
 import SearchIcon from '@mui/icons-material/Search';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import ButtonComponent from '../ButtonComponent';
+import NavigationMobile from './NavigationMobile';
 function Header() {
     return (
         <Stack
@@ -16,7 +18,12 @@ function Header() {
                 bgcolor: "white"
             }}>
             <Logo sizeLogo="50px" sizeName="35px" />
-            <Tabs aria-label="nav tabs">
+            <Tabs aria-label="nav tabs" sx={{
+                display: {
+                    lg: "block",
+                    xs: "none"
+                }
+            }}>
                 <Tab label="Trang chủ" />
                 <Tab label="Trung tâm" />
                 <Tab label="Gia sư" />
@@ -36,9 +43,21 @@ function Header() {
                         <NotificationsActiveIcon />
                     </Badge>
                 </IconButton>
-
-                <Button variant='contained'>Đăng nhập</Button>
-                <Button variant='outlined'>Đăng ký</Button>
+                <Box sx={{
+                    display: {
+                        xs: "none",
+                        lg: "block"
+                    }
+                }}>
+                    <ButtonComponent text="Đăng nhập" height="40px" />
+                </Box>
+                <Button variant='outlined' sx={{
+                    display: {
+                        xs: "none",
+                        lg: "block"
+                    }
+                }}>Đăng ký</Button>
+                <NavigationMobile />
             </Stack>
         </Stack>
     )
