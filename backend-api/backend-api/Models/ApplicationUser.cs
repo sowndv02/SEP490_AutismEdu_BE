@@ -13,7 +13,7 @@ namespace backend_api.Models
         public string? ImageLocalPathUrl { get; set; }
         public string? ImageLocalUrl { get; set; }
         [NotMapped]
-        public string RoleId { get; set; }
+        public List<string> RoleIds { get; set; }
         [NotMapped]
         public string Role { get; set; }
         [NotMapped]
