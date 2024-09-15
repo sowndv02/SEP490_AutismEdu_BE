@@ -1,2 +1,15 @@
-:root {
+:root {}
+
+@font-face {
+    font-family: 'Euclid Circular';
+    src: url('./assets/css/EuclidCircularARegular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Euclid Circular';
+    src: url('./assets/css/EuclidCircularABold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
 }

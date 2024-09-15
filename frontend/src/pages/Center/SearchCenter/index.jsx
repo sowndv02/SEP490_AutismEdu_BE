@@ -12,7 +12,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import Person3OutlinedIcon from '@mui/icons-material/Person3Outlined';
 import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ButtonComponent from '~/Components/ButtonComponent';
+import ButtonComponent from '~/components/ButtonComponent';
 import Collapse from '@mui/material/Collapse';
 
 function Index() {
