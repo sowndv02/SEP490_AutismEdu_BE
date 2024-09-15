@@ -693,21 +693,32 @@ namespace backend_api.Repository
 
             if (result.Succeeded)
             {
-                var roleId = user.RoleId;
-                if (roleId != null)
+                var roleIds = user.RoleIds;
+                if (roleIds != null && roleIds.Count != 0)
                 {
-                    user.Role = _roleManager.FindByIdAsync(roleId).GetAwaiter().GetResult().Name;
-                    if (user.Role != null)
+                    foreach(var roleId in roleIds)
                     {
-                        await _userManager.AddToRoleAsync(obj, user.Role);
-                    }
-                    else
-                    {
-                        if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
+                        user.Role = _roleManager.FindByIdAsync(roleId).GetAwaiter().GetResult().Name;
+                        if (user.Role != null)
                         {
-                            await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
+                            await _userManager.AddToRoleAsync(obj, user.Role);
                         }
-                        await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
+                        else
+                        {
+                            var role_user = _userManager.GetRolesAsync(user).GetAwaiter().GetResult().FirstOrDefault(x => x.Equals(SD.USER_ROLE));
+                            if (role_user != null && role_user == SD.USER_ROLE)
+                            {
+                                continue;
+                            }else
+                            {
+                                if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
+                                {
+                                    await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
+                                }
+                                await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
+                            }
+                            
+                        }
                     }
                 }
                 else
