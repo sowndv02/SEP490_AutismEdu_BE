@@ -6,14 +6,8 @@ import LocalPhoneOutlinedIcon from '@mui/icons-material/LocalPhoneOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SubdirectoryArrowLeftIcon from '@mui/icons-material/SubdirectoryArrowLeft';
+import { formatter } from '~/utils/service';
 function Tutor() {
-
-    const formatter = new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-        minimumFractionDigits: 0, // Số chữ số thập phân sau dấu chấm
-        maximumFractionDigits: 0, // Số chữ số thập phân sau dấu chấm
-    });
     return (
         <Box sx={{ width: "100vw", py: "100px", textAlign: 'center' }}>
 
