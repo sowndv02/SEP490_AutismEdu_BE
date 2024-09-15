@@ -7,8 +7,11 @@ function AboutMe() {
                 <Grid item xs={2}></Grid>
                 <Grid item xs={8}>
                     <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }} textAlign={"left"}>
-                        <Grid item xs={12} md={6} >
-                            <img src={teacher} />
+                        <Grid item xs={12} md={6} sx={{
+                            backgroundImage: `url(${teacher})`,
+                            backgroundSize: "cover",
+                            backgroundRepeat: "no-repeat"
+                        }}>
                         </Grid>
                         <Grid item xs={12} md={6} sx={{ height: "510px" }}>
                             <Chip
