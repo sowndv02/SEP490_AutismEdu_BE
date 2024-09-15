@@ -55,6 +55,11 @@ const theme = createTheme({
             fontWeight: '700',
             color: '#192335'
         },
+        h6: {
+            fontSize: "20px",
+            fontWeight: '700',
+            color: '#192335'
+        },
         'h1, h2, h3, h4, h5, h6': {
             fontFamily: 'Euclid Circular',
             color: '#192335'

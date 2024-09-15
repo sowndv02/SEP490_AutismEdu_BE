@@ -9,6 +9,7 @@ import ResetPassword from '~/pages/Auth/ResetPassword'
 import ConfirmRegister from '~/pages/Auth/ConfirmRegister'
 import SearchCenter from '~/pages/Center/SearchCenter'
 import SearchTutor from '~/pages/Tutor/SearchTutor'
+import CenterProfile from '~/pages/Center/CenterProfile'
 
 const publicRoutes = [
     {
@@ -40,6 +41,10 @@ const publicRoutes = [
         element: SearchCenter
     },
     {
+        path: PAGES.CENTERPROFILE,
+        element: CenterProfile
+    },
+	{
         path: PAGES.LISTTUTOR,
         element: SearchTutor
     },
