@@ -245,6 +245,9 @@ void ApplyMigration()
                 _db.Database.Migrate();
                 Console.WriteLine("Migrations applied successfully.");
             }
+			
+			// Seed the database if it’s empty
+			_db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
         }
     }
     catch (Exception ex)
