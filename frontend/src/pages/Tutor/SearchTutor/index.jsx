@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Grid, Box, TextField, InputAdornment, Card, CardContent, CardMedia, Typography, Rating, Button, Link, IconButton, CardActions, Container, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Grid, Box, TextField, InputAdornment, Card, CardContent, CardMedia, Typography, Rating, Button, Link, IconButton, CardActions, Container, Select, MenuItem, InputLabel, FormControl, CircularProgress } from '@mui/material';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Stack from '@mui/material/Stack';
 import GridViewIcon from '@mui/icons-material/GridView';
@@ -13,10 +13,15 @@ import Person3OutlinedIcon from '@mui/icons-material/Person3Outlined';
 import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ButtonComponent from '~/Components/ButtonComponent';
-import Collapse from '@mui/material/Collapse';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import LocalPhoneOutlinedIcon from '@mui/icons-material/LocalPhoneOutlined';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import StarIcon from '@mui/icons-material/Star';
+import CALL_API_ADDRESS from '~/utils/call_api_address';
+import axios from 'axios';
 import FormSearch from './FormSearch/FormSearch';
 
-function Index() {
+function SearchTutor() {
     const [searchCriteria, setSearchCriteria] = useState({
         searchValue: "",
         address: "",
@@ -27,7 +32,7 @@ function Index() {
     const arrCenter = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     const [visibleCards, setVisibleCards] = useState(6);
     const [showFilters, setShowFilters] = useState(false);
-
+    
     const handleFilterClick = () => {
         setShowFilters(!showFilters);
     };
@@ -56,6 +61,7 @@ function Index() {
     const handleRatingChange = (event) => {
         setSelectedRating(event.target.value);
     };
+
     const breadcrumbs = [
         <Link underline="hover" key="1" color="inherit" href="/" onClick={handleClick}>
             Trang chủ
@@ -64,12 +70,22 @@ function Index() {
             Danh sách trung tâm
         </Typography>,
     ];
+
+    const formatter = new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    });
+
     return (
         <Box sx={{ height: 'auto' }}>
             <FormSearch selected={selected} setSelected={setSelected}
                 showFilters={showFilters} handleSearch={handleSearch} handleFilterClick={handleFilterClick} searchCriteria={searchCriteria} setSearchCriteria={setSearchCriteria} />
-            <Grid container sx={{ height: 'auto', position: "relative", top: '-180px' }}>
+            <Grid container sx={{ height: 'auto', position: "relative", top: '-170px' }}>
+
                 <Grid item xs={2} />
+
                 <Grid item xs={8} sx={{ height: 'auto' }} mt={5}>
                     <Grid container sx={{ height: 'auto' }}>
                         <Grid item>
@@ -78,7 +94,7 @@ function Index() {
                                     arrCenter.slice(0, visibleCards).map((c, index) =>
                                     (<Grid item xs={4}>
                                         <Card sx={{
-                                            padding: "20px", minHeight: "670px",
+                                            padding: "20px", minHeight: "auto",
                                             transition: "transform 0.3s ease, box-shadow 0.3s ease",
                                             '&:hover': {
                                                 transform: "scale(1.05) translateY(-10px)",
@@ -87,9 +103,9 @@ function Index() {
                                             borderRadius: "5px"
                                         }}>
                                             <CardMedia
-                                                sx={{ height: 240 }}
-                                                image="https://touristjourney.com/wp-content/uploads/2020/10/Discover-the-One-Pillar-Pagoda-during-the-Insider-Hanoi-City-Tour-scaled-e1601972144150-1024x569.jpg"
-                                                title="Hanoi"
+                                                sx={{ height: 240, objectPosition: "top", objectFit: "cover" }}
+                                                image="https://www.workitdaily.com/media-library/a-happy-young-teacher-grades-an-assignment-from-one-of-her-students.jpg?id=22146397&width=1200&height=800&quality=85&coordinates=0%2C0%2C0%2C1"
+                                                title="apeople"
                                             />
                                             <CardContent>
                                                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -102,35 +118,62 @@ function Index() {
                                                     </IconButton>
                                                 </Box>
                                                 <Typography gutterBottom variant="h4" component="div" sx={{ fontSize: "26px" }}>
-                                                    Trung tâm trẻ tự kỷ Inova
+                                                    Nguyễn Thuỳ Trang
                                                 </Typography>
-                                                <Box sx={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                                                    <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                                                        <ClassOutlinedIcon />
-                                                        <Typography><span>20 lớp</span></Typography>
-                                                    </Box>
-                                                    <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                                                        <Person3OutlinedIcon />
-                                                        <Typography><span>20 giáo viên</span></Typography>
-                                                    </Box>
+                                                <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mt: 2 }}>
+                                                    <LocationOnOutlinedIcon />
+                                                    <Typography>Hồ Chí Minh</Typography>
                                                 </Box>
                                                 <Typography mt={2} sx={{
                                                     display: '-webkit-box',
-                                                    WebkitLineClamp: 2,
+                                                    WebkitLineClamp: 3,
                                                     WebkitBoxOrient: 'vertical',
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
                                                 }}>
                                                     HiStudy Education Theme của Rainbow là một công cụ WordPress thân thiện  được thiết kế cho HiStudy Education Theme của Rainbow là một công cụ WordPress thân thiện  được thiết kế cho
                                                 </Typography>
-                                                <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mt: 2 }}>
-                                                    <LocationOnIcon />
-                                                    <Typography>Tỉnh/Thành phố: Hồ Chí Minh</Typography>
+
+                                                <Box sx={{ display: "flex", gap: "15px" }}>
+                                                    <Box sx={{
+                                                        display: "flex", alignItems: "center", gap: "10px", mt: 2,
+                                                        '&:hover': {
+                                                            color: "blue"
+                                                        }
+                                                    }}>
+                                                        <LocalPhoneOutlinedIcon />
+                                                        <a href='tel:0325845628'><Typography sx={{
+                                                            '&:hover': {
+                                                                color: "blue"
+                                                            }
+                                                        }}>0325845628</Typography></a>
+                                                    </Box>
+                                                    <Box sx={{
+                                                        display: "flex", alignItems: "center", gap: "10px", mt: 2,
+                                                        '&:hover': {
+                                                            color: "blue"
+                                                        }
+                                                    }}>
+                                                        <EmailOutlinedIcon />
+                                                        <a href='mailto:xuanthulab.net@gmail.com'>
+                                                            <Typography
+                                                                sx={{
+                                                                    whiteSpace: 'nowrap',
+                                                                    overflow: 'hidden',
+                                                                    textOverflow: 'ellipsis',
+                                                                    maxWidth: '180px',
+                                                                    '&:hover': {
+                                                                        color: "blue"
+                                                                    }
+                                                                }}
+                                                            >
+                                                                nguyenthuytrang@gmail.com
+                                                            </Typography>
+                                                        </a>
+                                                    </Box>
+
                                                 </Box>
-                                                <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mt: 2 }}>
-                                                    <LocalPhoneIcon />
-                                                    <Typography>SĐT: 40404040404</Typography>
-                                                </Box>
+                                                <Typography mt={4} variant='h5'>{formatter.format(100000)} / buổi</Typography>
                                             </CardContent>
                                             <CardActions>
                                                 <Button sx={{ fontSize: "20px" }}>Tìm hiểu thêm <ArrowForwardIcon /></Button>
@@ -147,12 +190,12 @@ function Index() {
                                                 boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
                                             },
                                             borderRadius: "5px",
-                                            minHeight: "240px"
+                                            minHeight: "auto"
                                         }}>
 
                                             <CardMedia
-                                                sx={{ width: '40%', height: 'auto', borderRadius: '8px' }} // 2/5 của bố cục
-                                                image="https://nhuminhplazahotel.com/wp-content/uploads/2023/03/choi-gi-o-da-nang-2-min-1048x565.jpg"
+                                                sx={{ width: '40%', height: 'auto', borderRadius: '8px' }}
+                                                image="https://www.workitdaily.com/media-library/a-happy-young-teacher-grades-an-assignment-from-one-of-her-students.jpg?id=22146397&width=1200&height=800&quality=85&coordinates=0%2C0%2C0%2C1"
                                                 title="Hanoi"
                                             />
 
@@ -169,38 +212,63 @@ function Index() {
                                                         </IconButton>
                                                     </Box>
                                                     <Typography gutterBottom variant="h4" component="div" sx={{ fontSize: "26px" }}>
-                                                        Trung tâm trẻ tự kỷ Inova
+                                                        Nguyễn Thuỳ Trang
                                                     </Typography>
-                                                    <Box sx={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                                                        <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                                                            <ClassOutlinedIcon />
-                                                            <Typography><span>20 lớp</span></Typography>
-                                                        </Box>
-                                                        <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                                                            <Person3OutlinedIcon />
-                                                            <Typography><span>20 giáo viên</span></Typography>
-                                                        </Box>
+                                                    <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mt: 2 }}>
+                                                        <LocationOnOutlinedIcon />
+                                                        <Typography>Hồ Chí Minh</Typography>
                                                     </Box>
                                                     <Typography mt={2} sx={{
                                                         display: '-webkit-box',
-                                                        WebkitLineClamp: 2,
+                                                        WebkitLineClamp: 3,
                                                         WebkitBoxOrient: 'vertical',
                                                         overflow: 'hidden',
                                                         textOverflow: 'ellipsis',
                                                     }}>
-                                                        HiStudy Education Theme của Rainbow là một công cụ WordPress thân thiện được thiết kế cho HiStudy Education Theme của Rainbow là một công cụ WordPress thân thiện được thiết kế cho
+                                                        HiStudy Education Theme của Rainbow là một công cụ WordPress thân thiện  được thiết kế cho HiStudy Education Theme của Rainbow là một công cụ WordPress thân thiện  được thiết kế cho
                                                     </Typography>
-                                                    <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mt: 2 }}>
-                                                        <LocationOnIcon />
-                                                        <Typography>Tỉnh/Thành phố: Hồ Chí Minh</Typography>
+
+                                                    <Box sx={{ display: "flex", gap: "15px" }}>
+                                                        <Box sx={{
+                                                            display: "flex", alignItems: "center", gap: "10px", mt: 2,
+                                                            '&:hover': {
+                                                                color: "blue"
+                                                            }
+                                                        }}>
+                                                            <LocalPhoneOutlinedIcon />
+                                                            <a href='tel:0325845628'><Typography sx={{
+                                                                '&:hover': {
+                                                                    color: "blue"
+                                                                }
+                                                            }}>0325845628</Typography></a>
+                                                        </Box>
+                                                        <Box sx={{
+                                                            display: "flex", alignItems: "center", gap: "10px", mt: 2,
+                                                            '&:hover': {
+                                                                color: "blue"
+                                                            }
+                                                        }}>
+                                                            <EmailOutlinedIcon />
+                                                            <a href='mailto:xuanthulab.net@gmail.com'>
+                                                                <Typography
+                                                                    sx={{
+                                                                        whiteSpace: 'nowrap',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        maxWidth: '180px',
+                                                                        '&:hover': {
+                                                                            color: "blue"
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    nguyenthuytrang@gmail.com
+                                                                </Typography>
+                                                            </a>
+                                                        </Box>
+
                                                     </Box>
-                                                    <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mt: 2 }}>
-                                                        <LocalPhoneIcon />
-                                                        <Typography>SĐT: 40404040404</Typography>
-                                                    </Box>
+                                                    <Typography mt={4} variant='h5'>{formatter.format(100000)} / buổi</Typography>
                                                 </CardContent>
-
-
                                                 <CardActions>
                                                     <Button sx={{ fontSize: "20px" }}>Tìm hiểu thêm <ArrowForwardIcon /></Button>
                                                 </CardActions>
@@ -228,4 +296,4 @@ function Index() {
     );
 }
 
-export default Index;
+export default SearchTutor;
