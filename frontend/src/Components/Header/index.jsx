@@ -1,4 +1,4 @@
-import { Badge, Box, Button, IconButton, Paper, Stack, Tab, Tabs, Typography } from '@mui/material'
+import { Badge, Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tab, Tabs, Typography } from '@mui/material'
 import React, { useState } from 'react'
 import Logo from '../Logo'
 import SearchIcon from '@mui/icons-material/Search';
@@ -6,8 +6,24 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import ButtonComponent from '../ButtonComponent';
 import NavigationMobile from './NavigationMobile';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 function Header() {
     const [tab, setTab] = useState("1");
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [selectedIndex, setSelectedIndex] = React.useState(1);
+    const open = Boolean(anchorEl);
+    const handleClickListItem = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuItemClick = (event, index) => {
+        setSelectedIndex(index);
+        setAnchorEl(null);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
     return (
         <Stack
             direction="row"
@@ -26,11 +42,27 @@ function Header() {
                 }
             }}>
                 <Tab value={"1"} label="Trang chủ" />
-                <Tab value={"2"} label="Trung tâm" />
-                <Tab value={"3"} label="Gia sư" />
+                <Tab value={"2"} label="Trung tâm" icon={<ExpandMoreIcon />} iconPosition="end" onClick={handleClickListItem} />
+                <Tab value={"3"} label="Gia sư" onClick={handleClickListItem}/>
                 <Tab value={"4"} label="Lớp học" />
                 <Tab value={"5"} label="Blog" />
             </Tabs>
+            <Menu
+                id="lock-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                MenuListProps={{
+                    'aria-labelledby': 'lock-button',
+                    role: 'listbox',
+                }}
+            >
+                <MenuItem
+                    onClick={(event) => handleMenuItemClick(event)}
+                >
+                    Danh sách trung tâm
+                </MenuItem>
+            </Menu>
             <Stack direction="row" sx={{ alignItems: "center" }} spacing={2}>
                 <IconButton>
                     <SearchIcon />
