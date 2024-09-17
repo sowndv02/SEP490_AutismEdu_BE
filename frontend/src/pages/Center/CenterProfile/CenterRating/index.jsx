@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Pagination, Rating, Stack, Typography } from '@mui/material'
+import { Avatar, Box, Button, Pagination, Rating, Stack, TextField, Typography } from '@mui/material'
 import React, { useState } from 'react'
 import StarIcon from '@mui/icons-material/Star';
 import { TextareaAutosize } from '@mui/base/TextareaAutosize';
@@ -76,8 +76,9 @@ function CenterRating() {
                         src="https://scontent.fhan2-4.fna.fbcdn.net/v/t39.30808-1/268142468_3035907700072578_4829229204736514171_n.jpg?stp=cp0_dst-jpg_s40x40&_nc_cat=100&ccb=1-7&_nc_sid=6738e8&_nc_eui2=AeFe_w7HSGpqFDepgviEP4pyq9KSuRzAWe6r0pK5HMBZ7pEuCwmHx3H-gP4TXxRF640CJIZj8zT62i8cDsbhFZrr&_nc_ohc=bFMv_CKAR0wQ7kNvgFHuqae&_nc_ht=scontent.fhan2-4.fna&_nc_gid=AGqxW37Vosru_hqYPbyxMG4&oh=00_AYBPmeiE9kQ9b7WqaSmV3ZgyMf5UJ_NkTcJz_inkboLHyQ&oe=66ED5045" />
                     <Typography variant='h6'>Khải Đào</Typography>
                 </Box>
-                <Box sx={{
-                    width: "70%"
+                <Stack direction='column' sx={{
+                    width: "70%",
+                    gap: 3
                 }}>
                     <Rating
                         name="simple-controlled"
@@ -85,10 +86,17 @@ function CenterRating() {
                         onChange={(event, newValue) => {
                             setRating(newValue);
                         }}
-                    /> <br />
-                    <TextareaAutosize minRows={5} maxRows={20} style={{ width: "100%" }} />
+                    />
+                    <TextField
+                        id="outlined-multiline-static"
+                        label="Đánh giá"
+                        multiline
+                        rows={4}
+                        sx={{ width: "100%" }}
+                        defaultValue=""
+                    />
                     <Button variant='contained'>Đăng</Button>
-                </Box>
+                </Stack>
             </Stack>
             <Box bgcolor="#e4e9fd" p={2} sx={{ borderRadius: "5px", mt: 3 }}>
                 <Stack direction='row' sx={{
