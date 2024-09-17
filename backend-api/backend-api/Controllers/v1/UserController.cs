@@ -15,14 +15,17 @@ namespace backend_api.Controllers.v1
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<UserController> _logger;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
         public UserController(IUserRepository userRepository, IMapper mapper,
-            IConfiguration configuration, IBlobStorageRepository blobStorageRepository, ILogger<UserController> logger)
+            IConfiguration configuration, IBlobStorageRepository blobStorageRepository,
+            ILogger<UserController> logger, IRoleRepository roleRepository)
         {
+            _roleRepository = roleRepository;
             pageSize = configuration.GetValue<int>("APIConfig:PageSize");
             _mapper = mapper;
             _userRepository = userRepository;
@@ -89,8 +92,14 @@ namespace backend_api.Controllers.v1
                 }
                 else
                 {
+                    var responseList = new List<RoleDTO>();
+                    foreach (var item in userRoleDTO.UserRoleIds)
+                    {
+                        IdentityRole model = await _roleRepository.GetByIdAsync(item);
+                        responseList.Add(_mapper.Map<RoleDTO>(model));
+                    }
                     _response.IsSuccess = true;
-                    _response.Result = _userRepository.GetAsync(x => x.Id == userId);
+                    _response.Result = responseList;
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
