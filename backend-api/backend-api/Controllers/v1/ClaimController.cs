@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -174,13 +175,13 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] ClaimDTO claimDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] ClaimCreateDTO claimDTO)
         {
             try
             {
                 if (claimDTO == null) return BadRequest(claimDTO);
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
-                model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == null ? claimDTO.UserId : User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var claimExist = await _claimRepository.GetAsync(x => x.ClaimType == claimDTO.ClaimType && x.ClaimValue == claimDTO.ClaimValue, false);
                 if (claimExist != null)
                 {
@@ -191,6 +192,8 @@ namespace backend_api.Controllers.v1
                 }
                 model.ClaimValue = _formatString.FormatStringUpperCaseFirstChar(model.ClaimValue);
                 model.ClaimType = _formatString.FormatStringUpperCaseFirstChar(model.ClaimType);
+                model.DefaultClaimValue = _formatString.FormatStringUpperCaseFirstChar(model.ClaimValue);
+                model.DefaultClaimType = _formatString.FormatStringUpperCaseFirstChar(model.ClaimType);
                 model.CreatedDate = DateTime.Now;
                 await _claimRepository.CreateAsync(model);
                 _response.Result = _mapper.Map<ClaimDTO>(model);
