@@ -40,6 +40,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 Expression<Func<ApplicationClaim, bool>>? filter = u => true;
+                Expression<Func<ApplicationClaim, bool>> defaultFilter = u => true;
 
                 if (!string.IsNullOrEmpty(searchType))
                 {
@@ -62,7 +63,7 @@ namespace backend_api.Controllers.v1
                             break;
                     }
                 }
-
+                int totalClaim = 0;
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     Expression<Func<ApplicationClaim, bool>> searchFilter = u => u.ClaimValue.ToLower().Contains(searchValue.ToLower());
@@ -82,8 +83,9 @@ namespace backend_api.Controllers.v1
                     userClaims = await _userRepository.GetClaimByUserIdAsync(userId);
                 }
                 List<ApplicationClaim> list = await _claimRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, userClaims: userClaims);
-
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = list.Count };
+                bool isFilterUnmodified = filter.ToString() == defaultFilter.ToString();
+                if (isFilterUnmodified) totalClaim = _claimRepository.GetTotalClaim(); else totalClaim = list.Count;
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalClaim };
                 var result = _mapper.Map<List<ClaimDTO>>(list);
                 foreach (var claim in result)
                 {
