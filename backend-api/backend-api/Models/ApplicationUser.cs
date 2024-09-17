@@ -13,7 +13,7 @@ namespace backend_api.Models
         public string? ImageLocalPathUrl { get; set; }
         public string? ImageLocalUrl { get; set; }
         [NotMapped]
-        public string RoleId { get; set; }
+        public List<string> RoleIds { get; set; }
         [NotMapped]
         public string Role { get; set; }
         [NotMapped]
@@ -24,5 +24,11 @@ namespace backend_api.Models
 
         //public List<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         //public List<ApplicationClaim> ApplicationClaims { get; set; } = new List<ApplicationClaim>();
+
+        public string? AboutMe { get; set; }
+        public string? ExperienceYear { get; set; }
+        public string? University { get; set; }
+        public decimal? Price { get; set; }
+        public string? Address { get; set; }
     }
 }
