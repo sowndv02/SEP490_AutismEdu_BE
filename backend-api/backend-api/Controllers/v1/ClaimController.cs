@@ -83,7 +83,7 @@ namespace backend_api.Controllers.v1
                 }
                 List<ApplicationClaim> list = await _claimRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, userClaims: userClaims);
 
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = _claimRepository.GetTotalClaim() };
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = list.Count };
                 var result = _mapper.Map<List<ClaimDTO>>(list);
                 foreach (var claim in result)
                 {
