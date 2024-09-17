@@ -7,7 +7,7 @@ function Blog() {
             <Stack direction='row' sx={{ justifyContent: "center", width: "100vw" }}>
                 <Box sx={{
                     width: {
-                        xl: "70%",
+                        xl: "80%",
                         lg: "90%"
                     }
                 }}>

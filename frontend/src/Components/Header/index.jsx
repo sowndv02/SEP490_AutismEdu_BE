@@ -1,5 +1,5 @@
 import { Badge, Box, Button, IconButton, Paper, Stack, Tab, Tabs, Typography } from '@mui/material'
-import React from 'react'
+import React, { useState } from 'react'
 import Logo from '../Logo'
 import SearchIcon from '@mui/icons-material/Search';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
@@ -7,6 +7,7 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import ButtonComponent from '../ButtonComponent';
 import NavigationMobile from './NavigationMobile';
 function Header() {
+    const [tab, setTab] = useState("1");
     return (
         <Stack
             direction="row"
@@ -18,17 +19,17 @@ function Header() {
                 bgcolor: "white"
             }}>
             <Logo sizeLogo="50px" sizeName="35px" />
-            <Tabs aria-label="nav tabs" sx={{
+            <Tabs value={tab} sx={{
                 display: {
                     lg: "block",
                     xs: "none"
                 }
             }}>
-                <Tab label="Trang chủ" />
-                <Tab label="Trung tâm" />
-                <Tab label="Gia sư" />
-                <Tab label="Lớp học" />
-                <Tab label="Blog" />
+                <Tab value={"1"} label="Trang chủ" />
+                <Tab value={"2"} label="Trung tâm" />
+                <Tab value={"3"} label="Gia sư" />
+                <Tab value={"4"} label="Lớp học" />
+                <Tab value={"5"} label="Blog" />
             </Tabs>
             <Stack direction="row" sx={{ alignItems: "center" }} spacing={2}>
                 <IconButton>
