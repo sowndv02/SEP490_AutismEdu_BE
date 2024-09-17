@@ -1,20 +1,20 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { LoadingButton } from '@mui/lab';
-import { Box, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput, SvgIcon } from '@mui/material';
+import { Box, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput } from '@mui/material';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { enqueueSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import TrelloIcon from '~/assets/trello.svg?react';
 import HtmlTooltip from '~/components/HtmlTooltip';
 import service from '~/plugins/services';
-import PAGES from '~/utils/pages';
 import checkValid from '~/utils/auth_form_verify';
+import PAGES from '~/utils/pages';
 function ResetPassword() {
     const [showPassword, setShowPassword] = useState(false);
     const [passwordError, setPasswordError] = useState(null);
@@ -62,11 +62,11 @@ function ResetPassword() {
                     password,
                     confirmPassword: cfPassword
                 }, (res) => {
-                    enqueueSnackbar("Reset password successfully!", { variant: "success" });
-                    nav("/login");
+                    enqueueSnackbar("Đặt lại mật khẩu thành công!", { variant: "success" });
+                    nav(PAGES.ROOT + PAGES.LOGIN);
                 }, (err) => {
                     if (err.code === 500) {
-                        enqueueSnackbar("Failed to reset password!", { variant: "error" });
+                        enqueueSnackbar("Đặt lại mật khẩu thất bại!", { variant: "error" });
                     }
                     else enqueueSnackbar(err.error[0], { variant: "error" });
                 })
@@ -84,12 +84,12 @@ function ResetPassword() {
             }}>
                 <CardContent>
                     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
-                        <SvgIcon component={TrelloIcon} inheritViewBox sx={{ color: 'blue' }} />
+                        <EscalatorWarningIcon sx={{ color: "#394ef4", fontSize: "40px" }} />
                         <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
-                            My App
+                            AutismEdu
                         </Typography>
                     </Box>
-                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Reset Password 🔒</Typography>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Đặt lại mật khẩu 🔒</Typography>
                     <Typography sx={{ mt: "10px" }}>Your new password must be different from previously used passwords</Typography>
                     <Box mt="30px">
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">

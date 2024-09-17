@@ -6,11 +6,9 @@ import services from '~/plugins/services';
 function GoogleLogin() {
     const login = useGoogleLogin({
         onSuccess: credentialResponse => {
-            console.log(credentialResponse)
             services.AuthenticationAPI.loginGoogle({
                 token: credentialResponse.code
             }, (res) => {
-                console.log(res);
                 Cookies.set('access_token', res.result.accessToken, { expires: 30 })
                 Cookies.set('refresh_token', res.result.refreshToken, { expires: 365 })
             }, (err) => {

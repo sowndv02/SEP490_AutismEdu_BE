@@ -34,7 +34,7 @@ const theme = createTheme({
     },
     typography: {
         fontFamily: 'Euclid Circular, Arial, sans-serif',
-        fontSize: 16,
+        fontSize: 14,
         button: {
             fontFamily: 'Euclid Circular',
             textTransform: 'none', // Loại bỏ in hoa mặc định
@@ -43,6 +43,13 @@ const theme = createTheme({
             fontSize: {
                 xs: "30px",
                 md: "44px"
+            },
+            fontWeight: '700'
+        },
+        h3: {
+            fontSize: {
+                xs: "26px",
+                md: "40px"
             },
             fontWeight: '700'
         },

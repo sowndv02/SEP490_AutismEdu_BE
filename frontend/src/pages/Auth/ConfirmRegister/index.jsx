@@ -2,6 +2,7 @@ import { enqueueSnackbar } from 'notistack';
 import React, { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import service from '~/plugins/services'
+import PAGES from '~/utils/pages';
 function ConfirmRegister() {
     const location = useLocation();
     const urlParams = new URLSearchParams(location.search);
@@ -13,30 +14,25 @@ function ConfirmRegister() {
         handleSubmit();
     }, [])
     const handleSubmit = async () => {
-        console.log({
-            code,
-            security,
-            userId
-        });
         try {
             await service.AuthenticationAPI.confirmEmail({
                 code,
                 security,
                 userId
             }, (res) => {
-                enqueueSnackbar("Confirm email successfully!", { variant: "success" });
-                nav("/login")
+                enqueueSnackbar("Xác thực tài khoản thành công!", { variant: "success" });
+                nav(PAGES.ROOT + PAGES.LOGIN)
             }, (err) => {
                 console.log(err);
                 if (err.code === 500) {
-                    enqueueSnackbar("Failed to confirm your account!", { variant: "error" });
+                    enqueueSnackbar("Xác thực tài khoản thất bại!", { variant: "error" });
                 }
                 else enqueueSnackbar(err.error[0], { variant: "error" });
-                nav("/login")
+                nav(PAGES.ROOT + PAGES.LOGIN)
             })
         } catch (error) {
-            enqueueSnackbar("Failed to confirm your account!", { variant: "error" });
-            nav("/login")
+            enqueueSnackbar("Xác thực tài khoản thất bại!", { variant: "error" });
+            nav(PAGES.ROOT + PAGES.LOGIN)
         }
     }
     return (
