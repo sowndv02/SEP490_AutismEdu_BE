@@ -1,47 +1,47 @@
-import PAGES from '~/utils/pages'
-import Login from '~/pages/Auth/Login'
-import Home from '~/pages/Home'
 import DashBoard from '~/pages/Admin/DashBoard'
-import UserManagement from '~/pages/Admin/UserManagement'
 import RoleClaimManagement from '~/pages/Admin/RoleClaimManagement'
+import UserManagement from '~/pages/Admin/UserManagement'
+import ConfirmRegister from '~/pages/Auth/ConfirmRegister'
 import ForgotPassword from '~/pages/Auth/ForgotPassword'
+import Login from '~/pages/Auth/Login'
 import Register from '~/pages/Auth/Register'
 import ResetPassword from '~/pages/Auth/ResetPassword'
-import ConfirmRegister from '~/pages/Auth/ConfirmRegister'
-import SearchCenter from '~/pages/Center/SearchCenter'
 import CenterProfile from '~/pages/Center/CenterProfile'
+import SearchCenter from '~/pages/Center/SearchCenter'
+import Home from '~/pages/Home'
+import PAGES from '~/utils/pages'
 
 const publicRoutes = [
     {
-        path: PAGES.HOME,
+        path: PAGES.ROOT + PAGES.HOME,
         element: Home
     },
     {
-        path: PAGES.LOGIN,
+        path: PAGES.ROOT + PAGES.LOGIN,
         element: Login
     },
     {
-        path: PAGES.FORGOTPASSWORD,
+        path: PAGES.ROOT + PAGES.FORGOTPASSWORD,
         element: ForgotPassword
     },
     {
-        path: PAGES.REGISTER,
+        path: PAGES.ROOT + PAGES.REGISTER,
         element: Register
     },
     {
-        path: PAGES.RESETPASSWORD,
+        path: PAGES.ROOT + PAGES.RESETPASSWORD,
         element: ResetPassword
     },
     {
-        path: PAGES.CONFIRMREGISTER,
+        path: PAGES.ROOT + PAGES.CONFIRMREGISTER,
         element: ConfirmRegister
     },
     {
-        path: PAGES.LISTCENTER,
+        path: PAGES.ROOT + PAGES.LISTCENTER,
         element: SearchCenter
     },
     {
-        path: PAGES.CENTERPROFILE,
+        path: PAGES.ROOT + PAGES.CENTERPROFILE,
         element: CenterProfile
     },
 ]
@@ -61,6 +61,5 @@ const adminRoutes = [
     }
 ]
 export {
-    publicRoutes,
-    adminRoutes
+    adminRoutes, publicRoutes
 }

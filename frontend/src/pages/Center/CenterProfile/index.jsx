@@ -1,13 +1,16 @@
-import { Avatar, Box, Breadcrumbs, Button, Grid, Stack, Tab, Tabs, Typography } from '@mui/material'
-import React from 'react'
-import { Link } from 'react-router-dom'
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import { TabContext, TabList, TabPanel } from '@mui/lab';
 import styled from '@emotion/styled';
-import { formatter } from '~/utils/service';
-import PhoneIcon from '@mui/icons-material/Phone';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
+import PhoneIcon from '@mui/icons-material/Phone';
+import { Avatar, Box, Breadcrumbs, Button, Divider, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { formatter } from '~/utils/service';
+import CenterIntroduction from './CenterIntroduction';
+import CenterMedia from './CenterMedia';
+import CenterRating from './CenterRating';
+import CenterTeacher from './CenterTeacher';
+import CenterLocation from './CenterLocation';
 const StyledTabs = styled((props) => (
     <Tabs
         {...props}
@@ -42,10 +45,10 @@ const StyledTab = styled((props) => <Tab disableRipple {...props} />)(
 );
 function CenterProfile() {
 
-    const [value, setValue] = useState('1');
+    const [tab, setTab] = useState('1');
 
     const handleChange = (event, newValue) => {
-        setValue(newValue);
+        setTab(newValue);
     };
     return (
         <Box>
@@ -87,7 +90,7 @@ function CenterProfile() {
                 </Stack>
                 <Box mt={5}>
                     <StyledTabs
-                        value={value}
+                        value={tab}
                         onChange={handleChange}
                         aria-label="tab-center"
                     >
@@ -95,41 +98,50 @@ function CenterProfile() {
                         <StyledTab value="2" label="Giáo viên" />
                         <StyledTab value="3" label="Thư viện" />
                         <StyledTab value="4" label="Vị Trí" />
+                        <StyledTab value="5" label="Đánh giá" />
                     </StyledTabs>
                 </Box>
             </Box>
             <Stack direction="row" sx={{
                 px: "200px",
-                mt: "40px"
+                mt: "40px",
+                gap: 3
             }}>
-                <Box sx={{ width: "60%" }}></Box>
-                <Box sx={{
-                    width: "40%", border: "1px solid gray", p: "20px",
-                    borderRadius: "5px"
-                }}>
-                    <Typography variant='h6'>Tổng quan</Typography>
-                    <Box mt={2}>
-                        <Typography sx={{ fontSize: "14px" }}>Học phí</Typography>
-                        <Typography variant='h6' sx={{ color: "#f97316" }}>{formatter.format(3000000)}</Typography>
-                    </Box>
-                    <Box mt={2}>
-                        <Typography sx={{ fontSize: "14px" }}>Độ tuổi học sinh, học viên</Typography>
-                        <Typography variant='h6'>12 tháng - 10 tuổi</Typography>
-                    </Box>
-                    <Box mt={2}>
-                        <Typography sx={{ fontSize: "14px" }}>Số điện thoại</Typography>
-                        <Stack direction='row' gap={3} sx={{ alignItems: "center" }}>
-                            <Typography variant='h6'>30404839439</Typography>
-                            <Button startIcon={<PhoneIcon />}>Liên hệ</Button>
-                        </Stack>
-                    </Box>
-                    <Box mt={2}>
-                        <Typography sx={{ fontSize: "14px" }}>Địa chỉ</Typography>
-                        <Typography variant='h6'>Số 5 lô 1 ô c4 Nam Trung Yên, Trung Hoà, Quận Cầu Giấy, Hà Nội</Typography>
-                        <Button startIcon={<NotListedLocationIcon />}>Xem trên map</Button>
+                {1 === Number(tab) && <CenterIntroduction />}
+                {2 === Number(tab) && <CenterTeacher />}
+                {3 === Number(tab) && <CenterMedia />}
+                {4 === Number(tab) && <CenterLocation />}
+                {5 === Number(tab) && <CenterRating />}
+                <Box sx={{ width: "35%" }}>
+                    <Box sx={{
+                        border: "1px solid gray", p: "20px",
+                        borderRadius: "5px"
+                    }}>
+                        <Typography variant='h6'>Tổng quan</Typography>
+                        <Box mt={2}>
+                            <Typography sx={{ fontSize: "14px" }}>Học phí</Typography>
+                            <Typography variant='h6' sx={{ color: "#f97316" }}>{formatter.format(3000000)}</Typography>
+                        </Box>
+                        <Box mt={2}>
+                            <Typography sx={{ fontSize: "14px" }}>Độ tuổi học sinh, học viên</Typography>
+                            <Typography variant='h6'>12 tháng - 10 tuổi</Typography>
+                        </Box>
+                        <Box mt={2}>
+                            <Typography sx={{ fontSize: "14px" }}>Số điện thoại</Typography>
+                            <Stack direction='row' gap={3} sx={{ alignItems: "center" }}>
+                                <Typography variant='h6'>30404839439</Typography>
+                                <Button startIcon={<PhoneIcon />}>Liên hệ</Button>
+                            </Stack>
+                        </Box>
+                        <Box mt={2}>
+                            <Typography sx={{ fontSize: "14px" }}>Địa chỉ</Typography>
+                            <Typography variant='h6'>Số 5 lô 1 ô c4 Nam Trung Yên, Trung Hoà, Quận Cầu Giấy, Hà Nội</Typography>
+                            <Button startIcon={<NotListedLocationIcon />}>Xem trên map</Button>
+                        </Box>
                     </Box>
                 </Box>
             </Stack>
+            <Divider sx={{ width: "80%", margin: "auto", mt: "100px" }} />
         </Box>
     )
 }

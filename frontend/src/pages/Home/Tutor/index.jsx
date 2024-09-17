@@ -18,16 +18,16 @@ function Tutor() {
                 </Typography>
             </Box>
             <Stack direction='row' sx={{ justifyContent: "center", width: "100vw" }}>
-                <Grid container m={0} spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }} sx={{
+                <Stack direction="row" sx={{
                     textAlign: "left",
                     width: {
-                        xl: "70%",
+                        xl: "80%",
                         lg: "90%"
-                    }
+                    },
+                    gap: "20px"
                 }}>
-                    <Grid item xs={12} md={7} >
+                    <Box sx={{ width: "60%" }} pt={1}>
                         <Card sx={{ display: 'flex', p: "30px", width: "100%", boxSizing: "border-box", alignItems: "center" }}>
-
                             <Box sx={{ flexBasis: "40%" }}>
                                 <img src='https://rainbowthemes.net/themes/histudy/wp-content/uploads/2024/03/team-04.webp'
                                     style={{ objectFit: "cover", width: "100%", height: "auto" }}
@@ -91,11 +91,13 @@ function Tutor() {
                             </Box>
 
                         </Card>
-                    </Grid>
-                    <Grid item xs={12} md={5} >
-                        <Grid container m={0} spacing={{ xs: 2, md: 3, }} textAlign={"left"} sx={{ height: "100%" }}>
+                    </Box>
+                    <Box sx={{ width: "40%" }} >
+                        <Grid container m={0} spacing={{ xs: 2, md: 3 }} textAlign={"left"} sx={{ height: "100%" }}
+                            columnSpacing={2} rowSpacing={1}
+                        >
                             <Grid item xs={12} md={4} sx={{ height: "50%" }}>
-                                <Card sx={{ width: "100%", height: "100%", p: 1, position: 'relative' }}>
+                                <Card sx={{ width: "100%", height: "100%", p: 1, position: 'relative', cursor: "pointer" }}>
                                     <CardMedia
                                         component="img"
                                         height="100%"
@@ -173,8 +175,8 @@ function Tutor() {
                             </Grid>
 
                         </Grid>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Stack>
             </Stack >
         </Box >
     )

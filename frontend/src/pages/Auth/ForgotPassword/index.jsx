@@ -12,6 +12,7 @@ import service from '~/plugins/services'
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useSnackbar } from 'notistack';
 import checkValid from '~/utils/auth_form_verify';
+import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
 function ForgotPassword() {
     const [emailError, setEmailError] = useState(null);
     const [submited, setSubmited] = useState(false);
@@ -40,7 +41,7 @@ function ForgotPassword() {
                 setSubmited(true);
             }, (err) => {
                 console.log(err);
-                enqueueSnackbar("Email is not valid", { variant: "error" });
+                enqueueSnackbar("Email không hợp lệ", { variant: "error" });
                 setLoading(false)
             })
             setLoading(false)
@@ -56,13 +57,13 @@ function ForgotPassword() {
             }}>
                 <CardContent>
                     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
-                        <SvgIcon component={TrelloIcon} inheritViewBox sx={{ color: 'blue' }} />
+                    <EscalatorWarningIcon sx={{ color: "#394ef4", fontSize: "40px" }} />
                         <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
-                            My App
+                            AutismEdu
                         </Typography>
                     </Box>
-                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Forgot Password? 🔒</Typography>
-                    <Typography sx={{ mt: "10px" }}>Enter your email and we&#8216;ll send you instructions to reset your password</Typography>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Quên Mật Khẩu? 🔒</Typography>
+                    <Typography sx={{ mt: "10px" }}>Nhập email của bạn và chúng tôi sẽ gửi cho bạn đường dẫn để đổi mật khẩu</Typography>
                     {
                         submited === false && (
                             <>
@@ -94,7 +95,7 @@ function ForgotPassword() {
                                             setLoading(true);
                                         }
                                     }}>
-                                    Send Reset Link
+                                    Gửi
                                 </LoadingButton>
                             </>
                         )
@@ -107,17 +108,17 @@ function ForgotPassword() {
                                     onClick={() => {
                                         setLoading(true);
                                     }}>
-                                    Resend
+                                    Gửi lại
                                 </LoadingButton>
                                 <Button onClick={() => {
                                     setSubmited(false)
-                                }}>Change email</Button>
+                                }}>Đổi email</Button>
                             </>
                         )
                     }
                     <Typography textAlign={'center'} mt="20px">
                         <Link to={PAGES.LOGIN} style={{ color: "#666cff" }}>
-                            <ArrowBackIosNewIcon sx={{ fontSize: "12px" }} /> Back to login
+                            <ArrowBackIosNewIcon sx={{ fontSize: "12px" }} /> Trở lại đăng nhập
                         </Link>
                     </Typography>
                 </CardContent>

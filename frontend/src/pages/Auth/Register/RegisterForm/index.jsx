@@ -9,12 +9,13 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { enqueueSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import TrelloIcon from '~/assets/trello.svg?react';
 import HtmlTooltip from '~/components/HtmlTooltip';
 import service from '~/plugins/services';
-import PAGES from '~/utils/pages';
 import checkValid from '~/utils/auth_form_verify';
+import PAGES from '~/utils/pages';
+import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
 function RegisterForm({ setVerify, setEmailVerify }) {
     const [showPassword, setShowPassword] = useState(false);
     const [emailError, setEmailError] = useState(null);
@@ -59,12 +60,12 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                     password,
                     role: "user"
                 }, (res) => {
-                    enqueueSnackbar("Register Successfully!", { variant: "success" });
+                    enqueueSnackbar("Đăng ký thành công!", { variant: "success" });
                     setVerify(true);
                     setEmailVerify(email);
                 }, (err) => {
                     if (err.code === 500) {
-                        enqueueSnackbar("Failed to register!", { variant: "error" });
+                        enqueueSnackbar("Đăng ký thật bại!", { variant: "error" });
                     }
                     else enqueueSnackbar(err.error[0], { variant: "error" });
                 })
@@ -82,13 +83,13 @@ function RegisterForm({ setVerify, setEmailVerify }) {
             }}>
                 <CardContent>
                     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
-                        <SvgIcon component={TrelloIcon} inheritViewBox sx={{ color: 'blue' }} />
+                        <EscalatorWarningIcon sx={{ color: "#394ef4", fontSize: "40px" }} />
                         <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
-                            My App
+                            AutismEdu
                         </Typography>
                     </Box>
-                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Adventure starts here 🚀</Typography>
-                    <Typography sx={{ mt: "10px" }}>Make your app management easy and fun!</Typography>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Hãy Tạo Một Tài Khoản 🚀</Typography>
+                    <Typography sx={{ mt: "10px" }}>Chúng tôi sẽ cung chấp cho bạn những dịch vụ mà chúng tôi có!</Typography>
                     <Box mt="30px">
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
                             <InputLabel htmlFor="email">Email</InputLabel>
@@ -104,7 +105,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                             }
                         </FormControl>
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
-                            <InputLabel htmlFor="password">Password</InputLabel>
+                            <InputLabel htmlFor="password">Mật khẩu</InputLabel>
                             <OutlinedInput
                                 error={!!passwordError}
                                 id="password"
@@ -122,7 +123,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                                         </IconButton>
                                     </InputAdornment>
                                 }
-                                label="Password"
+                                label="Mật khẩu"
                             />
                             {
                                 passwordError && (
@@ -153,7 +154,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                             }
                         </FormControl>
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
-                            <InputLabel htmlFor="confirm-password">Confirm Password</InputLabel>
+                            <InputLabel htmlFor="confirm-password">Nhập lại mật khẩu</InputLabel>
                             <OutlinedInput
                                 error={!!passwordConfirmError}
                                 value={cfPassword}
@@ -177,7 +178,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                                         </IconButton>
                                     </InputAdornment>
                                 }
-                                label="Password"
+                                label="Nhập lại mật khẩu"
                             />
                             {
                                 passwordConfirmError && (
@@ -193,11 +194,11 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                         onClick={() => {
                             setLoading(true);
                         }}>
-                        Sign Up
+                        Đăng ký
                     </LoadingButton>
 
-                    <Typography sx={{ textAlign: "center", mt: "20px" }}>Already have an account? <Link to={PAGES.LOGIN} style={{ color: "#666cff" }}>Sign in instead</Link></Typography>
-                    <Divider sx={{ mt: "15px" }}>or</Divider>
+                    <Typography sx={{ textAlign: "center", mt: "20px" }}>Bạn đã có tài khoản? <Link to={PAGES.ROOT + PAGES.LOGIN} style={{ color: "#666cff" }}>Đăng nhập</Link></Typography>
+                    <Divider sx={{ mt: "15px" }}>hoặc</Divider>
                     <Box sx={{ display: "flex", justifyContent: "center" }}>
                         <IconButton>
                             <GoogleIcon sx={{ color: "#dd4b39 " }} />
