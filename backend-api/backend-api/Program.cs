@@ -244,7 +244,7 @@ void ApplyMigration()
                 Console.WriteLine("Migrations applied successfully.");
             }
 
-            // Seed the database if it’s empty
+            // Seed the database if itâ€™s empty
             _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
         }
     }
