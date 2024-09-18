@@ -20,6 +20,7 @@ const API_CODE = {
   API_ASSIGN_ROLES: '/v1/User/role/',
   API_GET_USER_ROLES: '/v1/User/role/',
   API_REMOVE_USER_ROLES: '/v1/User/role/',
+  API_GET_USER_ID: '/v1/User/',
   //Claim management
   API_GET_CLAIM: '/v1/Claim',
 

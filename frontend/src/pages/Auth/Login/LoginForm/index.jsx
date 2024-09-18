@@ -8,12 +8,16 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Cookies from 'js-cookie';
 import { enqueueSnackbar } from 'notistack';
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useId, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import service from '~/plugins/services';
 import checkValid from '~/utils/auth_form_verify';
 import PAGES from '~/utils/pages';
 import GoogleLogin from '../GoogleLogin';
+import { useDispatch, useSelector } from "react-redux";
+import { setUserInformation } from '~/redux/features/userSlice';
+import { jwtDecode } from 'jwt-decode';
+import services from '~/plugins/services';
 function LoginForm({ setVerify, setEmailVerify }) {
     const [showPassword, setShowPassword] = useState(false);
     const [emailError, setEmailError] = useState(null);
@@ -21,6 +25,9 @@ function LoginForm({ setVerify, setEmailVerify }) {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [password, setPassword] = useState("");
+    const [userId, setUserId] = useState(null);
+    const nav = useNavigate();
+    const dispatch = useDispatch();
     const INPUT_CSS = {
         width: "100%",
         borderRadius: "15px",
@@ -38,6 +45,22 @@ function LoginForm({ setVerify, setEmailVerify }) {
             handleSubmit();
         }
     }, [loading])
+    console.log(userId);
+
+    useEffect(() => {
+        if (userId) {
+            console.log("zoday");
+            services.UserManagementAPI.getUserById(userId, (res) => {
+                dispatch(setUserInformation(res.result))
+                enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });
+                nav(`${PAGES.ROOT}`)
+            }, (error) => {
+                enqueueSnackbar("Đăng nhập thất bại!", { variant: "error" });
+                console.log(error);
+            })
+            setLoading(false)
+        }
+    }, [userId])
     const handleSubmit = async () => {
         if (passwordError !== null || emailError !== null) {
             setLoading(false);
@@ -55,7 +78,8 @@ function LoginForm({ setVerify, setEmailVerify }) {
                 }, (res) => {
                     Cookies.set('access_token', res.result.accessToken, { expires: 30 })
                     Cookies.set('refresh_token', res.result.refreshToken, { expires: 365 })
-                    enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });
+                    const decodedToken = jwtDecode(res.result.accessToken);
+                    setUserId(decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'])
                 }, (err) => {
                     if (err.code === 500) {
                         enqueueSnackbar("Đăng nhập thất bại!", { variant: "error" });
@@ -65,8 +89,8 @@ function LoginForm({ setVerify, setEmailVerify }) {
                         setEmailVerify(email);
                     }
                     else enqueueSnackbar("Tài khoản hoặc mật khẩu không đúng!", { variant: "error" });
+                    setLoading(false)
                 })
-                setLoading(false)
             }
         }
     }

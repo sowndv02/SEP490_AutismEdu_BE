@@ -9,8 +9,8 @@ import ResetPassword from '~/pages/Auth/ResetPassword'
 import CenterProfile from '~/pages/Center/CenterProfile'
 import SearchCenter from '~/pages/Center/SearchCenter'
 import Home from '~/pages/Home'
-import PAGES from '~/utils/pages'import SearchTutor from '~/pages/Tutor/SearchTutor'
-import CenterProfile from '~/pages/Center/CenterProfile'
+import PAGES from '~/utils/pages'
+import SearchTutor from '~/pages/Tutor/SearchTutor'
 
 const publicRoutes = [
     {
@@ -45,8 +45,8 @@ const publicRoutes = [
         path: PAGES.ROOT + PAGES.CENTERPROFILE,
         element: CenterProfile
     },
-	{
-        path: PAGES.LISTTUTOR,
+    {
+        path: PAGES.ROOT + PAGES.LISTTUTOR,
         element: SearchTutor
     },
 ]
