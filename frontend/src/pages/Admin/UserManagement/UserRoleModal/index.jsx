@@ -1,9 +1,9 @@
-import { Box, Button, Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Modal, OutlinedInput, Select, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
-import DeleteRoleDialog from './DeleteRoleDialog';
-import services from '~/plugins/services';
+import { Box, Button, Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Modal, OutlinedInput, Select, TextField, Typography } from '@mui/material';
 import { enqueueSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
 import LoadingComponent from '~/components/LoadingComponent';
+import services from '~/plugins/services';
+import DeleteRoleDialog from './DeleteRoleDialog';
 const style = {
     position: 'absolute',
     top: '50%',
@@ -41,7 +41,10 @@ function UserRoleModal({ currentUser, handleCloseMenu }) {
             setLoading(true);
             await Promise.all([
                 services.UserManagementAPI.getUserRoles(currentUser.id, (res) => {
-                    setUserRoles(res.result);
+                    const filteredRoles = res.result.filter((role) => {
+                        return role.name !== "User"
+                    })
+                    setUserRoles(filteredRoles);
                 }, (err) => {
                     console.log(err);
                 }),
@@ -78,22 +81,28 @@ function UserRoleModal({ currentUser, handleCloseMenu }) {
 
     const handleSubmit = async () => {
         try {
-            setLoading(true);
-            const submitRoles = selectedRoles.map((role) => {
-                const selectedRole = roles.find((r) => r.name === role);
-                return selectedRole.id;
-            })
-            console.log(submitRoles);
-            await services.RoleManagementAPI.assignRoles(currentUser.id, {
-                userId: currentUser.id,
-                userRoleIds: submitRoles
-            }, (res) => {
-                console.log(res);
-                enqueueSnackbar("Assign role successfully!", { variant: "success" });
-            }, (error) => {
-                enqueueSnackbar("Assign role failed!", { variant: "error" });
-            })
-            setLoading(false);
+            if (selectedRoles.length !== 0) {
+                setLoading(true);
+                const submitRoles = selectedRoles.map((role) => {
+                    const selectedRole = roles.find((r) => r.name === role);
+                    return selectedRole.id;
+                })
+                await services.RoleManagementAPI.assignRoles(currentUser.id, {
+                    userId: currentUser.id,
+                    userRoleIds: submitRoles
+                }, (res) => {
+                    setUserRoles([...res.result, ...userRoles]);
+                    const unAssignRoles = roles.filter((role) => {
+                        return !submitRoles.includes(role.id);
+                    })
+                    setRoles(unAssignRoles)
+                    enqueueSnackbar("Assign role successfully!", { variant: "success" });
+                }, (error) => {
+                    enqueueSnackbar("Assign role failed!", { variant: "error" });
+                })
+                setLoading(false);
+                setSelectedRoles([])
+            }
         } catch (error) {
             console.log(error);
         }
@@ -102,6 +111,7 @@ function UserRoleModal({ currentUser, handleCloseMenu }) {
         try {
             setLoading(true);
             if (id) {
+                const selectedRole = userRoles.find((role) => role.id === id);
                 await services.UserManagementAPI.removeUserRoles(currentUser.id, {
                     userId: currentUser.id,
                     userRoleIds: [id]
@@ -115,6 +125,7 @@ function UserRoleModal({ currentUser, handleCloseMenu }) {
                     return u.id !== id;
                 })
                 setUserRoles(filteredRoles);
+                setRoles([selectedRole, ...roles])
             }
             else {
                 enqueueSnackbar("Remove role failed!", { variant: "error" });
@@ -137,29 +148,35 @@ function UserRoleModal({ currentUser, handleCloseMenu }) {
                     <Typography id="modal-modal-title" variant="h6" component="h2">
                         Roles of {currentUser?.fullName}
                     </Typography>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }} mt="20px">
-                        <FormControl size="small" sx={{ width: "80%" }}>
-                            <InputLabel id="roles">Roles</InputLabel>
-                            <Select
-                                labelId="roles"
-                                id="multiple-roles"
-                                multiple
-                                value={selectedRoles}
-                                onChange={handleChange}
-                                input={<OutlinedInput label="Roles" />}
-                                renderValue={(selected) => selected.join(', ')}
-                                MenuProps={MenuProps}
-                            >
-                                {roles?.map((role) => (
-                                    <MenuItem key={role.id} value={role.name}>
-                                        <Checkbox checked={selectedRoles.indexOf(role.name) > -1} />
-                                        <ListItemText primary={role.name} />
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <Button variant='contained' sx={{ alignSelf: "end", height: "40px", fontSize: "11px" }} onClick={handleSubmit}>Add Role</Button>
-                    </Box>
+                    {
+                        roles.length !== 0 && (
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }} mt="20px">
+                                <FormControl size="small" sx={{ width: "80%" }}>
+                                    <InputLabel id="roles">Roles</InputLabel>
+                                    <Select
+                                        labelId="roles"
+                                        id="multiple-roles"
+                                        multiple
+                                        value={selectedRoles}
+                                        onChange={handleChange}
+                                        input={<OutlinedInput label="Roles" />}
+                                        renderValue={(selected) => selected.join(', ')}
+                                        MenuProps={MenuProps}
+                                    >
+                                        {
+                                            roles?.map((role) => (
+                                                <MenuItem key={role.id} value={role.name}>
+                                                    <Checkbox checked={selectedRoles.indexOf(role.name) > -1} />
+                                                    <ListItemText primary={role.name} />
+                                                </MenuItem>
+                                            ))
+                                        }
+                                    </Select>
+                                </FormControl>
+                                <Button variant='contained' sx={{ alignSelf: "end", height: "40px", fontSize: "11px" }} onClick={handleSubmit}>Add Role</Button>
+                            </Box>
+                        )
+                    }
                     <Box mt="20px">
                         {
                             userRoles?.map((l) => {
