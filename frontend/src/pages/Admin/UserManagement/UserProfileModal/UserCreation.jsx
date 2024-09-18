@@ -1,6 +1,7 @@
+import { Password } from '@mui/icons-material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { Button, Divider, FormControl, FormHelperText, IconButton, InputAdornment, MenuItem, OutlinedInput, Select } from '@mui/material';
+import { Button, Checkbox, Divider, FormControl, FormHelperText, IconButton, InputAdornment, ListItemText, MenuItem, OutlinedInput, Select } from '@mui/material';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
@@ -8,6 +9,7 @@ import { useFormik } from 'formik';
 import * as React from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
+import LoadingComponent from '~/components/LoadingComponent';
 import services from '~/plugins/services';
 const style = {
     position: 'absolute',
@@ -20,6 +22,16 @@ const style = {
     p: 4,
     borderRadius: "10px"
 };
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+    PaperProps: {
+        style: {
+            maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+            width: 250,
+        }
+    }
+};
 function UserCreation() {
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
@@ -27,6 +39,7 @@ function UserCreation() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(true);
     const [roles, setRoles] = useState([]);
+    const [selectedRoles, setSelectedRoles] = useState([]);
     const validate = values => {
         const errors = {};
         if (!values.fullName) {
@@ -43,8 +56,10 @@ function UserCreation() {
     };
 
     useEffect(() => {
-        getRoles();
-    }, []);
+        if (open) {
+            getRoles();
+        }
+    }, [open]);
     const getRoles = async () => {
         try {
             await services.RoleManagementAPI.getRoles((res) => {
@@ -62,21 +77,74 @@ function UserCreation() {
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
+
+    const handleChange = (event) => {
+        const {
+            target: { value },
+        } = event;
+        setSelectedRoles(
+            typeof value === 'string' ? value.split(',') : value
+        );
+    };
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     const formik = useFormik({
         initialValues: {
             fullName: '',
             email: '',
+            phoneNumber: '',
             password: '',
-            cfPassword: '',
-            role: ''
+            cfPassword: ''
         },
         validate,
-        onSubmit: values => {
-            alert(JSON.stringify(values, null, 2));
+        onSubmit: async (values) => {
+            try {
+                setLoading(true);
+                const submitRoles = selectedRoles.map((role) => {
+                    const selectedRole = roles.find((r) => r.name === role);
+                    return selectedRole.id;
+                })
+                const formData = new FormData();
+                // formData.append("FullName", values.fullName);
+                // formData.append("Email", values.email);
+                // formData.append("Password", values.password);
+                // formData.append("ConfirmPassword", values.cfPassword);
+                // formData.append("RoleIds", submitRoles);
+                // formData.append("IsLockedOut", false);
+                // formData.append("PhoneNumber", values.phoneNumber)
+                console.log(formData.get("PhoneNumber"));
+                // {
+                //     FullName: values.fullName,
+                //     Email: values.email,
+                //     PhoneNumber: values.phoneNumber,
+                //     Password: values.Password,
+                //     ConfirmPassword: values.cfPassword,
+                //     RoleIds: submitRoles,
+                //     IsLockedOut: false
+                // }
+                console.log(values);
+                await services.UserManagementAPI.createUser(
+                    {
+                        FullName: values.fullName,
+                        Email: values.email,
+                        PhoneNumber: values.phoneNumber,
+                        Password: values.password,
+                        ConfirmPassword: values.cfPassword,
+                        RoleIds: submitRoles,
+                        IsLockedOut: false
+                    }
+                    , (res) => {
+                        console.log(res);
+                    }, (error) => {
+                        console.log("loi");
+                        console.log(error);
+                    })
+                setLoading(false);
+            } catch (error) {
+                console.log(error);
+                setLoading(false);
+            }
         },
     });
-    console.log(roles);
     return (
         <div>
             <Button variant="contained" onClick={handleOpen}>Add new user</Button>
@@ -130,6 +198,24 @@ function UserCreation() {
                                 }
                             </FormControl>
                         </Box>
+                        <FormControl sx={{ width: '100%', marginTop: "10px" }} variant="outlined">
+                            <label style={{ fontWeight: "bold", color: "black", fontSize: "14px" }} htmlFor="phone">Phone Number</label>
+                            <OutlinedInput
+                                error={formik.errors.phoneNumber}
+                                name='phoneNumber'
+                                id="phone"
+                                onChange={formik.handleChange}
+                                value={formik.values.phoneNumber}
+                                size='small'
+                            />
+                            {
+                                formik.errors.phoneNumber && (
+                                    <FormHelperText error>
+                                        {formik.errors.phoneNumber}
+                                    </FormHelperText>
+                                )
+                            }
+                        </FormControl>
                         <FormControl sx={{ width: '100%', marginTop: "10px" }} variant="outlined">
                             <label style={{ fontWeight: "bold", color: "black", fontSize: "14px" }} htmlFor="password">Password</label>
                             <OutlinedInput
@@ -193,28 +279,24 @@ function UserCreation() {
                             }
                         </FormControl>
                         <Box sx={{ display: "flex", gap: "10px", mt: "20px" }}>
-                            <FormControl sx={{ width: "50%" }}>
+                            <FormControl sx={{ width: "50%" }} size='small'>
                                 <label style={{ fontWeight: "bold", color: "black", fontSize: "14px" }} htmlFor="role">Roles</label>
                                 <Select
-                                    labelId="role"
-                                    id="role"
-                                    value={formik.values.role}
-                                    onChange={formik.handleChange}
-                                    size='small'
-                                    displayEmpty
+                                    labelId="roles"
+                                    id="multiple-roles"
+                                    multiple
+                                    value={selectedRoles}
+                                    onChange={handleChange}
+                                    input={<OutlinedInput label="" />}
+                                    renderValue={(selected) => selected.join(', ')}
+                                    MenuProps={MenuProps}
                                 >
-                                    <MenuItem value="">
-                                        <em>Choose role</em>
-                                    </MenuItem>
-                                    {
-                                        roles?.map((role) => {
-                                            return (
-                                                <MenuItem value={`${role.id}`} key={role.id}>
-                                                    {role.name}
-                                                </MenuItem>
-                                            )
-                                        })
-                                    }
+                                    {roles?.map((role) => (
+                                        <MenuItem key={role.id} value={role.name}>
+                                            <Checkbox checked={selectedRoles.indexOf(role.name) > -1} />
+                                            <ListItemText primary={role.name} />
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Box>
@@ -223,6 +305,7 @@ function UserCreation() {
                             <Button type="submit" variant='contained' sx={{ width: "50%" }}>Create</Button>
                         </Box>
                     </form>
+                    <LoadingComponent open={loading} setLoading={setLoading} />
                 </Box>
             </Modal>
         </div>
