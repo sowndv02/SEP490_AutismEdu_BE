@@ -1,7 +1,28 @@
 import { Avatar, AvatarGroup, Box, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import ListUserModal from '../RoleClaimModal/ListUserModal';
+import { useEffect, useState } from 'react';
+import services from '~/plugins/services';
+
 function RoleTable() {
-    const arr = [1, 2]
+    const [roles, setRoles] = useState([]);
+
+    useEffect(() => {
+        handleGetRoles();
+    }, []);
+    const handleGetRoles = async () => {
+        try {
+            await services.RoleManagementAPI.getRoles((res) => {
+                setRoles(res.result);
+                console.log(res);
+
+            }, (err) => {
+                console.log(err);
+            })
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
     return (
         <TableContainer component={Paper} sx={{ mt: "20px" }}>
             <Table>
@@ -10,40 +31,28 @@ function RoleTable() {
                         <TableCell>No</TableCell>
                         <TableCell>Role</TableCell>
                         <TableCell>Users</TableCell>
-                        <TableCell>Created Date</TableCell>
-                        <TableCell>Updated Date</TableCell>
-                        <TableCell>Actions</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {
-                        arr.map((a) => {
+                        roles.map((r, index) => {
                             return (
-                                <TableRow key={a}>
-                                    <TableCell>{a}</TableCell>
+                                <TableRow key={r.id || index}>
+                                    <TableCell>{r.id}</TableCell>
                                     <TableCell>
-                                        Admin
+                                        {r.name}
                                     </TableCell>
                                     <TableCell>
-                                        <ListUserModal />
+                                        {r.users.length === 0 ? 'Empty' : <ListUserModal totalUsersInRole={r.totalUsersInRole} users={r.users} roles={roles} setRoles={setRoles} roleId={r.id} />}
                                     </TableCell>
-                                    <TableCell>12/4/2024</TableCell>
-                                    <TableCell>
-                                        12/4/2024
-                                    </TableCell>
-                                    <TableCell>
-                                        Edit
-                                    </TableCell>
+
                                 </TableRow>
                             )
                         })
                     }
                 </TableBody>
             </Table>
-            <Box sx={{ p: "10px", display: "flex", justifyContent: "space-between" }}>
-                <Typography>Showing 1 to 10 of 47 enteries</Typography>
-                <Pagination count={10} color="primary" />
-            </Box>
+
         </TableContainer >
     )
 }

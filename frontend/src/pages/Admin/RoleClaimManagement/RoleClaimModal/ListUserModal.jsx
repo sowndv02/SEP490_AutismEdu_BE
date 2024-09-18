@@ -10,6 +10,10 @@ import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import DeleteRoleDialog from './DeleteRoleDialog';
+import services from '~/plugins/services';
+import { enqueueSnackbar } from 'notistack';
+import DeleteRoleSDialog from './DeleteRoleSDialog';
 const style = {
     position: 'absolute',
     top: '50%',
@@ -20,24 +24,84 @@ const style = {
     boxShadow: 24,
     p: 4,
 };
+//users={r.users} roles={roles} setRoles={setRoles} roleId={r.id} 
+function ListUserModal({ totalUser, totalUsersInRole, claim, setClaim, users, claimId, roleId, roles, setRoles }) {
+    console.log(totalUser);
 
-function ListUserModal() {
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
+    const handleDeleteUserFromClaim = (id) => {
+        try {
+
+            services.UserManagementAPI.removeUserClaims(id,
+                {
+                    userId: id,
+                    userClaimIds: [claimId]
+                }, (res) => {
+                    enqueueSnackbar("Remove user from claim successfully!", { variant: "success" });
+                    const claims = claim.map(c => {
+                        if (c.id === claimId) {
+                            c.users = users.filter((u) => (u.id !== id));
+                            return c;
+                        } else {
+                            return c;
+                        }
+                    });
+                    setClaim(claims);
+
+                }, (err) => {
+                    enqueueSnackbar("Remove user from claim failed!", { variant: "error" });
+                    console.log(err);
+                })
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handleDeleteUserFromRole = async (id) => {
+        try {
+            console.log(users);
+
+            await services.UserManagementAPI.removeUserRoles(id,
+                {
+                    userId: id,
+                    userRoleIds: [roleId]
+                }, (res) => {
+                    enqueueSnackbar("Remove user from role successfully!", { variant: "success" });
+                    const role = roles.map(r => {
+                        if (r.id === roleId) {
+                            r.users = users.filter((u) => (u.id !== id));
+
+                            return c;
+                        } else {
+                            return c;
+                        }
+                    });
+                    setRoles(role);
+                    console.log(role);
+                }, (err) => {
+                    enqueueSnackbar("Remove user from role failed!", { variant: "error" });
+                    console.log(err);
+                })
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    console.log(totalUser);
+
     return (
         <div>
-            <AvatarGroup max={4} sx={{
+            <AvatarGroup max={4} total={totalUser || totalUsersInRole} sx={{
                 "&.MuiAvatarGroup-root": {
                     justifyContent: "start"
                 },
                 cursor: "pointer"
             }} onClick={handleOpen}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
-                <Avatar alt="Travis Howard" src="/static/images/avatar/2.jpg" />
-                <Avatar alt="Cindy Baker" src="/static/images/avatar/3.jpg" />
-                <Avatar alt="Agnes Walker" src="/static/images/avatar/4.jpg" />
-                <Avatar alt="Trevor Henderson" src="/static/images/avatar/5.jpg" />
+                {users?.map((u, index) => (
+                    <Avatar alt={'?'} src={u.imageLocalUrl} />
+                ))}
+
             </AvatarGroup>
             <Modal
                 open={open}
@@ -51,85 +115,36 @@ function ListUserModal() {
                     </Typography>
                     <Box mt="20px">
                         <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-                            <ListItem alignItems="flex-start"
-                                secondaryAction={
-                                    <IconButton
-                                        edge="end"
-                                    ><RemoveIcon sx={{ color: "#C63C51" }} /></IconButton>
-                                }>
-                                <ListItemAvatar>
-                                    <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary="Brunch this weekend?"
-                                    secondary={
-                                        <React.Fragment>
-                                            <Typography
-                                                sx={{ display: 'inline' }}
-                                                component="span"
-                                                variant="body2"
-                                                color="text.primary"
-                                            >
-                                                daoquangkhai2002@gmail.com
-                                            </Typography>
-                                        </React.Fragment>
-                                    }
-                                />
-                            </ListItem>
-                            <Divider variant="inset" component="li" />
-                            <ListItem alignItems="flex-start"
-                                secondaryAction={
-                                    <IconButton
-                                        edge="end"
-                                    ><RemoveIcon sx={{ color: "#C63C51" }} /></IconButton>
-                                }
-                            >
-                                <ListItemAvatar>
-                                    <Avatar alt="Travis Howard" src="/static/images/avatar/2.jpg" />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary="Summer BBQ"
-                                    secondary={
-                                        <React.Fragment>
-                                            <Typography
-                                                sx={{ display: 'inline' }}
-                                                component="span"
-                                                variant="body2"
-                                                color="text.primary"
-                                            >
-                                                daoquangkhai2002@gmail.com
-                                            </Typography>
-                                        </React.Fragment>
-                                    }
-                                />
-                            </ListItem>
-                            <Divider variant="inset" component="li" />
-                            <ListItem alignItems="flex-start"
-                                secondaryAction={
-                                    <IconButton
-                                        edge="end"
-                                    ><RemoveIcon sx={{ color: "#C63C51" }} /></IconButton>
-                                }
-                            >
-                                <ListItemAvatar>
-                                    <Avatar alt="Cindy Baker" src="/static/images/avatar/3.jpg" />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary="Oui Oui"
-                                    secondary={
-                                        <React.Fragment>
-                                            <Typography
-                                                sx={{ display: 'inline' }}
-                                                component="span"
-                                                variant="body2"
-                                                color="text.primary"
-                                            >
-                                                daoquangkhai2002@gmail.com
-                                            </Typography>
-                                        </React.Fragment>
-                                    }
-                                />
-                            </ListItem>
+                            {users?.map((u, index) => (
+                                <>
+                                    <ListItem alignItems="flex-start"
+                                        secondaryAction={
+                                            roleId ? (<DeleteRoleSDialog handleDeleteUserFromRole={handleDeleteUserFromRole} id={u.id} />) :
+                                                <DeleteRoleDialog handleDeleteUserFromClaim={handleDeleteUserFromClaim} id={u.id} />
+                                        }>
+                                        <ListItemAvatar>
+                                            <Avatar alt={'?'} src={u.imageLocalUrl} />
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={u.fullName || ''}
+                                            secondary={
+                                                <React.Fragment>
+                                                    <Typography
+                                                        sx={{ display: 'inline' }}
+                                                        component="span"
+                                                        variant="body2"
+                                                        color="text.primary"
+                                                    >
+                                                        {u.email}
+                                                    </Typography>
+                                                </React.Fragment>
+                                            }
+                                        />
+                                    </ListItem>
+                                    <Divider variant="inset" component="li" />
+                                </>
+                            ))}
+
                         </List>
                     </Box>
                 </Box>

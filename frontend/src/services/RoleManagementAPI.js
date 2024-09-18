@@ -7,8 +7,12 @@ const getRoles = async (success, error, params) => {
 const assignRoles = async (endpoint, params, success, error) => {
     await post(API_CODE.API_ASSIGN_ROLES + endpoint, params, success, error);
 };
+const addRole = async (params, success, error) => {
+    await post(API_CODE.API_ADD_ROLE, params, success, error);
+};
 
 export const RoleManagementAPI = {
     getRoles,
-    assignRoles
+    assignRoles,
+    addRole
 }

@@ -20,23 +20,11 @@ function RoleManagement() {
             <Box sx={{
                 width: "100%",
                 display: "flex",
-                justifyContent: "space-between",
+                justifyContent: "end",
                 gap: 2,
                 marginTop: "30px"
             }}>
-                <FormControl size='small' sx={{ width: "180px" }}>
-                    <InputLabel id="type-claim">Role</InputLabel>
-                    <Select
-                        labelId="type-claim"
-                        id="type-claim-select"
-                        value={role}
-                        label="Type"
-                        onChange={handleChange}
-                    >
-                        <MenuItem value={10}>Admin</MenuItem>
-                        <MenuItem value={20}>Customer</MenuItem>
-                    </Select>
-                </FormControl>
+                
                 <RoleModal />
             </Box>
             <Box>

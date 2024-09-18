@@ -10,6 +10,7 @@ const PAGES = {
   CONFIRMREGISTER: '/confirm-register',
   LISTCENTER:'/list-center',
   LISTTUTOR:'/list-tutor',
+  TUTORPROFILE:'/tutor-profile'
 };
 
 export default PAGES;

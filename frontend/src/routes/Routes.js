@@ -10,6 +10,7 @@ import ResetPassword from '~/pages/Auth/ResetPassword'
 import ConfirmRegister from '~/pages/Auth/ConfirmRegister'
 import SearchCenter from '~/pages/Center/SearchCenter'
 import SearchTutor from '~/pages/Tutor/SearchTutor'
+import TutorProfile from '~/pages/Tutor/TutorProfile'
 
 const publicRoutes = [
     {
@@ -43,6 +44,10 @@ const publicRoutes = [
     {
         path: PAGES.LISTTUTOR,
         element: SearchTutor
+    },
+    {
+        path: PAGES.TUTORPROFILE,
+        element: TutorProfile
     },
 ]
 

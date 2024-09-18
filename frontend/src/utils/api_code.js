@@ -24,7 +24,8 @@ const API_CODE = {
   API_GET_CLAIM: '/v1/Claim',
 
   //role management
-  API_GET_ROLE: '/v1/Role'
+  API_GET_ROLE: '/v1/Role',
+  API_ADD_ROLE: '/v1/Role'
 };
 
 export default API_CODE;
