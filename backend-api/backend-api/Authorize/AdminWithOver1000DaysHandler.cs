@@ -18,7 +18,7 @@ namespace backend_api.Authorize
 
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AdminWithMoreThan1000DaysRequirement requirement)
         {
-            if (!context.User.IsInRole(SD.Admin))
+            if (!context.User.IsInRole(SD.ADMIN_ROLE))
             {
                 return Task.CompletedTask;
             }

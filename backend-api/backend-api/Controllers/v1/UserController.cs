@@ -1,13 +1,11 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Drawing;
 using System.Net;
-using System.Security.Claims;
 using System.Text.Json;
 
 namespace backend_api.Controllers.v1
@@ -18,19 +16,104 @@ namespace backend_api.Controllers.v1
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
+        private readonly ILogger<UserController> _logger;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
-        public UserController(IUserRepository userRepository, IMapper mapper, 
-            IConfiguration configuration, IBlobStorageRepository blobStorageRepository)
+        public UserController(IUserRepository userRepository, IMapper mapper,
+            IConfiguration configuration, IBlobStorageRepository blobStorageRepository,
+            ILogger<UserController> logger, IRoleRepository roleRepository)
         {
+            _roleRepository = roleRepository;
             pageSize = configuration.GetValue<int>("APIConfig:PageSize");
             _mapper = mapper;
             _userRepository = userRepository;
             _response = new();
             _blobStorageRepository = blobStorageRepository;
+            _logger = logger;
         }
+
+        [HttpDelete("role/{userId}")]
+        public async Task<ActionResult<APIResponse>> RemoveRoleByUserId(string userId, UserRoleDTO userRoleDTO)
+        {
+            try
+            {
+                if (!userId.Equals(userRoleDTO.UserId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    return BadRequest(_response);
+                }
+                var result = await _userRepository.RemoveRoleByUserId(userId, userRoleDTO.UserRoleIds);
+                if (!result)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    _response.IsSuccess = true;
+                    _response.StatusCode = HttpStatusCode.NoContent;
+                    return Ok(_response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPost("role/{userId}")]
+        public async Task<ActionResult<APIResponse>> AddRoleToUser(string userId, UserRoleDTO userRoleDTO)
+        {
+            try
+            {
+                if (!userId.Equals(userRoleDTO.UserId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    return BadRequest(_response);
+                }
+                var result = await _userRepository.AddRoleToUser(userId, userRoleDTO.UserRoleIds);
+                if (!result)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    var responseList = new List<RoleDTO>();
+                    foreach (var item in userRoleDTO.UserRoleIds)
+                    {
+                        IdentityRole model = await _roleRepository.GetByIdAsync(item);
+                        responseList.Add(_mapper.Map<RoleDTO>(model));
+                    }
+                    _response.IsSuccess = true;
+                    _response.Result = responseList;
+                    _response.StatusCode = HttpStatusCode.Created;
+                    return Ok(_response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
 
         [HttpDelete("claim/{userId}")]
         public async Task<ActionResult<APIResponse>> RemoveClaimByUserId(string userId, UserClaimDTO userClaimDTO)
@@ -55,10 +138,11 @@ namespace backend_api.Controllers.v1
                 else
                 {
                     _response.IsSuccess = true;
-                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.StatusCode = HttpStatusCode.NoContent;
                     return Ok(_response);
                 }
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
@@ -90,7 +174,8 @@ namespace backend_api.Controllers.v1
                 else
                 {
                     _response.IsSuccess = true;
-                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.Result = await _userRepository.GetAsync(x => x.Id == userId);
+                    _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
             }
@@ -105,41 +190,20 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] UserCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] UserCreateDTO createDTO)
         {
             try
             {
-
                 if (createDTO == null) return BadRequest(createDTO);
 
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
                 model.CreatedDate = DateTime.Now;
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                if (createDTO.Image != null)
-                {
-                    if (!string.IsNullOrEmpty(model.ImageLocalPathUrl))
-                    {
-                        var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), model.ImageLocalPathUrl);
-                        FileInfo file = new FileInfo(oldFilePathDirectory);
-                        if (file.Exists)
-                        {
-                            file.Delete();
-                        }
-                    }
-                    Guid guid = Guid.NewGuid();
-                    string fileName = guid.ToString() + Path.GetExtension(createDTO.Image.FileName);
-                    string filePath = @"wwwroot\UserImages\" + fileName;
+                string filePath = @"wwwroot\UserImages\" + SD.IMAGE_DEFAULT_AVATAR_NAME;
+                model.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
+                model.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
+                model.ImageLocalPathUrl = filePath;
 
-                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
-
-                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
-                    {
-                        createDTO.Image.CopyTo(fileStream);
-                    }
-                    model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
-                    model.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
-                    model.ImageLocalPathUrl = filePath;
-                }
                 model.UserName = model.Email;
                 model.UserType = SD.APPLICATION_USER;
                 model.LockoutEnabled = true;
@@ -175,6 +239,7 @@ namespace backend_api.Controllers.v1
                 var exsitingUserClaims = await _userRepository.GetClaimByUserIdAsync(id);
                 //_response.Result = _mapper.Map<List<ClaimDTO>>(exsitingUserClaims);
                 _response.Result = exsitingUserClaims;
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -185,9 +250,9 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
-        
+
         [HttpPut("{id}")]
-        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, [FromForm]ApplicationUserDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, [FromForm] ApplicationUserDTO updateDTO)
         {
             try
             {
@@ -222,7 +287,7 @@ namespace backend_api.Controllers.v1
                         updateDTO.Image.CopyTo(fileStream);
                     }
                     model.ImageLocalPathUrl = filePath;
-                    model.ImageLocalUrl = baseUrl + $"/{SD.UrlImageUser}/" + SD.UrlImageAvatarDefault;
+                    model.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                     using var stream = updateDTO.Image.OpenReadStream();
                     model.ImageUrl = await _blobStorageRepository.UploadImg(stream, fileName);
                 }
@@ -231,6 +296,7 @@ namespace backend_api.Controllers.v1
                 await _userRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
+                _response.Result = model;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -244,7 +310,7 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? searchValue, string? searchType, string? searchTypeId,int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? searchValue, string? searchType, string? searchTypeId, int pageNumber = 1)
         {
             try
             {
@@ -252,7 +318,7 @@ namespace backend_api.Controllers.v1
                 List<ApplicationUser> list = new();
                 if (!string.IsNullOrEmpty(searchType))
                 {
-                    switch (searchType.ToLower().Trim()) 
+                    switch (searchType.ToLower().Trim())
                     {
                         case "all":
                             list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
@@ -263,7 +329,7 @@ namespace backend_api.Controllers.v1
                             {
                                 var (total, users) = await _userRepository.GetUsersForClaimAsync(int.Parse(searchTypeId), pageSize, pageNumber);
                                 list = users;
-                                totalCount = total; 
+                                totalCount = total;
                             }
                             break;
                         case "role":
@@ -280,15 +346,20 @@ namespace backend_api.Controllers.v1
                             break;
 
                     }
-
                 }
+                else
+                {
+                    list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                    totalCount = _userRepository.GetTotalUser();
+                }
+
 
                 if (!string.IsNullOrEmpty(searchValue))
                 {
-                    list = list.Where(u => u.FullName.ToLower().Contains(searchValue)).ToList();
+                    list = list.Where(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower()))).ToList();
                 }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-
+                _logger.LogInformation($"GetAlllUser: \n SearchValue: {searchValue} \n SearchType: {searchType} \n searchTypeId: {searchTypeId}\n pageNumber: {pageNumber}");
                 Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = _mapper.Map<List<ApplicationUserDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -318,6 +389,7 @@ namespace backend_api.Controllers.v1
                 }
                 ApplicationUser model = await _userRepository.GetAsync(x => x.Id == id);
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -343,6 +415,7 @@ namespace backend_api.Controllers.v1
                 }
                 ApplicationUser model = await _userRepository.LockoutUser(userId);
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -368,6 +441,7 @@ namespace backend_api.Controllers.v1
                 }
                 ApplicationUser model = await _userRepository.UnlockUser(userId);
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -398,10 +472,45 @@ namespace backend_api.Controllers.v1
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
+
+
+        [HttpGet("role/{userId}", Name = "GetRoleByUserId")]
+        public async Task<ActionResult<APIResponse>> GetRoleByUserIdAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{userId} is null or empty!" };
+                    return NotFound(_response);
+                }
+                List<IdentityRole> model = await _userRepository.GetRoleByUserId(userId);
+                if (model == null || model.Count == 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{userId} is not in role!" };
+                    return BadRequest(_response);
+                }
+                _response.Result = _mapper.Map<List<RoleDTO>>(model);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
     }
 }

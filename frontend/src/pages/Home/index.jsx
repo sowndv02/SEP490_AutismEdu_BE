@@ -1,25 +1,20 @@
-import { Typography } from '@mui/material'
-import services from '~/plugins/services'
-
+import { Box } from '@mui/material';
+import AboutMe from './AboutMe';
+import BigCity from './BigCity';
+import Blog from './Blog';
+import CarouselComponent from './CarouselComponent';
+import Center from './Center';
+import TutorComponent from './Tutor';
 function Home() {
-    const handleGetData = async () => {
-        await services.AuthenticationAPI.getData(
-            (res) => {
-                console.log(res);
-            },
-            (err) => {
-                console.log(err);
-            }, {}
-        )
-    }
     return (
-        <>
-            <Typography variant='h1' sx={{ color: "secondary.main" }}>This is homepage</Typography>
-            <Typography>{import.meta.env.VITE_BASE_URL}</Typography>
-            <button onClick={handleGetData}>
-                get data
-            </button>
-        </>
+        <Box>
+            <CarouselComponent />
+            <BigCity />
+            <Center />
+            <TutorComponent />
+            <Blog />
+            <AboutMe />
+        </Box>
     )
 }
 

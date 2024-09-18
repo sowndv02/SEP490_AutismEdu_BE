@@ -2,16 +2,14 @@
 using backend_api.Models.DTOs;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
-using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Security.Claims;
 
 namespace backend_api.Repository.IRepository
 {
     public interface IUserRepository
     {
         bool IsUniqueUser(string username);
-        Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO, bool checkPassword = true);
+        Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO, bool checkPassword = true, string refreshTokenGoogle = null);
         Task<ApplicationUser> Register(RegisterationRequestDTO registerationRequestDTO);
         Task<TokenDTO> RefreshAccessToken(TokenDTO tokenDTO);
         Task RevokeRefreshToken(TokenDTO tokenDTO);
@@ -37,5 +35,11 @@ namespace backend_api.Repository.IRepository
         Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(string token);
         Task<(int TotalCount, List<ApplicationUser> Users)> GetUsersForClaimAsync(int claimId, int takeValue = 4, int pageSize = 0, int pageNumber = 0);
         Task<(int TotalCount, List<ApplicationUser> Users)> GetUsersInRole(string roleName, int takeValue = 4, int pageSize = 0, int pageNumber = 0);
+        Task<string> GetRefreshTokenGoogleValid(string userId);
+        Task<bool> RemoveRoleByUserId(string userId, List<string> userRoleIds);
+        Task<bool> AddRoleToUser(string userId, List<string> roleIds);
+        Task<List<IdentityRole>> GetRoleByUserId(string userId);
+
+
     }
 }

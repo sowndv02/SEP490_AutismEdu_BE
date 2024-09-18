@@ -23,6 +23,9 @@ const removeUserClaims = async (endpoint, data, success, error) => {
 const getUserRoles = async (endpoint, success, error, params) => {
     await get(API_CODE.API_GET_USER_ROLES + endpoint, success, error, params);
 };
+const getUserById = async (endpoint, success, error) => {
+    await get(API_CODE.API_GET_USER_ID + endpoint, success, error);
+};
 const removeUserRoles = async (endpoint, data, success, error) => {
     await del(API_CODE.API_REMOVE_USER_ROLES + endpoint, data, success, error);
 };
@@ -39,5 +42,6 @@ export const UserManagementAPI = {
     removeUserClaims,
     getUserRoles,
     removeUserRoles,
-    createUser
+	getUserById,
+	createUser
 }

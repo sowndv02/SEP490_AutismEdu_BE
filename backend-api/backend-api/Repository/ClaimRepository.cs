@@ -1,10 +1,8 @@
 ﻿using backend_api.Data;
 using backend_api.Models;
-using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace backend_api.Repository
 {
@@ -30,15 +28,43 @@ namespace backend_api.Repository
             }
         }
 
-        public int GetTotalClaim()
+        public int GetTotalClaim(List<UserClaim> userClaims = null)
         {
             try
             {
-                return _context.ApplicationClaims.Count();
-            }catch (Exception ex)
+                if (userClaims == null || userClaims.Count == 0)
+                    return _context.ApplicationClaims.Count();
+                var result = _context.ApplicationClaims.ToList();
+                result = result.Where(claim => !userClaims.Any(uc => uc.ClaimType == claim.ClaimType && uc.ClaimValue == claim.ClaimValue)).ToList();
+                return result.Count;
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        public async Task<(int TotalCount, List<ApplicationClaim> list)> GetAllAsync(Expression<Func<ApplicationClaim, bool>>? filter = null, string? includeProperties = null,
+            int pageSize = 10, int pageNumber = 1, List<UserClaim> userClaims = null)
+        {
+            IQueryable<ApplicationClaim> query = _context.ApplicationClaims;
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (includeProperties != null)
+            {
+                var includeProps = includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var includeProp in includeProps)
+                {
+                    query = query.Include(includeProp);
+                }
+            }
+            var result = await query.ToListAsync();
+            if (userClaims != null && userClaims.Count > 0)
+            {
+                result = result.Where(claim => !userClaims.Any(uc => uc.ClaimType == claim.ClaimType && uc.ClaimValue == claim.ClaimValue)).ToList();
+            }
+            return (result.Count, result.Skip(pageSize * (pageNumber - 1)).Take(pageSize).ToList());
         }
     }
 }

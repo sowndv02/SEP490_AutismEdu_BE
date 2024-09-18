@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
 
@@ -29,12 +30,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"));
 });
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+// Add Loging
+Log.Logger = new LoggerConfiguration().MinimumLevel.Debug()
+    .WriteTo.File("log/seplogs.txt", rollingInterval: RollingInterval.Day).CreateLogger();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins("http://localhost:5173") // Replace with your frontend URL
+            builder.WithOrigins(SD.URL_FE)
                    .AllowAnyHeader()
                    .AllowAnyMethod()
                    .AllowCredentials();
@@ -42,7 +48,11 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
-builder.Services.AddResponseCaching();
+builder.Services.AddResponseCaching(options =>
+{
+    options.MaximumBodySize = 1024;
+    options.UseCaseSensitivePaths = true;
+});
 
 // Add DI
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -60,11 +70,16 @@ builder.Services.AddScoped<IAuthorizationHandler, AssignClaimHandler>();
 
 
 
-// Add DI SendMail Service
+// Add DI other Service
 var mailsettings = builder.Configuration.GetSection("MailSettings");
 builder.Services.Configure<MailSettings>(mailsettings);
 builder.Services.AddTransient<IEmailSender, SendMailService>();
 builder.Services.AddSingleton<DateTimeEncryption>();
+builder.Services.AddSingleton<TokenEcryption>();
+builder.Services.AddSingleton<FormatString>();
+builder.Services.AddHostedService<RefreshTokenCleanupService>();
+
+
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingConfig));
@@ -122,19 +137,20 @@ builder.Services.AddAuthentication(options =>
 });
 
 
+builder.Host.UseSerilog();
 // Config Authorization with policy
 
 builder.Services.AddAuthorization(option =>
 {
 
     // Authorization with policy using role requirement
-    option.AddPolicy("Admin", policy => policy.RequireRole(SD.Admin));
+    option.AddPolicy("Admin", policy => policy.RequireRole(SD.ADMIN_ROLE));
     // Authorization with policy using role requirement using condition and
-    option.AddPolicy("AdminAndUser", policy => policy.RequireRole(SD.Admin).RequireRole(SD.User));
+    option.AddPolicy("AdminAndUser", policy => policy.RequireRole(SD.ADMIN_ROLE).RequireRole(SD.USER_ROLE));
     // Authorization with policy using single claim requirement
-    option.AddPolicy("AdminRole_CreateClaim", policy => policy.RequireRole(SD.Admin).RequireClaim("Create", "True"));
+    option.AddPolicy("AdminRole_CreateClaim", policy => policy.RequireRole(SD.ADMIN_ROLE).RequireClaim("Create", "True"));
     // Authorization with policy using multiple claim requirement
-    option.AddPolicy("AdminRole_CreateEditDeleteClaim", policy => policy.RequireRole(SD.Admin)
+    option.AddPolicy("AdminRole_CreateEditDeleteClaim", policy => policy.RequireRole(SD.ADMIN_ROLE)
                                             .RequireClaim("Create", "True")
                                             .RequireClaim("Delete", "True")
                                             .RequireClaim("Edit", "True")
@@ -182,9 +198,27 @@ app.UseSwaggerUI(options =>
 app.UseCors("AllowSpecificOrigin");
 
 app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
+app.UseMiddleware<RequestTimeLoggingMidleware>();
+app.UseMiddleware<ExceptionMiddleware>();
+
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();
+app.UseResponseCaching();
+
+// Add cache for response
+app.Use(async (context, next) =>
+{
+    context.Response.GetTypedHeaders().CacheControl =
+    new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
+    {
+        Public = true,
+        MaxAge = TimeSpan.FromSeconds(10)
+    };
+    context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] = new string[] { "Accept-Encoding" };
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -202,6 +236,7 @@ void ApplyMigration()
         {
             var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+
             // Check for pending migrations and apply them if any
             var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
             if (pendingMigrations.Count > 0)
@@ -211,7 +246,7 @@ void ApplyMigration()
                 Console.WriteLine("Migrations applied successfully.");
             }
 
-            // Seed the database if it’s empty
+            // Seed the database if itâ€™s empty
             _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
         }
     }
@@ -226,10 +261,10 @@ void ApplyMigration()
 
 bool AdminRole_CreateEditDeleteClaim_ORSuperAdminRole(AuthorizationHandlerContext context)
 {
-    return (context.User.IsInRole(SD.Admin) && context.User.HasClaim(c => c.Type == "Create" && c.Value == "True")
+    return (context.User.IsInRole(SD.ADMIN_ROLE) && context.User.HasClaim(c => c.Type == "Create" && c.Value == "True")
         && context.User.HasClaim(c => c.Type == "Edit" && c.Value == "True")
         && context.User.HasClaim(c => c.Type == "Delete" && c.Value == "True")
-    ) || context.User.IsInRole(SD.SuperAdmin);
+    ) || context.User.IsInRole(SD.ADMIN_ROLE);
 }
 
 public partial class Program { }

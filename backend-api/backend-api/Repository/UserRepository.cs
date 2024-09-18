@@ -1,18 +1,15 @@
-﻿using AutoMapper;
-using backend_api.Data;
-using backend_api.Models.DTOs;
+﻿using backend_api.Data;
 using backend_api.Models;
+using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
-using System.Linq.Expressions;
-using System.Diagnostics;
-using System.Linq;
-using Google.Apis.Auth;
 
 namespace backend_api.Repository
 {
@@ -26,16 +23,47 @@ namespace backend_api.Repository
         private readonly IClaimRepository _claimRepository;
         private string secretKey = string.Empty;
 
-        public UserRepository(ApplicationDbContext context, IConfiguration configuration, UserManager<ApplicationUser> userManager, 
+        public UserRepository(ApplicationDbContext context, IConfiguration configuration, UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager, IClaimRepository claimRepository)
         {
             _claimRepository = claimRepository;
-            _signInManager = signInManager; 
+            _signInManager = signInManager;
             _roleManager = roleManager;
             _userManager = userManager;
             _context = context;
             _configuration = configuration;
             secretKey = configuration.GetValue<string>("ApiSettings:JWT:Secret");
+        }
+
+        public async Task RevokeRefreshTokenGoogleAsync(string userId)
+        {
+            try
+            {
+                var list = await _context.RefreshTokens.Where(x => x.UserId == userId && x.TokenType == SD.GOOGLE_REFRESH_TOKEN && x.IsValid).ToListAsync();
+                foreach (var item in list)
+                {
+                    item.IsValid = false;
+                }
+                _context.RefreshTokens.UpdateRange(list);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        public async Task<string> SaveRefreshTokenGoogleAsync(RefreshToken refreshToken)
+        {
+            try
+            {
+                await _context.RefreshTokens.AddAsync(refreshToken);
+                await _context.SaveChangesAsync();
+                return refreshToken.Refresh_Token;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public async Task<(int TotalCount, List<ApplicationUser> Users)> GetUsersForClaimAsync(int claimId, int takeValue = 4, int pageSize = 0, int pageNumber = 0)
@@ -44,7 +72,7 @@ namespace backend_api.Repository
             {
                 var claim = await _claimRepository.GetAsync(x => x.Id == claimId);
                 var list = await _userManager.GetUsersForClaimAsync(new Claim(claim.ClaimType, claim.ClaimValue));
-                if(pageSize == 0 && pageNumber == 0)
+                if (pageSize == 0 && pageNumber == 0)
                 {
                     return (list.Count, list.Take(takeValue).ToList());
                 }
@@ -127,7 +155,7 @@ namespace backend_api.Repository
         {
             try
             {
-                var result =  await _userManager.ResetPasswordAsync(user, code, password);
+                var result = await _userManager.ResetPasswordAsync(user, code, password);
                 if (result.Succeeded)
                 {
                     return true;
@@ -196,12 +224,12 @@ namespace backend_api.Repository
                 {
                     throw new ArgumentException("User not found");
                 }
-                var userClaims = _context.UserClaims.Where(c => userClaimIds.Contains(c.Id)).ToList();
+                var userClaims = _context.ApplicationClaims.Where(c => userClaimIds.Contains(c.Id)).ToList();
                 var result = await _userManager.RemoveClaimsAsync(user, userClaims.Select(x => new Claim(x.ClaimType, x.ClaimValue)));
                 if (!result.Succeeded) return false;
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -229,7 +257,7 @@ namespace backend_api.Repository
             return false;
         }
 
-        public async Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO, bool checkPassword = true)
+        public async Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO, bool checkPassword = true, string refreshTokenGoogle = null)
         {
             var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName.ToLower() == loginRequestDTO.Email.ToLower());
             if (user == null)
@@ -270,7 +298,19 @@ namespace backend_api.Repository
             var jwtTokenId = $"JTI{Guid.NewGuid()}";
             var accessToken = await GetAccessToken(user, jwtTokenId);
             var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
-
+            if (!string.IsNullOrEmpty(refreshTokenGoogle) && !checkPassword)
+            {
+                await RevokeRefreshTokenGoogleAsync(user.Id);
+                await SaveRefreshTokenGoogleAsync(new RefreshToken()
+                {
+                    UserId = user.Id,
+                    Refresh_Token = refreshTokenGoogle,
+                    ExpiresAt = DateTime.Now.AddYears(1),
+                    IsValid = true,
+                    JwtTokenId = jwtTokenId,
+                    TokenType = SD.GOOGLE_REFRESH_TOKEN
+                });
+            }
             TokenDTO tokenDTO = new()
             {
                 AccessToken = accessToken,
@@ -331,15 +371,15 @@ namespace backend_api.Repository
             var authClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Role, roles.FirstOrDefault()),
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                new Claim(JwtRegisteredClaimNames.Jti, jwtTokenId)
+                new Claim(JwtRegisteredClaimNames.Jti,  jwtTokenId)
             };
             authClaims.AddRange(userClaims);
             var token = new JwtSecurityToken(
                 issuer: _configuration["ApiSettings:JWT:ValidIssuer"],
                 audience: _configuration["ApiSettings:JWT:ValidAudience"],
-                expires: DateTime.UtcNow.AddMinutes(1),
+                expires: DateTime.UtcNow.AddMinutes(30),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authenKey, SecurityAlgorithms.HmacSha512Signature)
             );
@@ -400,6 +440,7 @@ namespace backend_api.Repository
             };
         }
 
+
         private async Task<string> CreateNewRefreshToken(string userId, string tokenId)
         {
             RefreshToken refreshToken = new()
@@ -408,7 +449,8 @@ namespace backend_api.Repository
                 UserId = userId,
                 JwtTokenId = tokenId,
                 ExpiresAt = DateTime.Now.AddDays(100),
-                Refresh_Token = Guid.NewGuid() + "-" + Guid.NewGuid()
+                Refresh_Token = Guid.NewGuid() + "-" + Guid.NewGuid(),
+                TokenType = SD.APPLICATION_REFRESH_TOKEN
             };
 
             await _context.RefreshTokens.AddAsync(refreshToken);
@@ -541,11 +583,11 @@ namespace backend_api.Repository
                 {
                     user.LockoutEnd = DateTime.Now.AddYears(1000);
                     await _context.SaveChangesAsync();
-                    if (user.LockoutEnd ==null ||user.LockoutEnd <= DateTime.Now)
+                    if (user.LockoutEnd == null || user.LockoutEnd <= DateTime.Now)
                         user.IsLockedOut = false;
                     else user.IsLockedOut = true;
                 }
-                
+
                 return user;
             }
             catch (Exception ex)
@@ -567,7 +609,7 @@ namespace backend_api.Repository
                         user.IsLockedOut = false;
                     else user.IsLockedOut = true;
                 }
-                
+
                 return user;
             }
             catch (Exception ex)
@@ -600,7 +642,7 @@ namespace backend_api.Repository
             }
             var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
 
-            if ( objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
+            if (objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
                 objReturn.IsLockedOut = false;
             else objReturn.IsLockedOut = true;
             var user_role = await _userManager.GetRolesAsync(user) as List<string>;
@@ -651,34 +693,47 @@ namespace backend_api.Repository
 
             if (result.Succeeded)
             {
-                var roleId = user.RoleId;
-                if (roleId != null)
+                var roleIds = user.RoleIds;
+                await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
+                if (roleIds != null && roleIds.Count != 0)
                 {
-                    user.Role = _roleManager.FindByIdAsync(roleId).GetAwaiter().GetResult().Name;
-                    if (user.Role != null)
+                    foreach (var roleId in roleIds)
                     {
-                        await _userManager.AddToRoleAsync(obj, user.Role);
-                    }
-                    else
-                    {
-                        if (!_roleManager.RoleExistsAsync(SD.User).GetAwaiter().GetResult())
+                        user.Role = _roleManager.FindByIdAsync(roleId).GetAwaiter().GetResult().Name;
+                        if (user.Role != null)
                         {
-                            await _roleManager.CreateAsync(new IdentityRole(SD.User));
+                            await _userManager.AddToRoleAsync(obj, user.Role);
                         }
-                        await _userManager.AddToRoleAsync(obj, SD.User);
+                        else
+                        {
+                            var role_user = _userManager.GetRolesAsync(user).GetAwaiter().GetResult().FirstOrDefault(x => x.Equals(SD.USER_ROLE));
+                            if (role_user != null && role_user == SD.USER_ROLE)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
+                                {
+                                    await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
+                                }
+                                await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
+                            }
+
+                        }
                     }
                 }
                 else
                 {
-                    if (!_roleManager.RoleExistsAsync(SD.User).GetAwaiter().GetResult())
+                    if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(SD.User));
+                        await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
                     }
-                    await _userManager.AddToRoleAsync(obj, SD.User);
+                    await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
                 }
                 var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
 
-                if (objReturn.LockoutEnd == null ||objReturn.LockoutEnd <= DateTime.Now)
+                if (objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
                     objReturn.IsLockedOut = false;
                 else objReturn.IsLockedOut = true;
 
@@ -751,7 +806,7 @@ namespace backend_api.Repository
             try
             {
                 var user = await _userManager.FindByIdAsync(userId);
-                
+
                 if (user != null)
                 {
                     var userClaims = await _context.UserClaims.Where(x => x.UserId == userId).
@@ -793,6 +848,109 @@ namespace backend_api.Repository
             catch (Exception)
             {
                 return null; //Invalid token or error
+            }
+        }
+        public async Task<string> GetRefreshTokenGoogleValid(string userId)
+        {
+            try
+            {
+                var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.IsValid && x.TokenType == SD.GOOGLE_REFRESH_TOKEN && x.UserId == userId);
+
+                if (refreshToken == null) return null;
+
+                return refreshToken.Refresh_Token;
+            }
+            catch (Exception)
+            {
+                return null; //Invalid token or error
+            }
+        }
+
+        public async Task<bool> RemoveRoleByUserId(string userId, List<string> userRoleIds)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    throw new ArgumentException("User not found");
+                }
+                var roles = new List<IdentityRole>();
+                var userRoles = _context.UserRoles.Where(c => userRoleIds.Contains(c.RoleId)).ToList();
+                foreach (var roleId in userRoleIds)
+                {
+                    roles.Add(await _roleManager.FindByIdAsync(roleId));
+                }
+                var result = await _userManager.RemoveFromRolesAsync(user, roles.Select(x => x.Name));
+                if (!result.Succeeded) return false;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> AddRoleToUser(string userId, List<string> roleIds)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    throw new ArgumentException("User not found");
+                }
+
+                List<IdentityRole> roles = _roleManager.Roles.Where(c => roleIds.Contains(c.Id)).ToList();
+
+                var currentRoles = await _userManager.GetRolesAsync(user);
+
+                var missingRoles = roles
+                    .Where(c => !currentRoles.Contains(c.Name))
+                    .Select(c => c.Name)
+                    .ToList();
+
+
+                if (missingRoles.Any())
+                {
+                    var result = await _userManager.AddToRolesAsync(user, missingRoles);
+                    if (!result.Succeeded)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+
+        public async Task<List<IdentityRole>> GetRoleByUserId(string userId)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    List<IdentityRole> roles = new List<IdentityRole>();
+                    var user = await _userManager.FindByIdAsync(userId);
+                    if (user == null) throw new Exception("user not found");
+                    var roleNames = await _userManager.GetRolesAsync(user);
+                    foreach (var name in roleNames)
+                    {
+                        var r = await _roleManager.FindByNameAsync(name);
+                        roles.Add(r);
+                    }
+                    return roles;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
         }
     }

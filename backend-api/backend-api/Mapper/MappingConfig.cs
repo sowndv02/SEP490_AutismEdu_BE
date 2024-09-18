@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
 
 namespace backend_api.Mapper
 {
@@ -23,7 +23,12 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ReverseMap();
-            
+
+            CreateMap<ClaimCreateDTO, ApplicationClaim>().ReverseMap();
+            CreateMap<ApplicationUser, UserCreateDTO>().ReverseMap();
+            CreateMap<RoleCreateDTO, IdentityRole>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ReverseMap();
 
             CreateMap<ApplicationUser, ApplicationUserDTO>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))

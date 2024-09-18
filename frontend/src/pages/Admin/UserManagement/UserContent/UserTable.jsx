@@ -1,18 +1,19 @@
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import LockPersonIcon from '@mui/icons-material/LockPerson';
-import PersonIcon from '@mui/icons-material/Person';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Avatar, Box, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import { enqueueSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
+import LoadingComponent from '~/components/LoadingComponent';
 import TablePagging from '~/components/TablePagging';
 import services from '~/plugins/services';
-import ActionMenu from './ActionMenu';
 import UserProfileModal from '../UserProfileModal';
+import ActionMenu from './ActionMenu';
+import ConfirmLockDialog from './ConfirmLockDialog';
 function UserTable({ users, setPagination, setUsers, pagination }) {
-    const handleChangeUserStatus = (id, status) => {
+    const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1)
+    const handleChangeUserStatus = async (id, status) => {
+        setLoading(true);
         if (status) {
-            services.UserManagementAPI.unLockUsers(id, (res) => {
+            await services.UserManagementAPI.unLockUsers(id, (res) => {
                 const updatedUser = users.map((u) => {
                     if (u.id !== id) return u;
                     else {
@@ -26,7 +27,7 @@ function UserTable({ users, setPagination, setUsers, pagination }) {
                 enqueueSnackbar("Unlock user failed!", { variant: "error" });
             })
         } else {
-            services.UserManagementAPI.lockUsers(id, (res) => {
+            await services.UserManagementAPI.lockUsers(id, (res) => {
                 const updatedUser = users.map((u) => {
                     if (u.id !== id) return u;
                     else {
@@ -40,6 +41,36 @@ function UserTable({ users, setPagination, setUsers, pagination }) {
                 console.log(err);
                 enqueueSnackbar("Lock user failed!", { variant: "error" });
             })
+        }
+        setLoading(false);
+    }
+
+    useEffect(() => {
+        handleGetData();
+    }, [currentPage]);
+    const handleGetData = async () => {
+        try {
+            setLoading(true);
+            console.log(currentPage);
+            await services.UserManagementAPI.getUsers((res) => {
+                const updatedResult = res.result.map((r) => {
+                    let splitedRole = r.role.split(",");
+                    r.role = splitedRole;
+                    return r;
+                })
+                console.log(res);
+                setUsers(updatedResult);
+                res.pagination.currentSize = updatedResult.length
+                setPagination(res.pagination);
+                setLoading(false);
+            }, (err) => {
+                setLoading(false);
+            }, {
+                pageNumber: currentPage || 1
+            });
+        } catch (error) {
+            console.log(error);
+            setLoading(false);
         }
     }
     return (
@@ -59,7 +90,7 @@ function UserTable({ users, setPagination, setUsers, pagination }) {
                         users?.map((user, index) => {
                             return (
                                 <TableRow key={user.id}>
-                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
                                     <TableCell>
                                         <Box sx={{ display: "flex", gap: 1 }}>
                                             <Avatar alt="Remy Sharp" src={user.imageLocalUrl} />
@@ -75,11 +106,7 @@ function UserTable({ users, setPagination, setUsers, pagination }) {
                                     <TableCell>{user.isLockedOut ? "True" : "False"}</TableCell>
                                     <TableCell>
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
-                                            <IconButton aria-label="status" onClick={() => handleChangeUserStatus(user.id, user.isLockedOut)}>
-                                                {
-                                                    user.isLockedOut ? <LockOpenIcon /> : <LockPersonIcon />
-                                                }
-                                            </IconButton>
+                                            <ConfirmLockDialog isLock={user.isLockedOut} name={user.fullName} id={user.id} handleChangeUserStatus={handleChangeUserStatus} />
                                             <IconButton>
                                                 <UserProfileModal currentUser={user} />
                                             </IconButton>
@@ -91,8 +118,9 @@ function UserTable({ users, setPagination, setUsers, pagination }) {
                         })
                     }
                 </TableBody>
+                <LoadingComponent open={loading} setLoading={setLoading} />
             </Table>
-            <TablePagging pagination={pagination} setPaggination={setPagination} />
+            <TablePagging pagination={pagination} setPagination={setPagination} setCurrentPage={setCurrentPage} />
         </TableContainer >
     )
 }
