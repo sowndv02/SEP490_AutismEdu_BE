@@ -2,6 +2,7 @@
 {
     public static class SD
     {
+        public static string ADMIN_EMAIL_DEFAULT = "admin@admin.com";
         public const string USER_ROLE = "User";
         public const string ADMIN_ROLE = "Admin";
         public const string TEACHER_ROLE = "Teacher";
