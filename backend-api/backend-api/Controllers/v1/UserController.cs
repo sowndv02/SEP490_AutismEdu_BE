@@ -199,7 +199,7 @@ namespace backend_api.Controllers.v1
                 if (currentUser != null)
                 {
                     _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { "Email is exist!" };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
@@ -217,14 +217,24 @@ namespace backend_api.Controllers.v1
                 model.IsLockedOut = false;
                 model.EmailConfirmed = true;
                 var user = await _userRepository.CreateAsync(model, createDTO.Password);
-                _response.Result = user;
-                _response.StatusCode = HttpStatusCode.Created;
-                return Ok(_response);
+                if (user == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Error when create user" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    _response.Result = user;
+                    _response.StatusCode = HttpStatusCode.Created;
+                    return Ok(_response);
+                }
             }
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
