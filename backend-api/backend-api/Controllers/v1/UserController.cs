@@ -195,7 +195,14 @@ namespace backend_api.Controllers.v1
             try
             {
                 if (createDTO == null) return BadRequest(createDTO);
-
+                var currentUser = await _userRepository.GetUserByEmailAsync(createDTO.Email);
+                if (currentUser != null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Email is exist!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
                 model.CreatedDate = DateTime.Now;
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
