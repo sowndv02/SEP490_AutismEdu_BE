@@ -56,10 +56,10 @@ function UserTable({ users, setPagination, setUsers, pagination }) {
                 </TableHead>
                 <TableBody>
                     {
-                        users?.map((user) => {
+                        users?.map((user, index) => {
                             return (
                                 <TableRow key={user.id}>
-                                    <TableCell>{user.id}</TableCell>
+                                    <TableCell>{index + 1}</TableCell>
                                     <TableCell>
                                         <Box sx={{ display: "flex", gap: 1 }}>
                                             <Avatar alt="Remy Sharp" src={user.imageLocalUrl} />
@@ -70,8 +70,7 @@ function UserTable({ users, setPagination, setUsers, pagination }) {
                                         </Box>
                                     </TableCell>
                                     <TableCell>
-                                        {user.role.includes("Admin") && <AdminPanelSettingsIcon sx={{ color: "#ff4d49" }} />}
-                                        {user.role.includes("user") && <PersonIcon sx={{ color: "#2196f3" }} />}
+                                        {user.role.join(", ")}
                                     </TableCell>
                                     <TableCell>{user.isLockedOut ? "True" : "False"}</TableCell>
                                     <TableCell>

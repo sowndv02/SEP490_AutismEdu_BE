@@ -16,6 +16,7 @@ function UserContent() {
                 r.role = splitedRole;
                 return r;
             })
+            console.log(res);
             setUsers(updatedResult);
             res.pagination.currentSize = updatedResult.length
             setPagination(res.pagination);
@@ -48,7 +49,6 @@ function UserContent() {
                 r.role = splitedRole;
                 return r;
             })
-            console.log(updatedResult);
             setUsers(updatedResult);
             res.pagination.currentSize = updatedResult.length
             setPagination(res.pagination);
