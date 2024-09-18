@@ -40,7 +40,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins(SD.URL_FE) // Replace with your frontend URL
+            builder.WithOrigins(SD.URL_FE)
                    .AllowAnyHeader()
                    .AllowAnyMethod()
                    .AllowCredentials();
@@ -245,9 +245,9 @@ void ApplyMigration()
                 _db.Database.Migrate();
                 Console.WriteLine("Migrations applied successfully.");
             }
-			
-			// Seed the database if it’s empty
-			_db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
+
+            // Seed the database if it’s empty
+            _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
         }
     }
     catch (Exception ex)

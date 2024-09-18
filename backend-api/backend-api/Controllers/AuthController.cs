@@ -64,7 +64,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
-                var callbackUrl = $"{SD.URL_FE}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
+                var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
                 await _emailSender.SendEmailAsync(user.Email, "Confirm Email", $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>");
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -220,7 +220,7 @@ namespace backend_api.Controllers
                 }
                 var code = await _userRepository.GeneratePasswordResetTokenAsync(user);
 
-                var callbackUrl = $"{SD.URL_FE}/reset-password?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
+                var callbackUrl = $"{SD.URL_FE_FULL}/reset-password?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
 
                 await _emailSender.SendEmailAsync(forgotPasswordDTO.Email, "Reset password", $"Expiration time 5 minutes. \nPlease reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
 
@@ -310,7 +310,7 @@ namespace backend_api.Controllers
                 await _userRepository.UpdateAsync(user);
 
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
-                var callbackUrl = $"{SD.URL_FE}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
+                var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
                 await _emailSender.SendEmailAsync(user.Email, "Confirm Email", $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>");
 
                 _response.StatusCode = HttpStatusCode.OK;
