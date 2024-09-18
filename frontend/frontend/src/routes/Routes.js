@@ -51,7 +51,7 @@ const publicRoutes = [
         element: SearchTutor
     },
     {
-        path: PAGES.TUTORPROFILE,
+        path: PAGES.ROOT + PAGES.TUTORPROFILE,
         element: TutorProfile
     },
 ]

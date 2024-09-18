@@ -90,7 +90,7 @@ function UserTable({ users, setPagination, setUsers, pagination }) {
                         users?.map((user, index) => {
                             return (
                                 <TableRow key={user.id}>
-                                    <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
+                                    <TableCell>{index + 1}</TableCell>
                                     <TableCell>
                                         <Box sx={{ display: "flex", gap: 1 }}>
                                             <Avatar alt="Remy Sharp" src={user.imageLocalUrl} />
