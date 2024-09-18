@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 import { useFormik } from 'formik';
+import { enqueueSnackbar } from 'notistack';
 import * as React from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
@@ -32,7 +33,7 @@ const MenuProps = {
         }
     }
 };
-function UserCreation() {
+function UserCreation({ setUsers }) {
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -58,12 +59,22 @@ function UserCreation() {
     useEffect(() => {
         if (open) {
             getRoles();
+        } else {
+            formik.values.fullName = "";
+            formik.values.email = '';
+            formik.values.phoneNumber = '';
+            formik.values.password = '';
+            formik.values.cfPassword = ''
+            setSelectedRoles([])
         }
     }, [open]);
     const getRoles = async () => {
         try {
             await services.RoleManagementAPI.getRoles((res) => {
-                setRoles(res.result);
+                const returnRole = res.result.filter((r) => {
+                    return r.name !== "User"
+                })
+                setRoles(returnRole);
             },
                 (err) => {
                     console.log(err);
@@ -103,25 +114,7 @@ function UserCreation() {
                     const selectedRole = roles.find((r) => r.name === role);
                     return selectedRole.id;
                 })
-                const formData = new FormData();
-                // formData.append("FullName", values.fullName);
-                // formData.append("Email", values.email);
-                // formData.append("Password", values.password);
-                // formData.append("ConfirmPassword", values.cfPassword);
-                // formData.append("RoleIds", submitRoles);
-                // formData.append("IsLockedOut", false);
-                // formData.append("PhoneNumber", values.phoneNumber)
-                console.log(formData.get("PhoneNumber"));
-                // {
-                //     FullName: values.fullName,
-                //     Email: values.email,
-                //     PhoneNumber: values.phoneNumber,
-                //     Password: values.Password,
-                //     ConfirmPassword: values.cfPassword,
-                //     RoleIds: submitRoles,
-                //     IsLockedOut: false
-                // }
-                console.log(values);
+                setOpen(false);
                 await services.UserManagementAPI.createUser(
                     {
                         FullName: values.fullName,
@@ -134,9 +127,16 @@ function UserCreation() {
                     }
                     , (res) => {
                         console.log(res);
+                        let splitedRole = res.result.role.split(",");
+                        res.result.role = splitedRole;
+                        setUsers(preState => [res.result, ...preState]);
+                        enqueueSnackbar("Create account successfully!", { variant: "success" });
                     }, (error) => {
-                        console.log("loi");
                         console.log(error);
+                        if (error.code === 400)
+                            enqueueSnackbar("Email has already exist!", { variant: "error" });
+                        else
+                            enqueueSnackbar("Failed to create account!", { variant: "error" });
                     })
                 setLoading(false);
             } catch (error) {
@@ -145,6 +145,7 @@ function UserCreation() {
             }
         },
     });
+    console.log(open);
     return (
         <div>
             <Button variant="contained" onClick={handleOpen}>Add new user</Button>
