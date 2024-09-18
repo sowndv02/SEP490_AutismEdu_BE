@@ -26,6 +26,7 @@ namespace backend_api.Mapper
 
             CreateMap<ClaimCreateDTO, ApplicationClaim>().ReverseMap();
             CreateMap<ApplicationUser, UserCreateDTO>().ReverseMap();
+
             CreateMap<RoleCreateDTO, IdentityRole>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
                 .ReverseMap();
