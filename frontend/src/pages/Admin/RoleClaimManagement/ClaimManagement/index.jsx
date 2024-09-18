@@ -4,25 +4,73 @@ import { useEffect, useState } from 'react';
 import ClaimModal from '../RoleClaimModal/ClaimModal';
 import services from '~/plugins/services';
 import LoadingComponent from '~/components/LoadingComponent';
+import SearchIcon from '@mui/icons-material/Search';
 
 function ClaimManagement() {
-    const [claim, setClaim] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [claim, setClaim] = useState([]);
+    const [pagination, setPagination] = useState(null);
+    const [selected, setSelected] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchType, setSearchType] = useState('all');
+    const [searchValue, setSearchValue] = useState('');
     useEffect(() => {
-        services.ClaimManagementAPI.getClaims((res) => {
-            console.log(res);
-        }, (err) => {
-            console.log(err);
-        })
-    }, [])
+
+        handleSearch();
+    }, [currentPage]);
+    const handleGetClaims = async () => {
+        try {
+            setLoading(true);
+            await services.ClaimManagementAPI.getClaims((res) => {
+                setClaim(res.result);
+                console.log(res);
+                res.pagination.currentSize = res.result.length
+                setPagination(res.pagination);
+            }, (err) => {
+                console.log(err);
+            }, {
+                pageNumber: currentPage || 1
+            });
+            setLoading(false);
+        } catch (error) {
+            console.log(error);
+            setLoading(false);
+        }
+    }
+
     const handleChange = (event) => {
-        setClaim(event.target.value);
+        setSearchType(event.target.value);
     };
+    const handleChangeSearchValue = (e) => {
+        setSearchValue(e.target.value);
+    }
+    const handleSearch = async (e) => {
+        try {
+            setLoading(true);
+            await services.ClaimManagementAPI.getClaims((res) => {
+                setClaim(res.result);
+                console.log(res);
+                res.pagination.currentSize = res.result.length
+                setPagination(res.pagination);
+            }, (err) => {
+                console.log(err);
+            }, {
+                searchType,
+                searchValue,
+                pageNumber: currentPage || 1
+            });
+            setLoading(false);
+        } catch (error) {
+            console.log(error);
+            setLoading(false);
+        }
+    }
     return (
         <Box sx={{
             width: "100%", bgcolor: "white", p: "20px",
             borderRadius: "10px",
             boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px",
-            position:"relative"
+            position: "relative"
         }}>
             <Typography variant='h6'>Claims</Typography>
             <Box sx={{
@@ -38,25 +86,33 @@ function ClaimManagement() {
                         <Select
                             labelId="type-claim"
                             id="type-claim-select"
-                            value={claim}
+                            value={searchType}
                             label="Type"
                             onChange={handleChange}
                         >
-                            <MenuItem value={10}>Create</MenuItem>
-                            <MenuItem value={20}>View</MenuItem>
-                            <MenuItem value={30}>Edit</MenuItem>
-                            <MenuItem value={30}>Delete</MenuItem>
+                            <MenuItem value={'all'}>All</MenuItem>
+                            <MenuItem value={'Create'}>Create</MenuItem>
+                            <MenuItem value={'View'}>View</MenuItem>
+                            <MenuItem value={'Update'}>Update</MenuItem>
+                            <MenuItem value={'Delete'}>Delete</MenuItem>
+                            <MenuItem value={'Assign'}>Assign</MenuItem>
                         </Select>
                     </FormControl>
                     <TextField size='small' id="outlined-basic" label="Search claim" variant="outlined"
                         sx={{
                             width: "300px"
-                        }} />
+                        }} onChange={handleChangeSearchValue} value={searchValue}/>
+                    <Button variant='contained' color='primary' startIcon={<SearchIcon />} onClick={handleSearch}>Search</Button>
                 </Box>
                 <ClaimModal />
             </Box>
             <Box>
-                <ClaimTable />
+                <ClaimTable claim={claim} setClaim={setClaim} pagination={pagination}
+                    setPagination={setPagination}
+                    currentPage={currentPage}
+                    setCurrentPage={setCurrentPage} 
+                    />
+                <LoadingComponent open={loading} setOpen={setLoading} />
             </Box>
         </Box>
     )

@@ -11,6 +11,7 @@ import SearchCenter from '~/pages/Center/SearchCenter'
 import Home from '~/pages/Home'
 import PAGES from '~/utils/pages'
 import SearchTutor from '~/pages/Tutor/SearchTutor'
+import TutorProfile from '~/pages/Tutor/TutorProfile'
 
 const publicRoutes = [
     {
@@ -48,6 +49,10 @@ const publicRoutes = [
     {
         path: PAGES.ROOT + PAGES.LISTTUTOR,
         element: SearchTutor
+    },
+    {
+        path: PAGES.TUTORPROFILE,
+        element: TutorProfile
     },
 ]
 

@@ -1,7 +1,9 @@
 import { Avatar, AvatarGroup, Box, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import ListUserModal from '../RoleClaimModal/ListUserModal';
-function ClaimTable() {
-    const arr = [1, 2, 3, 4, 5, 6]
+import { format } from 'date-fns';
+import TablePagging from '~/Components/TablePagging';
+function ClaimTable({totalUser, claim, setClaim, pagination, setPagination, currentPage, setCurrentPage }) {
+
     return (
         <TableContainer component={Paper} sx={{ mt: "20px" }}>
             <Table>
@@ -18,22 +20,24 @@ function ClaimTable() {
                 </TableHead>
                 <TableBody>
                     {
-                        arr.map((a) => {
+                        claim.map((a, index) => {
                             return (
-                                <TableRow key={a}>
-                                    <TableCell>{a}</TableCell>
+                                <TableRow key={index}>
+                                    <TableCell>{a.id}</TableCell>
                                     <TableCell>
-                                        Create
+                                        {a.claimType}
                                     </TableCell>
                                     <TableCell>
-                                        User Account
+                                        {a.claimValue}
                                     </TableCell>
                                     <TableCell>
-                                        <ListUserModal />
+                                        <ListUserModal totalUser={a.totalUser} users={a.users} claimId={a.id} claim={claim} setClaim={setClaim}/>
                                     </TableCell>
-                                    <TableCell>12/4/2024</TableCell>
                                     <TableCell>
-                                        12/4/2024
+                                        {format(a.createdDate, 'dd-MM-yyyy')}
+                                    </TableCell>
+                                    <TableCell>
+                                        {format(a.updatedDate, 'dd-MM-yyyy')}
                                     </TableCell>
                                     <TableCell>
                                         Edit
@@ -44,11 +48,9 @@ function ClaimTable() {
                     }
                 </TableBody>
             </Table>
-            <Box sx={{ p: "10px", display: "flex", justifyContent: "space-between" }}>
-                <Typography>Showing 1 to 10 of 47 enteries</Typography>
-                <Pagination count={10} color="primary" />
-            </Box>
-        </TableContainer >
+
+            <TablePagging pagination={pagination} setPagination={setPagination} setCurrentPage={setCurrentPage} />
+        </TableContainer>
     )
 }
 
