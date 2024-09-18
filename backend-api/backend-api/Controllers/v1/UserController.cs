@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,14 +16,17 @@ namespace backend_api.Controllers.v1
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<UserController> _logger;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
         public UserController(IUserRepository userRepository, IMapper mapper,
-            IConfiguration configuration, IBlobStorageRepository blobStorageRepository, ILogger<UserController> logger)
+            IConfiguration configuration, IBlobStorageRepository blobStorageRepository,
+            ILogger<UserController> logger, IRoleRepository roleRepository)
         {
+            _roleRepository = roleRepository;
             pageSize = configuration.GetValue<int>("APIConfig:PageSize");
             _mapper = mapper;
             _userRepository = userRepository;
@@ -89,8 +93,14 @@ namespace backend_api.Controllers.v1
                 }
                 else
                 {
+                    var responseList = new List<RoleDTO>();
+                    foreach (var item in userRoleDTO.UserRoleIds)
+                    {
+                        IdentityRole model = await _roleRepository.GetByIdAsync(item);
+                        responseList.Add(_mapper.Map<RoleDTO>(model));
+                    }
                     _response.IsSuccess = true;
-                    _response.Result = _userRepository.GetAsync(x => x.Id == userId);
+                    _response.Result = responseList;
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
@@ -180,12 +190,19 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] UserCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] UserCreateDTO createDTO)
         {
             try
             {
                 if (createDTO == null) return BadRequest(createDTO);
-
+                var currentUser = await _userRepository.GetUserByEmailAsync(createDTO.Email);
+                if (currentUser != null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { "Email is exist!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
                 model.CreatedDate = DateTime.Now;
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
@@ -199,10 +216,20 @@ namespace backend_api.Controllers.v1
                 model.LockoutEnabled = true;
                 model.IsLockedOut = false;
                 model.EmailConfirmed = true;
-                await _userRepository.CreateAsync(model, createDTO.Password);
-                _response.Result = _mapper.Map<ApplicationUserDTO>(model);
-                _response.StatusCode = HttpStatusCode.Created;
-                return Ok(_response);
+                var user = await _userRepository.CreateAsync(model, createDTO.Password);
+                if (user == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "Error when create user" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                else
+                {
+                    _response.Result = user;
+                    _response.StatusCode = HttpStatusCode.Created;
+                    return Ok(_response);
+                }
             }
             catch (Exception ex)
             {

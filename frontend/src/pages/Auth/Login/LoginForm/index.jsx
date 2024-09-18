@@ -1,20 +1,23 @@
+import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { Box, Divider, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput, SvgIcon, TextField } from '@mui/material';
-import Button from '@mui/material/Button';
+import { LoadingButton } from '@mui/lab';
+import { Box, Divider, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput } from '@mui/material';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
-import TrelloIcon from '~/assets/trello.svg?react';
 import Cookies from 'js-cookie';
-import { Link, useNavigate } from 'react-router-dom';
-import PAGES from '~/utils/pages';
-import service from '~/plugins/services'
-import { LoadingButton } from '@mui/lab';
 import { enqueueSnackbar } from 'notistack';
-import GoogleLogin from '../GoogleLogin';
+import { useEffect, useId, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import service from '~/plugins/services';
 import checkValid from '~/utils/auth_form_verify';
+import PAGES from '~/utils/pages';
+import GoogleLogin from '../GoogleLogin';
+import { useDispatch, useSelector } from "react-redux";
+import { setUserInformation } from '~/redux/features/userSlice';
+import { jwtDecode } from 'jwt-decode';
+import services from '~/plugins/services';
 function LoginForm({ setVerify, setEmailVerify }) {
     const [showPassword, setShowPassword] = useState(false);
     const [emailError, setEmailError] = useState(null);
@@ -22,7 +25,9 @@ function LoginForm({ setVerify, setEmailVerify }) {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [password, setPassword] = useState("");
+    const [userId, setUserId] = useState(null);
     const nav = useNavigate();
+    const dispatch = useDispatch();
     const INPUT_CSS = {
         width: "100%",
         borderRadius: "15px",
@@ -40,6 +45,22 @@ function LoginForm({ setVerify, setEmailVerify }) {
             handleSubmit();
         }
     }, [loading])
+    console.log(userId);
+
+    useEffect(() => {
+        if (userId) {
+            console.log("zoday");
+            services.UserManagementAPI.getUserById(userId, (res) => {
+                dispatch(setUserInformation(res.result))
+                enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });
+                nav(`${PAGES.ROOT}`)
+            }, (error) => {
+                enqueueSnackbar("Đăng nhập thất bại!", { variant: "error" });
+                console.log(error);
+            })
+            setLoading(false)
+        }
+    }, [userId])
     const handleSubmit = async () => {
         if (passwordError !== null || emailError !== null) {
             setLoading(false);
@@ -55,22 +76,21 @@ function LoginForm({ setVerify, setEmailVerify }) {
                     email,
                     password
                 }, (res) => {
-                    console.log(res);
                     Cookies.set('access_token', res.result.accessToken, { expires: 30 })
                     Cookies.set('refresh_token', res.result.refreshToken, { expires: 365 })
-                    enqueueSnackbar("Login successfully!", { variant: "success" });
+                    const decodedToken = jwtDecode(res.result.accessToken);
+                    setUserId(decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'])
                 }, (err) => {
-                    console.log(err);
                     if (err.code === 500) {
-                        enqueueSnackbar("Failed to reset password!", { variant: "error" });
+                        enqueueSnackbar("Đăng nhập thất bại!", { variant: "error" });
                     } else if (err.code === 406) {
-                        enqueueSnackbar(err.error[0], { variant: "error" });
+                        enqueueSnackbar("Tài khoản này chưa được kích hoạt!", { variant: "warning" });
                         setVerify(true);
                         setEmailVerify(email);
                     }
-                    else enqueueSnackbar(err.error[0], { variant: "error" });
+                    else enqueueSnackbar("Tài khoản hoặc mật khẩu không đúng!", { variant: "error" });
+                    setLoading(false)
                 })
-                setLoading(false)
             }
         }
     }
@@ -85,22 +105,21 @@ function LoginForm({ setVerify, setEmailVerify }) {
             }}>
                 <CardContent>
                     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
-                        <SvgIcon component={TrelloIcon} inheritViewBox sx={{ color: 'blue' }} />
+                        <EscalatorWarningIcon sx={{ color: "#394ef4", fontSize: "40px" }} />
                         <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
-                            My App
+                            AutismEdu
                         </Typography>
                     </Box>
-                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Welcome to MyApp! 👋</Typography>
-                    <Typography sx={{ mt: "10px" }}>Please sign-in to your account and start the adventure</Typography>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>AutismEdu Xin Chào! 👋</Typography>
+                    <Typography sx={{ mt: "10px" }}>Vui lòng đăng nhập vào tài khoản của bạn và khám phá dịch vụ của chúng tôi</Typography>
                     <Box mt="30px">
                         <FormControl sx={{ ...INPUT_CSS }} variant="outlined">
-                            <InputLabel htmlFor="email">Email or Username</InputLabel>
-                            <OutlinedInput id="email" label="Email or username" variant="outlined" type='text'
+                            <InputLabel htmlFor="email">Email</InputLabel>
+                            <OutlinedInput id="email" label="Email" variant="outlined" type='text'
                                 value={email}
                                 error={!!emailError}
                                 onChange={(e) => {
                                     if (!e.target.value.includes(" ")) {
-                                        console.log("zoday");
                                         checkValid(e.target.value, 1, setEmailError);
                                         setEmail(e.target.value);
                                     }
@@ -115,7 +134,7 @@ function LoginForm({ setVerify, setEmailVerify }) {
                             }
                         </FormControl>
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
-                            <InputLabel htmlFor="password">Password</InputLabel>
+                            <InputLabel htmlFor="password">Mật khẩu</InputLabel>
                             <OutlinedInput
                                 error={!!passwordError}
                                 id="password"
@@ -139,7 +158,7 @@ function LoginForm({ setVerify, setEmailVerify }) {
                                         </IconButton>
                                     </InputAdornment>
                                 }
-                                label="Password"
+                                label="Mật khẩu"
                             />
                             {
                                 passwordError && (
@@ -151,16 +170,16 @@ function LoginForm({ setVerify, setEmailVerify }) {
                         </FormControl>
                     </Box>
                     <Box sx={{ width: "100%", textAlign: "end", marginTop: "15px" }}>
-                        <Link to={PAGES.FORGOTPASSWORD} style={{ color: "#666cff" }}>Forgot Password?</Link>
+                        <Link to={PAGES.ROOT + PAGES.FORGOTPASSWORD} style={{ color: "#666cff" }}>Quên mật khẩu?</Link>
                     </Box>
                     <LoadingButton variant='contained' sx={{ width: "100%", marginTop: "20px" }} onClick={() => setLoading(true)}
                         loading={loading} loadingIndicator="Sending..."
                     >
-                        Sign In
+                        Đăng nhập
                     </LoadingButton>
 
-                    <Typography sx={{ textAlign: "center", mt: "20px" }}>New on our platform? <Link to={PAGES.REGISTER} style={{ color: "#666cff" }}>Create an account</Link></Typography>
-                    <Divider sx={{ mt: "15px" }}>or</Divider>
+                    <Typography sx={{ textAlign: "center", mt: "20px" }}>Bạn chưa có tài khoản? <Link to={PAGES.ROOT + PAGES.REGISTER} style={{ color: "#666cff" }}>Tạo tài khoản mới</Link></Typography>
+                    <Divider sx={{ mt: "15px" }}>hoặc</Divider>
                     <GoogleLogin />
                 </CardContent>
             </Card>

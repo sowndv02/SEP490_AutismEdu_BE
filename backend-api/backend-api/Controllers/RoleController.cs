@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Identity;
@@ -96,7 +97,7 @@ namespace backend_api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateRoleAsync(RoleDTO roleDTO)
+        public async Task<ActionResult<APIResponse>> CreateRoleAsync(RoleCreateDTO roleDTO)
         {
             try
             {

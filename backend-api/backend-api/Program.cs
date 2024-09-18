@@ -40,7 +40,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins(SD.URL_FE) // Replace with your frontend URL
+            builder.WithOrigins(SD.URL_FE)
                    .AllowAnyHeader()
                    .AllowAnyMethod()
                    .AllowCredentials();
@@ -207,17 +207,17 @@ app.UseHttpsRedirection();
 app.UseResponseCaching();
 
 // Add cache for response
-app.Use(async (context, next) =>
-{
-    context.Response.GetTypedHeaders().CacheControl =
-    new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
-    {
-        Public = true,
-        MaxAge = TimeSpan.FromSeconds(10)
-    };
-    context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] = new string[] { "Accept-Encoding" };
-    await next();
-});
+//app.Use(async (context, next) =>
+//{
+//    context.Response.GetTypedHeaders().CacheControl =
+//    new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
+//    {
+//        Public = true,
+//        MaxAge = TimeSpan.FromSeconds(10)
+//    };
+//    context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] = new string[] { "Accept-Encoding" };
+//    await next();
+//});
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -245,9 +245,9 @@ void ApplyMigration()
                 _db.Database.Migrate();
                 Console.WriteLine("Migrations applied successfully.");
             }
-			
-			// Seed the database if it’s empty
-			_db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
+
+            // Seed the database if it’s empty
+            _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
         }
     }
     catch (Exception ex)

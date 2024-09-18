@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +41,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 Expression<Func<ApplicationClaim, bool>>? filter = u => true;
+                Expression<Func<ApplicationClaim, bool>> defaultFilter = u => true;
 
                 if (!string.IsNullOrEmpty(searchType))
                 {
@@ -62,7 +64,7 @@ namespace backend_api.Controllers.v1
                             break;
                     }
                 }
-
+                int totalClaim = 0;
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     Expression<Func<ApplicationClaim, bool>> searchFilter = u => u.ClaimValue.ToLower().Contains(searchValue.ToLower());
@@ -81,9 +83,9 @@ namespace backend_api.Controllers.v1
                 {
                     userClaims = await _userRepository.GetClaimByUserIdAsync(userId);
                 }
-                List<ApplicationClaim> list = await _claimRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, userClaims: userClaims);
-
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = _claimRepository.GetTotalClaim() };
+                var (total, list) = await _claimRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, userClaims: userClaims);
+                List<ApplicationClaim> claims = list;
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = total };
                 var result = _mapper.Map<List<ClaimDTO>>(list);
                 foreach (var claim in result)
                 {
@@ -172,13 +174,13 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] ClaimDTO claimDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] ClaimCreateDTO claimDTO)
         {
             try
             {
                 if (claimDTO == null) return BadRequest(claimDTO);
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
-                model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == null ? claimDTO.UserId : User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var claimExist = await _claimRepository.GetAsync(x => x.ClaimType == claimDTO.ClaimType && x.ClaimValue == claimDTO.ClaimValue, false);
                 if (claimExist != null)
                 {
@@ -189,6 +191,8 @@ namespace backend_api.Controllers.v1
                 }
                 model.ClaimValue = _formatString.FormatStringUpperCaseFirstChar(model.ClaimValue);
                 model.ClaimType = _formatString.FormatStringUpperCaseFirstChar(model.ClaimType);
+                model.DefaultClaimValue = _formatString.FormatStringUpperCaseFirstChar(model.ClaimValue);
+                model.DefaultClaimType = _formatString.FormatStringUpperCaseFirstChar(model.ClaimType);
                 model.CreatedDate = DateTime.Now;
                 await _claimRepository.CreateAsync(model);
                 _response.Result = _mapper.Map<ClaimDTO>(model);

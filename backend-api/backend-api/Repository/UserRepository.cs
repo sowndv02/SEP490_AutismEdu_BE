@@ -224,7 +224,7 @@ namespace backend_api.Repository
                 {
                     throw new ArgumentException("User not found");
                 }
-                var userClaims = _context.UserClaims.Where(c => userClaimIds.Contains(c.Id)).ToList();
+                var userClaims = _context.ApplicationClaims.Where(c => userClaimIds.Contains(c.Id)).ToList();
                 var result = await _userManager.RemoveClaimsAsync(user, userClaims.Select(x => new Claim(x.ClaimType, x.ClaimValue)));
                 if (!result.Succeeded) return false;
                 return true;
@@ -326,6 +326,7 @@ namespace backend_api.Repository
             ApplicationUser user = new()
             {
                 UserName = registerationRequestDTO.Email,
+                FullName = registerationRequestDTO.FullName,
                 Email = registerationRequestDTO.Email,
                 NormalizedEmail = registerationRequestDTO.Email,
                 PasswordHash = registerationRequestDTO.Password,
@@ -336,12 +337,12 @@ namespace backend_api.Repository
                 var result = await _userManager.CreateAsync(user, registerationRequestDTO.Password);
                 if (result.Succeeded)
                 {
-                    if (!_roleManager.RoleExistsAsync(registerationRequestDTO.Role).GetAwaiter().GetResult())
+                    if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(registerationRequestDTO.Role));
+                        await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
                     }
 
-                    await _userManager.AddToRoleAsync(user, registerationRequestDTO.Role);
+                    await _userManager.AddToRoleAsync(user, SD.USER_ROLE);
                     ApplicationUser objReturn = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email == user.Email);
                     if (objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
                         objReturn.IsLockedOut = false;
@@ -694,9 +695,10 @@ namespace backend_api.Repository
             if (result.Succeeded)
             {
                 var roleIds = user.RoleIds;
+                await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
                 if (roleIds != null && roleIds.Count != 0)
                 {
-                    foreach(var roleId in roleIds)
+                    foreach (var roleId in roleIds)
                     {
                         user.Role = _roleManager.FindByIdAsync(roleId).GetAwaiter().GetResult().Name;
                         if (user.Role != null)
@@ -709,7 +711,8 @@ namespace backend_api.Repository
                             if (role_user != null && role_user == SD.USER_ROLE)
                             {
                                 continue;
-                            }else
+                            }
+                            else
                             {
                                 if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
                                 {
@@ -717,7 +720,7 @@ namespace backend_api.Repository
                                 }
                                 await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
                             }
-                            
+
                         }
                     }
                 }

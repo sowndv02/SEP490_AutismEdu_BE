@@ -1,4 +1,5 @@
 const PAGES = {
+  ROOT: '/autismedu',
   HOME: '/',
   LOGIN: '/login',
   DASHBOARD: '/admin/dashboard',
@@ -8,7 +9,8 @@ const PAGES = {
   REGISTER: '/register',
   RESETPASSWORD: '/reset-password',
   CONFIRMREGISTER: '/confirm-register',
-  LISTCENTER:'/list-center',
+  LISTCENTER: '/list-center',
+  CENTERPROFILE:'/center/:id',
   LISTTUTOR:'/list-tutor',
   TUTORPROFILE:'/tutor-profile'
 };
