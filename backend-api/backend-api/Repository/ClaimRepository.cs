@@ -44,7 +44,7 @@ namespace backend_api.Repository
             }
         }
 
-        public async Task<List<ApplicationClaim>> GetAllAsync(Expression<Func<ApplicationClaim, bool>>? filter = null, string? includeProperties = null,
+        public async Task<(int TotalCount, List<ApplicationClaim> list)> GetAllAsync(Expression<Func<ApplicationClaim, bool>>? filter = null, string? includeProperties = null,
             int pageSize = 10, int pageNumber = 1, List<UserClaim> userClaims = null)
         {
             IQueryable<ApplicationClaim> query = _context.ApplicationClaims;
@@ -64,7 +64,7 @@ namespace backend_api.Repository
             {
                 result = result.Where(claim => !userClaims.Any(uc => uc.ClaimType == claim.ClaimType && uc.ClaimValue == claim.ClaimValue)).ToList();
             }
-            return result.Skip(pageSize * (pageNumber - 1)).Take(pageSize).ToList();
+            return (result.Count, result.Skip(pageSize * (pageNumber - 1)).Take(pageSize).ToList());
         }
     }
 }
