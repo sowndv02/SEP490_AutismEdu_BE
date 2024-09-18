@@ -12,6 +12,6 @@ namespace backend_api.Models.DTOs
         [PasswordPropertyText]
         public string Password { get; set; }
         [Required]
-        public string Role { get; set; } = SD.USER_ROLE;
+        public string FullName { get; set; }
     }
 }
