@@ -695,7 +695,15 @@ namespace backend_api.Repository
             if (result.Succeeded)
             {
                 var roleIds = user.RoleIds;
-                await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
+                if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
+                }
+                var resultAddRole = await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
+                if (resultAddRole.Succeeded)
+                {
+                    Console.WriteLine("Add user to role user");
+                }
                 if (roleIds != null && roleIds.Count != 0)
                 {
                     foreach (var roleId in roleIds)
@@ -724,25 +732,17 @@ namespace backend_api.Repository
                         }
                     }
                 }
-                else
-                {
-                    if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
-                    }
-                    await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
-                }
                 var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
 
                 if (objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
                     objReturn.IsLockedOut = false;
                 else objReturn.IsLockedOut = true;
 
-                var user_role = await _userManager.GetRolesAsync(user) as List<string>;
+                var user_role = await _userManager.GetRolesAsync(objReturn) as List<string>;
                 var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
                 var claimString = user_claim.Select(x => $"{x.Type}-{x.Value}").ToList();
-                user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
-                user.Role = String.Join(",", user_role);
+                objReturn.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
+                objReturn.Role = String.Join(",", user_role);
                 return objReturn;
             }
             else

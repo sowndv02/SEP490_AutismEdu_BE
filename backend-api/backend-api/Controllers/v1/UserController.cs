@@ -226,7 +226,7 @@ namespace backend_api.Controllers.v1
                 }
                 else
                 {
-                    _response.Result = user;
+                    _response.Result = _mapper.Map<ApplicationUserDTO>(user);
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
