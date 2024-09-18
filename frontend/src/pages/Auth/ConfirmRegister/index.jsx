@@ -15,11 +15,13 @@ function ConfirmRegister() {
     }, [])
     const handleSubmit = async () => {
         try {
+            console.log(userId, code, security);
             await service.AuthenticationAPI.confirmEmail({
                 code,
                 security,
                 userId
             }, (res) => {
+                console.log(res);
                 enqueueSnackbar("Xác thực tài khoản thành công!", { variant: "success" });
                 nav(PAGES.ROOT + PAGES.LOGIN)
             }, (err) => {

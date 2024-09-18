@@ -9,6 +9,7 @@ const PAGES = {
   REGISTER: '/register',
   RESETPASSWORD: '/reset-password',
   CONFIRMREGISTER: '/confirm-register',
+  LISTCENTER: '/list-center',
   CENTERPROFILE:'/center/:id',
   LISTTUTOR:'/list-tutor',
 };
