@@ -83,10 +83,9 @@ namespace backend_api.Controllers.v1
                 {
                     userClaims = await _userRepository.GetClaimByUserIdAsync(userId);
                 }
-                List<ApplicationClaim> list = await _claimRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, userClaims: userClaims);
-                bool isFilterUnmodified = filter.ToString() == defaultFilter.ToString();
-                if (isFilterUnmodified) totalClaim = _claimRepository.GetTotalClaim(); else totalClaim = list.Count;
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalClaim };
+                var (total, list) = await _claimRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, userClaims: userClaims);
+                List<ApplicationClaim> claims = list;
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = total };
                 var result = _mapper.Map<List<ClaimDTO>>(list);
                 foreach (var claim in result)
                 {
