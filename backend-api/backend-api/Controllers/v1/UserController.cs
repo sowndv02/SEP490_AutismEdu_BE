@@ -216,15 +216,15 @@ namespace backend_api.Controllers.v1
                 model.LockoutEnabled = true;
                 model.IsLockedOut = false;
                 model.EmailConfirmed = true;
-                await _userRepository.CreateAsync(model, createDTO.Password);
-                _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                var user = await _userRepository.CreateAsync(model, createDTO.Password);
+                _response.Result = user;
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.ErrorMessages = new List<string>() { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
