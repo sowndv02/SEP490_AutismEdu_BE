@@ -21,6 +21,8 @@ function RegisterForm({ setVerify, setEmailVerify }) {
     const [emailError, setEmailError] = useState(null);
     const [passwordConfirmError, setPasswordConfirmError] = useState(null);
     const [passwordError, setPasswordError] = useState(null);
+    const [fullNameError, setFullNameError] = useState(null);
+    const [fullName, setFullName] = useState(null);
     const [email, setEmail] = useState()
     const [password, setPassword] = useState("");
     const [cfPassword, setCfPassword] = useState("");

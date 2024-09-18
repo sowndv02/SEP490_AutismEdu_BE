@@ -85,7 +85,7 @@ function UserContent() {
                             padding: "0",
                             width: "300px"
                         }} size='small' />
-                    <UserCreation />
+                    <UserCreation setUsers={setUsers} />
                 </Box>
                 <Box>
                     <UserTable users={users} pagination={pagination} setPagination={setPagination} setUsers={setUsers} />
