@@ -190,7 +190,7 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] UserCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] UserCreateDTO createDTO)
         {
             try
             {
