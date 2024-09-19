@@ -193,7 +193,7 @@ app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "SEP490");
-    options.RoutePrefix = string.Empty;
+    //options.RoutePrefix = string.Empty;
 });
 app.UseCors("AllowSpecificOrigin");
 
@@ -221,6 +221,11 @@ app.Use(async (context, next) =>
 
 app.UseAuthentication();
 app.UseAuthorization();
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 app.MapControllers();
 ApplyMigration();
 app.Run();

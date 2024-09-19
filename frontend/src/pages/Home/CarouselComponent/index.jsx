@@ -19,7 +19,15 @@ function CarouselComponent() {
 function Item({ src }) {
     return (
         <Box sx={{
+<<<<<<< HEAD
             width: "100vw", height: "100vh", backgroundImage: `url('${src}')`,
+=======
+            width: "100vw", height: {
+                xs: "50vh",
+                md: "70vh",
+                lg: "100vh"
+            }, backgroundImage: `url('${src}')`,
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
             backgroundSize: "cover",
             backgroundRepeat: "no-repeat"
         }}>

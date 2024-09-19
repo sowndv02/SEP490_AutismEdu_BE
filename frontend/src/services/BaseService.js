@@ -26,11 +26,14 @@ const logError = (e, error) => {
         return;
       }
 
+<<<<<<< HEAD
       // const errors = e.response.data.errors
       //   ? Object.fromEntries(
       //     Object.entries(e.response.data.errors).map(([key, value]) => [key, value[0]])
       //   )
       //   : [];
+=======
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
       error({
         code: e.response.data.statusCode,
         error: e.response.data.errorMessages,

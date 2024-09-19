@@ -12,10 +12,23 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import Person3OutlinedIcon from '@mui/icons-material/Person3Outlined';
 import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+<<<<<<< HEAD
 import ButtonComponent from '~/Components/ButtonComponent';
 import Collapse from '@mui/material/Collapse';
 
 function Index() {
+=======
+import ButtonComponent from '~/components/ButtonComponent';
+import Collapse from '@mui/material/Collapse';
+import FormSearch from './FormSearch/FormSearch';
+
+function Index() {
+    const [searchCriteria, setSearchCriteria] = useState({
+        searchValue: "",
+        address: "",
+        selectedRating: ""
+    });
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const [selected, setSelected] = useState('grid');
     const [searchValue, setSearchValue] = useState('');
     const arrCenter = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -25,9 +38,13 @@ function Index() {
     const handleFilterClick = () => {
         setShowFilters(!showFilters);
     };
+<<<<<<< HEAD
     const handleSearchChange = (event) => {
         setSearchValue(event.target.value);
     };
+=======
+
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const handleSearch = () => {
         if (searchValue.trim()) {
             console.log('Searching for:', searchValue);
@@ -47,6 +64,14 @@ function Index() {
     const handleShowMore = () => {
         setVisibleCards((prevVisible) => prevVisible + 6);
     };
+<<<<<<< HEAD
+=======
+
+    // Khi người dùng chọn đánh giá
+    const handleRatingChange = (event) => {
+        setSelectedRating(event.target.value);
+    };
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const breadcrumbs = [
         <Link underline="hover" key="1" color="inherit" href="/" onClick={handleClick}>
             Trang chủ
@@ -55,6 +80,7 @@ function Index() {
             Danh sách trung tâm
         </Typography>,
     ];
+<<<<<<< HEAD
 
     const [region, setRegion] = useState('');
     const [ward, setWard] = useState('');
@@ -265,6 +291,14 @@ function Index() {
 
                 <Grid item xs={2} />
 
+=======
+    return (
+        <Box sx={{ height: 'auto' }}>
+            <FormSearch selected={selected} setSelected={setSelected}
+                showFilters={showFilters} handleSearch={handleSearch} handleFilterClick={handleFilterClick} searchCriteria={searchCriteria} setSearchCriteria={setSearchCriteria} />
+            <Grid container sx={{ height: 'auto', position: "relative", top: '-180px' }}>
+                <Grid item xs={2} />
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                 <Grid item xs={8} sx={{ height: 'auto' }} mt={5}>
                     <Grid container sx={{ height: 'auto' }}>
                         <Grid item>

@@ -326,7 +326,10 @@ namespace backend_api.Repository
             ApplicationUser user = new()
             {
                 UserName = registerationRequestDTO.Email,
+<<<<<<< HEAD
                 FullName = registerationRequestDTO.FullName,
+=======
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                 Email = registerationRequestDTO.Email,
                 NormalizedEmail = registerationRequestDTO.Email,
                 PasswordHash = registerationRequestDTO.Password,
@@ -342,7 +345,11 @@ namespace backend_api.Repository
                         await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
                     }
 
+<<<<<<< HEAD
                     await _userManager.AddToRoleAsync(user, SD.USER_ROLE);
+=======
+                    await _userManager.AddToRoleAsync(user, registerationRequestDTO.Role);
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     ApplicationUser objReturn = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email == user.Email);
                     if (objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
                         objReturn.IsLockedOut = false;

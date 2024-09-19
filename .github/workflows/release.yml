@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 name: api-ci
+=======
+name: sep-api-cd
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 
 on:
   push:
@@ -12,10 +16,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+<<<<<<< HEAD
 
       - name: Checkout code
         uses: actions/checkout@v4.1.1
         
+=======
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v4.0.0
         with:
@@ -25,7 +35,11 @@ jobs:
         run: dotnet restore ./backend-api/backend-api/backend-api.csproj
 
       - name: Build the project
+<<<<<<< HEAD
         run: dotnet build ./backend-api/backend-api/backend-api.csproj -c Release
+=======
+        run: dotnet build ./backend-api/backend-api/backend-api.csproj --no-restore -c Release
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 
       - name: Publish the project
         run: dotnet publish ./backend-api/backend-api/backend-api.csproj -o ${{ env.DOTNET_ROOT }}/api
@@ -36,7 +50,11 @@ jobs:
           name: api-artifact
           path: ${{ env.DOTNET_ROOT }}/api
 
+<<<<<<< HEAD
   deploy-dev:
+=======
+  deploy-prod:
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -48,5 +66,9 @@ jobs:
       - name: Azure WebApp
         uses: Azure/webapps-deploy@v3.0.0
         with:
+<<<<<<< HEAD
           app-name: 'sep490-g50'
+=======
+          app-name: 'backend-api20240823212838'
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}

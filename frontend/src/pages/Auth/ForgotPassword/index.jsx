@@ -12,6 +12,10 @@ import service from '~/plugins/services'
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useSnackbar } from 'notistack';
 import checkValid from '~/utils/auth_form_verify';
+<<<<<<< HEAD
+=======
+import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 function ForgotPassword() {
     const [emailError, setEmailError] = useState(null);
     const [submited, setSubmited] = useState(false);
@@ -40,7 +44,11 @@ function ForgotPassword() {
                 setSubmited(true);
             }, (err) => {
                 console.log(err);
+<<<<<<< HEAD
                 enqueueSnackbar("Email is not valid", { variant: "error" });
+=======
+                enqueueSnackbar("Email không hợp lệ", { variant: "error" });
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                 setLoading(false)
             })
             setLoading(false)
@@ -56,6 +64,7 @@ function ForgotPassword() {
             }}>
                 <CardContent>
                     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
+<<<<<<< HEAD
                         <SvgIcon component={TrelloIcon} inheritViewBox sx={{ color: 'blue' }} />
                         <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
                             My App
@@ -63,6 +72,15 @@ function ForgotPassword() {
                     </Box>
                     <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Forgot Password? 🔒</Typography>
                     <Typography sx={{ mt: "10px" }}>Enter your email and we&#8216;ll send you instructions to reset your password</Typography>
+=======
+                    <EscalatorWarningIcon sx={{ color: "#394ef4", fontSize: "40px" }} />
+                        <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
+                            AutismEdu
+                        </Typography>
+                    </Box>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Quên Mật Khẩu? 🔒</Typography>
+                    <Typography sx={{ mt: "10px" }}>Nhập email của bạn và chúng tôi sẽ gửi cho bạn đường dẫn để đổi mật khẩu</Typography>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     {
                         submited === false && (
                             <>
@@ -94,7 +112,11 @@ function ForgotPassword() {
                                             setLoading(true);
                                         }
                                     }}>
+<<<<<<< HEAD
                                     Send Reset Link
+=======
+                                    Gửi
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                                 </LoadingButton>
                             </>
                         )
@@ -107,17 +129,29 @@ function ForgotPassword() {
                                     onClick={() => {
                                         setLoading(true);
                                     }}>
+<<<<<<< HEAD
                                     Resend
                                 </LoadingButton>
                                 <Button onClick={() => {
                                     setSubmited(false)
                                 }}>Change email</Button>
+=======
+                                    Gửi lại
+                                </LoadingButton>
+                                <Button onClick={() => {
+                                    setSubmited(false)
+                                }}>Đổi email</Button>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                             </>
                         )
                     }
                     <Typography textAlign={'center'} mt="20px">
                         <Link to={PAGES.LOGIN} style={{ color: "#666cff" }}>
+<<<<<<< HEAD
                             <ArrowBackIosNewIcon sx={{ fontSize: "12px" }} /> Back to login
+=======
+                            <ArrowBackIosNewIcon sx={{ fontSize: "12px" }} /> Trở lại đăng nhập
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                         </Link>
                     </Typography>
                 </CardContent>

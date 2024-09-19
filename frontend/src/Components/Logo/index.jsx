@@ -1,7 +1,12 @@
+<<<<<<< HEAD
 import { Stack, Typography } from '@mui/material'
 import React from 'react'
 import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
 import { AppBar, Tabs, Tab } from '@mui/material';
+=======
+import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
+import { Stack, Typography } from '@mui/material';
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 function Logo({ sizeLogo, sizeName }) {
     return (
         <Stack direction="row" sx={{ alignItems: "center" }}>

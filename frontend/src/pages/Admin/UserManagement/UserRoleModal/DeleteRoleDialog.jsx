@@ -5,13 +5,24 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
 import * as React from 'react';
+<<<<<<< HEAD
 function DeleteRoleDialog() {
+=======
+function DeleteRoleDialog({ handleRemoveRole, id }) {
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const [open, setOpen] = React.useState(false);
 
     const handleClickOpen = () => {
         setOpen(true);
     };
 
+<<<<<<< HEAD
+=======
+    const handleSubmit = () => {
+        handleRemoveRole(id);
+        handleClose();
+    }
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const handleClose = () => {
         setOpen(false);
     };
@@ -30,7 +41,11 @@ function DeleteRoleDialog() {
                     {"Do you want remove this claim"}
                 </DialogTitle>
                 <DialogActions>
+<<<<<<< HEAD
                     <Button onClick={handleClose}>Delete</Button>
+=======
+                    <Button onClick={handleSubmit}>Delete</Button>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     <Button onClick={handleClose} autoFocus>
                         Cancle
                     </Button>

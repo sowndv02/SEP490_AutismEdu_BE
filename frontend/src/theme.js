@@ -1,7 +1,13 @@
 import { createTheme } from '@mui/material/styles';
 import { red } from '@mui/material/colors';
+<<<<<<< HEAD
 
 // Create a theme instance.
+=======
+import './assets/css/EuclidCircularARegular.ttf'
+// Create a theme instance.
+const labelFontSize = "12px";
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 const theme = createTheme({
     myapp: {
         adminHeaderHeight: '70px',
@@ -22,6 +28,7 @@ const theme = createTheme({
             secondary: '#3b4056'
         }
     },
+<<<<<<< HEAD
 
     typography: {
         h1: {
@@ -46,6 +53,54 @@ const theme = createTheme({
         },
         h6: {
             fontWeight: 'bold',
+=======
+    breakpoints: {
+        values: {
+            xs: 0,
+            sm: 700,
+            md: 900,
+            lg: 1200,
+            xl: 1536,
+        },
+    },
+    typography: {
+        fontFamily: 'Euclid Circular, Arial, sans-serif',
+        fontSize: 14,
+        button: {
+            fontFamily: 'Euclid Circular',
+            textTransform: 'none', // Loại bỏ in hoa mặc định
+        },
+        h2: {
+            fontSize: {
+                xs: "30px",
+                md: "44px"
+            },
+            fontWeight: '700'
+        },
+        h3: {
+            fontSize: {
+                xs: "26px",
+                md: "40px"
+            },
+            fontWeight: '700'
+        },
+        h4: {
+            fontSize: "30px",
+            fontWeight: '700',
+            color: '#192335'
+        },
+        h5: {
+            fontWeight: '700',
+            color: '#192335'
+        },
+        h6: {
+            fontSize: "20px",
+            fontWeight: '700',
+            color: '#192335'
+        },
+        'h1, h2, h3, h4, h5, h6': {
+            fontFamily: 'Euclid Circular',
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
             color: '#192335'
         },
     },
@@ -68,7 +123,11 @@ const theme = createTheme({
                     textTransform: "none"
                 }
             }
+<<<<<<< HEAD
         },
+=======
+        }
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     }
 });
 

@@ -195,6 +195,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 if (createDTO == null) return BadRequest(createDTO);
+<<<<<<< HEAD
                 var currentUser = await _userRepository.GetUserByEmailAsync(createDTO.Email);
                 if (currentUser != null)
                 {
@@ -203,6 +204,9 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string>() { "Email is exist!" };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
+=======
+
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
                 model.CreatedDate = DateTime.Now;
                 var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
@@ -216,6 +220,7 @@ namespace backend_api.Controllers.v1
                 model.LockoutEnabled = true;
                 model.IsLockedOut = false;
                 model.EmailConfirmed = true;
+<<<<<<< HEAD
                 var user = await _userRepository.CreateAsync(model, createDTO.Password);
                 if (user == null)
                 {
@@ -230,6 +235,12 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
+=======
+                await _userRepository.CreateAsync(model, createDTO.Password);
+                _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                _response.StatusCode = HttpStatusCode.Created;
+                return Ok(_response);
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
             }
             catch (Exception ex)
             {

@@ -19,6 +19,10 @@
     "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.2.7",
     "axios": "^1.7.4",
+<<<<<<< HEAD
+=======
+    "dayjs": "^1.11.13",
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     "dotenv": "^16.4.5",
     "formik": "^2.4.6",
     "frontend": "file:",

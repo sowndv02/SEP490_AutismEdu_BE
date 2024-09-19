@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Avatar, Box, IconButton, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LockPersonIcon from '@mui/icons-material/LockPerson';
@@ -6,6 +7,83 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 function UserTable() {
 
     const arr = [1, 2, 3, 4, 5, 6]
+=======
+import { Avatar, Box, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import { enqueueSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
+import LoadingComponent from '~/components/LoadingComponent';
+import TablePagging from '~/components/TablePagging';
+import services from '~/plugins/services';
+import UserProfileModal from '../UserProfileModal';
+import ActionMenu from './ActionMenu';
+import ConfirmLockDialog from './ConfirmLockDialog';
+function UserTable({ users, setPagination, setUsers, pagination }) {
+    const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1)
+    const handleChangeUserStatus = async (id, status) => {
+        setLoading(true);
+        if (status) {
+            await services.UserManagementAPI.unLockUsers(id, (res) => {
+                const updatedUser = users.map((u) => {
+                    if (u.id !== id) return u;
+                    else {
+                        u.isLockedOut = false;
+                        return u;
+                    }
+                })
+                setUsers(updatedUser);
+                enqueueSnackbar("Unlock user successfully!", { variant: "success" });
+            }, (err) => {
+                enqueueSnackbar("Unlock user failed!", { variant: "error" });
+            })
+        } else {
+            await services.UserManagementAPI.lockUsers(id, (res) => {
+                const updatedUser = users.map((u) => {
+                    if (u.id !== id) return u;
+                    else {
+                        u.isLockedOut = true;
+                        return u;
+                    }
+                })
+                setUsers(updatedUser);
+                enqueueSnackbar("Lock user successfully!", { variant: "success" });
+            }, (err) => {
+                console.log(err);
+                enqueueSnackbar("Lock user failed!", { variant: "error" });
+            })
+        }
+        setLoading(false);
+    }
+
+    useEffect(() => {
+        handleGetData();
+    }, [currentPage]);
+    const handleGetData = async () => {
+        try {
+            setLoading(true);
+            console.log(currentPage);
+            await services.UserManagementAPI.getUsers((res) => {
+                const updatedResult = res.result.map((r) => {
+                    let splitedRole = r.role.split(",");
+                    r.role = splitedRole;
+                    return r;
+                })
+                console.log(res);
+                setUsers(updatedResult);
+                res.pagination.currentSize = updatedResult.length
+                setPagination(res.pagination);
+                setLoading(false);
+            }, (err) => {
+                setLoading(false);
+            }, {
+                pageNumber: currentPage || 1
+            });
+        } catch (error) {
+            console.log(error);
+            setLoading(false);
+        }
+    }
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     return (
         <TableContainer component={Paper} sx={{ mt: "20px" }}>
             <Table>
@@ -20,6 +98,7 @@ function UserTable() {
                 </TableHead>
                 <TableBody>
                     {
+<<<<<<< HEAD
                         arr.map((a) => {
                             return (
                                 <TableRow key={a}>
@@ -30,10 +109,23 @@ function UserTable() {
                                             <Box>
                                                 <Typography sx={{ fontWeight: "bold" }}>Khai dao</Typography>
                                                 <Typography sx={{ fontSize: "12px" }}>daoquangkhai2002@gmail.com</Typography>
+=======
+                        users?.map((user, index) => {
+                            return (
+                                <TableRow key={user.id}>
+                                    <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: "flex", gap: 1 }}>
+                                            <Avatar alt="Remy Sharp" src={user.imageLocalUrl} />
+                                            <Box>
+                                                <Typography sx={{ fontWeight: "bold" }}>{user.fullName}</Typography>
+                                                <Typography sx={{ fontSize: "12px" }}>{user.email}</Typography>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                                             </Box>
                                         </Box>
                                     </TableCell>
                                     <TableCell>
+<<<<<<< HEAD
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, fontSize: "16px" }}>
                                             <AdminPanelSettingsIcon sx={{ color: "#ff4d49" }} />
                                             Admin
@@ -49,6 +141,18 @@ function UserTable() {
                                                 <VisibilityIcon />
                                             </IconButton>
                                             <ActionMenu />
+=======
+                                        {user.role.join(", ")}
+                                    </TableCell>
+                                    <TableCell>{user.isLockedOut ? "True" : "False"}</TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                                            <ConfirmLockDialog isLock={user.isLockedOut} name={user.fullName} id={user.id} handleChangeUserStatus={handleChangeUserStatus} />
+                                            <IconButton>
+                                                <UserProfileModal currentUser={user} />
+                                            </IconButton>
+                                            <ActionMenu currentUser={user} />
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                                         </Box>
                                     </TableCell>
                                 </TableRow>
@@ -56,11 +160,17 @@ function UserTable() {
                         })
                     }
                 </TableBody>
+<<<<<<< HEAD
             </Table>
             <Box sx={{ p: "10px", display: "flex", justifyContent: "space-between" }}>
                 <Typography>Showing 1 to 10 of 47 enteries</Typography>
                 <Pagination count={10} color="primary" />
             </Box>
+=======
+                <LoadingComponent open={loading} setLoading={setLoading} />
+            </Table>
+            <TablePagging pagination={pagination} setPagination={setPagination} setCurrentPage={setCurrentPage} />
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
         </TableContainer >
     )
 }

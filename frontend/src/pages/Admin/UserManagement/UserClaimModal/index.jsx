@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 import { Box, Button, FormControl, IconButton, InputLabel, MenuItem, Modal, Select, Typography } from '@mui/material';
 import React, { useState } from 'react'
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteClaimDialog from './DeleteClaimDialog';
+=======
+import { Box, MenuItem, Modal, Tab, Tabs, Typography } from '@mui/material';
+import { useState } from 'react';
+import ClaimTable from './ClaimTable';
+import MyClaim from './MyClaim';
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 const style = {
     position: 'absolute',
     top: '50%',
@@ -12,6 +19,7 @@ const style = {
     boxShadow: 24,
     p: 4,
 };
+<<<<<<< HEAD
 function UserClaimModal({ handleCloseMenu }) {
     const [open, setOpen] = useState(false);
     const [claim, setClaim] = useState('');
@@ -52,6 +60,16 @@ function UserClaimModal({ handleCloseMenu }) {
             value: "User information"
         },
     ]
+=======
+function UserClaimModal({ handleCloseMenu, currentUser }) {
+    const [open, setOpen] = useState(false);
+    const [tab, setTab] = useState(0);
+    const [claims, setClaims] = useState(null);
+    const [pagination, setPagination] = useState(null);
+    const [selected, setSelected] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1)
+
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const handleOpen = () => {
         setOpen(true)
     };
@@ -59,12 +77,22 @@ function UserClaimModal({ handleCloseMenu }) {
         handleCloseMenu()
         setOpen(false);
     }
+<<<<<<< HEAD
     const handleChange = (event) => {
         setClaim(event.target.value);
     };
     return (
         <div>
             <MenuItem onClick={handleOpen}>Manage Claim</MenuItem>
+=======
+
+    const handleChangeTab = (event, newValue) => {
+        setTab(newValue);
+    };
+    return (
+        <div>
+            <MenuItem onClick={() => { handleOpen(); }}>Manage Claim</MenuItem>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
             <Modal
                 open={open}
                 onClose={handleClose}
@@ -73,6 +101,7 @@ function UserClaimModal({ handleCloseMenu }) {
             >
                 <Box sx={style} >
                     <Typography id="modal-modal-title" variant="h6" component="h2">
+<<<<<<< HEAD
                         Claim of Khai Dao
                     </Typography>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }} mt="20px">
@@ -116,6 +145,26 @@ function UserClaimModal({ handleCloseMenu }) {
                             })
                         }
                     </Box>
+=======
+                        Claim of {currentUser.fullName}
+                    </Typography>
+                    <Tabs value={tab} onChange={handleChangeTab} aria-label="basic tabs example">
+                        <Tab label={`${currentUser.fullName}'s Claims`} />
+                        <Tab label="Add Claims" />
+                    </Tabs>
+
+                    {
+                        tab === 0 ? <MyClaim currentUser={currentUser} /> : <ClaimTable claims={claims} setClaims={setClaims} pagination={pagination}
+                            setPagination={setPagination}
+                            userId={currentUser.id}
+                            selected={selected}
+                            setSelected={setSelected}
+                            setTab={setTab}
+                            currentPage={currentPage}
+                            setCurrentPage={setCurrentPage}
+                        />
+                    }
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                 </Box>
             </Modal>
         </div>

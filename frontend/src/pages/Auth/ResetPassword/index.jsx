@@ -1,20 +1,35 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+<<<<<<< HEAD
+=======
+import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { LoadingButton } from '@mui/lab';
+<<<<<<< HEAD
 import { Box, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput, SvgIcon } from '@mui/material';
+=======
+import { Box, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput } from '@mui/material';
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { enqueueSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import TrelloIcon from '~/assets/trello.svg?react';
 import HtmlTooltip from '~/components/HtmlTooltip';
 import service from '~/plugins/services';
 import PAGES from '~/utils/pages';
 import checkValid from '~/utils/auth_form_verify';
+=======
+import HtmlTooltip from '~/components/HtmlTooltip';
+import service from '~/plugins/services';
+import checkValid from '~/utils/auth_form_verify';
+import PAGES from '~/utils/pages';
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 function ResetPassword() {
     const [showPassword, setShowPassword] = useState(false);
     const [passwordError, setPasswordError] = useState(null);
@@ -44,6 +59,7 @@ function ResetPassword() {
     };
     const handleClickShowPassword = () => setShowPassword((show) => !show);
 
+<<<<<<< HEAD
     const checkValid = (value, field) => {
         const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%@]).+$/
         if (field === 1) {
@@ -80,6 +96,8 @@ function ResetPassword() {
             }
         }
     }
+=======
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const handleSubmit = async () => {
         if (passwordError !== null || passwordConfirmError !== null) {
             setLoading(false);
@@ -98,11 +116,19 @@ function ResetPassword() {
                     password,
                     confirmPassword: cfPassword
                 }, (res) => {
+<<<<<<< HEAD
                     enqueueSnackbar("Reset password successfully!", { variant: "success" });
                     nav("/login");
                 }, (err) => {
                     if (err.code === 500) {
                         enqueueSnackbar("Failed to reset password!", { variant: "error" });
+=======
+                    enqueueSnackbar("Đặt lại mật khẩu thành công!", { variant: "success" });
+                    nav(PAGES.ROOT + PAGES.LOGIN);
+                }, (err) => {
+                    if (err.code === 500) {
+                        enqueueSnackbar("Đặt lại mật khẩu thất bại!", { variant: "error" });
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     }
                     else enqueueSnackbar(err.error[0], { variant: "error" });
                 })
@@ -120,12 +146,21 @@ function ResetPassword() {
             }}>
                 <CardContent>
                     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
+<<<<<<< HEAD
                         <SvgIcon component={TrelloIcon} inheritViewBox sx={{ color: 'blue' }} />
                         <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
                             My App
                         </Typography>
                     </Box>
                     <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Reset Password 🔒</Typography>
+=======
+                        <EscalatorWarningIcon sx={{ color: "#394ef4", fontSize: "40px" }} />
+                        <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
+                            AutismEdu
+                        </Typography>
+                    </Box>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Đặt lại mật khẩu 🔒</Typography>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     <Typography sx={{ mt: "10px" }}>Your new password must be different from previously used passwords</Typography>
                     <Box mt="30px">
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
@@ -208,7 +243,11 @@ function ResetPassword() {
                                         </IconButton>
                                     </InputAdornment>
                                 }
+<<<<<<< HEAD
                                 label="Password"
+=======
+                                label="Confirm Password"
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                             />
                             {
                                 passwordConfirmError && (

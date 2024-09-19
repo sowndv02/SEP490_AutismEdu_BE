@@ -9,6 +9,27 @@ const API_CODE = {
   API_007: '/v1/Auth/register',
   API_008: '/v1/Auth/get-token-external',
   API_009: '/v1/test/authorized-access',
+<<<<<<< HEAD
+=======
+
+  //User management
+  API_GET_USERS: '/v1/User',
+  API_LOCK_USERS: '/v1/User/lock/',
+  API_UNLOCK_USERS: '/v1/User/unlock/',
+  API_GET_USER_CLAIMS: '/v1/User/claim/',
+  API_ASSIGN_CLAIMS: '/v1/User/claim/',
+  API_REMOVE_USER_CLAIM: '/v1/User/claim/',
+  API_ASSIGN_ROLES: '/v1/User/role/',
+  API_GET_USER_ROLES: '/v1/User/role/',
+  API_REMOVE_USER_ROLES: '/v1/User/role/',
+  API_CREATE_USER: '/v1/User',
+  API_GET_USER_ID: '/v1/User/',
+  //Claim management
+  API_GET_CLAIM: '/v1/Claim',
+
+  //role management
+  API_GET_ROLE: '/v1/Role',
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 };
 
 export default API_CODE;

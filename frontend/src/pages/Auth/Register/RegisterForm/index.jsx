@@ -9,17 +9,32 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { enqueueSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { Link, useNavigate } from 'react-router-dom';
 import TrelloIcon from '~/assets/trello.svg?react';
 import HtmlTooltip from '~/components/HtmlTooltip';
 import service from '~/plugins/services';
 import PAGES from '~/utils/pages';
 import checkValid from '~/utils/auth_form_verify';
+=======
+import { Link } from 'react-router-dom';
+import TrelloIcon from '~/assets/trello.svg?react';
+import HtmlTooltip from '~/components/HtmlTooltip';
+import service from '~/plugins/services';
+import checkValid from '~/utils/auth_form_verify';
+import PAGES from '~/utils/pages';
+import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 function RegisterForm({ setVerify, setEmailVerify }) {
     const [showPassword, setShowPassword] = useState(false);
     const [emailError, setEmailError] = useState(null);
     const [passwordConfirmError, setPasswordConfirmError] = useState(null);
     const [passwordError, setPasswordError] = useState(null);
+<<<<<<< HEAD
+=======
+    const [fullNameError, setFullNameError] = useState(null);
+    const [fullName, setFullName] = useState(null);
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const [email, setEmail] = useState()
     const [password, setPassword] = useState("");
     const [cfPassword, setCfPassword] = useState("");
@@ -35,6 +50,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
+<<<<<<< HEAD
 
     const nav = useNavigate();
     const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -89,6 +105,10 @@ function RegisterForm({ setVerify, setEmailVerify }) {
             }
         }
     }
+=======
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     useEffect(() => {
         if (loading) {
             handleSubmit();
@@ -111,12 +131,20 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                     password,
                     role: "user"
                 }, (res) => {
+<<<<<<< HEAD
                     enqueueSnackbar("Register Successfully!", { variant: "success" });
+=======
+                    enqueueSnackbar("Đăng ký thành công!", { variant: "success" });
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     setVerify(true);
                     setEmailVerify(email);
                 }, (err) => {
                     if (err.code === 500) {
+<<<<<<< HEAD
                         enqueueSnackbar("Failed to register!", { variant: "error" });
+=======
+                        enqueueSnackbar("Đăng ký thật bại!", { variant: "error" });
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     }
                     else enqueueSnackbar(err.error[0], { variant: "error" });
                 })
@@ -134,6 +162,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
             }}>
                 <CardContent>
                     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
+<<<<<<< HEAD
                         <SvgIcon component={TrelloIcon} inheritViewBox sx={{ color: 'blue' }} />
                         <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
                             My App
@@ -141,6 +170,15 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                     </Box>
                     <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Adventure starts here 🚀</Typography>
                     <Typography sx={{ mt: "10px" }}>Make your app management easy and fun!</Typography>
+=======
+                        <EscalatorWarningIcon sx={{ color: "#394ef4", fontSize: "40px" }} />
+                        <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
+                            AutismEdu
+                        </Typography>
+                    </Box>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Hãy Tạo Một Tài Khoản 🚀</Typography>
+                    <Typography sx={{ mt: "10px" }}>Chúng tôi sẽ cung chấp cho bạn những dịch vụ mà chúng tôi có!</Typography>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     <Box mt="30px">
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
                             <InputLabel htmlFor="email">Email</InputLabel>
@@ -156,7 +194,11 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                             }
                         </FormControl>
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
+<<<<<<< HEAD
                             <InputLabel htmlFor="password">Password</InputLabel>
+=======
+                            <InputLabel htmlFor="password">Mật khẩu</InputLabel>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                             <OutlinedInput
                                 error={!!passwordError}
                                 id="password"
@@ -174,7 +216,11 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                                         </IconButton>
                                     </InputAdornment>
                                 }
+<<<<<<< HEAD
                                 label="Password"
+=======
+                                label="Mật khẩu"
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                             />
                             {
                                 passwordError && (
@@ -205,7 +251,11 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                             }
                         </FormControl>
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
+<<<<<<< HEAD
                             <InputLabel htmlFor="confirm-password">Confirm Password</InputLabel>
+=======
+                            <InputLabel htmlFor="confirm-password">Nhập lại mật khẩu</InputLabel>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                             <OutlinedInput
                                 error={!!passwordConfirmError}
                                 value={cfPassword}
@@ -229,7 +279,11 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                                         </IconButton>
                                     </InputAdornment>
                                 }
+<<<<<<< HEAD
                                 label="Password"
+=======
+                                label="Nhập lại mật khẩu"
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                             />
                             {
                                 passwordConfirmError && (
@@ -245,11 +299,19 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                         onClick={() => {
                             setLoading(true);
                         }}>
+<<<<<<< HEAD
                         Sign Up
                     </LoadingButton>
 
                     <Typography sx={{ textAlign: "center", mt: "20px" }}>Already have an account? <Link to={PAGES.LOGIN} style={{ color: "#666cff" }}>Sign in instead</Link></Typography>
                     <Divider sx={{ mt: "15px" }}>or</Divider>
+=======
+                        Đăng ký
+                    </LoadingButton>
+
+                    <Typography sx={{ textAlign: "center", mt: "20px" }}>Bạn đã có tài khoản? <Link to={PAGES.ROOT + PAGES.LOGIN} style={{ color: "#666cff" }}>Đăng nhập</Link></Typography>
+                    <Divider sx={{ mt: "15px" }}>hoặc</Divider>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     <Box sx={{ display: "flex", justifyContent: "center" }}>
                         <IconButton>
                             <GoogleIcon sx={{ color: "#dd4b39 " }} />

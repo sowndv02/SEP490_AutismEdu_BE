@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { Box, Divider, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput, SvgIcon, TextField } from '@mui/material';
@@ -15,6 +16,28 @@ import { LoadingButton } from '@mui/lab';
 import { enqueueSnackbar } from 'notistack';
 import GoogleLogin from '../GoogleLogin';
 import checkValid from '~/utils/auth_form_verify';
+=======
+import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { LoadingButton } from '@mui/lab';
+import { Box, Divider, FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput } from '@mui/material';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Cookies from 'js-cookie';
+import { enqueueSnackbar } from 'notistack';
+import { useEffect, useId, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import service from '~/plugins/services';
+import checkValid from '~/utils/auth_form_verify';
+import PAGES from '~/utils/pages';
+import GoogleLogin from '../GoogleLogin';
+import { useDispatch, useSelector } from "react-redux";
+import { setUserInformation } from '~/redux/features/userSlice';
+import { jwtDecode } from 'jwt-decode';
+import services from '~/plugins/services';
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
 function LoginForm({ setVerify, setEmailVerify }) {
     const [showPassword, setShowPassword] = useState(false);
     const [emailError, setEmailError] = useState(null);
@@ -22,7 +45,13 @@ function LoginForm({ setVerify, setEmailVerify }) {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [password, setPassword] = useState("");
+<<<<<<< HEAD
     const nav = useNavigate();
+=======
+    const [userId, setUserId] = useState(null);
+    const nav = useNavigate();
+    const dispatch = useDispatch();
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const INPUT_CSS = {
         width: "100%",
         borderRadius: "15px",
@@ -40,6 +69,7 @@ function LoginForm({ setVerify, setEmailVerify }) {
             handleSubmit();
         }
     }, [loading])
+<<<<<<< HEAD
     const checkValid = (value, field) => {
         const rgPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.!&%@]).+$/
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -74,6 +104,24 @@ function LoginForm({ setVerify, setEmailVerify }) {
             }
         }
     }
+=======
+    console.log(userId);
+
+    useEffect(() => {
+        if (userId) {
+            console.log("zoday");
+            services.UserManagementAPI.getUserById(userId, (res) => {
+                dispatch(setUserInformation(res.result))
+                enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });
+                nav(`${PAGES.ROOT}`)
+            }, (error) => {
+                enqueueSnackbar("Đăng nhập thất bại!", { variant: "error" });
+                console.log(error);
+            })
+            setLoading(false)
+        }
+    }, [userId])
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
     const handleSubmit = async () => {
         if (passwordError !== null || emailError !== null) {
             setLoading(false);
@@ -89,6 +137,7 @@ function LoginForm({ setVerify, setEmailVerify }) {
                     email,
                     password
                 }, (res) => {
+<<<<<<< HEAD
                     console.log(res);
                     Cookies.set('access_token', res.result.accessToken, { expires: 30 })
                     Cookies.set('refresh_token', res.result.refreshToken, { expires: 365 })
@@ -105,6 +154,23 @@ function LoginForm({ setVerify, setEmailVerify }) {
                     else enqueueSnackbar(err.error[0], { variant: "error" });
                 })
                 setLoading(false)
+=======
+                    Cookies.set('access_token', res.result.accessToken, { expires: 30 })
+                    Cookies.set('refresh_token', res.result.refreshToken, { expires: 365 })
+                    const decodedToken = jwtDecode(res.result.accessToken);
+                    setUserId(decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'])
+                }, (err) => {
+                    if (err.code === 500) {
+                        enqueueSnackbar("Đăng nhập thất bại!", { variant: "error" });
+                    } else if (err.code === 406) {
+                        enqueueSnackbar("Tài khoản này chưa được kích hoạt!", { variant: "warning" });
+                        setVerify(true);
+                        setEmailVerify(email);
+                    }
+                    else enqueueSnackbar("Tài khoản hoặc mật khẩu không đúng!", { variant: "error" });
+                    setLoading(false)
+                })
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
             }
         }
     }
@@ -119,6 +185,7 @@ function LoginForm({ setVerify, setEmailVerify }) {
             }}>
                 <CardContent>
                     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
+<<<<<<< HEAD
                         <SvgIcon component={TrelloIcon} inheritViewBox sx={{ color: 'blue' }} />
                         <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
                             My App
@@ -130,11 +197,27 @@ function LoginForm({ setVerify, setEmailVerify }) {
                         <FormControl sx={{ ...INPUT_CSS }} variant="outlined">
                             <InputLabel htmlFor="email">Email or Username</InputLabel>
                             <OutlinedInput id="email" label="Email or username" variant="outlined" type='text'
+=======
+                        <EscalatorWarningIcon sx={{ color: "#394ef4", fontSize: "40px" }} />
+                        <Typography sx={{ fontSize: 20, fontWeight: "bold", color: "text.secondary" }}>
+                            AutismEdu
+                        </Typography>
+                    </Box>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>AutismEdu Xin Chào! 👋</Typography>
+                    <Typography sx={{ mt: "10px" }}>Vui lòng đăng nhập vào tài khoản của bạn và khám phá dịch vụ của chúng tôi</Typography>
+                    <Box mt="30px">
+                        <FormControl sx={{ ...INPUT_CSS }} variant="outlined">
+                            <InputLabel htmlFor="email">Email</InputLabel>
+                            <OutlinedInput id="email" label="Email" variant="outlined" type='text'
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                                 value={email}
                                 error={!!emailError}
                                 onChange={(e) => {
                                     if (!e.target.value.includes(" ")) {
+<<<<<<< HEAD
                                         console.log("zoday");
+=======
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                                         checkValid(e.target.value, 1, setEmailError);
                                         setEmail(e.target.value);
                                     }
@@ -149,7 +232,11 @@ function LoginForm({ setVerify, setEmailVerify }) {
                             }
                         </FormControl>
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
+<<<<<<< HEAD
                             <InputLabel htmlFor="password">Password</InputLabel>
+=======
+                            <InputLabel htmlFor="password">Mật khẩu</InputLabel>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                             <OutlinedInput
                                 error={!!passwordError}
                                 id="password"
@@ -173,7 +260,11 @@ function LoginForm({ setVerify, setEmailVerify }) {
                                         </IconButton>
                                     </InputAdornment>
                                 }
+<<<<<<< HEAD
                                 label="Password"
+=======
+                                label="Mật khẩu"
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                             />
                             {
                                 passwordError && (
@@ -185,16 +276,28 @@ function LoginForm({ setVerify, setEmailVerify }) {
                         </FormControl>
                     </Box>
                     <Box sx={{ width: "100%", textAlign: "end", marginTop: "15px" }}>
+<<<<<<< HEAD
                         <Link to={PAGES.FORGOTPASSWORD} style={{ color: "#666cff" }}>Forgot Password?</Link>
+=======
+                        <Link to={PAGES.ROOT + PAGES.FORGOTPASSWORD} style={{ color: "#666cff" }}>Quên mật khẩu?</Link>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     </Box>
                     <LoadingButton variant='contained' sx={{ width: "100%", marginTop: "20px" }} onClick={() => setLoading(true)}
                         loading={loading} loadingIndicator="Sending..."
                     >
+<<<<<<< HEAD
                         Sign In
                     </LoadingButton>
 
                     <Typography sx={{ textAlign: "center", mt: "20px" }}>New on our platform? <Link to={PAGES.REGISTER} style={{ color: "#666cff" }}>Create an account</Link></Typography>
                     <Divider sx={{ mt: "15px" }}>or</Divider>
+=======
+                        Đăng nhập
+                    </LoadingButton>
+
+                    <Typography sx={{ textAlign: "center", mt: "20px" }}>Bạn chưa có tài khoản? <Link to={PAGES.ROOT + PAGES.REGISTER} style={{ color: "#666cff" }}>Tạo tài khoản mới</Link></Typography>
+                    <Divider sx={{ mt: "15px" }}>hoặc</Divider>
+>>>>>>> 5598c1832bd23a189aad54969380111a502c987f
                     <GoogleLogin />
                 </CardContent>
             </Card>
