@@ -27,11 +27,11 @@ namespace backend_api.Controllers.v1
             IUserRepository userRepository, FormatString formatString)
         {
             _userRepository = userRepository;
-            pageSize = configuration.GetValue<int>("APIConfig:PageSize");
+            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _claimRepository = claimRepository;
             _mapper = mapper;
             _response = new();
-            takeValue = configuration.GetValue<int>("APIConfig:TakeValue");
+            takeValue = int.Parse(configuration["APIConfig:TakeValue"]);
             _formatString = formatString;
         }
 
