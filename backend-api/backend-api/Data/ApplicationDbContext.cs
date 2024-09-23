@@ -3,7 +3,6 @@ using backend_api.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -28,6 +27,7 @@ namespace backend_api.Data
         public DbSet<Report> Reports { get; set; }
         public DbSet<ReportMedia> ReportMedias { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Tutor> Tutors { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
