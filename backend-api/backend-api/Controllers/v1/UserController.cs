@@ -27,7 +27,7 @@ namespace backend_api.Controllers.v1
             ILogger<UserController> logger, IRoleRepository roleRepository)
         {
             _roleRepository = roleRepository;
-            pageSize = configuration.GetValue<int>("APIConfig:PageSize");
+            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _mapper = mapper;
             _userRepository = userRepository;
             _response = new();
