@@ -12,6 +12,7 @@ namespace backend_api.Models
         public decimal? PriceTo { get; set; }
         public int StartAge { get; set; }
         public int EndAge { get; set; }
+        public DateTime DateOfBirth { get; set; }
         [ForeignKey(nameof(UserId))]
         public ApplicationUser User { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
