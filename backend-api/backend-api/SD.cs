@@ -70,5 +70,12 @@
         public const string DEFAULT_ASSIGN_CLAIM_CLAIM_TYPE = "Assign";
         public const string DEFAULT_ASSIGN_CLAIM_CLAIM_VALUE = "Claim";
 
+
+        // Const license name
+        public const string BACHELORS_DEGREE_LICENSE = "Bằng đại học";
+        public const string CITIZEN_ID_LICENSE = "Căn cước công dân";
+        public const string OTHER_LICENSE = "Khác";
+
+
     }
 }
