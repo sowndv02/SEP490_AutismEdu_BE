@@ -2,6 +2,7 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
+using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -269,11 +270,11 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, [FromForm] ApplicationUserDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, [FromForm] UserUpdateDTO updateDTO)
         {
             try
             {
-                if (updateDTO == null || !id.Equals(updateDTO.Id))
+                if (updateDTO == null || !id.Equals(updateDTO.UserId))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -294,7 +295,7 @@ namespace backend_api.Controllers.v1
                             file.Delete();
                         }
                     }
-                    string fileName = updateDTO.Id + Path.GetExtension(updateDTO.Image.FileName);
+                    string fileName = updateDTO.UserId + Path.GetExtension(updateDTO.Image.FileName);
                     string filePath = @"wwwroot\UserImage\" + fileName;
 
                     var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
@@ -308,8 +309,12 @@ namespace backend_api.Controllers.v1
                     using var stream = updateDTO.Image.OpenReadStream();
                     model.ImageUrl = await _blobStorageRepository.UploadImg(stream, fileName);
                 }
-                model.PhoneNumber = updateDTO.PhoneNumber;
-                model.FullName = updateDTO.FullName;
+                if (!string.IsNullOrEmpty(model.Address))
+                    model.Address = updateDTO.Address;
+                if (!string.IsNullOrEmpty(model.PhoneNumber))
+                    model.PhoneNumber = updateDTO.PhoneNumber;
+                if (!string.IsNullOrEmpty(model.FullName))
+                    model.FullName = updateDTO.FullName;
                 await _userRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
