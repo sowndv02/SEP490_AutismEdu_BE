@@ -59,6 +59,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IClaimRepository, ClaimRepository>();
 builder.Services.AddScoped<IBlobStorageRepository, BlobStorageRepository>();
+builder.Services.AddScoped<ITutorRepository, TutorRepository>();
 
 
 // Add DI requirement authorization handler
