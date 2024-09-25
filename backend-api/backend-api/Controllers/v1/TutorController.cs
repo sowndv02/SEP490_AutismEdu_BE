@@ -2,12 +2,9 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
 using System.Net;
 
 namespace backend_api.Controllers.v1
@@ -26,8 +23,8 @@ namespace backend_api.Controllers.v1
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
-        public TutorController(IUserRepository userRepository, ITutorRepository tutorRepository, 
-            ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository, 
+        public TutorController(IUserRepository userRepository, ITutorRepository tutorRepository,
+            ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString)
         {
             _formatString = formatString;
@@ -47,7 +44,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                if ( tutorCreateDTO == null  || string.IsNullOrEmpty(tutorCreateDTO.UserId) ||await _userRepository.GetAsync(x => x.Id.Equals(tutorCreateDTO.UserId), true, "Tutor") != null)
+                if (tutorCreateDTO == null || string.IsNullOrEmpty(tutorCreateDTO.UserId) || await _userRepository.GetAsync(x => x.Id.Equals(tutorCreateDTO.UserId), true, "Tutor") != null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -56,6 +53,7 @@ namespace backend_api.Controllers.v1
                 }
                 tutorCreateDTO.FormalName = _formatString.FormatStringFormalName(tutorCreateDTO.FormalName);
                 Tutor model = _mapper.Map<Tutor>(tutorCreateDTO);
+                model.CreatedDate = DateTime.Now;
                 await _tutorRepository.CreateAsync(model);
                 _response.Result = _mapper.Map<RoleDTO>(model);
                 _response.StatusCode = HttpStatusCode.Created;
