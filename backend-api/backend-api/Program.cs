@@ -60,7 +60,8 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IClaimRepository, ClaimRepository>();
 builder.Services.AddScoped<IBlobStorageRepository, BlobStorageRepository>();
 builder.Services.AddScoped<ITutorRepository, TutorRepository>();
-builder.Services.AddScoped<ILicenseRepository, LicenseRepository>();
+builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
+builder.Services.AddScoped<ICertificateMediaRepository, CertificateMediaRepository>();
 builder.Services.AddScoped<IWorkExperienceRepository, WorkExperienceRepository>();
 
 

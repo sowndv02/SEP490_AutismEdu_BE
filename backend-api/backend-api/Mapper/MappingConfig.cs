@@ -43,6 +43,7 @@ namespace backend_api.Mapper
                 .ReverseMap();
 
             CreateMap<WorkExperience, WorkExperienceCreateDTO>().ReverseMap();
+            CreateMap<Certificate, CertificateCreateDTO>().ReverseMap();
 
         }
     }

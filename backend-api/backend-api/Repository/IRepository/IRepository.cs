@@ -1,5 +1,4 @@
-﻿using backend_api.Models;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace backend_api.Repository.IRepository
 {
@@ -9,7 +8,7 @@ namespace backend_api.Repository.IRepository
             int pageSize = 10, int pageNumber = 1);
         Task<(int TotalCount, List<T> list)> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null);
         Task<T> GetAsync(Expression<Func<T, bool>> filter = null, bool tracked = true, string? includeProperties = null, string? excludeProperties = null);
-        Task CreateAsync(T entity);
+        Task<T> CreateAsync(T entity);
         Task RemoveAsync(T entity);
         Task SaveAsync();
     }

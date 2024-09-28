@@ -17,10 +17,11 @@ namespace backend_api.Repository
             this.dbset = _context.Set<T>();
         }
 
-        public async Task CreateAsync(T entity)
+        public async Task<T> CreateAsync(T entity)
         {
             await dbset.AddAsync(entity);
             await SaveAsync();
+            return entity;
         }
 
         public async Task<T> GetAsync(Expression<Func<T, bool>> filter = null, bool tracked = true, string? includeProperties = null, string? excludeProperties = null)
@@ -84,7 +85,7 @@ namespace backend_api.Repository
                 query = query.Where(filter);
                 queryCount = query;
             }
-                
+
             if (pageSize > 0)
             {
                 query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);

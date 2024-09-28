@@ -48,7 +48,7 @@ namespace backend_api.Repository
             return uri.Segments.Last();
         }
 
-        public async Task<string> UploadImg(Stream data, string fileName, bool isPrivate = false)
+        public async Task<string> Upload(Stream data, string fileName, bool isPrivate = false)
         {
             try
             {
