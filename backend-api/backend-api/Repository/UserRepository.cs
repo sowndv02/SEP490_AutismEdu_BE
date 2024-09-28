@@ -770,14 +770,11 @@ namespace backend_api.Repository
             }
         }
 
-        public async Task<List<ApplicationUser>> GetAllAsync(Expression<Func<ApplicationUser, bool>>? filter = null, string? includeProperties = null,
+        public async Task<(int TotalCount, List<ApplicationUser> list)> GetAllAsync(Expression<Func<ApplicationUser, bool>>? filter = null, string? includeProperties = null,
             int pageSize = 10, int pageNumber = 1)
         {
 
             IQueryable<ApplicationUser> query = _context.ApplicationUsers;
-
-            if (filter != null)
-                query = query.Where(filter);
 
             if (includeProperties != null)
             {
@@ -786,6 +783,12 @@ namespace backend_api.Repository
                     query = query.Include(includeProperty);
                 }
             }
+
+            int count = 0;
+            if (filter != null)
+                query = query.Where(filter);
+            count= query.Count();
+            
             query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
             var users = await query.ToListAsync();
             foreach (var user in users)
@@ -799,7 +802,7 @@ namespace backend_api.Repository
                 user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
                 user.Role = String.Join(",", user_role);
             }
-            return users;
+            return (count, users);
         }
 
         public async Task<List<UserClaim>> GetClaimByUserIdAsync(string userId)
