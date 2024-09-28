@@ -2,12 +2,15 @@
 {
     public static class SD
     {
+        // Const default account
+        public static string ADMIN_EMAIL_DEFAULT = "admin@admin.com";
+        public static string ADMIN_PASSWORD_DEFAULT = "Sa12345@";
 
         // Const role
-        public static string ADMIN_EMAIL_DEFAULT = "admin@admin.com";
         public const string USER_ROLE = "User";
+        public const string STAFF_ROLE = "Staff";
         public const string ADMIN_ROLE = "Admin";
-        public const string TEACHER_ROLE = "Teacher";
+        public const string TUTOR_ROLE = "Tutor";
 
         // Const image user
         public const string URL_IMAGE_USER = "UserImages";

@@ -41,6 +41,9 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.UserClaim, opt => opt.MapFrom(src => src.UserClaim))
                 .ForMember(dest => dest.IsLockedOut, opt => opt.MapFrom(src => src.IsLockedOut))
                 .ReverseMap();
+
+            CreateMap<WorkExperience, WorkExperienceCreateDTO>().ReverseMap();
+
         }
     }
 }
