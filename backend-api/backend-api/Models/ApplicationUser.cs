@@ -31,6 +31,6 @@ namespace backend_api.Models
         public decimal? Price { get; set; }
         public string? Address { get; set; }
         [NotMapped]
-        public Tutor? Tutor { get; set; }
+        public Tutor? TutorProfile { get; set; }
     }
 }

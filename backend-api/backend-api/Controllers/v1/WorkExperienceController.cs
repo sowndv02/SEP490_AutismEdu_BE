@@ -10,22 +10,21 @@ using System.Security.Claims;
 
 namespace backend_api.Controllers.v1
 {
-    [Route("api/v{version:apiVersion}/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
-    [ApiVersion("1.0")]
-    public class TutorController : ControllerBase
+    public class WorkExperienceController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
-        private readonly ITutorRepository _tutorRepository;
+        private readonly IWorkExperienceRepository _workExperienceRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
-        private readonly ILogger<TutorController> _logger;
+        private readonly ILogger<WorkExperienceController> _logger;
         private readonly IMapper _mapper;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
-        public TutorController(IUserRepository userRepository, ITutorRepository tutorRepository,
-            ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
+        public WorkExperienceController(IUserRepository userRepository, IWorkExperienceRepository workExperienceRepository,
+            ILogger<WorkExperienceController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString)
         {
             _formatString = formatString;
@@ -36,28 +35,28 @@ namespace backend_api.Controllers.v1
             _blobStorageRepository = blobStorageRepository;
             _logger = logger;
             _userRepository = userRepository;
-            _tutorRepository = tutorRepository;
+            _workExperienceRepository = workExperienceRepository;
         }
 
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> RegisterTutorAsync(TutorCreateDTO tutorCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync(WorkExperienceCreateDTO workExperienceCreateDTO)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (tutorCreateDTO == null || string.IsNullOrEmpty(userId) || _userRepository.GetAsync(x => x.Id.Equals(userId), true, "TutorProfile").GetAwaiter().GetResult()?.TutorProfile != null)
+                if (workExperienceCreateDTO == null || string.IsNullOrEmpty(userId))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { $"{userId} not exist!" };
                     return BadRequest(_response);
                 }
-                tutorCreateDTO.FormalName = _formatString.FormatStringFormalName(tutorCreateDTO.FormalName);
-                Tutor model = _mapper.Map<Tutor>(tutorCreateDTO);
+                WorkExperience model = _mapper.Map<WorkExperience>(workExperienceCreateDTO);
+                model.UserId = userId;
                 model.CreatedDate = DateTime.Now;
-                await _tutorRepository.CreateAsync(model);
+                await _workExperienceRepository.CreateAsync(model);
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
