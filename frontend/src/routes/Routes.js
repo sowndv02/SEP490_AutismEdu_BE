@@ -12,6 +12,7 @@ import Home from '~/pages/Home'
 import PAGES from '~/utils/pages'
 import SearchTutor from '~/pages/Tutor/SearchTutor'
 import TutorProfile from '~/pages/Tutor/TutorProfile'
+import TutorRegistration from '~/pages/Tutor/TutorRegistration'
 
 const publicRoutes = [
     {
@@ -53,6 +54,10 @@ const publicRoutes = [
     {
         path: PAGES.ROOT + PAGES.TUTORPROFILE,
         element: TutorProfile
+    },
+    {
+        path: PAGES.ROOT + PAGES.TUTORREGISTRATION,
+        element: TutorRegistration
     },
 ]
 

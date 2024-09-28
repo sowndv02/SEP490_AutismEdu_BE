@@ -4,7 +4,7 @@ import ChipComponent from '~/components/ChipComponent';
 
 function BigCity() {
     return (
-        <Stack direction="row" sx={{ mt: "30px", paddingBottom: "30px", justifyContent: "center" }}>
+        <Stack direction="row" sx={{ mt: "30px", paddingBottom: "30px", justifyContent: "center", pb:"100px" }}>
             <Box sx={{
                 width: {
                     xl: "80%",
@@ -16,7 +16,7 @@ function BigCity() {
                     <Typography variant='h2' sx={{
                         width: "70%", margin: "auto", color: "#192335", fontWeight: "bold"
                     }}>
-                        Tìm Trung Tâm Và Gia Sư Ở Các Thành Phố Lớn
+                        Tìm Gia Sư Ở Các Thành Phố Lớn
                     </Typography>
                 </Box>
                 <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>

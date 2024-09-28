@@ -11,7 +11,7 @@ if (token != undefined && token.length != 0) {
 }
 
 const axiosInstance = axios.create({
-  baseURL: "https://sep490-g50.azurewebsites.net/",
+  baseURL: import.meta.env.VITE_BASE_URL,
   timeout: 80000, // replace project base url later
   headers
 });
