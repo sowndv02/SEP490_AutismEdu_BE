@@ -14,7 +14,6 @@ namespace backend_api.Models
         public int EndAge { get; set; }
         public DateTime DateOfBirth { get; set; }
         public bool IsApprove { get; set; } = false;
-        public bool IsDraft { get; set; } = false;
         [ForeignKey(nameof(UserId))]
         public ApplicationUser User { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;

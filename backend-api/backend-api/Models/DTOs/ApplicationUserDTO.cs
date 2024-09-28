@@ -16,5 +16,6 @@
         public bool IsLockedOut { get; set; }
         public int UserClaimId { get; set; }
         public string UserType { get; set; }
+        public Tutor TutorProfile { get; set; }
     }
 }

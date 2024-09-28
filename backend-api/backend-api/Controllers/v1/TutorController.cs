@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using backend_api.Models;
+using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
@@ -70,15 +71,31 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpPost("savedraft")]
-        public async Task<ActionResult<APIResponse>> SaveDraftTutorProfile(TutorCreateDTO tutorCreateDTO)
+        [HttpGet]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạch, int pageNumber = 1)
         {
             try
             {
-                _logger.LogInformation("Call save draft");
-                _logger.LogDebug(tutorCreateDTO.ToString());
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                int totalCount = 0;
+                List<ApplicationUser> list = new();
+
+                if (!string.IsNullOrEmpty(seạch))
+                {
+                    var (count, result) = await _userRepository.GetAllAsync(u => (u.Email.ToLower().Contains(seạch.ToLower())) || (!string.IsNullOrEmpty(u.TutorProfile.FormalName) && u.TutorProfile.FormalName.ToLower().Contains(seạch.ToLower())), "TutorProfile", pageSize: pageSize, pageNumber: pageNumber);
+                    list = result;
+                    totalCount = count;
+                }
+                else
+                {
+                    var (count, result) = await _userRepository.GetAllAsync(null, "TutorProfile",pageSize: pageSize, pageNumber: pageNumber);
+                    list = result;
+                    totalCount = count;
+                }
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                _response.Result = _mapper.Map<List<ApplicationUserDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
-                _response.IsSuccess = true;
+                _response.Pagination = pagination;
                 return Ok(_response);
             }
             catch (Exception ex)

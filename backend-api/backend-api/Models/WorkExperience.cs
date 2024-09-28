@@ -12,7 +12,7 @@ namespace backend_api.Models
         [ForeignKey(nameof(UserId))]
         public ApplicationUser User { get; set; }
         public string CompanyName { get; set; }
-        public string Address { get; set; }
+        public string Position { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public DateTime CreatedDate { get; set; }
