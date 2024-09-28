@@ -12,5 +12,7 @@ namespace backend_api.Models
         public string? UrlPath { get; set; }
         [ForeignKey(nameof(CertificateId))]
         public Certificate Certificate { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime UpdatedDate { get; set; }
     }
 }
