@@ -69,5 +69,26 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
+        [HttpPost("savedraft")]
+        public async Task<ActionResult<APIResponse>> SaveDraftTutorProfile(TutorCreateDTO tutorCreateDTO)
+        {
+            try
+            {
+                _logger.LogInformation("Call save draft");
+                _logger.LogDebug(tutorCreateDTO.ToString());
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
     }
 }
