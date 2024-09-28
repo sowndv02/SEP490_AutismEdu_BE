@@ -4,19 +4,19 @@ using backend_api.Repository.IRepository;
 
 namespace backend_api.Repository
 {
-    public class LicenseRepository : Repository<Licence>, ILicenseRepository
+    public class CertificateMediaRepository : Repository<CertificateMedia>, ICertificateMediaRepository
     {
         private readonly ApplicationDbContext _context;
-        public LicenseRepository(ApplicationDbContext context) : base(context)
+        public CertificateMediaRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
 
-        public async Task<Licence> UpdateAsync(Licence model)
+        public async Task<CertificateMedia> UpdateAsync(CertificateMedia model)
         {
             try
             {
-                _context.Licences.Update(model);
+                _context.CertificateMedias.Update(model);
                 await _context.SaveChangesAsync();
                 return model;
             }
