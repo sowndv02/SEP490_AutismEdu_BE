@@ -51,12 +51,12 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> RegisterTutorAsync(TutorCreateDTO tutorCreateDTO)
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == null ? _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id : User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (tutorCreateDTO == null || string.IsNullOrEmpty(userId) || tutorCreateDTO.TutorInfo == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -77,24 +77,31 @@ namespace backend_api.Controllers.v1
                 model.CreatedDate = DateTime.Now;
                 await _tutorRepository.CreateAsync(model);
 
-                //// Add WorkExperience
-                //WorkExperience modelWorkExperience = _mapper.Map<WorkExperience>(tutorCreateDTO.WorkExperience);
-                //modelWorkExperience.UserId = userId;
-                //modelWorkExperience.CreatedDate = DateTime.Now;
-                //await _workExperienceRepository.CreateAsync(modelWorkExperience);
+                // Add WorkExperience
+                List<WorkExperience> modelWorkExperience = _mapper.Map<List<WorkExperience>>(tutorCreateDTO.WorkExperiences);
+                foreach (var workExperience in modelWorkExperience) 
+                {
+                    workExperience.UserId = userId;
+                    workExperience.CreatedDate = DateTime.Now;
+                    await _workExperienceRepository.CreateAsync(workExperience);
+                }
 
-                //// Add Certificate
-                //Certificate modelCertificate = _mapper.Map<Certificate>(tutorCreateDTO.Certificate);
-                //modelCertificate.SubmiterId = userId;
-                //modelCertificate.CreatedDate = DateTime.Now;
-                //var certificate = await _certificateRepository.CreateAsync(modelCertificate);
-                //foreach (var media in tutorCreateDTO.Certificate.Medias)
-                //{
-                //    using var stream = media.OpenReadStream();
-                //    var url = await _blobStorageRepository.Upload(stream, userId + Path.GetExtension(media.FileName));
-                //    var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url };
-                //    await _certificateMediaRepository.CreateAsync(objMedia);
-                //}
+                // Add Certificate
+                foreach (var cert in tutorCreateDTO.Certificates)
+                {
+                    var modelCertificate = _mapper.Map<Certificate>(cert);
+                    modelCertificate.SubmiterId = userId;
+                    modelCertificate.CreatedDate = DateTime.Now;
+                    var certificate = await _certificateRepository.CreateAsync(modelCertificate);
+                    foreach (var media in cert.Medias)
+                    {
+                        using var stream = media.OpenReadStream();
+                        var url = await _blobStorageRepository.Upload(stream, userId + Path.GetExtension(media.FileName));
+                        var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url };
+                        await _certificateMediaRepository.CreateAsync(objMedia);
+                    }
+                   
+                }
 
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
@@ -109,6 +116,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạch, int pageNumber = 1)
         {
             try

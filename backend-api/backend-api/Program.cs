@@ -69,8 +69,7 @@ builder.Services.AddScoped<IWorkExperienceRepository, WorkExperienceRepository>(
 builder.Services.AddScoped<INumberOfDaysForAccount, NumberOfDaysForAccount>();
 builder.Services.AddScoped<IAuthorizationHandler, AdminWithOver1000DaysHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, FirstNameAuthHandler>();
-builder.Services.AddScoped<IAuthorizationHandler, AssignRoleHandler>();
-builder.Services.AddScoped<IAuthorizationHandler, AssignClaimHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, AssignRoleOrClaimHandler>();
 
 
 
@@ -172,11 +171,11 @@ builder.Services.AddAuthorization(option =>
 
     // Define policy for checking assign-role
     option.AddPolicy("AssignRolePolicy", policy =>
-        policy.Requirements.Add(new AssignRoleRequirement("Assign", "Role")));
+        policy.Requirements.Add(new AssignRoleOrClaimRequirement("Assign", "Role")));
 
     // Define policy for checking assign-claim
     option.AddPolicy("AssignClaimPolicy", policy =>
-        policy.Requirements.Add(new AssignClaimRequirement("Assign", "Claim")));
+        policy.Requirements.Add(new AssignRoleOrClaimRequirement("Assign", "Claim")));
 
 });
 
