@@ -45,8 +45,21 @@ namespace backend_api.Mapper
             CreateMap<WorkExperience, WorkExperienceCreateDTO>().ReverseMap();
             CreateMap<Certificate, CertificateCreateDTO>().ReverseMap();
             CreateMap<TutorInfo, Tutor>().ReverseMap();
-            CreateMap<Tutor, TutorDTO>().ReverseMap();
+            CreateMap<Tutor, TutorInfoDTO>().ReverseMap();
 
+            CreateMap<Tutor, TutorDTO>()
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.User.FullName))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.User.Role))
+                .ForMember(dest => dest.UserClaim, opt => opt.MapFrom(src => src.User.UserClaim))
+                .ForMember(dest => dest.IsLockedOut, opt => opt.MapFrom(src => src.User.IsLockedOut))
+                .ForMember(dest => dest.UserClaimId, opt => opt.Ignore())
+                .ForMember(dest => dest.UserType, opt => opt.MapFrom(src => src.User.UserType))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.ImageUrl))
+                .ForMember(dest => dest.ImageLocalUrl, opt => opt.MapFrom(src => src.User.ImageLocalUrl))
+                .ForMember(dest => dest.ImageLocalPathUrl, opt => opt.MapFrom(src => src.User.ImageLocalPathUrl))
+                .ForMember(dest => dest.Image, opt => opt.Ignore());
         }
     }
 }

@@ -15,6 +15,7 @@ namespace backend_api.Controllers.v1
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
+    //[Authorize]
     public class TutorController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
@@ -116,31 +117,81 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "ViewTutorPolicy")]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạch, int pageNumber = 1)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
-                List<ApplicationUser> list = new();
+                List<Tutor> list = new();
 
                 if (!string.IsNullOrEmpty(seạch))
                 {
-                    var (count, result) = await _userRepository.GetAllAsync(u => (u.Email.ToLower().Contains(seạch.ToLower())) || (!string.IsNullOrEmpty(u.TutorProfile.FormalName) && u.TutorProfile.FormalName.ToLower().Contains(seạch.ToLower())), "TutorProfile", pageSize: pageSize, pageNumber: pageNumber);
+                    var (count, result) = await _tutorRepository.GetAllAsync(u => (!string.IsNullOrEmpty(u.FormalName) && u.FormalName.ToLower().Contains(seạch.ToLower())), "User", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
                     list = result;
                     totalCount = count;
                 }
                 else
                 {
-                    var (count, result) = await _userRepository.GetAllAsync(null, "TutorProfile",pageSize: pageSize, pageNumber: pageNumber);
+                    var (count, result) = await _tutorRepository.GetAllAsync(null, "User", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
                     list = result;
                     totalCount = count;
                 }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-                _response.Result = _mapper.Map<List<ApplicationUserDTO>>(list);
+                _response.Result = _mapper.Map<List<TutorDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet("{id}")]
+        [Authorize(Policy = "ViewTutorPolicy")]
+        public async Task<ActionResult<APIResponse>> GetById(string id)
+        {
+            try
+            {
+                var result = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User", null);
+                _response.Result = _mapper.Map<TutorDTO>(result);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPut("approve/{userId}")]
+        [Authorize(Policy = "ViewTutorPolicy")]
+        [Authorize(Policy = "UpdateTutorPolicy")]
+        public async Task<IActionResult> ApproveOrRejectTutor(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
+                    return BadRequest(_response);
+                }
+                Tutor model = await _tutorRepository.GetAsync(x => x.UserId == userId, false, "User", null);
+                model.IsApprove  = !model.IsApprove;
+                await _tutorRepository.UpdateAsync(model);
+                _response.Result = _mapper.Map<TutorDTO>(model);
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)

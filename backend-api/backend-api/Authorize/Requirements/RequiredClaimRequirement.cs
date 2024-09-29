@@ -2,12 +2,12 @@
 
 namespace backend_api.Authorize.Requirements
 {
-    public class AssignRoleOrClaimRequirement : IAuthorizationRequirement
+    public class RequiredClaimRequirement : IAuthorizationRequirement
     {
         public string ClaimType { get; }
         public string ClaimValue { get; }
 
-        public AssignRoleOrClaimRequirement(string claimType, string claimValue)
+        public RequiredClaimRequirement(string claimType, string claimValue)
         {
             ClaimType = claimType;
             ClaimValue = claimValue;
