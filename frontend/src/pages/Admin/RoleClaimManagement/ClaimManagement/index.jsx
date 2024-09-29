@@ -48,6 +48,7 @@ function ClaimManagement() {
             setLoading(true);
             await services.ClaimManagementAPI.getClaims((res) => {
                 setClaim(res.result);
+                console.log(res);
                 res.pagination.currentSize = res.result.length
                 setPagination(res.pagination);
             }, (err) => {

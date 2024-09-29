@@ -35,7 +35,7 @@ function RoleTable({roles, setRoles}) {
                 </TableBody>
             </Table>
 
-        </TableContainer >
+        </TableContainer>
     )
 }
 

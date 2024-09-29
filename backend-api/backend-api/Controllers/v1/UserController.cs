@@ -2,10 +2,12 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
+using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace backend_api.Controllers.v1
@@ -27,7 +29,7 @@ namespace backend_api.Controllers.v1
             ILogger<UserController> logger, IRoleRepository roleRepository)
         {
             _roleRepository = roleRepository;
-            pageSize = configuration.GetValue<int>("APIConfig:PageSize");
+            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _mapper = mapper;
             _userRepository = userRepository;
             _response = new();
@@ -226,7 +228,7 @@ namespace backend_api.Controllers.v1
                 }
                 else
                 {
-                    _response.Result = user;
+                    _response.Result = _mapper.Map<ApplicationUserDTO>(user);
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
@@ -269,11 +271,12 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, [FromForm] ApplicationUserDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateUserAsync(string id, [FromForm] UserUpdateDTO updateDTO)
         {
             try
             {
-                if (updateDTO == null || !id.Equals(updateDTO.Id))
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (updateDTO == null || !id.Equals(userId))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -294,7 +297,7 @@ namespace backend_api.Controllers.v1
                             file.Delete();
                         }
                     }
-                    string fileName = updateDTO.Id + Path.GetExtension(updateDTO.Image.FileName);
+                    string fileName = userId + Path.GetExtension(updateDTO.Image.FileName);
                     string filePath = @"wwwroot\UserImage\" + fileName;
 
                     var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
@@ -306,10 +309,14 @@ namespace backend_api.Controllers.v1
                     model.ImageLocalPathUrl = filePath;
                     model.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                     using var stream = updateDTO.Image.OpenReadStream();
-                    model.ImageUrl = await _blobStorageRepository.UploadImg(stream, fileName);
+                    model.ImageUrl = await _blobStorageRepository.Upload(stream, fileName);
                 }
-                model.PhoneNumber = updateDTO.PhoneNumber;
-                model.FullName = updateDTO.FullName;
+                if (!string.IsNullOrEmpty(model.Address))
+                    model.Address = updateDTO.Address;
+                if (!string.IsNullOrEmpty(model.PhoneNumber))
+                    model.PhoneNumber = updateDTO.PhoneNumber;
+                if (!string.IsNullOrEmpty(model.FullName))
+                    model.FullName = updateDTO.FullName;
                 await _userRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
@@ -338,27 +345,38 @@ namespace backend_api.Controllers.v1
                     switch (searchType.ToLower().Trim())
                     {
                         case "all":
-                            list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
-                            totalCount = _userRepository.GetTotalUser();
+                            if (!string.IsNullOrEmpty(searchValue))
+                            {
+                                var(totalResult, resultObject) = await _userRepository.GetAllAsync(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower())), pageSize: pageSize, pageNumber: pageNumber);
+                                totalCount = totalResult;
+                                list = resultObject;
+                            }
+                            else
+                            {
+                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                                totalCount = totalResult;
+                                list = resultObject;
+                            }
                             break;
                         case "claim":
                             if (!string.IsNullOrEmpty(searchTypeId))
                             {
-                                var (total, users) = await _userRepository.GetUsersForClaimAsync(int.Parse(searchTypeId), pageSize, pageNumber);
+                                var (totalResult, users) = await _userRepository.GetUsersForClaimAsync(int.Parse(searchTypeId), pageSize, pageNumber);
                                 list = users;
-                                totalCount = total;
+                                totalCount = totalResult;
                             }
                             break;
                         case "role":
                             if (!string.IsNullOrEmpty(searchTypeId))
                             {
-                                var (total, users) = await _userRepository.GetUsersInRole(searchTypeId, pageSize, pageNumber);
+                                var (totalResult, users) = await _userRepository.GetUsersInRole(searchTypeId, pageSize, pageNumber);
                                 list = users;
-                                totalCount = total;
+                                totalCount = totalResult;
                             }
                             break;
                         default:
-                            list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                            var (total, result) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                            list = result;
                             totalCount = _userRepository.GetTotalUser();
                             break;
 
@@ -366,18 +384,11 @@ namespace backend_api.Controllers.v1
                 }
                 else
                 {
-                    list = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                    var (total, result) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
                     totalCount = _userRepository.GetTotalUser();
                 }
 
-
-                if (!string.IsNullOrEmpty(searchValue))
-                {
-                    list = list.Where(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower()))).ToList();
-                }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-                _logger.LogInformation($"GetAlllUser: \n SearchValue: {searchValue} \n SearchType: {searchType} \n searchTypeId: {searchTypeId}\n pageNumber: {pageNumber}");
-                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = _mapper.Map<List<ApplicationUserDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
@@ -404,7 +415,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { $"{id} is invalid!" };
                     return BadRequest(_response);
                 }
-                ApplicationUser model = await _userRepository.GetAsync(x => x.Id == id);
+                ApplicationUser model = await _userRepository.GetAsync(x => x.Id == id, false, "TutorProfile");
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);

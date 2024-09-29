@@ -30,5 +30,7 @@ namespace backend_api.Models
         public string? University { get; set; }
         public decimal? Price { get; set; }
         public string? Address { get; set; }
+        [NotMapped]
+        public Tutor? TutorProfile { get; set; }
     }
 }

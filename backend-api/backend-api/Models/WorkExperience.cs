@@ -3,17 +3,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_api.Models
 {
-    public class ClassMember
+    public class WorkExperience
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int ClassId { get; set; }
         public string UserId { get; set; }
-        public string Role { get; set; }
-        [ForeignKey(nameof(ClassId))]
-        public Class Class { get; set; }
         [ForeignKey(nameof(UserId))]
         public ApplicationUser User { get; set; }
+        public string CompanyName { get; set; }
+        public string Position { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime UpdatedDate { get; set; }
     }
 }

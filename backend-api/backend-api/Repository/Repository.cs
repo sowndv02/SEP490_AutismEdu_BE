@@ -17,10 +17,11 @@ namespace backend_api.Repository
             this.dbset = _context.Set<T>();
         }
 
-        public async Task CreateAsync(T entity)
+        public async Task<T> CreateAsync(T entity)
         {
             await dbset.AddAsync(entity);
             await SaveAsync();
+            return entity;
         }
 
         public async Task<T> GetAsync(Expression<Func<T, bool>> filter = null, bool tracked = true, string? includeProperties = null, string? excludeProperties = null)
@@ -50,7 +51,7 @@ namespace backend_api.Repository
             return await query.FirstOrDefaultAsync(filter);
         }
 
-        public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null)
+        public async Task<(int TotalCount, List<T> list)> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null)
         {
             IQueryable<T> query = dbset;
             if (filter != null)
@@ -71,16 +72,20 @@ namespace backend_api.Repository
                 }
             }
 
-
-            return await query.ToListAsync();
+            return (query.ToListAsync().GetAwaiter().GetResult().Count, await query.ToListAsync());
         }
 
-        public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null,
+        public async Task<(int TotalCount, List<T> list)> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null,
             int pageSize = 0, int pageNumber = 1)
         {
             IQueryable<T> query = dbset;
+            IQueryable<T> queryCount = query;
             if (filter != null)
+            {
                 query = query.Where(filter);
+                queryCount = query;
+            }
+
             if (pageSize > 0)
             {
                 query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
@@ -93,9 +98,7 @@ namespace backend_api.Repository
                     query = query.Include(includeProp);
                 }
             }
-
-
-            return await query.ToListAsync();
+            return (queryCount.ToListAsync().GetAwaiter().GetResult().Count, await query.ToListAsync());
         }
 
         public async Task SaveAsync()

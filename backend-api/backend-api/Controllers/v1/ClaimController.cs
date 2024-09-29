@@ -27,13 +27,47 @@ namespace backend_api.Controllers.v1
             IUserRepository userRepository, FormatString formatString)
         {
             _userRepository = userRepository;
-            pageSize = configuration.GetValue<int>("APIConfig:PageSize");
+            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _claimRepository = claimRepository;
             _mapper = mapper;
             _response = new();
-            takeValue = configuration.GetValue<int>("APIConfig:TakeValue");
+            takeValue = int.Parse(configuration["APIConfig:TakeValue"]);
             _formatString = formatString;
         }
+
+        [HttpPut("reset/{id}")]
+        public async Task<ActionResult<APIResponse>> ResetAsync(int? id)
+        {
+            try
+            {
+                var claim = await _claimRepository.GetAsync(x => x.Id == id, false);
+                if (claim == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { "Id invalid!" };
+                    return BadRequest(_response);
+                }
+                ApplicationClaim model = _mapper.Map<ApplicationClaim>(claim);
+                model.ClaimValue = model.DefaultClaimValue;
+                model.ClaimType = model.DefaultClaimType;
+                model.UpdatedDate = DateTime.Now;
+                var result = await _claimRepository.UpdateAsync(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                _response.Result = result;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
 
         [HttpGet]
         public async Task<ActionResult<APIResponse>> GetAllClaimsAsync([FromQuery] string? searchValue, string? searchType, int pageNumber = 1, string? userId = null)
@@ -114,7 +148,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                List<ApplicationClaim> list = await _claimRepository.GetAllAsync(null, null, null);
+                var (total, list) = await _claimRepository.GetAllAsync(null, null, null);
                 var distinctClaimTypes = list.Select(c => c.ClaimType).Distinct().ToList();
                 _response.Result = distinctClaimTypes;
                 _response.StatusCode = HttpStatusCode.OK;
@@ -180,7 +214,7 @@ namespace backend_api.Controllers.v1
             {
                 if (claimDTO == null) return BadRequest(claimDTO);
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
-                model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == null ? claimDTO.UserId : User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == null ? _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id : User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var claimExist = await _claimRepository.GetAsync(x => x.ClaimType == claimDTO.ClaimType && x.ClaimValue == claimDTO.ClaimValue, false);
                 if (claimExist != null)
                 {

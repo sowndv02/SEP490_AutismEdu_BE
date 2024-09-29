@@ -1,9 +1,7 @@
 ﻿using backend_api.Models;
-using backend_api.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -20,14 +18,13 @@ namespace backend_api.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<ApplicationClaim> ApplicationClaims { get; set; }
-        public DbSet<Center> Centers { get; set; }
-        public DbSet<Class> Classes { get; set; }
-        public DbSet<ClassMember> ClassMembers { get; set; }
-        public DbSet<Licence> Licences { get; set; }
-        public DbSet<LicenceMedia> LicenceMedias { get; set; }
+        public DbSet<Certificate> Certificates { get; set; }
+        public DbSet<CertificateMedia> CertificateMedias { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<ReportMedia> ReportMedias { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Tutor> Tutors { get; set; }
+        public DbSet<WorkExperience> WorkExperiences { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -50,18 +47,6 @@ namespace backend_api.Data
                 .HasForeignKey(r => r.RevieweeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<ClassMember>()
-                .HasOne(cm => cm.Class)
-                .WithMany()
-                .HasForeignKey(cm => cm.ClassId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<ClassMember>()
-                .HasOne(cm => cm.User)
-                .WithMany()
-                .HasForeignKey(cm => cm.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             foreach (var entityType in builder.Model.GetEntityTypes())
             {
                 var tableName = entityType.GetTableName();
@@ -75,9 +60,56 @@ namespace backend_api.Data
         //Seeding
         public async Task SeedDataIfEmptyAsync()
         {
+            if (!Roles.Any())
+            {
+                Roles.AddRange(
+                    new IdentityRole()
+                    {
+                        Name = SD.TUTOR_ROLE,
+                        NormalizedName = SD.TUTOR_ROLE
+                    },
+                    new IdentityRole()
+                    {
+                        Name = SD.USER_ROLE,
+                        NormalizedName = SD.USER_ROLE
+                    },
+                    new IdentityRole()
+                    {
+                        Name = SD.STAFF_ROLE,
+                        NormalizedName = SD.STAFF_ROLE
+                    },
+                    new IdentityRole()
+                    {
+                        Name = SD.ADMIN_ROLE,
+                        NormalizedName = SD.ADMIN_ROLE
+                    }
+                );
+            }
+
+            var roleStaff = Roles.FirstOrDefault(x => x.Name.Equals(SD.STAFF_ROLE));
+            if (roleStaff == null)
+            {
+                roleStaff = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.STAFF_ROLE, NormalizedName = SD.STAFF_ROLE.ToUpper() };
+                Roles.Add(roleStaff);
+            }
+
+            var roleTutor = Roles.FirstOrDefault(x => x.Name.Equals(SD.TUTOR_ROLE));
+            if (roleTutor == null)
+            {
+                roleTutor = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.TUTOR_ROLE, NormalizedName = SD.TUTOR_ROLE.ToUpper() };
+                Roles.Add(roleTutor);
+            }
+
+            var roleUser = Roles.FirstOrDefault(x => x.Name.Equals(SD.USER_ROLE));
+            if (roleUser == null)
+            {
+                roleUser = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.USER_ROLE, NormalizedName = SD.USER_ROLE.ToUpper() };
+                Roles.Add(roleUser);
+            }
+
             var roleAdmin = Roles.FirstOrDefault(x => x.Name.Equals(SD.ADMIN_ROLE));
             var adminUser = ApplicationUsers.FirstOrDefault(x => x.Email.Equals("admin@admin.com"));
-            if (!Roles.Any() || roleAdmin == null)
+            if (roleAdmin == null)
             {
                 roleAdmin = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.ADMIN_ROLE, NormalizedName = SD.ADMIN_ROLE.ToUpper() };
                 Roles.Add(roleAdmin);
@@ -97,7 +129,7 @@ namespace backend_api.Data
                     Id = Guid.NewGuid().ToString(),
                     Email = "admin@admin.com",
                     FullName = "admin",
-                    PasswordHash = PasswordGenerator.GeneratePassword(),
+                    PasswordHash = SD.ADMIN_PASSWORD_DEFAULT,
                     UserName = "admin@admin.com",
                     CreatedDate = DateTime.Now,
                     ImageLocalPathUrl = @"wwwroot\UserImages\default-avatar.png",

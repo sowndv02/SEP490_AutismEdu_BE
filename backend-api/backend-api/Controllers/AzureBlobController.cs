@@ -1,7 +1,5 @@
-﻿using Azure;
-using backend_api.Models;
+﻿using backend_api.Models;
 using backend_api.Repository.IRepository;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -27,7 +25,7 @@ namespace backend_api.Controllers
             {
                 using var stream = file.OpenReadStream();
                 var fileName = file.FileName;
-                var url = await _blobStorageRepository.UploadImg(stream, fileName, isPrivate);
+                var url = await _blobStorageRepository.Upload(stream, fileName, isPrivate);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 _response.Result = url;
