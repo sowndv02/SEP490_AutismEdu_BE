@@ -66,22 +66,22 @@ namespace backend_api.Data
                     new IdentityRole()
                     {
                         Name = SD.TUTOR_ROLE,
-                        NormalizedName = SD.TUTOR_ROLE
+                        NormalizedName = SD.TUTOR_ROLE.ToUpper()
                     },
                     new IdentityRole()
                     {
                         Name = SD.USER_ROLE,
-                        NormalizedName = SD.USER_ROLE
+                        NormalizedName = SD.USER_ROLE.ToUpper()
                     },
                     new IdentityRole()
                     {
                         Name = SD.STAFF_ROLE,
-                        NormalizedName = SD.STAFF_ROLE
+                        NormalizedName = SD.STAFF_ROLE.ToUpper()
                     },
                     new IdentityRole()
                     {
                         Name = SD.ADMIN_ROLE,
-                        NormalizedName = SD.ADMIN_ROLE
+                        NormalizedName = SD.ADMIN_ROLE.ToUpper()
                     }
                 );
             }
@@ -272,6 +272,24 @@ namespace backend_api.Data
                         ClaimValue = SD.DEFAULT_ASSIGN_CLAIM_CLAIM_VALUE,
                         DefaultClaimType = SD.DEFAULT_ASSIGN_CLAIM_CLAIM_TYPE,
                         DefaultClaimValue = SD.DEFAULT_ASSIGN_CLAIM_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_VIEW_CLAIM_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_VIEW_CLAIM_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_VIEW_CLAIM_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_VIEW_CLAIM_CLAIM_VALUE,
+                        CreatedDate = DateTime.Now,
+                        UserId = adminUser.Id
+                    },
+                    new ApplicationClaim
+                    {
+                        ClaimType = SD.DEFAULT_VIEW_TUTOR_CLAIM_TYPE,
+                        ClaimValue = SD.DEFAULT_VIEW_TUTOR_CLAIM_VALUE,
+                        DefaultClaimType = SD.DEFAULT_VIEW_TUTOR_CLAIM_TYPE,
+                        DefaultClaimValue = SD.DEFAULT_VIEW_TUTOR_CLAIM_VALUE,
                         CreatedDate = DateTime.Now,
                         UserId = adminUser.Id
                     }

@@ -20,6 +20,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -66,10 +67,7 @@ builder.Services.AddScoped<IWorkExperienceRepository, WorkExperienceRepository>(
 
 
 // Add DI requirement authorization handler
-builder.Services.AddScoped<INumberOfDaysForAccount, NumberOfDaysForAccount>();
-builder.Services.AddScoped<IAuthorizationHandler, AdminWithOver1000DaysHandler>();
-builder.Services.AddScoped<IAuthorizationHandler, FirstNameAuthHandler>();
-builder.Services.AddScoped<IAuthorizationHandler, AssignRoleOrClaimHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, RequiredClaimHandler>();
 
 
 
@@ -145,38 +143,22 @@ builder.Host.UseSerilog();
 
 builder.Services.AddAuthorization(option =>
 {
+    option.AddPolicy("RoleAdminPolicy", policy => policy.RequireRole(SD.ADMIN_ROLE));
 
-    // Authorization with policy using role requirement
-    option.AddPolicy("Admin", policy => policy.RequireRole(SD.ADMIN_ROLE));
-    // Authorization with policy using role requirement using condition and
-    option.AddPolicy("AdminAndUser", policy => policy.RequireRole(SD.ADMIN_ROLE).RequireRole(SD.USER_ROLE));
-    // Authorization with policy using single claim requirement
-    option.AddPolicy("AdminRole_CreateClaim", policy => policy.RequireRole(SD.ADMIN_ROLE).RequireClaim("Create", "True"));
-    // Authorization with policy using multiple claim requirement
-    option.AddPolicy("AdminRole_CreateEditDeleteClaim", policy => policy.RequireRole(SD.ADMIN_ROLE)
-                                            .RequireClaim("Create", "True")
-                                            .RequireClaim("Delete", "True")
-                                            .RequireClaim("Edit", "True")
-                                            );
-
-
-    option.AddPolicy("AdminRole_CreateEditDeleteClaim_ORSuperAdminRole", policy => policy.RequireAssertion(context => AdminRole_CreateEditDeleteClaim_ORSuperAdminRole(context)));
-
-    option.AddPolicy("OnlySuperAdminChecker", p => p.Requirements.Add(new OnlySuperAdminChecker()));
-    // requirement is calculate date
-    option.AddPolicy("AdminWithMoreThan1000Days", p => p.Requirements.Add(new AdminWithMoreThan1000DaysRequirement(1000)));
-
-    // requirement is claim 
-    option.AddPolicy("FirstNameAuth", p => p.Requirements.Add(new FirstNameAuthRequirement("test")));
-
-    // Define policy for checking assign-role
-    option.AddPolicy("AssignRolePolicy", policy =>
-        policy.Requirements.Add(new AssignRoleOrClaimRequirement("Assign", "Role")));
-
-    // Define policy for checking assign-claim
     option.AddPolicy("AssignClaimPolicy", policy =>
-        policy.Requirements.Add(new AssignRoleOrClaimRequirement("Assign", "Claim")));
+        policy.Requirements.Add(new RequiredClaimRequirement("Assign", "Claim")));
 
+    option.AddPolicy("AssignRolePolicy", policy =>
+        policy.Requirements.Add(new RequiredClaimRequirement("Assign", "Role")));
+
+    option.AddPolicy("AssignRolePolicy", policy =>
+        policy.Requirements.Add(new RequiredClaimRequirement("Assign", "Role")));
+
+    option.AddPolicy("ViewTutorPolicy", policy =>
+        policy.Requirements.Add(new RequiredClaimRequirement("View", "Tutor")));
+
+    option.AddPolicy("UpdateTutorPolicy", policy =>
+        policy.Requirements.Add(new RequiredClaimRequirement("Update", "Tutor")));
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
@@ -259,15 +241,6 @@ void ApplyMigration()
         Console.WriteLine($"An error occurred while applying migrations: {ex.Message}");
         throw; // Re-throw the exception or handle it as needed
     }
-}
-
-
-bool AdminRole_CreateEditDeleteClaim_ORSuperAdminRole(AuthorizationHandlerContext context)
-{
-    return (context.User.IsInRole(SD.ADMIN_ROLE) && context.User.HasClaim(c => c.Type == "Create" && c.Value == "True")
-        && context.User.HasClaim(c => c.Type == "Edit" && c.Value == "True")
-        && context.User.HasClaim(c => c.Type == "Delete" && c.Value == "True")
-    ) || context.User.IsInRole(SD.ADMIN_ROLE);
 }
 
 public partial class Program { }

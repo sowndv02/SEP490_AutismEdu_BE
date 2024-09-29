@@ -771,7 +771,7 @@ namespace backend_api.Repository
         }
 
         public async Task<(int TotalCount, List<ApplicationUser> list)> GetAllAsync(Expression<Func<ApplicationUser, bool>>? filter = null, string? includeProperties = null,
-            int pageSize = 10, int pageNumber = 1)
+            int pageSize = 10, int pageNumber = 1, Expression<Func<ApplicationUser, bool>>? orderBy = null, bool isDesc = true)
         {
 
             IQueryable<ApplicationUser> query = _context.ApplicationUsers;
@@ -783,7 +783,13 @@ namespace backend_api.Repository
                     query = query.Include(includeProperty);
                 }
             }
-
+            if (orderBy != null)
+            {
+                if (isDesc)
+                    query = query.OrderByDescending(orderBy);
+                else
+                    query = query.OrderBy(orderBy);
+            }
             int count = 0;
             if (filter != null)
                 query = query.Where(filter);

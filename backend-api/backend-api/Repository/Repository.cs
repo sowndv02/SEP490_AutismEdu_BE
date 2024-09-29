@@ -76,7 +76,7 @@ namespace backend_api.Repository
         }
 
         public async Task<(int TotalCount, List<T> list)> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null,
-            int pageSize = 0, int pageNumber = 1)
+            int pageSize = 0, int pageNumber = 1, Expression<Func<T, object>>? orderBy = null, bool isDesc = true)
         {
             IQueryable<T> query = dbset;
             IQueryable<T> queryCount = query;
@@ -97,6 +97,13 @@ namespace backend_api.Repository
                 {
                     query = query.Include(includeProp);
                 }
+            }
+            if(orderBy != null)
+            {
+                if(isDesc)
+                    query = query.OrderByDescending(orderBy);
+                else 
+                    query = query.OrderBy(orderBy);
             }
             return (queryCount.ToListAsync().GetAwaiter().GetResult().Count, await query.ToListAsync());
         }
