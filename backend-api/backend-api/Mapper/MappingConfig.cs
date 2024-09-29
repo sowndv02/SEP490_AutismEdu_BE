@@ -44,6 +44,8 @@ namespace backend_api.Mapper
 
             CreateMap<WorkExperience, WorkExperienceCreateDTO>().ReverseMap();
             CreateMap<Certificate, CertificateCreateDTO>().ReverseMap();
+            CreateMap<TutorInfo, Tutor>().ReverseMap();
+            CreateMap<Tutor, TutorDTO>().ReverseMap();
 
         }
     }
