@@ -79,6 +79,7 @@
         public const string CITIZEN_ID_LICENSE = "Căn cước công dân";
         public const string OTHER_LICENSE = "Khác";
 
-
+        // Const message 
+        public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "You are already a tutor or have a previous registration requirement";
     }
 }
