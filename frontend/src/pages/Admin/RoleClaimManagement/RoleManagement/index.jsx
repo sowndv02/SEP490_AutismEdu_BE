@@ -1,14 +1,28 @@
 import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import RoleTable from './RoleTable';
 import RoleModal from '../RoleClaimModal/RoleModal';
+import services from '~/plugins/services';
 function RoleManagement() {
-    const [role, setRole] = useState('');
+    const [roles, setRoles] = useState([]);
+    const [status, setStatus] = useState(false);
+    useEffect(() => {
+        handleGetRoles();
+    }, [status]);
+    const handleGetRoles = async () => {
+        try {
+            await services.RoleManagementAPI.getRoles((res) => {
+                setRoles(res.result);
+            }, (err) => {
+                console.log(err);
+            });
+        } catch (error) {
+            console.log(error);
 
-    const handleChange = (event) => {
-        setRole(event.target.value);
-    };
+        }
+    }
+
     return (
         <Box sx={{
             width: "100%", bgcolor: "white", p: "20px",
@@ -24,11 +38,11 @@ function RoleManagement() {
                 gap: 2,
                 marginTop: "30px"
             }}>
-                
-                <RoleModal />
+
+                <RoleModal roles={roles} setRoles={setRoles} handleGetRoles={handleGetRoles} />
             </Box>
             <Box>
-                <RoleTable />
+                <RoleTable roles={roles} setRoles={setRoles} />
             </Box>
         </Box>
     )

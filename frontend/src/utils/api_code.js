@@ -24,6 +24,7 @@ const API_CODE = {
   API_GET_USER_ID: '/v1/User/',
   //Claim management
   API_GET_CLAIM: '/v1/Claim',
+  API_ADD_CLAIM: '/v1/Claim',
 
   //role management
   API_GET_ROLE: '/v1/Role',

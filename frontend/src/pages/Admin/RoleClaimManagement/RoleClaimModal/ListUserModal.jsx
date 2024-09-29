@@ -26,7 +26,6 @@ const style = {
 };
 //users={r.users} roles={roles} setRoles={setRoles} roleId={r.id} 
 function ListUserModal({ totalUser, totalUsersInRole, claim, setClaim, users, claimId, roleId, roles, setRoles }) {
-    console.log(totalUser);
 
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
@@ -61,7 +60,6 @@ function ListUserModal({ totalUser, totalUsersInRole, claim, setClaim, users, cl
 
     const handleDeleteUserFromRole = async (id) => {
         try {
-            console.log(users);
 
             await services.UserManagementAPI.removeUserRoles(id,
                 {
@@ -71,15 +69,14 @@ function ListUserModal({ totalUser, totalUsersInRole, claim, setClaim, users, cl
                     enqueueSnackbar("Remove user from role successfully!", { variant: "success" });
                     const role = roles.map(r => {
                         if (r.id === roleId) {
-                            r.users = users.filter((u) => (u.id !== id));
-
-                            return c;
+                            r.users = r.users.filter((u) => (u.id !== id));
+                            return r;
                         } else {
-                            return c;
+                            return r;
                         }
                     });
                     setRoles(role);
-                    console.log(role);
+                    
                 }, (err) => {
                     enqueueSnackbar("Remove user from role failed!", { variant: "error" });
                     console.log(err);
@@ -88,7 +85,6 @@ function ListUserModal({ totalUser, totalUsersInRole, claim, setClaim, users, cl
             console.log(error);
         }
     };
-    console.log(totalUser);
 
     return (
         <div>
