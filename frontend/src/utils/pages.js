@@ -10,11 +10,10 @@ const PAGES = {
   RESETPASSWORD: '/reset-password',
   CONFIRMREGISTER: '/confirm-register',
   LISTCENTER: '/list-center',
-  CENTERPROFILE: '/center/:id',
-  LISTTUTOR: '/list-tutor',
-  TUTORPROFILE: '/tutor-profile',
+  CENTERPROFILE:'/center/:id',
+  LISTTUTOR:'/list-tutor',
+  TUTORPROFILE:'/tutor-profile/:id'
   TUTORREGISTRATIONMANAGEMENT: '/admin/tutor-registration-management',
-  TUTORREGISTRATION: '/tutor-registration'
-};
+  TUTORREGISTRATION: '/tutor-registration'};
 
 export default PAGES;

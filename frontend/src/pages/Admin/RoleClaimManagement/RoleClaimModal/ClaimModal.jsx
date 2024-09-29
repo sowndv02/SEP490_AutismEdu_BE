@@ -5,6 +5,8 @@ import Modal from '@mui/material/Modal';
 import { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import { FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import services from '~/plugins/services';
+import { enqueueSnackbar } from 'notistack';
 const style = {
     position: 'absolute',
     top: '50%',
@@ -32,7 +34,22 @@ function ClaimModal() {
             setClaim("");
             setValue("")
         }
-    }, [open])
+    }, [open]);
+    const handleAddClaim = async () => {
+        try {
+            await services.ClaimManagementAPI.addClaim({ claimType: claim, claimValue: value }, (res) => {
+                enqueueSnackbar("Add role successfully!", { variant: "success" });
+                setOpen(false);
+            }
+                , (err) => {
+                    enqueueSnackbar("Add role error!", { variant: "error" });
+                    console.log(err);
+                });
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
     return (
         <div>
             <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen}>Add Claim</Button>
@@ -56,10 +73,10 @@ function ClaimModal() {
                                 label="Type"
                                 onChange={handleChange}
                             >
-                                <MenuItem value={10}>Create</MenuItem>
-                                <MenuItem value={20}>View</MenuItem>
-                                <MenuItem value={30}>Edit</MenuItem>
-                                <MenuItem value={30}>Delete</MenuItem>
+                                <MenuItem value={'Create'}>Create</MenuItem>
+                                <MenuItem value={'View'}>View</MenuItem>
+                                <MenuItem value={'Edit'}>Edit</MenuItem>
+                                <MenuItem value={'Delete'}>Delete</MenuItem>
                             </Select>
                         </FormControl>
                         <TextField size='small' id="outlined-basic" label="Claim value" variant="outlined"
@@ -69,7 +86,7 @@ function ClaimModal() {
                                 width: "100%",
                                 marginTop: "20px"
                             }} />
-                        <Button variant='contained' sx={{ marginTop: "20px" }}>Add</Button>
+                        <Button variant='contained' sx={{ marginTop: "20px" }} onClick={handleAddClaim}>Add</Button>
                     </Box>
                 </Box>
             </Modal>
