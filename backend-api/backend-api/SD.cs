@@ -39,6 +39,8 @@
         public const string DEFAULT_DELETE_CLAIM_VALUE = "True";
         public const string DEFAULT_UPDATE_CLAIM_TYPE = "Update";
         public const string DEFAULT_UPDATE_CLAIM_VALUE = "True";
+        public const string DEFAULT_VIEW_CLAIM_TYPE = "View";
+        public const string DEFAULT_VIEW_CLAIM_VALUE = "True";
 
         public const string DEFAULT_CREATE_CLAIM_CLAIM_TYPE = "Create";
         public const string DEFAULT_CREATE_CLAIM_CLAIM_VALUE = "Claim";
@@ -73,6 +75,11 @@
         public const string DEFAULT_ASSIGN_CLAIM_CLAIM_TYPE = "Assign";
         public const string DEFAULT_ASSIGN_CLAIM_CLAIM_VALUE = "Claim";
 
+        public const string DEFAULT_VIEW_CLAIM_CLAIM_TYPE = "View";
+        public const string DEFAULT_VIEW_CLAIM_CLAIM_VALUE = "Claim";
+
+        public const string DEFAULT_VIEW_TUTOR_CLAIM_TYPE = "View";
+        public const string DEFAULT_VIEW_TUTOR_CLAIM_VALUE = "Tutor";
 
         // Const license name
         public const string BACHELORS_DEGREE_LICENSE = "Bằng đại học";
