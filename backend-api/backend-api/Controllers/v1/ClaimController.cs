@@ -214,7 +214,7 @@ namespace backend_api.Controllers.v1
             {
                 if (claimDTO == null) return BadRequest(claimDTO);
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
-                model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == null ? _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id : User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                model.UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var claimExist = await _claimRepository.GetAsync(x => x.ClaimType == claimDTO.ClaimType && x.ClaimValue == claimDTO.ClaimValue, false);
                 if (claimExist != null)
                 {
