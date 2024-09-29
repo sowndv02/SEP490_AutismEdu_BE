@@ -5,9 +5,9 @@ using System.Security.Claims;
 
 namespace backend_api.Authorize
 {
-    public class AssignRoleHandler : AuthorizationHandler<AssignRoleRequirement>
+    public class AssignRoleOrClaimHandler : AuthorizationHandler<AssignRoleOrClaimRequirement>
     {
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AssignRoleRequirement requirement)
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AssignRoleOrClaimRequirement requirement)
         {
             if (context.User.HasClaim(c => c.Type == requirement.ClaimType && c.Value == requirement.ClaimValue))
             {
