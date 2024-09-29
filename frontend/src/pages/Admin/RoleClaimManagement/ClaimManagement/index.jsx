@@ -15,7 +15,6 @@ function ClaimManagement() {
     const [searchType, setSearchType] = useState('all');
     const [searchValue, setSearchValue] = useState('');
     useEffect(() => {
-
         handleSearch();
     }, [currentPage]);
     const handleGetClaims = async () => {
@@ -49,7 +48,6 @@ function ClaimManagement() {
             setLoading(true);
             await services.ClaimManagementAPI.getClaims((res) => {
                 setClaim(res.result);
-                console.log(res);
                 res.pagination.currentSize = res.result.length
                 setPagination(res.pagination);
             }, (err) => {
@@ -104,7 +102,7 @@ function ClaimManagement() {
                         }} onChange={handleChangeSearchValue} value={searchValue}/>
                     <Button variant='contained' color='primary' startIcon={<SearchIcon />} onClick={handleSearch}>Search</Button>
                 </Box>
-                <ClaimModal />
+                <ClaimModal/>
             </Box>
             <Box>
                 <ClaimTable claim={claim} setClaim={setClaim} pagination={pagination}

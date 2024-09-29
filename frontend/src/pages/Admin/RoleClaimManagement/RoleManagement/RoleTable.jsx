@@ -3,26 +3,8 @@ import ListUserModal from '../RoleClaimModal/ListUserModal';
 import { useEffect, useState } from 'react';
 import services from '~/plugins/services';
 
-function RoleTable() {
-    const [roles, setRoles] = useState([]);
-
-    useEffect(() => {
-        handleGetRoles();
-    }, []);
-    const handleGetRoles = async () => {
-        try {
-            await services.RoleManagementAPI.getRoles((res) => {
-                setRoles(res.result);
-                console.log(res);
-
-            }, (err) => {
-                console.log(err);
-            })
-        } catch (error) {
-            console.log(error);
-
-        }
-    }
+function RoleTable({roles, setRoles}) {
+    
     return (
         <TableContainer component={Paper} sx={{ mt: "20px" }}>
             <Table>

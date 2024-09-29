@@ -5,6 +5,8 @@ import Modal from '@mui/material/Modal';
 import { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import { FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import services from '~/plugins/services';
+import { enqueueSnackbar } from 'notistack';
 const style = {
     position: 'absolute',
     top: '50%',
@@ -16,7 +18,7 @@ const style = {
     p: 4,
 };
 
-function RoleModal() {
+function RoleModal({ roles, setRoles }) {
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -26,7 +28,28 @@ function RoleModal() {
         if (!open) {
             setRole("")
         }
-    }, [open])
+    }, [open]);
+
+    const handleAddRole = async () => {
+        try {
+            await services.RoleManagementAPI.addRole({ name: role }, (res) => {
+                enqueueSnackbar("Remove user from role successfully!", { variant: "success" });
+
+                setOpen(false);
+            }
+                , (err) => {
+                    enqueueSnackbar("Remove user from role error!", { variant: "error" });
+                    console.log(err);
+                });
+            await services.RoleManagementAPI.getRoles((res) => {
+                setRoles(res.result);
+            }, (err) => {
+                console.log(err);
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
     return (
         <div>
             <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen}>Add Role</Button>
@@ -47,7 +70,7 @@ function RoleModal() {
                             sx={{
                                 width: "100%"
                             }} />
-                        <Button variant='contained' sx={{ marginTop: "20px" }}>Add</Button>
+                        <Button variant='contained' sx={{ marginTop: "20px" }} onClick={handleAddRole}>Add</Button>
                     </Box>
                 </Box>
             </Modal>
