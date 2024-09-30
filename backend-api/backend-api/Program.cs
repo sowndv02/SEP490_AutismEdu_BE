@@ -64,6 +64,7 @@ builder.Services.AddScoped<ITutorRepository, TutorRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<ICertificateMediaRepository, CertificateMediaRepository>();
 builder.Services.AddScoped<IWorkExperienceRepository, WorkExperienceRepository>();
+builder.Services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
 
 
 // Add DI requirement authorization handler
