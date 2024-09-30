@@ -1,14 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace backend_api.Models
+﻿namespace backend_api.Models.DTOs
 {
-    public class Certificate
+    public class CertificateDTO
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string SubmiterId { get; set; }
         public string CertificateName { get; set; }
         public string? IdentityCardNumber { get; set; }
         public string? IssuingInstitution { get; set; }
@@ -18,8 +12,6 @@ namespace backend_api.Models
         public DateTime? UpdatedDate { get; set; }
         public string? Feedback { get; set; }
         public bool? IsApprove { get; set; }
-        [ForeignKey(nameof(SubmiterId))]
-        public ApplicationUser Submiter { get; set; }
         public List<CertificateMedia> CertificateMedias { get; set; }
     }
 }
