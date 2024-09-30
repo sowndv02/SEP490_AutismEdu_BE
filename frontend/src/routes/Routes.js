@@ -55,6 +55,10 @@ const publicRoutes = [
         path: PAGES.ROOT + PAGES.TUTORPROFILE,
         element: TutorProfile
     },
+    {
+        path: PAGES.ROOT + PAGES.TUTORREGISTRATION,
+        element: TutorRegistration
+    },
 ]
 
 const adminRoutes = [

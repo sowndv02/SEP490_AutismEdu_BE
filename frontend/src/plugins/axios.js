@@ -11,7 +11,7 @@ if (token != undefined && token.length != 0) {
 }
 
 const axiosInstance = axios.create({
-  baseURL: "https://localhost:5000/",
+  baseURL: import.meta.env.VITE_BASE_URL,
   timeout: 80000, // replace project base url later
   headers
 });
