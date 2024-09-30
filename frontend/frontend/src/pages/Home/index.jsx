@@ -10,7 +10,6 @@ function Home() {
         <Box>
             <CarouselComponent />
             <BigCity />
-            <Center />
             <TutorComponent />
             <Blog />
             <AboutMe />

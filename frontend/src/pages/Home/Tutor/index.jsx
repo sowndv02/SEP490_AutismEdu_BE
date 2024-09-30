@@ -7,9 +7,10 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SubdirectoryArrowLeftIcon from '@mui/icons-material/SubdirectoryArrowLeft';
 import { formatter } from '~/utils/service';
+import ButtonIcon from '~/components/ButtonComponent/ButtonIcon';
 function Tutor() {
     return (
-        <Box sx={{ width: "100vw", py: "100px", textAlign: 'center' }}>
+        <Box sx={{ width: "100vw", py: "100px", textAlign: 'center', bgcolor: "#f9f9ff" }}>
 
             <ChipComponent text="GIA SƯ NỔI BẬT" bgColor="#e4e9fd" color="#2f57f0" />
             <Box textAlign={'center'} sx={{ marginBottom: "50px" }}>
@@ -178,6 +179,9 @@ function Tutor() {
                     </Box>
                 </Stack>
             </Stack >
+            <Box mt={5} textAlign="center">
+                <ButtonIcon text={"XEM THÊM GiA SƯ"} width="400px" height="70px" fontSize="20px" />
+            </Box>
         </Box >
     )
 }

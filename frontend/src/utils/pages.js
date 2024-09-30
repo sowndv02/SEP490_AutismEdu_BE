@@ -13,7 +13,8 @@ const PAGES = {
   CENTERPROFILE: '/center/:id',
   LISTTUTOR: '/list-tutor',
   TUTORPROFILE: '/tutor-profile',
-  TUTORREGISTRATIONMANAGEMENT: '/admin/tutor-registration-management'
+  TUTORREGISTRATIONMANAGEMENT: '/admin/tutor-registration-management',
+  TUTORREGISTRATION: '/tutor-registration'
 };
 
 export default PAGES;

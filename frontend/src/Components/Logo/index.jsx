@@ -9,7 +9,7 @@ function Logo({ sizeLogo, sizeName }) {
                 background: 'linear-gradient(to right, #3c4ff4, #b660ec)',
                 WebkitBackgroundClip: "text",
                 color: "transparent",
-            }}>AutismEdu</Typography>
+            }}>AutismEduCS</Typography>
         </Stack>
     )
 }

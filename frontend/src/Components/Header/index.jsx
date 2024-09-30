@@ -65,11 +65,10 @@ function Header() {
                     xs: "none"
                 }
             }}>
-                <Tab value={"1"} label="Trang chủ" />
-                <Tab value={"2"} label="Trung tâm" icon={<ExpandMoreIcon />} iconPosition="end" onClick={handleClickListItem} />
-                <Tab value={"3"} label="Gia sư" onClick={handleClickListItem} />
-                <Tab value={"4"} label="Lớp học" />
-                <Tab value={"5"} label="Blog" />
+                <Tab sx={{fontSize:"18px"}} value={"1"} label="Trang chủ" />
+                <Tab sx={{fontSize:"18px"}} value={"3"} label="Gia sư" icon={<ExpandMoreIcon />} iconPosition="end" onClick={handleClickListItem} />
+                <Tab sx={{fontSize:"18px"}} value={"4"} label="Lớp học" />
+                <Tab sx={{fontSize:"18px"}} value={"5"} label="Blog" />
             </Tabs>
             <Menu
                 id="lock-menu"
