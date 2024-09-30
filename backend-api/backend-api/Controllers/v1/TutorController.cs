@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using backend_api.Migrations;
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
@@ -76,6 +77,39 @@ namespace backend_api.Controllers.v1
                 model.UserId = userId;
                 model.CreatedDate = DateTime.Now;
                 await _tutorRepository.CreateAsync(model);
+                // Update user profile
+                var userProfile = await _userRepository.GetAsync(x => x.Id == userId);
+                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                if (tutorCreateDTO.TutorBasicInfo.Image != null)
+                {
+                    if (!string.IsNullOrEmpty(tutorCreateDTO.TutorBasicInfo.ImageLocalPathUrl))
+                    {
+                        var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), tutorCreateDTO.TutorBasicInfo.ImageLocalPathUrl);
+                        FileInfo file = new FileInfo(oldFilePathDirectory);
+                        if (file.Exists)
+                        {
+                            file.Delete();
+                        }
+                    }
+                    string fileName = userId + Path.GetExtension(tutorCreateDTO.TutorBasicInfo.Image.FileName);
+                    string filePath = @"wwwroot\UserImage\" + fileName;
+
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+
+                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                    {
+                        tutorCreateDTO.TutorBasicInfo.Image.CopyTo(fileStream);
+                    }
+                    userProfile.ImageLocalPathUrl = filePath;
+                    userProfile.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
+                    using var stream = tutorCreateDTO.TutorBasicInfo.Image.OpenReadStream();
+                    userProfile.ImageUrl = await _blobStorageRepository.Upload(stream, fileName);
+                }
+                if (!string.IsNullOrEmpty(tutorCreateDTO.TutorBasicInfo.Address))
+                    userProfile.Address = tutorCreateDTO.TutorBasicInfo.Address;
+                if (!string.IsNullOrEmpty(tutorCreateDTO.TutorBasicInfo.PhoneNumber))
+                    userProfile.PhoneNumber = tutorCreateDTO.TutorBasicInfo.PhoneNumber;
+                await _userRepository.UpdateAsync(userProfile);
 
                 // Add WorkExperience
                 List<WorkExperience> modelWorkExperience = _mapper.Map<List<WorkExperience>>(tutorCreateDTO.WorkExperiences);
@@ -187,6 +221,15 @@ namespace backend_api.Controllers.v1
                 model.IsApprove = !model.IsApprove;
                 model.UpdatedDate = DateTime.Now;
                 await _tutorRepository.UpdateAsync(model);
+
+                // Update reject certificate
+                if (!model.IsApprove)
+                {
+                    Certificate certificates = await _certificateRepository.GetAsync(x => x.SubmiterId == userId, false, "CertificateMedias", null);
+                    model.IsApprove = false;
+                    model.UpdatedDate = DateTime.Now;
+                    await _certificateRepository.UpdateAsync(certificates);
+                }
                 _response.Result = _mapper.Map<TutorDTO>(model);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
