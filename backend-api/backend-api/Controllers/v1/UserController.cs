@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace backend_api.Controllers.v1
 {
@@ -347,7 +346,7 @@ namespace backend_api.Controllers.v1
                         case "all":
                             if (!string.IsNullOrEmpty(searchValue))
                             {
-                                var(totalResult, resultObject) = await _userRepository.GetAllAsync(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower())), pageSize: pageSize, pageNumber: pageNumber);
+                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower())), pageSize: pageSize, pageNumber: pageNumber);
                                 totalCount = totalResult;
                                 list = resultObject;
                             }

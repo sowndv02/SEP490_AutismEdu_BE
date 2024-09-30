@@ -40,5 +40,7 @@ namespace backend_api.Repository.IRepository
         Task<bool> AddRoleToUser(string userId, List<string> roleIds);
         Task<List<IdentityRole>> GetRoleByUserId(string userId);
 
+        Task<bool> CheckUserInRole(string userId, string roleName);
+
     }
 }
