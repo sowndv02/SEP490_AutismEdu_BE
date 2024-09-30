@@ -81,6 +81,12 @@
         public const string DEFAULT_VIEW_TUTOR_CLAIM_TYPE = "View";
         public const string DEFAULT_VIEW_TUTOR_CLAIM_VALUE = "Tutor";
 
+        public const string DEFAULT_VIEW_CERTIFICATE_CLAIM_TYPE = "View";
+        public const string DEFAULT_VIEW_CERTIFICATE_CLAIM_VALUE = "Certificate";
+
+        public const string DEFAULT_UPDATE_CERTIFICATE_CLAIM_TYPE = "Update";
+        public const string DEFAULT_UPDATE_CERTIFICATE_CLAIM_VALUE = "Certificate";
+
         // Const license name
         public const string BACHELORS_DEGREE_LICENSE = "Bằng đại học";
         public const string CITIZEN_ID_LICENSE = "Căn cước công dân";

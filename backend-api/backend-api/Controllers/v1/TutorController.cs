@@ -2,7 +2,6 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -32,7 +31,7 @@ namespace backend_api.Controllers.v1
         protected int pageSize = 0;
         public TutorController(IUserRepository userRepository, ITutorRepository tutorRepository,
             ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, 
+            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
             ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository)
         {
@@ -80,7 +79,7 @@ namespace backend_api.Controllers.v1
 
                 // Add WorkExperience
                 List<WorkExperience> modelWorkExperience = _mapper.Map<List<WorkExperience>>(tutorCreateDTO.WorkExperiences);
-                foreach (var workExperience in modelWorkExperience) 
+                foreach (var workExperience in modelWorkExperience)
                 {
                     workExperience.UserId = userId;
                     workExperience.CreatedDate = DateTime.Now;
@@ -101,7 +100,7 @@ namespace backend_api.Controllers.v1
                         var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url };
                         await _certificateMediaRepository.CreateAsync(objMedia);
                     }
-                   
+
                 }
 
                 _response.StatusCode = HttpStatusCode.Created;
@@ -117,7 +116,6 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        [Authorize(Policy = "ViewTutorPolicy")]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạch, int pageNumber = 1)
         {
             try
@@ -154,7 +152,6 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet("{id}")]
-        [Authorize(Policy = "ViewTutorPolicy")]
         public async Task<ActionResult<APIResponse>> GetById(string id)
         {
             try
@@ -173,8 +170,7 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpPut("approve/{userId}")]
-        [Authorize(Policy = "ViewTutorPolicy")]
+        [HttpPut("changeStatus/{userId}")]
         [Authorize(Policy = "UpdateTutorPolicy")]
         public async Task<IActionResult> ApproveOrRejectTutor(string userId)
         {
@@ -188,7 +184,8 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
                 Tutor model = await _tutorRepository.GetAsync(x => x.UserId == userId, false, "User", null);
-                model.IsApprove  = !model.IsApprove;
+                model.IsApprove = !model.IsApprove;
+                model.UpdatedDate = DateTime.Now;
                 await _tutorRepository.UpdateAsync(model);
                 _response.Result = _mapper.Map<TutorDTO>(model);
                 _response.StatusCode = HttpStatusCode.OK;

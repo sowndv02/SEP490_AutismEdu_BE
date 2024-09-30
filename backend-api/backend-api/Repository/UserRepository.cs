@@ -373,9 +373,12 @@ namespace backend_api.Repository
             {
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Role, roles.FirstOrDefault()),
                 new Claim(JwtRegisteredClaimNames.Jti,  jwtTokenId)
             };
+            foreach (var role in roles)
+            {
+                authClaims.Add(new Claim(ClaimTypes.Role, role));
+            }
             authClaims.AddRange(userClaims);
             var token = new JwtSecurityToken(
                 issuer: _configuration["ApiSettings:JWT:ValidIssuer"],
@@ -793,8 +796,8 @@ namespace backend_api.Repository
             int count = 0;
             if (filter != null)
                 query = query.Where(filter);
-            count= query.Count();
-            
+            count = query.Count();
+
             query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
             var users = await query.ToListAsync();
             foreach (var user in users)
@@ -957,6 +960,26 @@ namespace backend_api.Repository
                     return roles;
                 }
                 return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> CheckUserInRole(string userId, string roleName)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(roleName))
+                {
+                    List<IdentityRole> roles = new List<IdentityRole>();
+                    var user = await _userManager.FindByIdAsync(userId);
+                    if (user == null) throw new Exception("user not found");
+                    var roleNames = await _userManager.GetRolesAsync(user);
+                    return roles.FirstOrDefault(x => x.Name == roleName) != null;
+                }
+                return false;
             }
             catch (Exception ex)
             {
