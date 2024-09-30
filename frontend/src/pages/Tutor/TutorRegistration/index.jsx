@@ -1,5 +1,5 @@
 import { Box, Breadcrumbs, Divider, Paper, Stack, Typography } from '@mui/material'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PAGES from '~/utils/pages'
 import Stepper from '@mui/material/Stepper';
@@ -7,24 +7,28 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Button from '@mui/material/Button';
 import TutorInformation from './TutorInformation';
-import Certificate from './Certificate';
+import WorkInfo from './WorkInfo';
 import Identification from './Identification';
+import axios from 'axios';
 
 const steps = ['Thông tin gia sư', 'Bằng tốt nghiệp', 'Định danh'];
 function TutorRegistration() {
-    const [activeStep, setActiveStep] = React.useState(0);
+    const [activeStep, setActiveStep] = React.useState(2);
+    const [tutorInformation, setTutorInformation] = useState(null);
+    const [certificate, setCertificate] = useState([]);
+    const [career, setCareer] = useState([]);
+    const [identifcation, setIdentification] = useState(null);
+    // useEffect(() => {
+    //     const handleBeforeUnload = (event) => {
+    //         handleCallApi();
+    //         event.returnValue = '';
+    //     };
 
-    useEffect(() => {
-        const handleBeforeUnload = (event) => {
-            localStorage.setItem("Check", "Hello")
-            event.returnValue = '';
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
-    }, [])
+    //     window.addEventListener('beforeunload', handleBeforeUnload);
+    //     return () => {
+    //         window.removeEventListener('beforeunload', handleBeforeUnload);
+    //     };
+    // }, [])
     const handleNext = () => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
     };
@@ -50,7 +54,7 @@ function TutorRegistration() {
                     </Link>
                     <Typography sx={{ color: 'text.primary' }}>Đăng ký thành gia sư</Typography>
                 </Breadcrumbs>
-                <Paper sx={{ width: "100%", py: "50px", px: "40px", mt: "20px" }} elevation='2'>
+                <Paper sx={{ width: "100%", py: "50px", px: "40px", mt: "20px" }} elevation={2}>
                     <Box width="100%" px="100px">
                         <Stepper activeStep={activeStep}>
                             {steps.map((label, index) => {
@@ -78,20 +82,26 @@ function TutorRegistration() {
                     ) : (
                         <React.Fragment>
                             {
-                                activeStep + 1 === 1 && <TutorInformation
-                                    activeStep={activeStep}
-                                    handleBack={handleBack}
-                                    handleNext={handleNext}
-                                    steps={steps}
-                                />
+                                // activeStep + 1 === 1 && <TutorInformation
+                                //     activeStep={activeStep}
+                                //     handleBack={handleBack}
+                                //     handleNext={handleNext}
+                                //     steps={steps}
+                                //     tutorInformation={tutorInformation}
+                                //     setTutorInformation={setTutorInformation}
+                                // />
                             }
                             {
-                                activeStep + 1 === 2 && <Certificate
-                                    activeStep={activeStep}
-                                    handleBack={handleBack}
-                                    handleNext={handleNext}
-                                    steps={steps}
-                                />
+                                // activeStep + 1 === 2 && <WorkInfo
+                                //     activeStep={activeStep}
+                                //     handleBack={handleBack}
+                                //     handleNext={handleNext}
+                                //     steps={steps}
+                                //     certificate={certificate}
+                                //     career={career}
+                                //     setCareer={setCareer}
+                                //     setCertificate={setCertificate}
+                                // />
                             }
                             {
                                 activeStep + 1 === 3 && <Identification
@@ -99,6 +109,8 @@ function TutorRegistration() {
                                     handleBack={handleBack}
                                     handleNext={handleNext}
                                     steps={steps}
+                                    identifcation={identifcation}
+                                    setIdentification={setIdentification}
                                 />
                             }
 
