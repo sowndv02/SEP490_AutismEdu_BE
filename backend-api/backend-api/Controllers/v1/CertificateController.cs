@@ -83,7 +83,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         //[Authorize(Policy = "UpdateCertificatePolicy")]
-        public async Task<IActionResult> ApproveOrRejectTutor(ChangeStatusCertificateDTO changeStatusCertificateDTO)
+        public async Task<IActionResult> ApproveOrRejectCertificate(ChangeStatusCertificateDTO changeStatusCertificateDTO)
         {
             try
             {
@@ -94,14 +94,14 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { $"{changeStatusCertificateDTO.Id} is invalid!" };
                     return BadRequest(_response);
                 }
-                Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusCertificateDTO.Id, false, null, null);
+                Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusCertificateDTO.Id, false, "CertificateMedias", null);
                 model.IsApprove = !model.IsApprove;
 
                 if (!string.IsNullOrEmpty(changeStatusCertificateDTO.Feedback))
                     model.Feedback = changeStatusCertificateDTO.Feedback;
                 model.UpdatedDate = DateTime.Now;
                 await _certificateRepository.UpdateAsync(model);
-                _response.Result = _mapper.Map<TutorDTO>(model);
+                _response.Result = _mapper.Map<CertificateDTO>(model);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
@@ -174,36 +174,6 @@ namespace backend_api.Controllers.v1
             {
                 var result = await _certificateRepository.GetAsync(x => x.Id == id, false, "CertificateMedias", null);
                 _response.Result = _mapper.Map<CertificateDTO>(result);
-                _response.StatusCode = HttpStatusCode.OK;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-        [HttpPut("changeStatus/{id}")]
-        //[Authorize(Policy = "UpdateCertificatePolicy")]
-        public async Task<IActionResult> ApproveOrRejectTutor(int id)
-        {
-            try
-            {
-                if (id <= 0)
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{id} is invalid!" };
-                    return BadRequest(_response);
-                }
-                Certificate model = await _certificateRepository.GetAsync(x => x.Id == id, false, "CertificateMedias", null);
-                model.IsApprove = !model.IsApprove;
-                model.UpdatedDate = DateTime.Now;
-                await _certificateRepository.UpdateAsync(model);
-                _response.Result = _mapper.Map<CertificateDTO>(model);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
