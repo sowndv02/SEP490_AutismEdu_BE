@@ -4,9 +4,11 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.SignalR;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Net;
 using System.Security.Claims;
 
@@ -26,6 +28,7 @@ namespace backend_api.Controllers.v1
         private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<TutorController> _logger;
+        private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IMapper _mapper;
         private readonly FormatString _formatString;
         protected APIResponse _response;
@@ -34,8 +37,10 @@ namespace backend_api.Controllers.v1
             ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
-            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository)
+            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
+            IHubContext<NotificationHub> hubContext)
         {
+            _hubContext = hubContext;
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -230,6 +235,14 @@ namespace backend_api.Controllers.v1
                     model.UpdatedDate = DateTime.Now;
                     await _certificateRepository.UpdateAsync(certificates);
                 }
+                // Add signalR
+
+                var connectionId = NotificationHub.GetConnectionIdByEmail(userId);
+                if (!string.IsNullOrEmpty(connectionId))
+                {
+                    await _hubContext.Clients.Client(connectionId).SendAsync("Status change", _mapper.Map<TutorDTO>(model));
+                }
+
                 _response.Result = _mapper.Map<TutorDTO>(model);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);

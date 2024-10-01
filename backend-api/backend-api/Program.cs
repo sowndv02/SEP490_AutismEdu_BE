@@ -9,6 +9,7 @@ using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services;
 using backend_api.Services.IServices;
+using backend_api.SignalR;
 using backend_api.Swagger;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -80,7 +81,7 @@ builder.Services.AddSingleton<DateTimeEncryption>();
 builder.Services.AddSingleton<TokenEcryption>();
 builder.Services.AddSingleton<FormatString>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
-
+builder.Services.AddSignalR();
 
 
 // Add AutoMapper
@@ -191,6 +192,8 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseResponseCaching();
+
+app.MapHub<NotificationHub>("/hub/notifications");
 
 // Add cache for response
 //app.Use(async (context, next) =>
