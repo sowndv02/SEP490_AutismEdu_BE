@@ -1,4 +1,4 @@
-import { Avatar, AvatarGroup, Box, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import { Avatar, AvatarGroup, Box, Button, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import ListUserModal from '../RoleClaimModal/ListUserModal';
 import { format } from 'date-fns';
 import TablePagging from '~/Components/TablePagging';
@@ -40,7 +40,7 @@ function ClaimTable({totalUser, claim, setClaim, pagination, setPagination, curr
                                         {format(a.updatedDate, 'dd-MM-yyyy')}
                                     </TableCell>
                                     <TableCell>
-                                        Edit
+                                        <Button variant='contained' color='primary'>Rest</Button>
                                     </TableCell>
                                 </TableRow>
                             )
