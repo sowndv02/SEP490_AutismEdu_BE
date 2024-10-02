@@ -6,6 +6,7 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 
@@ -84,6 +85,35 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { $"Data is invalid!" };
                     return BadRequest(_response);
                 }
+                // Get current roles of the user
+                var currentRoles = await _userRepository.GetRoleByUserId(userId);
+
+                // Define restricted roles combinations
+                var restrictedRoles = new Dictionary<string, List<string>>
+                {
+                    { SD.STAFF_ROLE, new List<string> { SD.ADMIN_ROLE, SD.TUTOR_ROLE } },
+                    { SD.TUTOR_ROLE, new List<string> { SD.ADMIN_ROLE, SD.STAFF_ROLE } },
+                    { SD.ADMIN_ROLE, new List<string> { SD.TUTOR_ROLE, SD.STAFF_ROLE } }
+                };
+
+                // Validate if any restricted roles are being added
+                foreach (var role in currentRoles.Select(x => x.Name))
+                {
+                    if (restrictedRoles.ContainsKey(role))
+                    {
+                        foreach (var restrictedRole in restrictedRoles[role])
+                        {
+                            if (userRoleDTO.UserRoleIds.Contains(restrictedRole))
+                            {
+                                _response.StatusCode = HttpStatusCode.BadRequest;
+                                _response.IsSuccess = false;
+                                _response.ErrorMessages = new List<string> { $"Cannot add role {restrictedRole} to user with role {role}." };
+                                return BadRequest(_response);
+                            }
+                        }
+                    }
+                }
+
                 var result = await _userRepository.AddRoleToUser(userId, userRoleDTO.UserRoleIds);
                 if (!result)
                 {
@@ -339,6 +369,13 @@ namespace backend_api.Controllers.v1
             {
                 int totalCount = 0;
                 List<ApplicationUser> list = new();
+                Expression<Func<ApplicationUser, bool>> filter = null;
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                // TODO: HANDLE FOR ROLE
+                if (userRoles.Contains(SD.STAFF_ROLE))
+                {
+                    filter = u => !u.Role.Contains(SD.ADMIN_ROLE);
+                }
                 if (!string.IsNullOrEmpty(searchType))
                 {
                     switch (searchType.ToLower().Trim())
@@ -383,7 +420,8 @@ namespace backend_api.Controllers.v1
                 }
                 else
                 {
-                    var (total, result) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                    var (total, result) = await _userRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber);
+                    list = result;
                     totalCount = _userRepository.GetTotalUser();
                 }
 

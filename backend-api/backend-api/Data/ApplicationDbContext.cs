@@ -61,31 +61,31 @@ namespace backend_api.Data
         //Seeding
         public async Task SeedDataIfEmptyAsync()
         {
-            if (!Roles.Any())
-            {
-                Roles.AddRange(
-                    new IdentityRole()
-                    {
-                        Name = SD.TUTOR_ROLE,
-                        NormalizedName = SD.TUTOR_ROLE.ToUpper()
-                    },
-                    new IdentityRole()
-                    {
-                        Name = SD.USER_ROLE,
-                        NormalizedName = SD.USER_ROLE.ToUpper()
-                    },
-                    new IdentityRole()
-                    {
-                        Name = SD.STAFF_ROLE,
-                        NormalizedName = SD.STAFF_ROLE.ToUpper()
-                    },
-                    new IdentityRole()
-                    {
-                        Name = SD.ADMIN_ROLE,
-                        NormalizedName = SD.ADMIN_ROLE.ToUpper()
-                    }
-                );
-            }
+            //if (!Roles.Any())
+            //{
+            //    Roles.AddRange(
+            //        new IdentityRole()
+            //        {
+            //            Name = SD.TUTOR_ROLE,
+            //            NormalizedName = SD.TUTOR_ROLE.ToUpper()
+            //        },
+            //        new IdentityRole()
+            //        {
+            //            Name = SD.USER_ROLE,
+            //            NormalizedName = SD.USER_ROLE.ToUpper()
+            //        },
+            //        new IdentityRole()
+            //        {
+            //            Name = SD.STAFF_ROLE,
+            //            NormalizedName = SD.STAFF_ROLE.ToUpper()
+            //        },
+            //        new IdentityRole()
+            //        {
+            //            Name = SD.ADMIN_ROLE,
+            //            NormalizedName = SD.ADMIN_ROLE.ToUpper()
+            //        }
+            //    );
+            //}
 
             var roleStaff = Roles.FirstOrDefault(x => x.Name.Equals(SD.STAFF_ROLE));
             if (roleStaff == null)
