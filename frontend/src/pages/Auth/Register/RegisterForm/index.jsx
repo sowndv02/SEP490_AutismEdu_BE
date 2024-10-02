@@ -21,8 +21,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
     const [emailError, setEmailError] = useState(null);
     const [passwordConfirmError, setPasswordConfirmError] = useState(null);
     const [passwordError, setPasswordError] = useState(null);
-    const [fullNameError, setFullNameError] = useState(null);
-    const [fullName, setFullName] = useState(null);
+    const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState()
     const [password, setPassword] = useState("");
     const [cfPassword, setCfPassword] = useState("");
@@ -53,11 +52,12 @@ function RegisterForm({ setVerify, setEmailVerify }) {
             const checkPw = checkValid(password, 2, setPasswordError);
             const checkCfPw = checkValid(cfPassword, 3, setPasswordConfirmError, password);
             const checkEmail = checkValid(email, 1, setEmailError);
-            if (!checkPw || !checkCfPw || !checkEmail) {
+            if (!checkPw || !checkCfPw || !checkEmail || fullName === "") {
                 setLoading(false);
                 return;
             } else {
                 await service.AuthenticationAPI.register({
+                    fullName,
                     email,
                     password,
                     role: "user"
@@ -76,7 +76,7 @@ function RegisterForm({ setVerify, setEmailVerify }) {
         }
     }
     return (
-        <Box sx={{ bgcolor: "#f7f7f9", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Box sx={{ bgcolor: "#f7f7f9", display: "flex", alignItems: "center", justifyContent: "center", py: "50px" }}>
             <Card sx={{
                 width: "450px",
                 boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",
@@ -93,6 +93,18 @@ function RegisterForm({ setVerify, setEmailVerify }) {
                     <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>Hãy Tạo Một Tài Khoản 🚀</Typography>
                     <Typography sx={{ mt: "10px" }}>Chúng tôi sẽ cung chấp cho bạn những dịch vụ mà chúng tôi có!</Typography>
                     <Box mt="30px">
+                        <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
+                            <InputLabel htmlFor="fullname">Họ và tên</InputLabel>
+                            <OutlinedInput id="fullname" label="Họ và tên" variant="outlined"
+                                onChange={(e) => { setFullName(e.target.value) }} />
+                            {
+                                !fullName || fullName === "" && (
+                                    <FormHelperText error>
+                                        Bắt buộc
+                                    </FormHelperText>
+                                )
+                            }
+                        </FormControl>
                         <FormControl sx={{ ...INPUT_CSS, mt: "20px" }} variant="outlined">
                             <InputLabel htmlFor="email">Email</InputLabel>
                             <OutlinedInput id="email" label="Email" variant="outlined" type='email'

@@ -29,7 +29,7 @@ const style = {
 export default function CertificateAddition({ certificate, setCertificate }) {
     const [open, setOpen] = React.useState(false);
     const [openDialog, setOpenDialog] = React.useState(false);
-    const [images, setImages] = React.useState(null);
+    const [images, setImages] = React.useState([]);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
     const [currentImage, setCurrentImage] = React.useState(null);
@@ -160,9 +160,9 @@ export default function CertificateAddition({ certificate, setCertificate }) {
                                     ref={cIInput}
                                 />
                                 {
-                                    formik.errors.images && (
+                                    images.length === 0 && (
                                         <FormHelperText error>
-                                            {formik.errors.images}
+                                            Bắt buộc
                                         </FormHelperText>
                                     )
                                 }
@@ -214,7 +214,7 @@ export default function CertificateAddition({ certificate, setCertificate }) {
                 </Box>
             </Modal>
             {
-                currentImage !== null && (
+                currentImage !== null && openDialog && (
                     <Modal open={openDialog} onClose={() => setOpenDialog(false)}>
                         <Box
                             display="flex"

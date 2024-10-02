@@ -31,7 +31,7 @@ const style = {
 export default function CertificateDetail({ certificate, setCertificate, index, currentItem }) {
     const [open, setOpen] = React.useState(false);
     const [openDialog, setOpenDialog] = React.useState(false);
-    const [images, setImages] = React.useState(null);
+    const [images, setImages] = React.useState([]);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
     const [currentImage, setCurrentImage] = React.useState(null);
@@ -182,9 +182,9 @@ export default function CertificateDetail({ certificate, setCertificate, index, 
                                     ref={cIInput}
                                 />
                                 {
-                                    formik.errors.images && (
+                                    images.length === 0 && (
                                         <FormHelperText error>
-                                            {formik.errors.images}
+                                            Bắt buộc
                                         </FormHelperText>
                                     )
                                 }
