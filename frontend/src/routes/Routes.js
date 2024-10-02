@@ -12,6 +12,7 @@ import Home from '~/pages/Home'
 import PAGES from '~/utils/pages'
 import SearchTutor from '~/pages/Tutor/SearchTutor'
 import TutorProfile from '~/pages/Tutor/TutorProfile'
+import TutorRegistrationManagement from '~/pages/Admin/TutorRegistrationManagement'
 
 const publicRoutes = [
     {
@@ -68,6 +69,10 @@ const adminRoutes = [
     {
         path: PAGES.ROLECLAIMMANAGEMENT,
         element: RoleClaimManagement
+    },
+    {
+        path: PAGES.TUTORREGISTRATIONMANAGEMENT,
+        element: TutorRegistrationManagement
     }
 ]
 export {
