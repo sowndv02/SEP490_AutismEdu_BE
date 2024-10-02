@@ -32,7 +32,6 @@ function WorkInfo({ activeStep, handleBack, handleNext, steps, certificate, care
             console.log(values);
         }
     });
-    console.log(career);
     return (
         <>
             <form onSubmit={formik.handleSubmit}>

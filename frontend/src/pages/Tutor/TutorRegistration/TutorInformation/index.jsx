@@ -1,35 +1,102 @@
-import { Box, Button, FormHelperText, Grid, MenuItem, Select, TextField, Typography } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
+import { Box, Button, FormHelperText, Grid, MenuItem, Modal, Select, TextField, Typography } from '@mui/material';
+import axios from 'axios';
 import { useFormik } from 'formik';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-
+import ModalUploadAvatar from './ModalUploadAvatar';
 function TutorInformation({ activeStep, handleBack, handleNext, steps, tutorInformation, setTutorInformation }) {
     const [provinces, setProvinces] = useState([]);
     const [districts, setDistricts] = useState([]);
     const [communes, setCommunes] = useState([]);
+    const [avatar, setAvatar] = useState();
+    const validate = values => {
+        const errors = {};
+        if (!values.formalName) {
+            errors.formalName = 'Bắt buộc';
+        } else if (values.formalName.length > 20) {
+            errors.formalName = 'Tên dưới 20 ký tự';
+        }
+        if (!values.phoneNumber) {
+            errors.phoneNumber = 'Bắt buộc';
+        } else if (!/^(0?)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$/.test(values.phoneNumber)) {
+            errors.phoneNumber = 'Số điện thoại không hợp lệ';
+        }
+
+        if (!values.province || !values.district || !values.commune || !values.homeNumber) {
+            errors.address = 'Nhập đầy đủ địa chỉ';
+        }
+        if (!values.startAge || !values.endAge) {
+            errors.rangeAge = 'Vui lòng nhập độ tuổi';
+        } else if (values.startAge > values.endAge) {
+            errors.rangeAge = 'Độ tuổi không hợp lệ';
+        }
+        if (!avatar) {
+            errors.avatar = "Bắt buộc"
+        }
+        return errors;
+    };
+    const formik = useFormik({
+        initialValues: {
+            formalName: '',
+            phoneNumber: '',
+            dateOfBirth: '',
+            province: '',
+            district: '',
+            commune: '',
+            homeNumber: '',
+            startAge: '',
+            endAge: ''
+        },
+        validate,
+        onSubmit: async (values) => {
+            const selectedCommune = communes.find(p => p.idCommune === values.commune);
+            const selectedProvince = provinces.find(p => p.idProvince === values.province);
+            const selectedDistrict = districts.find(p => p.idDistrict === values.district);
+            setTutorInformation({
+                avatar: avatar,
+                formalName: values.formalName,
+                phoneNumber: values.phoneNumber,
+                dateOfBirth: values.dateOfBirth,
+                province: selectedProvince || '',
+                district: selectedDistrict || '',
+                commune: selectedCommune || '',
+                homeNumber: values.homeNumber,
+                startAge: values.startAge,
+                endAge: values.endAge
+            })
+            handleNext();
+        }
+    });
     useEffect(() => {
         getDataProvince();
-    }, []);
+        if (tutorInformation) {
+            formik.setFieldValue("formalName", tutorInformation?.formalName || "");
+            formik.setFieldValue("phoneNumber", tutorInformation?.phoneNumber || "");
+            formik.setFieldValue("dateOfBirth", tutorInformation?.dateOfBirth || "");
+            formik.setFieldValue("homeNumber", tutorInformation?.homeNumber || "");
+            formik.setFieldValue("startAge", tutorInformation?.startAge || "");
+            formik.setFieldValue("endAge", tutorInformation?.endAge || "");
+        }
+    }, [tutorInformation]);
     const getDataProvince = async () => {
         try {
             const data = await axios.get("https://vietnam-administrative-division-json-server-swart.vercel.app/province")
             const dataP = data.data;
             setProvinces(dataP);
             if (tutorInformation !== null) {
-                let address = tutorInformation.address.split("|");
-                const province = dataP.find((p) => { return p.name === address[0] });
+                const province = dataP.find((p) => { return p.idProvince === tutorInformation.province.idProvince });
                 if (province) {
                     formik.setFieldValue("province", province.idProvince);
                     handleGetDistrict(districts);
                     const dataD = await handleGetDistrict(province.idProvince);
-                    const district = dataD.find((d) => { return d.name === address[1] });
+                    const district = dataD.find((d) => { return d.idDistrict === tutorInformation.district.idDistrict });
                     if (district) {
                         formik.setFieldValue("district", district.idDistrict);
                         const dataC = await handleGetCommunes(district.idDistrict);
-                        const commune = dataC.find((c) => { return c.name === address[2] });
+                        const commune = dataC.find((c) => { return c.idCommune === tutorInformation.commune.idCommune });
                         if (commune) {
-                            formik.setFieldValue("ward", commune.idCommune);
-                            formik.setFieldValue("homeNumber", address[3]);
+                            formik.setFieldValue("commune", commune.idCommune);
                         }
                     }
                 }
@@ -39,35 +106,14 @@ function TutorInformation({ activeStep, handleBack, handleNext, steps, tutorInfo
         }
     };
 
-    const validate = values => {
-        const errors = {};
-        if (!values.fullName) {
-            errors.fullName = 'Bắt buộc';
-        } else if (values.fullName.length > 20) {
-            errors.fullName = 'Tên dưới 20 ký tự';
-        }
-        if (!values.phoneNumber) {
-            errors.phoneNumber = 'Bắt buộc';
-        } else if (!/^(0?)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$/.test(values.phoneNumber)) {
-            errors.phoneNumber = 'Số điện thoại không hợp lệ';
-        }
-
-        if (!values.province || !values.district || !values.ward || !values.homeNumber) {
-            errors.address = 'Nhập đầy đủ địa chỉ';
-        }
-        if (!values.fromAge || !values.toAge) {
-            errors.rangeAge = 'Vui lòng nhập độ tuổi';
-        } else if (values.fromAge > values.toAge) {
-            errors.rangeAge = 'Độ tuổi không hợp lệ';
-        }
-        return errors;
-    };
 
     const handleGetDistrict = async (id) => {
         try {
-            const data = await axios.get("https://vietnam-administrative-division-json-server-swart.vercel.app/district?idProvince=" + id);
-            setDistricts(data.data);
-            return data.data
+            if (id?.length !== 0) {
+                const data = await axios.get("https://vietnam-administrative-division-json-server-swart.vercel.app/district?idProvince=" + id);
+                setDistricts(data.data);
+                return data.data
+            }
         } catch (error) {
             console.log(error);
         }
@@ -89,50 +135,35 @@ function TutorInformation({ activeStep, handleBack, handleNext, steps, tutorInfo
         const day = String(today.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     };
-    const formik = useFormik({
-        initialValues: {
-            fullName: tutorInformation?.fullName || '',
-            phoneNumber: tutorInformation?.phoneNumber || '',
-            birthDate: tutorInformation?.birthDate || '',
-            province: '',
-            district: '',
-            ward: '',
-            homeNumber: '',
-            fromAge: tutorInformation?.fromAge || '',
-            toAge: tutorInformation?.toAge || ''
-        },
-        validate,
-        onSubmit: async (values) => {
-            const selectedCommune = communes.find(p => p.idCommune === values.ward);
-            const selectedProvince = provinces.find(p => p.idProvince === values.province);
-            const selectedDistrict = districts.find(p => p.idDistrict === values.district);
-            let address = `${selectedProvince.name}|${selectedDistrict.name}|${selectedCommune.name}|${values.homeNumber}`
-            setTutorInformation({
-                fullName: values.fullName,
-                phoneNumber: values.phoneNumber,
-                birthDate: values.birthDate,
-                address: address,
-                fromAge: values.fromAge,
-                toAge: values.toAge
-            })
-            handleNext();
-        }
-    });
 
-    console.log(districts);
     return (
         <>
             <form onSubmit={formik.handleSubmit}>
                 <Grid container px="100px" py="50px" columnSpacing={2} rowSpacing={3}>
+                    <Grid item xs={2} textAlign="right">Ảnh chân dung</Grid>
+                    <Grid item xs={10}>
+                        <ModalUploadAvatar setAvatar={setAvatar} />
+                        {
+                            !avatar && <FormHelperText error>
+                                Bắt buộc
+                            </FormHelperText>
+                        }
+                        <Box>
+                            {
+                                avatar &&
+                                <img src={URL.createObjectURL(avatar)} alt='avatar' width={150} />
+                            }
+                        </Box>
+                    </Grid>
                     <Grid item xs={2} textAlign="right">Họ và tên gia sư</Grid>
                     <Grid item xs={10}>
                         <TextField size='small' sx={{ width: "50%" }}
-                            value={formik.values.fullName}
-                            onChange={formik.handleChange} name='fullName' />
+                            value={formik.values.formalName}
+                            onChange={formik.handleChange} name='formalName' />
                         {
-                            formik.errors.fullName && (
+                            formik.errors.formalName && (
                                 <FormHelperText error>
-                                    {formik.errors.fullName}
+                                    {formik.errors.formalName}
                                 </FormHelperText>
                             )
                         }
@@ -157,8 +188,8 @@ function TutorInformation({ activeStep, handleBack, handleNext, steps, tutorInfo
                     <Grid item xs={2} textAlign="right">Ngày sinh</Grid>
                     <Grid item xs={10}>
                         <TextField size='small' sx={{ width: "50%" }} type='date' inputProps={{ max: getMaxDate() }}
-                            value={formik.values.birthDate}
-                            onChange={formik.handleChange} name='birthDate'
+                            value={formik.values.dateOfBirth}
+                            onChange={formik.handleChange} name='dateOfBirth'
                         />
                     </Grid>
                     <Grid item xs={2} textAlign="right">Địa chỉ</Grid>
@@ -167,11 +198,14 @@ function TutorInformation({ activeStep, handleBack, handleNext, steps, tutorInfo
                             value={formik.values.province}
                             name='province'
                             onChange={(event) => {
-                                formik.handleChange(event);
-                                handleGetDistrict(event.target.value);
-                                setCommunes([]);
-                                formik.setFieldValue('district', '')
-                                formik.setFieldValue('ward', '')
+                                const selectedProvince = event.target.value;
+                                if (selectedProvince && formik.values.province !== selectedProvince) {
+                                    formik.handleChange(event);
+                                    handleGetDistrict(event.target.value);
+                                    setCommunes([]);
+                                    formik.setFieldValue('district', '')
+                                    formik.setFieldValue('commune', '')
+                                }
                             }}
                             renderValue={(selected) => {
                                 if (!selected || selected === "") {
@@ -198,8 +232,9 @@ function TutorInformation({ activeStep, handleBack, handleNext, steps, tutorInfo
                             value={formik.values.district}
                             name='district'
                             onChange={(event) => {
+                                console.log(event.values);
                                 formik.handleChange(event); handleGetCommunes(event.target.value);
-                                formik.setFieldValue('ward', '')
+                                formik.setFieldValue('commune', '')
                             }}
                             renderValue={(selected) => {
                                 if (!selected || selected === "") {
@@ -227,8 +262,8 @@ function TutorInformation({ activeStep, handleBack, handleNext, steps, tutorInfo
                         <Select
                             labelId="demo-simple-select-label"
                             id="demo-simple-select"
-                            value={formik.values.ward}
-                            name='ward'
+                            value={formik.values.commune}
+                            name='commune'
                             onChange={formik.handleChange}
                             renderValue={(selected) => {
                                 if (!selected || selected === "") {
@@ -269,22 +304,22 @@ function TutorInformation({ activeStep, handleBack, handleNext, steps, tutorInfo
                     <Grid item xs={2} textAlign="right">Độ tuổi dạy</Grid>
                     <Grid item xs={10}>
                         <TextField size='small' label="Từ" sx={{ mr: "20px" }} type='number' inputProps={{ min: 0, max: 15 }}
-                            name='fromAge'
-                            value={formik.values.fromAge}
+                            name='startAge'
+                            value={formik.values.startAge}
                             onChange={(e) => {
                                 const value = e.target.value;
                                 if (Number.isInteger(Number(value)) || value === '') {
-                                    formik.setFieldValue('fromAge', value);
+                                    formik.setFieldValue('startAge', value);
                                 }
                             }}
                         />
                         <TextField size='small' label="Đến" type='number' inputProps={{ min: 0, max: 15 }}
-                            name='toAge'
-                            value={formik.values.toAge}
+                            name='endAge'
+                            value={formik.values.endAge}
                             onChange={(e) => {
                                 const value = e.target.value;
                                 if (Number.isInteger(Number(value)) || value === '') {
-                                    formik.setFieldValue('toAge', value);
+                                    formik.setFieldValue('endAge', value);
                                 }
                             }} />
                         {

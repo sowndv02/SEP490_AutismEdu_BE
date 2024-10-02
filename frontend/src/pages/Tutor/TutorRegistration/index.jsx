@@ -6,29 +6,49 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Button from '@mui/material/Button';
-import TutorInformation from './TutorInformation';
 import WorkInfo from './WorkInfo';
 import Identification from './Identification';
 import axios from 'axios';
+import TutorInformation from './TutorInformation';
 
 const steps = ['Thông tin gia sư', 'Bằng tốt nghiệp', 'Định danh'];
 function TutorRegistration() {
-    const [activeStep, setActiveStep] = React.useState(2);
+    const [activeStep, setActiveStep] = React.useState(0);
     const [tutorInformation, setTutorInformation] = useState(null);
     const [certificate, setCertificate] = useState([]);
     const [career, setCareer] = useState([]);
     const [identifcation, setIdentification] = useState(null);
-    // useEffect(() => {
-    //     const handleBeforeUnload = (event) => {
-    //         handleCallApi();
-    //         event.returnValue = '';
-    //     };
+    const [isSubmit, setIsSubmit] = useState(false);
 
-    //     window.addEventListener('beforeunload', handleBeforeUnload);
-    //     return () => {
-    //         window.removeEventListener('beforeunload', handleBeforeUnload);
-    //     };
-    // }, [])
+    useEffect(() => {
+        const draftData = localStorage.getItem(`draftData-094949494`);
+        if (draftData) {
+            const convertData = JSON.parse(draftData);
+            setTutorInformation(convertData.tutorInformation);
+            setCertificate(convertData.certificate);
+            setCareer(convertData.career);
+            setIdentification(convertData.identifcation);
+        }
+    }, [])
+    useEffect(() => {
+        const handleBeforeUnload = (event) => {
+            if (!isSubmit) {
+                const draftData = {
+                    id: "094949494",
+                    tutorInformation: tutorInformation,
+                    certificate: certificate,
+                    career: career,
+                    identifcation: identifcation
+                }
+                localStorage.setItem(`draftData-094949494`, JSON.stringify(draftData))
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [tutorInformation, certificate, career, identifcation])
     const handleNext = () => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
     };
@@ -40,6 +60,8 @@ function TutorRegistration() {
     const handleReset = () => {
         setActiveStep(0);
     };
+
+    console.log(tutorInformation);
     return (
         <Stack direction="row" sx={{ justifyContent: "center" }}>
             <Box sx={{
@@ -82,26 +104,26 @@ function TutorRegistration() {
                     ) : (
                         <React.Fragment>
                             {
-                                // activeStep + 1 === 1 && <TutorInformation
-                                //     activeStep={activeStep}
-                                //     handleBack={handleBack}
-                                //     handleNext={handleNext}
-                                //     steps={steps}
-                                //     tutorInformation={tutorInformation}
-                                //     setTutorInformation={setTutorInformation}
-                                // />
+                                activeStep + 1 === 1 && <TutorInformation
+                                    activeStep={activeStep}
+                                    handleBack={handleBack}
+                                    handleNext={handleNext}
+                                    steps={steps}
+                                    tutorInformation={tutorInformation}
+                                    setTutorInformation={setTutorInformation}
+                                />
                             }
                             {
-                                // activeStep + 1 === 2 && <WorkInfo
-                                //     activeStep={activeStep}
-                                //     handleBack={handleBack}
-                                //     handleNext={handleNext}
-                                //     steps={steps}
-                                //     certificate={certificate}
-                                //     career={career}
-                                //     setCareer={setCareer}
-                                //     setCertificate={setCertificate}
-                                // />
+                                activeStep + 1 === 2 && <WorkInfo
+                                    activeStep={activeStep}
+                                    handleBack={handleBack}
+                                    handleNext={handleNext}
+                                    steps={steps}
+                                    certificate={certificate}
+                                    career={career}
+                                    setCareer={setCareer}
+                                    setCertificate={setCertificate}
+                                />
                             }
                             {
                                 activeStep + 1 === 3 && <Identification
@@ -111,6 +133,9 @@ function TutorRegistration() {
                                     steps={steps}
                                     identifcation={identifcation}
                                     setIdentification={setIdentification}
+                                    career={career}
+                                    certificate={certificate}
+                                    tutorInformation={tutorInformation}
                                 />
                             }
 
