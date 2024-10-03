@@ -774,7 +774,7 @@ namespace backend_api.Repository
         }
 
         public async Task<(int TotalCount, List<ApplicationUser> list)> GetAllAsync(Expression<Func<ApplicationUser, bool>>? filter = null, string? includeProperties = null,
-            int pageSize = 10, int pageNumber = 1, Expression<Func<ApplicationUser, bool>>? orderBy = null, bool isDesc = true)
+            int pageSize = 10, int pageNumber = 1, Expression<Func<ApplicationUser, object>>? orderBy = null, bool isDesc = true, bool isAdminRole = false)
         {
 
             IQueryable<ApplicationUser> query = _context.ApplicationUsers;
@@ -797,8 +797,6 @@ namespace backend_api.Repository
             if (filter != null)
                 query = query.Where(filter);
             count = query.Count();
-
-            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
             var users = await query.ToListAsync();
             foreach (var user in users)
             {
@@ -811,6 +809,16 @@ namespace backend_api.Repository
                 user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
                 user.Role = String.Join(",", user_role);
             }
+            if (isAdminRole)
+            {
+                users = users.Where(x => x.Role.Contains(SD.STAFF_ROLE)).ToList();
+            }
+            else
+            {
+                users = users.Where(x => !x.Role.Contains(SD.STAFF_ROLE)).ToList();
+            }
+            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+            
             return (count, users);
         }
 
