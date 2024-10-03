@@ -369,12 +369,12 @@ namespace backend_api.Controllers.v1
             {
                 int totalCount = 0;
                 List<ApplicationUser> list = new();
-                Expression<Func<ApplicationUser, bool>> filter = null;
+                bool isAdmin = true;
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 // TODO: HANDLE FOR ROLE
                 if (userRoles.Contains(SD.STAFF_ROLE))
                 {
-                    filter = u => !u.Role.Contains(SD.ADMIN_ROLE);
+                    isAdmin = false;
                 }
                 if (!string.IsNullOrEmpty(searchType))
                 {
@@ -383,13 +383,13 @@ namespace backend_api.Controllers.v1
                         case "all":
                             if (!string.IsNullOrEmpty(searchValue))
                             {
-                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower())), pageSize: pageSize, pageNumber: pageNumber);
+                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower())), pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole:isAdmin);
                                 totalCount = totalResult;
                                 list = resultObject;
                             }
                             else
                             {
-                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
                                 totalCount = totalResult;
                                 list = resultObject;
                             }
@@ -411,7 +411,7 @@ namespace backend_api.Controllers.v1
                             }
                             break;
                         default:
-                            var (total, result) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber);
+                            var (total, result) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
                             list = result;
                             totalCount = _userRepository.GetTotalUser();
                             break;
@@ -420,7 +420,7 @@ namespace backend_api.Controllers.v1
                 }
                 else
                 {
-                    var (total, result) = await _userRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber);
+                    var (total, result) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
                     list = result;
                     totalCount = _userRepository.GetTotalUser();
                 }
