@@ -17,14 +17,12 @@ namespace backend_api.Repository
             _context = context;
         }
 
-        public async Task<List<ChildInformation>> GetChildByParentEmailAsync(string email)
+        public async Task<List<ChildInformation>> GetParentChildInformationAsync(string parentId)
         {
             try
             {
-                var parent = await _userManager.FindByEmailAsync(email);
-                if (parent != null)
+                if (parentId != null)
                 {
-                    string parentId = parent.Id;
                     var childInfoList = await _context.ChildInformations.Where(c => c.ParentId == parentId).ToListAsync();
                     return childInfoList;
                 }
