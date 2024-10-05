@@ -4,9 +4,9 @@ namespace backend_api.Models.DTOs.CreateDTOs
 {
     public class AvailableTimeSlotCreateDTO
     {
-        [Required]
-        public TimeSpan From { get; set; }
-        [Required]
-        public TimeSpan To { get; set; }
+		[Required]
+        public string From { get; set; }
+		[Required]
+        public string To { get; set; }
     }
 }

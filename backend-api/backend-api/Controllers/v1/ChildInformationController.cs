@@ -79,12 +79,7 @@ namespace backend_api.Controllers.v1
 
                 var childInfos = await _childInfoRepository.GetParentChildInformationAsync(parentId);
                 
-                List<ChildInformationDTO> result = new List<ChildInformationDTO>();
-                foreach(var childInfo in childInfos)
-                {
-                    result.Add(_mapper.Map<ChildInformationDTO>(childInfo));
-                }
-                _response.Result = result;
+                _response.Result = _mapper.Map<List<ChildInformationDTO>>(childInfos);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
