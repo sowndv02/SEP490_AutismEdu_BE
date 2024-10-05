@@ -62,6 +62,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Image, opt => opt.Ignore());
 			CreateMap<TutorRegistrationRequest, TutorRegistrationRequestCreateDTO>().ReverseMap();
             CreateMap<Curriculum, CurriculumCreateDTO>().ReverseMap();
+			CreateMap<CertificateMedia, CertificateMediaCreateDTO>().ReverseMap();
             CreateMap<ChildInformation, ChildInformationDTO>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
