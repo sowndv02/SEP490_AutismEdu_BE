@@ -8,6 +8,7 @@
 
         // Const role
         public const string USER_ROLE = "User";
+        public const string PARENT_ROLE = "Parent";
         public const string STAFF_ROLE = "Staff";
         public const string ADMIN_ROLE = "Admin";
         public const string TUTOR_ROLE = "Tutor";
@@ -94,5 +95,14 @@
 
         // Const message 
         public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "You are already a tutor or have a previous registration requirement";
+        public const string TUTOR_UPDATE_STATUS_IS_PENDING = "Không thể cập nhật trạng thái thành đang xử lý!";
+
+        public enum Status 
+        {
+            PENDING = 2,
+            APPROVE = 1,
+            REJECT = 0
+        }
+
     }
 }

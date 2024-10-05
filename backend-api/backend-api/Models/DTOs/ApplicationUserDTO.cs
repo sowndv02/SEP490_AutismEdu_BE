@@ -9,8 +9,6 @@
         public string? Role { get; set; }
         public string? UserClaim { get; set; }
         public string? ImageUrl { get; set; }
-        public string? ImageLocalPathUrl { get; set; }
-        public string? ImageLocalUrl { get; set; }
         public IFormFile? Image { get; set; }
         public DateTime? CreatedDate { get; set; }
         public bool IsLockedOut { get; set; }

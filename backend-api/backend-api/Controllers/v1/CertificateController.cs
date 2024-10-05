@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
+using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
 {
@@ -46,7 +47,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> CreateAsync(CertificateCreateDTO certificateCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm]CertificateCreateDTO certificateCreateDTO)
         {
             try
             {
@@ -95,10 +96,10 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusCertificateDTO.Id, false, "CertificateMedias", null);
-                model.IsApprove = !model.IsApprove;
+                model.RequestStatus = (Status)changeStatusCertificateDTO.StatusChange;
 
-                if (!string.IsNullOrEmpty(changeStatusCertificateDTO.Feedback))
-                    model.Feedback = changeStatusCertificateDTO.Feedback;
+                if (!string.IsNullOrEmpty(changeStatusCertificateDTO.RejectionReason))
+                    model.RejectionReason = changeStatusCertificateDTO.RejectionReason;
                 model.UpdatedDate = DateTime.Now;
                 await _certificateRepository.UpdateAsync(model);
                 _response.Result = _mapper.Map<CertificateDTO>(model);
@@ -137,12 +138,12 @@ namespace backend_api.Controllers.v1
                         totalCount = count;
                         break;
                     case "approve":
-                        var (countResult, resultObj) = await _certificateRepository.GetAllAsync(x => x.IsApprove == true && (filter == null || filter.Compile()(x)), "CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
+                        var (countResult, resultObj) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)), "CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
                         list = resultObj;
                         totalCount = countResult;
                         break;
                     case "reject":
-                        var (countObj, results) = await _certificateRepository.GetAllAsync(x => x.IsApprove == false && (filter == null || filter.Compile()(x)), "CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
+                        var (countObj, results) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)), "CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
                         list = results;
                         totalCount = countObj;
                         break;

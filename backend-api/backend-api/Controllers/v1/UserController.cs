@@ -236,11 +236,7 @@ namespace backend_api.Controllers.v1
                 }
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
                 model.CreatedDate = DateTime.Now;
-                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                string filePath = @"wwwroot\UserImages\" + SD.IMAGE_DEFAULT_AVATAR_NAME;
-                model.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                 model.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
-                model.ImageLocalPathUrl = filePath;
 
                 model.UserName = model.Email;
                 model.UserType = SD.APPLICATION_USER;
@@ -314,29 +310,9 @@ namespace backend_api.Controllers.v1
                 }
 
                 var model = await _userRepository.GetAsync(x => x.Id == id);
-                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
                 if (updateDTO.Image != null)
                 {
-                    if (!string.IsNullOrEmpty(model.ImageLocalPathUrl))
-                    {
-                        var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), model.ImageLocalPathUrl);
-                        FileInfo file = new FileInfo(oldFilePathDirectory);
-                        if (file.Exists)
-                        {
-                            file.Delete();
-                        }
-                    }
                     string fileName = userId + Path.GetExtension(updateDTO.Image.FileName);
-                    string filePath = @"wwwroot\UserImage\" + fileName;
-
-                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
-
-                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
-                    {
-                        updateDTO.Image.CopyTo(fileStream);
-                    }
-                    model.ImageLocalPathUrl = filePath;
-                    model.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                     using var stream = updateDTO.Image.OpenReadStream();
                     model.ImageUrl = await _blobStorageRepository.Upload(stream, fileName);
                 }

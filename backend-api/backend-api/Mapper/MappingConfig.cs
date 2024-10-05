@@ -30,7 +30,7 @@ namespace backend_api.Mapper
             CreateMap<RoleCreateDTO, IdentityRole>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
                 .ReverseMap();
-            CreateMap<Tutor, TutorCreateDTO>().ReverseMap();
+            CreateMap<Tutor, TutorRegistrationRequestCreateDTO>().ReverseMap();
             CreateMap<ApplicationUser, ApplicationUserDTO>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
@@ -59,9 +59,11 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.UserClaimId, opt => opt.Ignore())
                 .ForMember(dest => dest.UserType, opt => opt.MapFrom(src => src.User.UserType))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.ImageUrl))
-                .ForMember(dest => dest.ImageLocalUrl, opt => opt.MapFrom(src => src.User.ImageLocalUrl))
-                .ForMember(dest => dest.ImageLocalPathUrl, opt => opt.MapFrom(src => src.User.ImageLocalPathUrl))
                 .ForMember(dest => dest.Image, opt => opt.Ignore());
+
+
+            CreateMap<TutorRegistrationRequest, TutorRegistrationRequestCreateDTO>().ReverseMap();
+            CreateMap<Curriculum, CurriculumCreateDTO>().ReverseMap();
         }
     }
 }

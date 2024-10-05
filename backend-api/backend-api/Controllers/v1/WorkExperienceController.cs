@@ -54,7 +54,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
                 WorkExperience model = _mapper.Map<WorkExperience>(workExperienceCreateDTO);
-                model.UserId = userId;
+                model.SubmiterId = userId;
                 model.CreatedDate = DateTime.Now;
                 await _workExperienceRepository.CreateAsync(model);
                 _response.StatusCode = HttpStatusCode.Created;

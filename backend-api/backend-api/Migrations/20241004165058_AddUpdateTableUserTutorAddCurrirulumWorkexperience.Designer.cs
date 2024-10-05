@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend_api.Data;
 
@@ -11,9 +12,10 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241004165058_AddUpdateTableUserTutorAddCurrirulumWorkexperience")]
+    partial class AddUpdateTableUserTutorAddCurrirulumWorkexperience
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -111,9 +113,6 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("ApprovedId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("CertificateName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -124,20 +123,20 @@ namespace backend_api.Migrations
                     b.Property<DateTime?>("ExpirationDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Feedback")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("IdentityCardNumber")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("IsApprove")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("IssuingDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("IssuingInstitution")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RejectionReason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RequestStatus")
-                        .HasColumnType("int");
 
                     b.Property<string>("SubmiterId")
                         .HasColumnType("nvarchar(450)");
@@ -149,8 +148,6 @@ namespace backend_api.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApprovedId");
 
                     b.HasIndex("SubmiterId");
 
@@ -200,9 +197,6 @@ namespace backend_api.Migrations
                     b.Property<int>("AgeFrom")
                         .HasColumnType("int");
 
-                    b.Property<string>("ApprovedId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
@@ -210,13 +204,13 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RejectionReason")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("IsApprove")
+                        .HasColumnType("bit");
 
-                    b.Property<int>("RequestStatus")
+                    b.Property<int?>("TutorId")
                         .HasColumnType("int");
 
-                    b.Property<string>("SubmiterId")
+                    b.Property<string>("TutorInfoUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int?>("TutorRegistrationRequestId")
@@ -227,9 +221,7 @@ namespace backend_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApprovedId");
-
-                    b.HasIndex("SubmiterId");
+                    b.HasIndex("TutorInfoUserId");
 
                     b.HasIndex("TutorRegistrationRequestId");
 
@@ -346,7 +338,7 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("Description")
+                    b.Property<string>("Desc")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -387,7 +379,13 @@ namespace backend_api.Migrations
                     b.Property<int>("EndAge")
                         .HasColumnType("int");
 
-                    b.Property<decimal?>("Price")
+                    b.Property<bool>("IsApprove")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("PriceFrom")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PriceTo")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("StartAge")
@@ -473,9 +471,6 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("ApprovedId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -490,17 +485,8 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RejectionReason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RequestStatus")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("SubmiterId")
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int?>("TutorRegistrationRequestId")
                         .HasColumnType("int");
@@ -508,13 +494,14 @@ namespace backend_api.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ApprovedId");
-
-                    b.HasIndex("SubmiterId");
-
                     b.HasIndex("TutorRegistrationRequestId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("WorkExperiences");
                 });
@@ -771,19 +758,13 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
                 {
-                    b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
-                        .WithMany()
-                        .HasForeignKey("ApprovedId");
-
                     b.HasOne("backend_api.Models.ApplicationUser", "Submiter")
                         .WithMany()
                         .HasForeignKey("SubmiterId");
 
                     b.HasOne("backend_api.Models.TutorRegistrationRequest", "TutorRegistrationRequest")
-                        .WithMany("Certificates")
+                        .WithMany()
                         .HasForeignKey("TutorRegistrationRequestId");
-
-                    b.Navigation("ApprovedBy");
 
                     b.Navigation("Submiter");
 
@@ -803,21 +784,15 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Curriculum", b =>
                 {
-                    b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
+                    b.HasOne("backend_api.Models.Tutor", "TutorInfo")
                         .WithMany()
-                        .HasForeignKey("ApprovedId");
-
-                    b.HasOne("backend_api.Models.Tutor", "Submiter")
-                        .WithMany()
-                        .HasForeignKey("SubmiterId");
+                        .HasForeignKey("TutorInfoUserId");
 
                     b.HasOne("backend_api.Models.TutorRegistrationRequest", "TutorRegistrationRequest")
-                        .WithMany("Curriculums")
+                        .WithMany()
                         .HasForeignKey("TutorRegistrationRequestId");
 
-                    b.Navigation("ApprovedBy");
-
-                    b.Navigation("Submiter");
+                    b.Navigation("TutorInfo");
 
                     b.Navigation("TutorRegistrationRequest");
                 });
@@ -896,23 +871,17 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.WorkExperience", b =>
                 {
-                    b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
-                        .WithMany()
-                        .HasForeignKey("ApprovedId");
-
-                    b.HasOne("backend_api.Models.ApplicationUser", "Submiter")
-                        .WithMany()
-                        .HasForeignKey("SubmiterId");
-
                     b.HasOne("backend_api.Models.TutorRegistrationRequest", "TutorRegistrationRequest")
-                        .WithMany("WorkExperiences")
+                        .WithMany()
                         .HasForeignKey("TutorRegistrationRequestId");
 
-                    b.Navigation("ApprovedBy");
-
-                    b.Navigation("Submiter");
+                    b.HasOne("backend_api.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
 
                     b.Navigation("TutorRegistrationRequest");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -969,15 +938,6 @@ namespace backend_api.Migrations
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
                 {
                     b.Navigation("CertificateMedias");
-                });
-
-            modelBuilder.Entity("backend_api.Models.TutorRegistrationRequest", b =>
-                {
-                    b.Navigation("Certificates");
-
-                    b.Navigation("Curriculums");
-
-                    b.Navigation("WorkExperiences");
                 });
 
             modelBuilder.Entity("backend_api.Models.ApplicationUser", b =>

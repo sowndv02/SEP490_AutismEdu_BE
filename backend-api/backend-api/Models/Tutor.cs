@@ -7,13 +7,10 @@ namespace backend_api.Models
     {
         [Key]
         public string UserId { get; set; }
-        public string FormalName { get; set; }
-        public decimal? PriceFrom { get; set; }
-        public decimal? PriceTo { get; set; }
+        public decimal? Price { get; set; }
         public int StartAge { get; set; }
         public int EndAge { get; set; }
         public DateTime DateOfBirth { get; set; }
-        public bool IsApprove { get; set; } = false;
         public string? AboutMe { get; set; }
         [ForeignKey(nameof(UserId))]
         public ApplicationUser User { get; set; }
