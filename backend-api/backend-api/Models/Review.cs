@@ -9,7 +9,7 @@ namespace backend_api.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public decimal RateScore { get; set; }
-        public string Desc { get; set; }
+        public string Description { get; set; }
         public string ReviewerId { get; set; }
         public string RevieweeId { get; set; }
 

@@ -687,8 +687,6 @@ namespace backend_api.Repository
                 LockoutEnabled = true,
                 LockoutEnd = user.IsLockedOut ? DateTime.MaxValue : null,
                 ImageUrl = user.ImageUrl,
-                ImageLocalPathUrl = user.ImageLocalPathUrl,
-                ImageLocalUrl = user.ImageLocalUrl,
                 UserType = user.UserType,
                 CreatedDate = DateTime.Now,
                 EmailConfirmed = user.UserType == SD.GOOGLE_USER ? true : false,
