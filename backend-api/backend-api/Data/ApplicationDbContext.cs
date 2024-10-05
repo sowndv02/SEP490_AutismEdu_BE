@@ -27,6 +27,8 @@ namespace backend_api.Data
         public DbSet<WorkExperience> WorkExperiences { get; set; }
         public DbSet<ChildInformation> ChildInformations { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<AvailableTime> AvailableTimes { get; set; }
+        public DbSet<AvailableTimeSlot> AvailableTimeSlots { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
