@@ -25,6 +25,7 @@ namespace backend_api.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Tutor> Tutors { get; set; }
         public DbSet<WorkExperience> WorkExperiences { get; set; }
+        public DbSet<ChildInformation> ChildInformations { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)

@@ -62,6 +62,17 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.ImageLocalUrl, opt => opt.MapFrom(src => src.User.ImageLocalUrl))
                 .ForMember(dest => dest.ImageLocalPathUrl, opt => opt.MapFrom(src => src.User.ImageLocalPathUrl))
                 .ForMember(dest => dest.Image, opt => opt.Ignore());
+
+            CreateMap<ChildInformation, ChildInformationDTO>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.isMale ? "Male" : "Female"))
+                .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate.Value.ToString("dd/MM/yyyy")))
+                .ForMember(dest => dest.InitialCondition, opt => opt.MapFrom(src => src.InitialCondition))
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
+                .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate));
+            CreateMap<ChildInformation, ChildInformationCreateDTO>().ReverseMap();
+            
         }
     }
 }
