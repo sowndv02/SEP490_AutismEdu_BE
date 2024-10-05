@@ -7,6 +7,7 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Runtime.ConstrainedExecution;
@@ -23,6 +24,7 @@ namespace backend_api.Controllers.v1
     {
         private readonly IUserRepository _userRepository;
         private readonly ITutorRepository _tutorRepository;
+        private readonly IEmailSender _emailSender;
         private readonly ITutorRegistrationRequestRepository _tutorRegistrationRequestRepository;
         private readonly ICurriculumRepository _curriculumRepository;
         private readonly IWorkExperienceRepository _workExperienceRepository;
@@ -40,8 +42,10 @@ namespace backend_api.Controllers.v1
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
             ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository, 
-            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository)
+            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository,
+            IEmailSender emailSender)
         {
+            _emailSender = emailSender;
             _curriculumRepository = curriculumRepository;
             _formatString = formatString;
             _roleRepository = roleRepository;
@@ -97,8 +101,42 @@ namespace backend_api.Controllers.v1
                 }
 
                 model = await _tutorRegistrationRequestRepository.CreateAsync(model);
-                // TODO: Send email
 
+                // Handle certificate media uploads
+                if (tutorRegistrationRequestCreateDTO.Certificates != null && model.Certificates != null)
+                {
+                    for (int i = 0; i < tutorRegistrationRequestCreateDTO.Certificates.Count; i++)
+                    {
+                        var certificateDTO = tutorRegistrationRequestCreateDTO.Certificates[i];
+                        var certificate = model.Certificates[i];
+
+                        if (certificateDTO.Medias != null && certificateDTO.Medias.Count > 0)
+                        {
+                            foreach (var media in certificateDTO.Medias)
+                            {
+                                string mediaFileName = Guid.NewGuid().ToString() + Path.GetExtension(media.FileName);
+                                using var mediaStream = media.OpenReadStream();
+                                string mediaUrl = await _blobStorageRepository.Upload(mediaStream, mediaFileName);
+
+                                CertificateMedia certificateMedia = new CertificateMedia
+                                {
+                                    CertificateId = certificate.Id,
+                                    UrlPath = mediaUrl
+                                };
+                                await _certificateMediaRepository.CreateAsync(certificateMedia);
+                            }
+                        }
+                    }
+                }
+                // TODO: Send email
+                var subject = "Xác nhận Đăng ký Gia sư Dạy Trẻ Tự Kỷ - Đang Chờ Duyệt";
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TutorRegistrationRequestTemplate.cshtml");
+                var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                var htmlMessage = templateContent
+                    .Replace("@Model.FullName", model.FullName)
+                    .Replace("@Model.Email", model.Email)
+                    .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
+                await _emailSender.SendEmailAsync(model.Email, subject, htmlMessage);
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
@@ -174,14 +212,15 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
-                    return BadRequest(_response);
-                }
+                var userId = _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id;
+                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //if (string.IsNullOrEmpty(userId))
+                //{
+                //    _response.StatusCode = HttpStatusCode.BadRequest;
+                //    _response.IsSuccess = false;
+                //    _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
+                //    return BadRequest(_response);
+                //}
                 if (tutorRegistrationRequestChange.StatusChange == (int)Status.PENDING)
                 {
                     _response.ErrorMessages = new List<string>() { SD.TUTOR_UPDATE_STATUS_IS_PENDING };
@@ -192,6 +231,7 @@ namespace backend_api.Controllers.v1
                 TutorRegistrationRequest model = await _tutorRegistrationRequestRepository.GetAsync(x => x.Id == tutorRegistrationRequestChange.Id, false, "ApprovedBy,Curriculums,WorkExperiences,Certificates", null);
                 if (tutorRegistrationRequestChange.StatusChange == (int)Status.APPROVE)
                 {
+                    string passsword = PasswordGenerator.GeneratePassword();
                     // Create user
                     var user = await _userRepository.CreateAsync(new ApplicationUser
                     {
@@ -207,7 +247,7 @@ namespace backend_api.Controllers.v1
                         UserType = SD.APPLICATION_USER,
                         LockoutEnabled = true,
                         RoleIds = new List<string>() { _roleRepository.GetByNameAsync(SD.TUTOR_ROLE).GetAwaiter().GetResult().Id }
-                    }, PasswordGenerator.GeneratePassword());
+                    }, passsword);
 
                     // Create tutor profile
                     var tutor = await _tutorRepository.CreateAsync(new Tutor()
@@ -262,6 +302,19 @@ namespace backend_api.Controllers.v1
                     }
 
                     // TODO: Send mail
+                    var subject = "Thông báo Chấp nhận Đơn Đăng ký Gia sư Dạy Trẻ Tự Kỷ";
+
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AcceptedRegistrationTemplate.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", model.FullName)
+                        .Replace("@Model.Username", model.Email)
+                        .Replace("@Model.Password", passsword)
+                        .Replace("@Model.LoginUrl", SD.URL_FE_TUTOR_LOGIN);
+
+
+                    await _emailSender.SendEmailAsync(model.Email, subject, htmlMessage);
 
                     _response.Result = _mapper.Map<TutorDTO>(tutor);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -316,6 +369,14 @@ namespace backend_api.Controllers.v1
 
                     // TODO: Send mail
 
+                    var subject = "Thông báo Từ chối Đơn Đăng ký Gia sư và Hướng dẫn Tạo Đơn Mới";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "RejectTutorRegistrationRequest.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", model.FullName)
+                        .Replace("@Model.RejectionReason", model.RejectionReason ?? "Không có lý do cụ thể.");
+
+                    await _emailSender.SendEmailAsync(model.Email, subject, htmlMessage);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
