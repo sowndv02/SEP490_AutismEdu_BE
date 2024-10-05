@@ -51,7 +51,7 @@ namespace backend_api.Repository
             return await query.FirstOrDefaultAsync(filter);
         }
 
-        public async Task<(int TotalCount, List<T> list)> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null)
+        public async Task<(int TotalCount, List<T> list)> GetAllNotPagingAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null)
         {
             IQueryable<T> query = dbset;
             if (filter != null)
