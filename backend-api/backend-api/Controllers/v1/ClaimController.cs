@@ -148,7 +148,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var (total, list) = await _claimRepository.GetAllAsync(null, null, null);
+                var (total, list) = await _claimRepository.GetAllNotPagingAsync(null, null, null);
                 var distinctClaimTypes = list.Select(c => c.ClaimType).Distinct().ToList();
                 _response.Result = distinctClaimTypes;
                 _response.StatusCode = HttpStatusCode.OK;

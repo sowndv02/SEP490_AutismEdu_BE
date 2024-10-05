@@ -12,6 +12,6 @@
         public DateTime? UpdatedDate { get; set; }
         public string? Feedback { get; set; }
         public bool? IsApprove { get; set; }
-        public List<CertificateMedia> CertificateMedias { get; set; }
+        public List<CertificateMediaDTO> CertificateMedias { get; set; }
     }
 }
