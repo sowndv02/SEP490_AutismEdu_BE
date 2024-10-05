@@ -172,8 +172,16 @@ namespace backend_api.Controllers.v1
                     list = result;
                     totalCount = count;
                 }
+                foreach(var item in list)
+                {
+                    foreach(var certificate in item.Certificates)
+                    {
+                        var(countMedias, medias) = await _certificateMediaRepository.GetAllNotPagingAsync(x => x.CertificateId == certificate.Id, includeProperties: null, excludeProperties: null);
+                        certificate.CertificateMedias = medias;
+                    }
+                }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-                _response.Result = _mapper.Map<List<TutorDTO>>(list);
+                _response.Result = _mapper.Map<List<TutorRegistrationRequestDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);
@@ -208,7 +216,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         //[Authorize(Policy = "UpdateTutorPolicy")]
-        public async Task<IActionResult> ApproveOrRejectTutorRegistrationRequest(TutorRegistrationRequestChangeStatus tutorRegistrationRequestChange)
+        public async Task<IActionResult> ApproveOrRejectTutorRegistrationRequest(ChangeStatusDTO tutorRegistrationRequestChange)
         {
             try
             {
@@ -301,6 +309,10 @@ namespace backend_api.Controllers.v1
                         }
                     }
 
+                    model.RequestStatus = Status.APPROVE;
+                    model.UpdatedDate = DateTime.Now;
+                    model.ApprovedId = userId;
+                    await _tutorRegistrationRequestRepository.UpdateAsync(model);
                     // TODO: Send mail
                     var subject = "Thông báo Chấp nhận Đơn Đăng ký Gia sư Dạy Trẻ Tự Kỷ";
 
@@ -366,7 +378,6 @@ namespace backend_api.Controllers.v1
                             await _workExperienceRepository.UpdateAsync(item);
                         }
                     }
-
                     // TODO: Send mail
 
                     var subject = "Thông báo Từ chối Đơn Đăng ký Gia sư và Hướng dẫn Tạo Đơn Mới";

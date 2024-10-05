@@ -1,17 +1,22 @@
 ﻿using AutoMapper;
 using backend_api.Models;
+using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
+using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
+using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class WorkExperienceController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
@@ -68,5 +73,61 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
+
+        [HttpPut("changeStatus/{id}")]
+        //[Authorize(Policy = "UpdateTutorPolicy")]
+        public async Task<IActionResult> ApproveOrRejectWorkExperienceRequest(ChangeStatusDTO workExperienceChangeStatusDTO)
+        {
+            try
+            {
+                var userId = _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id;
+                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //if (string.IsNullOrEmpty(userId))
+                //{
+                //    _response.StatusCode = HttpStatusCode.BadRequest;
+                //    _response.IsSuccess = false;
+                //    _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
+                //    return BadRequest(_response);
+                //}
+                
+                WorkExperience model = await _workExperienceRepository.GetAsync(x => x.Id == workExperienceChangeStatusDTO.Id, false, null, null);
+                if (workExperienceChangeStatusDTO.StatusChange == (int)Status.APPROVE)
+                {
+                    model.RequestStatus = Status.APPROVE;
+                    model.UpdatedDate = DateTime.Now;
+                    model.ApprovedId = userId;
+                    await _workExperienceRepository.UpdateAsync(model);
+                    _response.Result = _mapper.Map<WorkExperienceDTO>(model);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
+                }
+                else if (workExperienceChangeStatusDTO.StatusChange == (int)Status.REJECT)
+                {
+                    // Handle for reject
+                    model.RejectionReason = workExperienceChangeStatusDTO.RejectionReason;
+                    model.UpdatedDate = DateTime.Now;
+                    model.ApprovedId = userId;
+                    await _workExperienceRepository.UpdateAsync(model);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
+
+                }
+
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
     }
 }

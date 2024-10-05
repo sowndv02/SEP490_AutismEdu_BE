@@ -1,6 +1,6 @@
 ﻿namespace backend_api.Models.DTOs.UpdateDTOs
 {
-    public class TutorRegistrationRequestChangeStatus
+    public class ChangeStatusDTO
     {
         public int Id { get; set; }
         public int StatusChange { get; set; }
