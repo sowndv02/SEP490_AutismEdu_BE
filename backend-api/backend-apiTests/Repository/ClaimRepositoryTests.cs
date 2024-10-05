@@ -54,8 +54,6 @@ namespace backend_api.Repository.Tests
                     PasswordHash = PasswordGenerator.GeneratePassword(),
                     UserName = "admin@admin.com",
                     CreatedDate = DateTime.Now,
-                    ImageLocalPathUrl = @"wwwroot\UserImages\default-avatar.png",
-                    ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME,
                     ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB
                 };
                 context.ApplicationUsers.Add(adminUser);

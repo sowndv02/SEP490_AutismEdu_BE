@@ -10,8 +10,6 @@ namespace backend_api.Models
         public string FullName { get; set; }
         public DateTime CreatedDate { get; set; }
         public string? ImageUrl { get; set; }
-        public string? ImageLocalPathUrl { get; set; }
-        public string? ImageLocalUrl { get; set; }
         [NotMapped]
         public List<string> RoleIds { get; set; }
         [NotMapped]

@@ -27,8 +27,10 @@ namespace backend_api.Data
         public DbSet<WorkExperience> WorkExperiences { get; set; }
         public DbSet<ChildInformation> ChildInformations { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
-        public DbSet<AvailableTime> AvailableTimes { get; set; }
+		public DbSet<TutorRegistrationRequest> TutorRegistrationRequests { get; set; }
+        public DbSet<Curriculum> Curriculums { get; set; }        public DbSet<AvailableTime> AvailableTimes { get; set; }
         public DbSet<AvailableTimeSlot> AvailableTimeSlots { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -64,32 +66,6 @@ namespace backend_api.Data
         //Seeding
         public async Task SeedDataIfEmptyAsync()
         {
-            //if (!Roles.Any())
-            //{
-            //    Roles.AddRange(
-            //        new IdentityRole()
-            //        {
-            //            Name = SD.TUTOR_ROLE,
-            //            NormalizedName = SD.TUTOR_ROLE.ToUpper()
-            //        },
-            //        new IdentityRole()
-            //        {
-            //            Name = SD.USER_ROLE,
-            //            NormalizedName = SD.USER_ROLE.ToUpper()
-            //        },
-            //        new IdentityRole()
-            //        {
-            //            Name = SD.STAFF_ROLE,
-            //            NormalizedName = SD.STAFF_ROLE.ToUpper()
-            //        },
-            //        new IdentityRole()
-            //        {
-            //            Name = SD.ADMIN_ROLE,
-            //            NormalizedName = SD.ADMIN_ROLE.ToUpper()
-            //        }
-            //    );
-            //}
-
             var roleStaff = Roles.FirstOrDefault(x => x.Name.Equals(SD.STAFF_ROLE));
             if (roleStaff == null)
             {
@@ -111,6 +87,13 @@ namespace backend_api.Data
                 Roles.Add(roleUser);
             }
 
+            var roleParent = Roles.FirstOrDefault(x => x.Name.Equals(SD.PARENT_ROLE));
+            if (roleParent == null)
+            {
+                roleParent = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.PARENT_ROLE, NormalizedName = SD.PARENT_ROLE.ToUpper() };
+                Roles.Add(roleParent);
+            }
+
             var roleAdmin = Roles.FirstOrDefault(x => x.Name.Equals(SD.ADMIN_ROLE));
             var adminUser = ApplicationUsers.FirstOrDefault(x => x.Email.Equals("admin@admin.com"));
             if (roleAdmin == null)
@@ -120,14 +103,7 @@ namespace backend_api.Data
             }
             if (!ApplicationUsers.Any() || adminUser == null)
             {
-                string baseUrl = string.Empty;
 
-                // Ensure HttpContext is available (if in a web context)
-                if (_httpContextAccessor.HttpContext != null)
-                {
-                    var httpContext = _httpContextAccessor.HttpContext;
-                    baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}{httpContext.Request.PathBase.Value}";
-                }
                 adminUser = new ApplicationUser
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -136,8 +112,6 @@ namespace backend_api.Data
                     PasswordHash = SD.ADMIN_PASSWORD_DEFAULT,
                     UserName = "admin@admin.com",
                     CreatedDate = DateTime.Now,
-                    ImageLocalPathUrl = @"wwwroot\UserImages\default-avatar.png",
-                    ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME,
                     ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB
                 };
 

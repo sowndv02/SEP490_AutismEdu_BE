@@ -110,7 +110,13 @@ namespace backend_api.Repository
 
         public async Task SaveAsync()
         {
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public async Task RemoveAsync(T entity)

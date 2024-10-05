@@ -1,0 +1,339 @@
+﻿using AutoMapper;
+using backend_api.Migrations;
+using backend_api.Models;
+using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
+using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.Repository.IRepository;
+using backend_api.Utils;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Runtime.ConstrainedExecution;
+using System.Security.Claims;
+using static backend_api.SD;
+
+namespace backend_api.Controllers.v1
+{
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiController]
+    [ApiVersion("1.0")]
+    //[Authorize]
+    public class TutorRegistrationRequestController : ControllerBase
+    {
+        private readonly IUserRepository _userRepository;
+        private readonly ITutorRepository _tutorRepository;
+        private readonly ITutorRegistrationRequestRepository _tutorRegistrationRequestRepository;
+        private readonly ICurriculumRepository _curriculumRepository;
+        private readonly IWorkExperienceRepository _workExperienceRepository;
+        private readonly ICertificateMediaRepository _certificateMediaRepository;
+        private readonly ICertificateRepository _certificateRepository;
+        private readonly IRoleRepository _roleRepository;
+        private readonly IBlobStorageRepository _blobStorageRepository;
+        private readonly ILogger<TutorController> _logger;
+        private readonly IMapper _mapper;
+        private readonly FormatString _formatString;
+        protected APIResponse _response;
+        protected int pageSize = 0;
+        public TutorRegistrationRequestController(IUserRepository userRepository, ITutorRepository tutorRepository,
+            ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
+            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
+            FormatString formatString, IWorkExperienceRepository workExperienceRepository,
+            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository, 
+            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository)
+        {
+            _curriculumRepository = curriculumRepository;
+            _formatString = formatString;
+            _roleRepository = roleRepository;
+            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            _response = new APIResponse();
+            _mapper = mapper;
+            _blobStorageRepository = blobStorageRepository;
+            _logger = logger;
+            _userRepository = userRepository;
+            _tutorRepository = tutorRepository;
+            _workExperienceRepository = workExperienceRepository;
+            _certificateRepository = certificateRepository;
+            _certificateMediaRepository = certificateMediaRepository;
+            _tutorRegistrationRequestRepository = tutorRegistrationRequestRepository;
+        }
+
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<ActionResult<APIResponse>> CreateTutorRegistrationRequestAsync([FromForm]TutorRegistrationRequestCreateDTO tutorRegistrationRequestCreateDTO)
+        {
+            try
+            {
+                if (tutorRegistrationRequestCreateDTO == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"Bad request!" };
+                    return BadRequest(_response);
+                }
+                if (_tutorRegistrationRequestRepository.GetAsync(x => x.Email.Equals(tutorRegistrationRequestCreateDTO.Email) && (x.RequestStatus == Status.PENDING || x.RequestStatus == Status.APPROVE) , true, null).GetAwaiter().GetResult() != null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR };
+                    return BadRequest(_response);
+                }
+                if(tutorRegistrationRequestCreateDTO.StartAge > tutorRegistrationRequestCreateDTO.EndAge)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { "Age bad request" };
+                    return BadRequest(_response);
+                }
+                tutorRegistrationRequestCreateDTO.FullName = _formatString.FormatStringFormalName(tutorRegistrationRequestCreateDTO.FullName);
+                TutorRegistrationRequest model = _mapper.Map<TutorRegistrationRequest>(tutorRegistrationRequestCreateDTO);
+
+                if (tutorRegistrationRequestCreateDTO.Image != null)
+                {
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(tutorRegistrationRequestCreateDTO.Image.FileName);
+                    using var stream = tutorRegistrationRequestCreateDTO.Image.OpenReadStream();
+                    model.ImageUrl = await _blobStorageRepository.Upload(stream, fileName);
+                }
+
+                model = await _tutorRegistrationRequestRepository.CreateAsync(model);
+                // TODO: Send email
+
+                _response.StatusCode = HttpStatusCode.Created;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạch, int pageNumber = 1)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                int totalCount = 0;
+                List<TutorRegistrationRequest> list = new();
+
+                if (!string.IsNullOrEmpty(seạch))
+                {
+                    var (count, result) = await _tutorRegistrationRequestRepository.GetAllAsync(u => (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(seạch.ToLower())),
+                        "ApprovedBy,Curriculums,WorkExperiences,Certificates", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
+                    list = result;
+                    totalCount = count;
+                }
+                else
+                {
+                    var (count, result) = await _tutorRegistrationRequestRepository.GetAllAsync(null, "ApprovedBy,Curriculums,WorkExperiences,Certificates", 
+                        pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
+                    list = result;
+                    totalCount = count;
+                }
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                _response.Result = _mapper.Map<List<TutorDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<APIResponse>> GetById(string id)
+        {
+            try
+            {
+                var result = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User", null);
+                _response.Result = _mapper.Map<TutorDTO>(result);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPut("changeStatus/{id}")]
+        //[Authorize(Policy = "UpdateTutorPolicy")]
+        public async Task<IActionResult> ApproveOrRejectTutorRegistrationRequest(TutorRegistrationRequestChangeStatus tutorRegistrationRequestChange)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
+                    return BadRequest(_response);
+                }
+                if (tutorRegistrationRequestChange.StatusChange == (int)Status.PENDING)
+                {
+                    _response.ErrorMessages = new List<string>() { SD.TUTOR_UPDATE_STATUS_IS_PENDING };
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
+                TutorRegistrationRequest model = await _tutorRegistrationRequestRepository.GetAsync(x => x.Id == tutorRegistrationRequestChange.Id, false, "ApprovedBy,Curriculums,WorkExperiences,Certificates", null);
+                if (tutorRegistrationRequestChange.StatusChange == (int)Status.APPROVE)
+                {
+                    // Create user
+                    var user = await _userRepository.CreateAsync(new ApplicationUser
+                    {
+                        Email = model.Email,
+                        Address = model.Address,
+                        FullName = model.FullName,
+                        PhoneNumber = model.PhoneNumber,
+                        EmailConfirmed = false,
+                        IsLockedOut = false,
+                        ImageUrl = model.ImageUrl,
+                        CreatedDate = DateTime.Now,
+                        UserName = model.Email,
+                        UserType = SD.APPLICATION_USER,
+                        LockoutEnabled = true,
+                        RoleIds = new List<string>() { _roleRepository.GetByNameAsync(SD.TUTOR_ROLE).GetAwaiter().GetResult().Id }
+                    }, PasswordGenerator.GeneratePassword());
+
+                    // Create tutor profile
+                    var tutor = await _tutorRepository.CreateAsync(new Tutor()
+                    {
+                        UserId = user.Id,
+                        Price = model.Price,
+                        AboutMe = model.Description,
+                        DateOfBirth = model.DateOfBirth,
+                        StartAge = model.StartAge,
+                        EndAge = model.EndAge,
+                        CreatedDate = DateTime.Now,
+                        UpdatedDate = DateTime.Now
+                    });
+
+                    // Update status curriculum
+                    if (model.Curriculums != null)
+                    {
+                        var curiculums = model.Curriculums.Where(x => x.RequestStatus == Status.PENDING).ToList();
+                        foreach (var item in curiculums)
+                        {
+                            item.ApprovedId = userId;
+                            item.UpdatedDate = DateTime.Now;
+                            item.SubmiterId = tutor.UserId;
+                            await _curriculumRepository.UpdateAsync(item);
+                        }
+                    }
+
+                    // Update status certificate except certificate have status is reject
+                    if (model.Certificates != null)
+                    {
+                        var certificates = model.Certificates.Where(x => x.RequestStatus == Status.PENDING).ToList();
+                        foreach (var cert in certificates)
+                        {
+                            cert.SubmiterId = tutor.UserId;
+                            cert.ApprovedId = userId;
+                            cert.UpdatedDate = DateTime.Now;
+                            await _certificateRepository.UpdateAsync(cert);
+                        }
+                    }
+
+                    // Update status work experience
+                    if (model.WorkExperiences != null)
+                    {
+                        var workExperiences = model.WorkExperiences.Where(x => x.RequestStatus == Status.PENDING).ToList();
+                        foreach (var workExperience in workExperiences)
+                        {
+                            workExperience.SubmiterId = tutor.UserId;
+                            workExperience.ApprovedId = userId;
+                            workExperience.UpdatedDate = DateTime.Now;
+                            await _workExperienceRepository.UpdateAsync(workExperience);
+                        }
+                    }
+
+                    // TODO: Send mail
+
+                    _response.Result = _mapper.Map<TutorDTO>(tutor);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
+                }
+                else if (tutorRegistrationRequestChange.StatusChange == (int)Status.REJECT)
+                {
+                    // Handle for reject
+                    model.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
+                    model.UpdatedDate = DateTime.Now;
+                    model.ApprovedId = userId;
+                    await _tutorRegistrationRequestRepository.UpdateAsync(model);
+
+                    // Reject certificate
+                    if (model.Certificates != null) 
+                    {
+                        foreach (var cert in model.Certificates)
+                        {
+                            cert.ApprovedId = userId;
+                            cert.UpdatedDate = DateTime.Now;
+                            cert.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
+                            cert.RequestStatus = Status.REJECT;
+                            await _certificateRepository.UpdateAsync(cert);
+                        }
+                    }
+
+                    // Reject curriculum
+                    if (model.Curriculums != null) 
+                    {
+                        foreach (var item in model.Curriculums)
+                        {
+                            item.ApprovedId = userId;
+                            item.UpdatedDate = DateTime.Now;
+                            item.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
+                            item.RequestStatus = Status.REJECT;
+                            await _curriculumRepository.UpdateAsync(item);
+                        }
+                    }
+
+                    if (model.WorkExperiences != null) 
+                    {
+                        foreach (var item in model.WorkExperiences)
+                        {
+                            item.ApprovedId = userId;
+                            item.UpdatedDate = DateTime.Now;
+                            item.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
+                            item.RequestStatus = Status.REJECT;
+                            await _workExperienceRepository.UpdateAsync(item);
+                        }
+                    }
+
+                    // TODO: Send mail
+
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
+
+                }
+                
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+    }
+}

@@ -301,10 +301,7 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string>() { "Error while registering" };
                     return BadRequest(_response);
                 }
-                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                user.ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                 user.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
-                user.ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.IMAGE_DEFAULT_AVATAR_NAME;
                 user.CreatedDate = DateTime.Now;
                 user.UserType = SD.APPLICATION_USER;
                 await _userRepository.UpdateAsync(user);
@@ -442,7 +439,6 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetUserByEmailAsync(payload.Email);
-                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
                 if (user == null)
                 {
                     user = await _userRepository.CreateAsync(new ApplicationUser
@@ -451,8 +447,6 @@ namespace backend_api.Controllers
                         Role = SD.USER_ROLE,
                         UserType = SD.GOOGLE_USER,
                         ImageUrl = payload.Picture,
-                        ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.IMAGE_DEFAULT_AVATAR_NAME,
-                        ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME,
                         FullName = payload.Name,
                         EmailConfirmed = true,
                         IsLockedOut = false
@@ -537,7 +531,6 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetUserByEmailAsync(payload.Email);
-                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
                 if (user == null)
                 {
                     user = await _userRepository.CreateAsync(new ApplicationUser
@@ -546,8 +539,6 @@ namespace backend_api.Controllers
                         Role = SD.USER_ROLE,
                         UserType = SD.GOOGLE_USER,
                         ImageUrl = payload.Picture,
-                        ImageLocalPathUrl = @"wwwroot\UserImages\" + SD.IMAGE_DEFAULT_AVATAR_NAME,
-                        ImageLocalUrl = baseUrl + $"/{SD.URL_IMAGE_USER}/" + SD.IMAGE_DEFAULT_AVATAR_NAME,
                         FullName = payload.Name,
                         EmailConfirmed = true,
                         IsLockedOut = false

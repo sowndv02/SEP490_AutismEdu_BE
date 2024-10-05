@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend_api.Data;
 
@@ -11,9 +12,10 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241005045338_AddUpdateTableUserTutorAddCurrirulumWorkexperience_v2")]
+    partial class AddUpdateTableUserTutorAddCurrirulumWorkexperience_v2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,70 +103,6 @@ namespace backend_api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ApplicationClaims");
-                });
-
-            modelBuilder.Entity("backend_api.Models.AvailableTime", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<TimeSpan>("From")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan>("To")
-                        .HasColumnType("time");
-
-                    b.Property<string>("TutorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Weekday")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TutorId");
-
-                    b.ToTable("AvailableTimes");
-                });
-
-            modelBuilder.Entity("backend_api.Models.AvailableTimeSlot", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<TimeSpan>("From")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan>("To")
-                        .HasColumnType("time");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("WeekdayId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WeekdayId");
-
-                    b.ToTable("AvailableTimeSlots");
                 });
 
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
@@ -299,42 +237,7 @@ namespace backend_api.Migrations
 
                     b.ToTable("Curriculums");
                 });
-			modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<DateTime?>("BirthDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("InitialCondition")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("isMale")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("ChildInformations");
-                });
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -868,28 +771,6 @@ namespace backend_api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("backend_api.Models.AvailableTime", b =>
-                {
-                    b.HasOne("backend_api.Models.ApplicationUser", "Tutor")
-                        .WithMany()
-                        .HasForeignKey("TutorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tutor");
-                });
-
-            modelBuilder.Entity("backend_api.Models.AvailableTimeSlot", b =>
-                {
-                    b.HasOne("backend_api.Models.AvailableTime", "Weekday")
-                        .WithMany()
-                        .HasForeignKey("WeekdayId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Weekday");
-                });
-
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
@@ -942,16 +823,7 @@ namespace backend_api.Migrations
 
                     b.Navigation("TutorRegistrationRequest");
                 });
-			modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
-                {
-                    b.HasOne("backend_api.Models.ApplicationUser", "Parent")
-                        .WithMany()
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
-                    b.Navigation("Parent");
-                });
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "User")
