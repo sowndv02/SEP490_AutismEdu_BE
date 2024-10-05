@@ -7,6 +7,7 @@ using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 
@@ -29,7 +30,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        [Authorize]
+        //[Authorize]
         public async Task<ActionResult<APIResponse>> CreateAsync(ChildInformationCreateDTO childInformationCreateDTO)
         {
             try
@@ -60,21 +61,24 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpGet("getByEmail/{email}")]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> GetChildInfoByParentEmail(string email)
+        [HttpGet]
+        //[Authorize]
+        public async Task<ActionResult<APIResponse>> GetParentChildInfo()
         {
             try
             {
-                var childInfos = await _childInfoRepository.GetChildByParentEmailAsync(email);
-
-                if (childInfos == null)
+                var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                
+                if(string.IsNullOrEmpty(parentId))
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = new List<string>() { "Email doesn't exist" };
+                    _response.ErrorMessages = new List<string>() { $"{parentId} not exist!" };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
+
+                var childInfos = await _childInfoRepository.GetParentChildInformationAsync(parentId);
+                
                 List<ChildInformationDTO> result = new List<ChildInformationDTO>();
                 foreach(var childInfo in childInfos)
                 {
@@ -83,7 +87,6 @@ namespace backend_api.Controllers.v1
                 _response.Result = result;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
-
             }
             catch (Exception ex)
             {
@@ -93,5 +96,6 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
     }
 }
