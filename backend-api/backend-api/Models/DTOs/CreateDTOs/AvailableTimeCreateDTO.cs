@@ -3,6 +3,6 @@
     public class AvailableTimeCreateDTO
     {
         public int Weekday { get; set; }
-        public List<string> Times { get; set; }
+        public AvailableTimeSlotCreateDTO TimeSlot { get; set; }
     }
 }
