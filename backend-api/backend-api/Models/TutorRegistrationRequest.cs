@@ -10,10 +10,13 @@ namespace backend_api.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        [Required]
         public string Email { get; set; }
         public string FullName { get; set; }
+        [EmailAddress]
         public string PhoneNumber { get; set; }
         public string? ImageUrl { get; set; }
+        [Required]
         public string Address { get; set; }
         [Required]
         public DateTime DateOfBirth { get; set; }

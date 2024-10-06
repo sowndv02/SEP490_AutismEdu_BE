@@ -46,7 +46,6 @@ namespace backend_api.Mapper
             CreateMap<Certificate, CertificateCreateDTO>().ReverseMap();
             CreateMap<Certificate, CertificateDTO>().ReverseMap();
             CreateMap<CertificateMedia, CertificateMediaDTO>().ReverseMap();
-            CreateMap<TutorInfo, Tutor>().ReverseMap();
             CreateMap<Tutor, TutorInfoDTO>().ReverseMap();
 
             CreateMap<Tutor, TutorDTO>()

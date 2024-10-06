@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -28,18 +29,26 @@ namespace backend_api.Data
         public DbSet<ChildInformation> ChildInformations { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
 		public DbSet<TutorRegistrationRequest> TutorRegistrationRequests { get; set; }
-        public DbSet<Curriculum> Curriculums { get; set; }        public DbSet<AvailableTime> AvailableTimes { get; set; }
+        public DbSet<Curriculum> Curriculums { get; set; }        
+        public DbSet<AvailableTime> AvailableTimes { get; set; }
         public DbSet<AvailableTimeSlot> AvailableTimeSlots { get; set; }
+        public DbSet<TutorRequest> TutorRequests { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            //builder.Entity<ApplicationClaim>()
-            //    .HasOne(a => a.User)
-            //    .WithMany(u => u.ApplicationClaims)
-            //    .HasForeignKey(a => a.UserId)
-            //    .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<TutorRequest>()
+                .HasOne(t => t.Tutor)
+                .WithMany()
+                .HasForeignKey(t => t.TutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TutorRequest>()
+                .HasOne(tr => tr.Parent)
+                .WithMany()  // or define the correct navigation property
+                .HasForeignKey(tr => tr.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Change Cascade to Restrict
 
             builder.Entity<Review>()
                 .HasOne(r => r.Reviewer)

@@ -6,11 +6,13 @@ namespace backend_api.Models.DTOs.CreateDTOs
     public class TutorRegistrationRequestCreateDTO
     {
         [Required]
+        [EmailAddress]
         public string Email { get; set; }
         [Required]
         public string FullName { get; set; }
         [Required]
         public string PhoneNumber { get; set; }
+        [Required]
         public string Address { get; set; }
         public IFormFile Image { get; set; }
         [Required]
