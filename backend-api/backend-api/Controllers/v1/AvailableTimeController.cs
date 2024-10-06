@@ -129,20 +129,18 @@ namespace backend_api.Controllers.v1
 
         [HttpDelete]
         //[Authorize]
-        public async Task<ActionResult<APIResponse>> RemoveTimeSlotFromWeekday(int id)
+        public async Task<ActionResult<APIResponse>> RemoveTimeSlotFromWeekday(int weekday, int timeSlotId)
         {
             try
             {
-                var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == id, true, null);
-
+                var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == timeSlotId && x.WeekdayId == weekday, true, null);
                 if(timeslot == null)
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
+                    _response.ErrorMessages = new List<string>() { "There is no timeslot with this Id!" };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
-
                 AvailableTimeSlot model = _mapper.Map<AvailableTimeSlot>(timeslot);
                 await _availableTimeSlotRepository.RemoveAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
