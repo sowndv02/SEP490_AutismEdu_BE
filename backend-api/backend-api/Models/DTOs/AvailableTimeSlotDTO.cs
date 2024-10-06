@@ -2,6 +2,7 @@
 {
     public class AvailableTimeSlotDTO
     {
-        public string TimeSLot { get; set; }
+        public int TimeSlotId { get; set; }
+        public string TimeSlot { get; set; }
     }
 }
