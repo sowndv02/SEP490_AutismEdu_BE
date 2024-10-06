@@ -106,5 +106,11 @@
             REJECT = 0
         }
 
+        // Status string
+        public const string STATUS_PENDING = "pending";
+        public const string STATUS_APPROVE = "approve";
+        public const string STATUS_REJECT = "reject";
+        public const string STATUS_ALL = "all";
+
     }
 }

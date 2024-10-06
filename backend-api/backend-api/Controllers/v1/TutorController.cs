@@ -55,99 +55,55 @@ namespace backend_api.Controllers.v1
         }
 
 
-        //[HttpGet]
-        //public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạch, int pageNumber = 1)
-        //{
-        //    try
-        //    {
-        //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //        int totalCount = 0;
-        //        List<Tutor> list = new();
+        [HttpGet]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạrch, string? searchAddress, int? reviewScore = 5, int[]? ages = null, int pageNumber = 1)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                int totalCount = 0;
+                List<Tutor> list = new();
+                if(ages == null || ages.Count() == 0)
+                {
+                    ages = new int[2] { 0, 15 };
+                }
+                if (ages[0] > ages[1])
+                {
+                    var temp = ages[0];
+                    ages[1] = ages[0];
+                    ages[0] = temp;
+                }
+                if (!string.IsNullOrEmpty(seạrch) || !string.IsNullOrEmpty(searchAddress) || reviewScore != null)
+                {
+                    var (countSearch, resultSearch) = await _tutorRepository.GetAllTutorAsync(u => (!string.IsNullOrEmpty(u.User.FullName) && u.User.FullName.ToLower().Contains(seạrch.ToLower())), 
+                        filterAddress: u => (!string.IsNullOrEmpty(u.User.Address) && u.User.Address.ToLower().Contains(searchAddress.ToLower())), 
+                        reviewScore: reviewScore, ageFrom: ages[0], ages[1],
+                        includeProperties: "User,Reviews", pageSize: pageSize, pageNumber: pageNumber);
+                    list = resultSearch;
+                    totalCount = countSearch;
+                }
+                else
+                {
+                    var (count, result) = await _tutorRepository.GetAllTutorAsync(null, null, reviewScore: reviewScore, 
+                        ageFrom: ages[0], ageTo: ages[1], "User,Reviews", pageSize: pageSize, pageNumber: pageNumber);
+                    list = result;
+                    totalCount = count;
+                }
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                _response.Result = _mapper.Map<List<TutorDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
-        //        //if (!string.IsNullOrEmpty(seạch))
-        //        //{
-        //        //    var (count, result) = await _tutorRepository.GetAllAsync(u => (!string.IsNullOrEmpty(u.FormalName) && u.FormalName.ToLower().Contains(seạch.ToLower())), "User", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
-        //        //    list = result;
-        //        //    totalCount = count;
-        //        //}
-        //        //else
-        //        //{
-        //        //    var (count, result) = await _tutorRepository.GetAllAsync(null, "User", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
-        //        //    list = result;
-        //        //    totalCount = count;
-        //        //}
-        //        //Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-        //        //_response.Result = _mapper.Map<List<TutorDTO>>(list);
-        //        //_response.StatusCode = HttpStatusCode.OK;
-        //        //_response.Pagination = pagination;
-        //        //return Ok(_response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _response.IsSuccess = false;
-        //        _response.StatusCode = HttpStatusCode.InternalServerError;
-        //        _response.ErrorMessages = new List<string>() { ex.Message };
-        //        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-        //    }
-        //}
-
-        //[HttpGet("{id}")]
-        //public async Task<ActionResult<APIResponse>> GetById(string id)
-        //{
-        //    try
-        //    {
-        //        var result = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User", null);
-        //        _response.Result = _mapper.Map<TutorDTO>(result);
-        //        _response.StatusCode = HttpStatusCode.OK;
-        //        return Ok(_response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _response.IsSuccess = false;
-        //        _response.StatusCode = HttpStatusCode.InternalServerError;
-        //        _response.ErrorMessages = new List<string>() { ex.Message };
-        //        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-        //    }
-        //}
-
-        //[HttpPut("changeStatus/{userId}")]
-        //[Authorize(Policy = "UpdateTutorPolicy")]
-        //public async Task<IActionResult> ApproveOrRejectTutor(string userId)
-        //{
-        //    try
-        //    {
-        //        if (string.IsNullOrEmpty(userId))
-        //        {
-        //            _response.StatusCode = HttpStatusCode.BadRequest;
-        //            _response.IsSuccess = false;
-        //            _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
-        //            return BadRequest(_response);
-        //        }
-        //        Tutor model = await _tutorRepository.GetAsync(x => x.UserId == userId, false, "User", null);
-        //        model.IsApprove = !model.IsApprove;
-        //        model.UpdatedDate = DateTime.Now;
-        //        await _tutorRepository.UpdateAsync(model);
-
-        //        // Update reject certificate
-        //        if (!model.IsApprove)
-        //        {
-        //            Certificate certificates = await _certificateRepository.GetAsync(x => x.SubmiterId == userId, false, "CertificateMedias", null);
-        //            model.IsApprove = false;
-        //            model.UpdatedDate = DateTime.Now;
-        //            await _certificateRepository.UpdateAsync(certificates);
-        //        }
-        //        _response.Result = _mapper.Map<TutorDTO>(model);
-        //        _response.StatusCode = HttpStatusCode.OK;
-        //        return Ok(_response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _response.IsSuccess = false;
-        //        _response.StatusCode = HttpStatusCode.InternalServerError;
-        //        _response.ErrorMessages = new List<string>() { ex.Message };
-        //        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-        //    }
-        //}
 
     }
 }

@@ -17,5 +17,6 @@ namespace backend_api.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         public List<TutorRequest> Requests { get; set; }
+        public List<Review> Reviews { get; set; }
     }
 }

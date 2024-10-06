@@ -8,6 +8,7 @@ using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
 using System.Runtime.ConstrainedExecution;
 using System.Security.Claims;
@@ -149,29 +150,46 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạch, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, int pageNumber = 1)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<TutorRegistrationRequest> list = new();
+                Expression<Func<TutorRegistrationRequest, bool>> filter = u => true;
 
-                if (!string.IsNullOrEmpty(seạch))
+                if (!string.IsNullOrEmpty(search))
                 {
-                    var (count, result) = await _tutorRegistrationRequestRepository.GetAllAsync(u => (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(seạch.ToLower())),
-                        "ApprovedBy,Curriculums,WorkExperiences,Certificates", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
-                    list = result;
-                    totalCount = count;
+                    filter = u => !string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(search.ToLower());
                 }
-                else
+
+                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
-                    var (count, result) = await _tutorRegistrationRequestRepository.GetAllAsync(null, "ApprovedBy,Curriculums,WorkExperiences,Certificates", 
-                        pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
-                    list = result;
-                    totalCount = count;
+                    switch (status.ToLower())
+                    {
+                        case "approve":
+                            var (countApprove, resultApprove) = await _tutorRegistrationRequestRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)),
+                                "ApprovedBy,Curriculums,WorkExperiences,Certificates", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
+                            list = resultApprove;
+                            totalCount = countApprove;
+                            break;
+                        case "reject":
+                            var (countReject, resultReject) = await _tutorRegistrationRequestRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)),
+                                "ApprovedBy,Curriculums,WorkExperiences,Certificates", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
+                            list = resultReject;
+                            totalCount = countReject;
+                            break;
+                        case "pending":
+                            var (countPending, resultPending) = await _tutorRegistrationRequestRepository.GetAllAsync(x => x.RequestStatus == Status.PENDING && (filter == null || filter.Compile()(x)),
+                                "ApprovedBy,Curriculums,WorkExperiences,Certificates", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
+                            list = resultPending;
+                            totalCount = countPending;
+                            break;
+                    }
                 }
-                foreach(var item in list)
+                
+                foreach (var item in list)
                 {
                     foreach(var certificate in item.Certificates)
                     {
