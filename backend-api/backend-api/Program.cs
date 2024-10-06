@@ -67,8 +67,10 @@ builder.Services.AddScoped<IWorkExperienceRepository, WorkExperienceRepository>(
 builder.Services.AddScoped<IChildInformationRepository, ChildInformationRepository>();
 builder.Services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
 builder.Services.AddScoped<IAvailableTimeRepository, AvailableTimeRepository>();
-builder.Services.AddScoped<IAvailableTimeSlotRepository, AvailableTimeSlotRepository>();builder.Services.AddScoped<ITutorRegistrationRequestRepository, TutorRegistrationRequestRepository>();
+builder.Services.AddScoped<IAvailableTimeSlotRepository, AvailableTimeSlotRepository>();
+builder.Services.AddScoped<ITutorRegistrationRequestRepository, TutorRegistrationRequestRepository>();
 builder.Services.AddScoped<ICurriculumRepository, CurriculumRepository>();
+builder.Services.AddScoped<ITutorRequestRepository, TutorRequestRepository>();
 
 
 // Add DI requirement authorization handler
