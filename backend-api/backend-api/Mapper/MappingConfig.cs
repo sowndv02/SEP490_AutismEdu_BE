@@ -81,8 +81,7 @@ namespace backend_api.Mapper
             CreateMap<ChildInformation, ChildInformationCreateDTO>().ReverseMap();
             CreateMap<AvailableTime, AvailableTimeCreateDTO>().ReverseMap();
             CreateMap<AvailableTimeSlot, AvailableTimeSlotCreateDTO>().ReverseMap();
-            CreateMap<AvailableTimeSlot, AvailableTimeSlotDTO>()
-                .ForMember(dest => dest.TimeSLot, opt => opt.MapFrom(src => $"{src.From.ToString(@"hh\:mm")}-{src.To.ToString(@"hh\:mm")}"));
+
             
             CreateMap<TutorRegistrationRequest, TutorRegistrationRequestDTO>().ReverseMap();
             CreateMap<WorkExperience, WorkExperienceDTO>().ReverseMap();
@@ -90,7 +89,9 @@ namespace backend_api.Mapper
             CreateMap<TutorRequest, TutorRequestCreateDTO>().ReverseMap();
             CreateMap<TutorRequest, TutorRequestDTO>().ReverseMap();
 
-
+            CreateMap<AvailableTimeSlot, AvailableTimeSlotDTO>()
+                .ForMember(dest => dest.TimeSlotId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.TimeSlot, opt => opt.MapFrom(src => $"{src.From.ToString(@"hh\:mm")}-{src.To.ToString(@"hh\:mm")}"));
 
         }
     }
