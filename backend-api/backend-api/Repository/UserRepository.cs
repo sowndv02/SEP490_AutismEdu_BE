@@ -791,10 +791,9 @@ namespace backend_api.Repository
                 else
                     query = query.OrderBy(orderBy);
             }
-            int count = 0;
+            int count = query.Count();
             if (filter != null)
                 query = query.Where(filter);
-            count = query.Count();
             var users = await query.ToListAsync();
             foreach (var user in users)
             {
