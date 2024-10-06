@@ -61,7 +61,7 @@ namespace backend_api.Controllers.v1
                 }
                 AvailableTimeSlot availableTimeSlot = _mapper.Map<AvailableTimeSlot>(availableTimeCreateDTO.TimeSlot);
                 
-                var existingTimeSlots = _availableTimeSlotRepository.GetAllAsync(x => x.WeekdayId == availableTime.Id, null, null).GetAwaiter().GetResult();
+                var existingTimeSlots = _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.WeekdayId == availableTime.Id, null, null).GetAwaiter().GetResult();
                 foreach (var slot in existingTimeSlots.list)
                 {
                     if (!(availableTimeSlot.To <= slot.From || availableTimeSlot.From >= slot.To))
@@ -111,7 +111,7 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.OK;
                     return Ok(_response);
                 }
-                var existingTimeSlots = _availableTimeSlotRepository.GetAllAsync(x => x.WeekdayId == availableTime.Id, null, null).GetAwaiter().GetResult();
+                var existingTimeSlots = _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.WeekdayId == availableTime.Id, null, null).GetAwaiter().GetResult();
 
                 _response.Result = _mapper.Map<List<AvailableTimeSlotDTO>>(existingTimeSlots.list.OrderBy(x => x.From));
                 _response.StatusCode = HttpStatusCode.OK;

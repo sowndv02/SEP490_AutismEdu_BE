@@ -133,8 +133,6 @@ namespace backend_api.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Weekday = table.Column<int>(type: "int", nullable: false),
-                    From = table.Column<TimeSpan>(type: "time", nullable: false),
-                    To = table.Column<TimeSpan>(type: "time", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },

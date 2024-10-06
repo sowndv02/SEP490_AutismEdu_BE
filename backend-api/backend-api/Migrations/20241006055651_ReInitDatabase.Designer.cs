@@ -12,7 +12,7 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241006054518_ReInitDatabase")]
+    [Migration("20241006055651_ReInitDatabase")]
     partial class ReInitDatabase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -115,12 +115,6 @@ namespace backend_api.Migrations
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<TimeSpan>("From")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan>("To")
-                        .HasColumnType("time");
 
                     b.Property<string>("TutorId")
                         .IsRequired()
