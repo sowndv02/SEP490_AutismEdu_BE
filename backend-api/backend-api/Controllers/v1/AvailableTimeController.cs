@@ -36,6 +36,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
                 if (availableTimeCreateDTO == null || string.IsNullOrEmpty(tutorId))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -50,8 +51,8 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { $"Invalid timeslot!" };
                     return BadRequest(_response);
                 }
-                var availableTime = _availableTimeRepository.GetAsync(x => x.TutorId.Equals(tutorId) &&
-                    x.Weekday.Equals(availableTimeCreateDTO.Weekday), true, null).GetAwaiter().GetResult();
+                var availableTime = await _availableTimeRepository.GetAsync(x => x.TutorId.Equals(tutorId) &&
+                    x.Weekday.Equals(availableTimeCreateDTO.Weekday), true, null);
                 if (availableTime == null)
                 {
                     AvailableTime model = _mapper.Map<AvailableTime>(availableTimeCreateDTO);
@@ -61,14 +62,14 @@ namespace backend_api.Controllers.v1
                 }
                 AvailableTimeSlot availableTimeSlot = _mapper.Map<AvailableTimeSlot>(availableTimeCreateDTO.TimeSlot);
                 
-                var existingTimeSlots = _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.WeekdayId == availableTime.Id, null, null).GetAwaiter().GetResult();
+                var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.WeekdayId == availableTime.Id, null, null);
                 foreach (var slot in existingTimeSlots.list)
                 {
                     if (!(availableTimeSlot.To <= slot.From || availableTimeSlot.From >= slot.To))
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { $"The new time slot overlaps with an existing time slot {slot.From.ToString(@"hh\:mm")}-{slot.To.ToString(@"hh\:mm")}" };
+                        _response.ErrorMessages = new List<string> { $"Khung giờ mới bị trùng với khung giờ đã tồn tại {slot.From.ToString(@"hh\:mm")}-{slot.To.ToString(@"hh\:mm")}" };
                         return BadRequest(_response);
                     }
                 }
@@ -104,17 +105,46 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var availableTime = _availableTimeRepository.GetAsync(x => x.TutorId.Equals(tutorId) && x.Weekday == weekday, true, null).GetAwaiter().GetResult();
+                var availableTime = await _availableTimeRepository.GetAsync(x => x.TutorId.Equals(tutorId) && x.Weekday == weekday, true, null);
                 if (availableTime == null)
                 {
                     _response.Result = null;
                     _response.StatusCode = HttpStatusCode.OK;
                     return Ok(_response);
                 }
-                var existingTimeSlots = _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.WeekdayId == availableTime.Id, null, null).GetAwaiter().GetResult();
+                var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.WeekdayId == availableTime.Id, null, null);
 
                 _response.Result = _mapper.Map<List<AvailableTimeSlotDTO>>(existingTimeSlots.list.OrderBy(x => x.From));
                 _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpDelete]
+        //[Authorize]
+        public async Task<ActionResult<APIResponse>> RemoveTimeSlotFromWeekday(int weekday, int timeSlotId)
+        {
+            try
+            {
+                var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == timeSlotId && x.WeekdayId == weekday, true, null);
+                if(timeslot == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { "There is no timeslot with this Id!" };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+                AvailableTimeSlot model = _mapper.Map<AvailableTimeSlot>(timeslot);
+                await _availableTimeSlotRepository.RemoveAsync(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)
