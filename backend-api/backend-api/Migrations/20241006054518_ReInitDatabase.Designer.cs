@@ -12,8 +12,8 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240930190422_AddTableActivityLog")]
-    partial class AddTableActivityLog
+    [Migration("20241006054518_ReInitDatabase")]
+    partial class ReInitDatabase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,6 +23,46 @@ namespace backend_api.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+
+            modelBuilder.Entity("backend_api.Models.ActivityLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Activity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TypeTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ActivityLogs");
+                });
 
             modelBuilder.Entity("backend_api.Models.ApplicationClaim", b =>
                 {
@@ -65,6 +105,70 @@ namespace backend_api.Migrations
                     b.ToTable("ApplicationClaims");
                 });
 
+            modelBuilder.Entity("backend_api.Models.AvailableTime", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("From")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("To")
+                        .HasColumnType("time");
+
+                    b.Property<string>("TutorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Weekday")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TutorId");
+
+                    b.ToTable("AvailableTimes");
+                });
+
+            modelBuilder.Entity("backend_api.Models.AvailableTimeSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("From")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("To")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WeekdayId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WeekdayId");
+
+                    b.ToTable("AvailableTimeSlots");
+                });
+
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
                 {
                     b.Property<int>("Id")
@@ -72,6 +176,9 @@ namespace backend_api.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("ApprovedId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("CertificateName")
                         .IsRequired()
@@ -83,14 +190,8 @@ namespace backend_api.Migrations
                     b.Property<DateTime?>("ExpirationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Feedback")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("IdentityCardNumber")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool?>("IsApprove")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("IssuingDate")
                         .HasColumnType("datetime2");
@@ -98,16 +199,28 @@ namespace backend_api.Migrations
                     b.Property<string>("IssuingInstitution")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RequestStatus")
+                        .HasColumnType("int");
+
                     b.Property<string>("SubmiterId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("TutorRegistrationRequestId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ApprovedId");
+
                     b.HasIndex("SubmiterId");
+
+                    b.HasIndex("TutorRegistrationRequestId");
 
                     b.ToTable("Certificates");
                 });
@@ -137,6 +250,93 @@ namespace backend_api.Migrations
                     b.HasIndex("CertificateId");
 
                     b.ToTable("CertificateMedias");
+                });
+
+            modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InitialCondition")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("isMale")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("ChildInformations");
+                });
+
+            modelBuilder.Entity("backend_api.Models.Curriculum", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("AgeEnd")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AgeFrom")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ApprovedId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RequestStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubmiterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("TutorRegistrationRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedId");
+
+                    b.HasIndex("SubmiterId");
+
+                    b.HasIndex("TutorRegistrationRequestId");
+
+                    b.ToTable("Curriculums");
                 });
 
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
@@ -249,7 +449,7 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("Desc")
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -290,17 +490,7 @@ namespace backend_api.Migrations
                     b.Property<int>("EndAge")
                         .HasColumnType("int");
 
-                    b.Property<string>("FormalName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsApprove")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal?>("PriceFrom")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("PriceTo")
+                    b.Property<decimal?>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("StartAge")
@@ -314,6 +504,108 @@ namespace backend_api.Migrations
                     b.ToTable("Tutors");
                 });
 
+            modelBuilder.Entity("backend_api.Models.TutorRegistrationRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ApprovedId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("EndAge")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RequestStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StartAge")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedId");
+
+                    b.ToTable("TutorRegistrationRequests");
+                });
+
+            modelBuilder.Entity("backend_api.Models.TutorRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("ChildId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TutorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TutorUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("TutorId");
+
+                    b.HasIndex("TutorUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TutorRequests");
+                });
+
             modelBuilder.Entity("backend_api.Models.WorkExperience", b =>
                 {
                     b.Property<int>("Id")
@@ -321,6 +613,9 @@ namespace backend_api.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("ApprovedId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
@@ -336,19 +631,31 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RequestStatus")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("SubmiterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("TutorRegistrationRequestId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ApprovedId");
+
+                    b.HasIndex("SubmiterId");
+
+                    b.HasIndex("TutorRegistrationRequestId");
 
                     b.ToTable("WorkExperiences");
                 });
@@ -571,12 +878,6 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ImageLocalPathUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageLocalUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -585,6 +886,17 @@ namespace backend_api.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasDiscriminator().HasValue("ApplicationUser");
+                });
+
+            modelBuilder.Entity("backend_api.Models.ActivityLog", b =>
+                {
+                    b.HasOne("backend_api.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend_api.Models.ApplicationClaim", b =>
@@ -598,15 +910,47 @@ namespace backend_api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("backend_api.Models.Certificate", b =>
+            modelBuilder.Entity("backend_api.Models.AvailableTime", b =>
                 {
-                    b.HasOne("backend_api.Models.ApplicationUser", "Submiter")
+                    b.HasOne("backend_api.Models.ApplicationUser", "Tutor")
                         .WithMany()
-                        .HasForeignKey("SubmiterId")
+                        .HasForeignKey("TutorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Tutor");
+                });
+
+            modelBuilder.Entity("backend_api.Models.AvailableTimeSlot", b =>
+                {
+                    b.HasOne("backend_api.Models.AvailableTime", "Weekday")
+                        .WithMany()
+                        .HasForeignKey("WeekdayId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Weekday");
+                });
+
+            modelBuilder.Entity("backend_api.Models.Certificate", b =>
+                {
+                    b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedId");
+
+                    b.HasOne("backend_api.Models.ApplicationUser", "Submiter")
+                        .WithMany()
+                        .HasForeignKey("SubmiterId");
+
+                    b.HasOne("backend_api.Models.TutorRegistrationRequest", "TutorRegistrationRequest")
+                        .WithMany("Certificates")
+                        .HasForeignKey("TutorRegistrationRequestId");
+
+                    b.Navigation("ApprovedBy");
+
                     b.Navigation("Submiter");
+
+                    b.Navigation("TutorRegistrationRequest");
                 });
 
             modelBuilder.Entity("backend_api.Models.CertificateMedia", b =>
@@ -618,6 +962,38 @@ namespace backend_api.Migrations
                         .IsRequired();
 
                     b.Navigation("Certificate");
+                });
+
+            modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
+                {
+                    b.HasOne("backend_api.Models.ApplicationUser", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("backend_api.Models.Curriculum", b =>
+                {
+                    b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedId");
+
+                    b.HasOne("backend_api.Models.Tutor", "Submiter")
+                        .WithMany()
+                        .HasForeignKey("SubmiterId");
+
+                    b.HasOne("backend_api.Models.TutorRegistrationRequest", "TutorRegistrationRequest")
+                        .WithMany("Curriculums")
+                        .HasForeignKey("TutorRegistrationRequestId");
+
+                    b.Navigation("ApprovedBy");
+
+                    b.Navigation("Submiter");
+
+                    b.Navigation("TutorRegistrationRequest");
                 });
 
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
@@ -683,15 +1059,65 @@ namespace backend_api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("backend_api.Models.WorkExperience", b =>
+            modelBuilder.Entity("backend_api.Models.TutorRegistrationRequest", b =>
                 {
-                    b.HasOne("backend_api.Models.ApplicationUser", "User")
+                    b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("ApprovedId");
+
+                    b.Navigation("ApprovedBy");
+                });
+
+            modelBuilder.Entity("backend_api.Models.TutorRequest", b =>
+                {
+                    b.HasOne("backend_api.Models.ChildInformation", "ChildInformation")
+                        .WithMany()
+                        .HasForeignKey("ChildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.HasOne("backend_api.Models.Tutor", "Tutor")
+                        .WithMany()
+                        .HasForeignKey("TutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.Tutor", null)
+                        .WithMany("Requests")
+                        .HasForeignKey("TutorUserId");
+
+                    b.HasOne("backend_api.Models.ApplicationUser", "Parent")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ChildInformation");
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("Tutor");
+                });
+
+            modelBuilder.Entity("backend_api.Models.WorkExperience", b =>
+                {
+                    b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedId");
+
+                    b.HasOne("backend_api.Models.ApplicationUser", "Submiter")
+                        .WithMany()
+                        .HasForeignKey("SubmiterId");
+
+                    b.HasOne("backend_api.Models.TutorRegistrationRequest", "TutorRegistrationRequest")
+                        .WithMany("WorkExperiences")
+                        .HasForeignKey("TutorRegistrationRequestId");
+
+                    b.Navigation("ApprovedBy");
+
+                    b.Navigation("Submiter");
+
+                    b.Navigation("TutorRegistrationRequest");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -748,6 +1174,20 @@ namespace backend_api.Migrations
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
                 {
                     b.Navigation("CertificateMedias");
+                });
+
+            modelBuilder.Entity("backend_api.Models.Tutor", b =>
+                {
+                    b.Navigation("Requests");
+                });
+
+            modelBuilder.Entity("backend_api.Models.TutorRegistrationRequest", b =>
+                {
+                    b.Navigation("Certificates");
+
+                    b.Navigation("Curriculums");
+
+                    b.Navigation("WorkExperiences");
                 });
 
             modelBuilder.Entity("backend_api.Models.ApplicationUser", b =>

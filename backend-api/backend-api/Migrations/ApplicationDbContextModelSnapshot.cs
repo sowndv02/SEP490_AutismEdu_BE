@@ -250,6 +250,43 @@ namespace backend_api.Migrations
                     b.ToTable("CertificateMedias");
                 });
 
+            modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InitialCondition")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("isMale")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("ChildInformations");
+                });
+
             modelBuilder.Entity("backend_api.Models.Curriculum", b =>
                 {
                     b.Property<int>("Id")
@@ -299,42 +336,7 @@ namespace backend_api.Migrations
 
                     b.ToTable("Curriculums");
                 });
-			modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<DateTime?>("BirthDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("InitialCondition")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("isMale")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("ChildInformations");
-                });
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -562,6 +564,44 @@ namespace backend_api.Migrations
                     b.HasIndex("ApprovedId");
 
                     b.ToTable("TutorRegistrationRequests");
+                });
+
+            modelBuilder.Entity("backend_api.Models.TutorRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("ChildId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TutorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TutorUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("TutorId");
+
+                    b.HasIndex("TutorUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TutorRequests");
                 });
 
             modelBuilder.Entity("backend_api.Models.WorkExperience", b =>
@@ -922,6 +962,17 @@ namespace backend_api.Migrations
                     b.Navigation("Certificate");
                 });
 
+            modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
+                {
+                    b.HasOne("backend_api.Models.ApplicationUser", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("backend_api.Models.Curriculum", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
@@ -942,16 +993,7 @@ namespace backend_api.Migrations
 
                     b.Navigation("TutorRegistrationRequest");
                 });
-			modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
-                {
-                    b.HasOne("backend_api.Models.ApplicationUser", "Parent")
-                        .WithMany()
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
-                    b.Navigation("Parent");
-                });
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "User")
@@ -1022,6 +1064,37 @@ namespace backend_api.Migrations
                         .HasForeignKey("ApprovedId");
 
                     b.Navigation("ApprovedBy");
+                });
+
+            modelBuilder.Entity("backend_api.Models.TutorRequest", b =>
+                {
+                    b.HasOne("backend_api.Models.ChildInformation", "ChildInformation")
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.Tutor", "Tutor")
+                        .WithMany()
+                        .HasForeignKey("TutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.Tutor", null)
+                        .WithMany("Requests")
+                        .HasForeignKey("TutorUserId");
+
+                    b.HasOne("backend_api.Models.ApplicationUser", "Parent")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ChildInformation");
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("backend_api.Models.WorkExperience", b =>
@@ -1099,6 +1172,11 @@ namespace backend_api.Migrations
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
                 {
                     b.Navigation("CertificateMedias");
+                });
+
+            modelBuilder.Entity("backend_api.Models.Tutor", b =>
+                {
+                    b.Navigation("Requests");
                 });
 
             modelBuilder.Entity("backend_api.Models.TutorRegistrationRequest", b =>
