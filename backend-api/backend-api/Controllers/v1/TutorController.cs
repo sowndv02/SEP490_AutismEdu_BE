@@ -60,7 +60,6 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<Tutor> list = new();
                 if(ages == null || ages.Count() == 0)

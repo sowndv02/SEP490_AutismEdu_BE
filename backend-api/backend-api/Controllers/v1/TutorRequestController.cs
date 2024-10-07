@@ -52,11 +52,11 @@ namespace backend_api.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<TutorRequest> list = new();
-                Expression<Func<TutorRequest, bool>> filter = u => true;
+                Expression<Func<TutorRequest, bool>> filter = u => u.TutorId == userId;
 
                 if (!string.IsNullOrEmpty(search))
                 {
-                    filter = u => !string.IsNullOrEmpty(u.Parent.FullName) && u.Parent.FullName.ToLower().Contains(search.ToLower());
+                    filter = u => !string.IsNullOrEmpty(u.Parent.FullName) && u.Parent.FullName.ToLower().Contains(search.ToLower()) && (filter == null || filter.Compile()(u));
                 }
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
@@ -82,6 +82,13 @@ namespace backend_api.Controllers.v1
                             totalCount = countPending;
                             break;
                     }
+                }
+                else
+                {
+                    var (count, result) = await _tutorRequestRepository.GetAllAsync(filter,
+                               "ApprovedBy,Curriculums,WorkExperiences,Certificates", pageSize: 5, pageNumber: pageNumber, x => x.CreatedDate, true);
+                    list = result;
+                    totalCount = count;
                 }
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
