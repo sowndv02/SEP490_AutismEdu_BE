@@ -154,7 +154,6 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<TutorRegistrationRequest> list = new();
                 Expression<Func<TutorRegistrationRequest, bool>> filter = u => true;
@@ -187,6 +186,13 @@ namespace backend_api.Controllers.v1
                             totalCount = countPending;
                             break;
                     }
+                }
+                else
+                {
+                    var (count, result) = await _tutorRegistrationRequestRepository.GetAllAsync(filter,
+                                "ApprovedBy,Curriculums,WorkExperiences,Certificates", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
+                    list = result;
+                    totalCount = count;
                 }
                 
                 foreach (var item in list)
