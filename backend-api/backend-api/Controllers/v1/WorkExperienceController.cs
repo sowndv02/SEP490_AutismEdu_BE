@@ -55,7 +55,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{userId} not exist!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 WorkExperience model = _mapper.Map<WorkExperience>(workExperienceCreateDTO);
@@ -87,10 +87,10 @@ namespace backend_api.Controllers.v1
                 //{
                 //    _response.StatusCode = HttpStatusCode.BadRequest;
                 //    _response.IsSuccess = false;
-                //    _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
+                //    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                 //    return BadRequest(_response);
                 //}
-                
+
                 WorkExperience model = await _workExperienceRepository.GetAsync(x => x.Id == workExperienceChangeStatusDTO.Id, false, null, null);
                 if (workExperienceChangeStatusDTO.StatusChange == (int)Status.APPROVE)
                 {

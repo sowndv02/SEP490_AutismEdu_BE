@@ -67,7 +67,7 @@ namespace backend_api.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{id} is null or empty!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 IdentityRole model = await _roleRepository.GetByIdAsync(id);
@@ -75,7 +75,7 @@ namespace backend_api.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{id} is not found!" };
+                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
                     return NotFound(_response);
                 }
                 var result = _mapper.Map<RoleDTO>(model);
@@ -105,7 +105,7 @@ namespace backend_api.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{roleDTO.Name} existed!" };
+                    _response.ErrorMessages = new List<string> { $"{roleDTO.Name} tồn tại!" };
                     return BadRequest(_response);
                 }
                 if (roleDTO == null) return BadRequest(roleDTO);
@@ -145,7 +145,7 @@ namespace backend_api.Controllers
                     {
                         _response.IsSuccess = false;
                         _response.StatusCode = HttpStatusCode.NotFound;
-                        _response.ErrorMessages = new List<string>() { $"Cannot delete this role, since there are users assigned to this role with role id is: {roleId}" };
+                        _response.ErrorMessages = new List<string>() { $"Không thể xóa vai trò này vì có những người dùng được chỉ định cho vai trò này với ID vai trò là: {roleId}" };
                         return Ok(_response);
                     }
                 }
@@ -153,7 +153,7 @@ namespace backend_api.Controllers
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.ErrorMessages = new List<string>() { $"Not found with role id is: {roleId}" };
+                    _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
                     return Ok(_response);
                 }
 
