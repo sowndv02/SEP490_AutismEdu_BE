@@ -33,6 +33,10 @@ namespace backend_api.Data
         public DbSet<AvailableTime> AvailableTimes { get; set; }
         public DbSet<AvailableTimeSlot> AvailableTimeSlots { get; set; }
         public DbSet<TutorRequest> TutorRequests { get; set; }
+        public DbSet<AssessmentQuestion> AssessmentQuestions { get; set; }
+        public DbSet<AssessmentOption> AssessmentOptions { get; set; }
+        public DbSet<AssessmentResult> AssessmentResults { get; set; }
+        public DbSet<ProgressReport> ProgressReports { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -60,6 +64,12 @@ namespace backend_api.Data
                 .HasOne(r => r.Reviewee)
                 .WithMany()
                 .HasForeignKey(r => r.RevieweeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ProgressReport>()
+                .HasOne(pr => pr.Tutor)
+                .WithMany()
+                .HasForeignKey(pr => pr.TutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             foreach (var entityType in builder.Model.GetEntityTypes())

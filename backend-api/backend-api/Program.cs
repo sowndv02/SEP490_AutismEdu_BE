@@ -71,6 +71,10 @@ builder.Services.AddScoped<IAvailableTimeSlotRepository, AvailableTimeSlotReposi
 builder.Services.AddScoped<ITutorRegistrationRequestRepository, TutorRegistrationRequestRepository>();
 builder.Services.AddScoped<ICurriculumRepository, CurriculumRepository>();
 builder.Services.AddScoped<ITutorRequestRepository, TutorRequestRepository>();
+builder.Services.AddScoped<IAssessmentQuestionRepository, AssessmentQuestionRepository>();
+builder.Services.AddScoped<IAssessmentOptionRepository, AssessmentOptionRepository>();
+builder.Services.AddScoped<IAssessmentResultRepository, AssessmentResultRepository>();
+builder.Services.AddScoped<IProgressReportRepository, ProgressReportRepository>();
 
 
 // Add DI requirement authorization handler
