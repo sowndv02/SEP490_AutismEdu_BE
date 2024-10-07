@@ -46,7 +46,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 var result = await _userRepository.RemoveRoleByUserId(userId, userRoleDTO.UserRoleIds);
@@ -54,7 +54,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    _response.ErrorMessages = new List<string>() { SD.INTERNAL_SERVER_ERROR_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 else
@@ -82,7 +82,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 // Get current roles of the user
@@ -107,7 +107,7 @@ namespace backend_api.Controllers.v1
                             {
                                 _response.StatusCode = HttpStatusCode.BadRequest;
                                 _response.IsSuccess = false;
-                                _response.ErrorMessages = new List<string> { $"Cannot add role {restrictedRole} to user with role {role}." };
+                                _response.ErrorMessages = new List<string> { $"Không thể thêm {restrictedRole} cho người dùng với vai trò {role}." };
                                 return BadRequest(_response);
                             }
                         }
@@ -119,7 +119,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    _response.ErrorMessages = new List<string>() { SD.INTERNAL_SERVER_ERROR_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 else
@@ -155,7 +155,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 var result = await _userRepository.RemoveClaimByUserId(userId, userClaimDTO.UserClaimIds);
@@ -163,7 +163,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    _response.ErrorMessages = new List<string>() { SD.INTERNAL_SERVER_ERROR_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 else
@@ -191,7 +191,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"Data is invalid!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 var result = await _userRepository.AddClaimToUser(userId, userClaimDTO.UserClaimIds);
@@ -199,7 +199,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { "Internal sever error!" };
+                    _response.ErrorMessages = new List<string>() { SD.INTERNAL_SERVER_ERROR_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 else
@@ -231,7 +231,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = new List<string>() { "Email is exist!" };
+                    _response.ErrorMessages = new List<string>() { SD.DUPLICATED_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
@@ -248,7 +248,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { "Error when create user" };
+                    _response.ErrorMessages = new List<string>() { SD.INTERNAL_SERVER_ERROR_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 else
@@ -305,7 +305,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Id invalid!" };
+                    _response.ErrorMessages = new List<string>() { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
 
@@ -425,7 +425,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{id} is invalid!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 ApplicationUser model = await _userRepository.GetAsync(x => x.Id == id, false, "TutorProfile");
@@ -451,7 +451,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 ApplicationUser model = await _userRepository.LockoutUser(userId);
@@ -477,7 +477,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 ApplicationUser model = await _userRepository.UnlockUser(userId);
@@ -530,7 +530,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{userId} is null or empty!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return NotFound(_response);
                 }
                 List<IdentityRole> model = await _userRepository.GetRoleByUserId(userId);
@@ -538,7 +538,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{userId} is not in role!" };
+                    _response.ErrorMessages = new List<string> { $"{userId} không có vai trò nào!" };
                     return BadRequest(_response);
                 }
                 _response.Result = _mapper.Map<List<RoleDTO>>(model);

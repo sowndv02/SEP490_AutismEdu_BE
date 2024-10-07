@@ -98,7 +98,16 @@
         // Const message 
         public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "You are already a tutor or have a previous registration requirement";
         public const string TUTOR_UPDATE_STATUS_IS_PENDING = "Không thể cập nhật trạng thái thành đang xử lý!";
+        public const string BAD_REQUEST_MESSAGE = "Dữ liệu không hợp lệ";
+        public const string WEEKDAY_REQUIRED = "Chưa nhập ngày trong tuần";
+        public const string TIMESLOT_REQUIRED = "Chưa nhập khung giờ";
+        public const string TIMESLOT_INVALID = "Khung giờ không hợp lệ";
+        public const string TIMESLOT_DUPLICATED = "Khung giờ mới bị trùng với khung giờ đã tồn tại";
+        public const string NOT_FOUND_MESSAGE = "Không tìm thấy dữ liệu";
+        public const string DUPLICATED_MESSAGE = "Dữ liệu đã tồn tại";
+        public const string INTERNAL_SERVER_ERROR_MESSAGE = "Hệ thống đang xảy ra lỗi! Vui lòng thử lại sau!";
 
+        // enum status
         public enum Status 
         {
             PENDING = 2,

@@ -45,7 +45,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Id invalid!" };
+                    _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
                     return BadRequest(_response);
                 }
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claim);
@@ -127,7 +127,6 @@ namespace backend_api.Controllers.v1
                     claim.TotalUser = totalCount;
                     claim.Users = _mapper.Map<List<ApplicationUserDTO>>(users);
                 }
-                //Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = result;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -173,7 +172,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{id} is invalid!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
 
@@ -184,7 +183,7 @@ namespace backend_api.Controllers.v1
                     //throw new NotFoundException(nameof(GetClaimByIdAsync), id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"Claim with ID {id} not found." };
+                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
                     return NotFound(_response);
                 }
                 var result = _mapper.Map<ClaimDTO>(model);
@@ -220,7 +219,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Claim Type or Claim value exist!" };
+                    _response.ErrorMessages = new List<string>() { SD.DUPLICATED_MESSAGE };
                     return BadRequest(_response);
                 }
                 model.ClaimValue = _formatString.FormatStringUpperCaseFirstChar(model.ClaimValue);
@@ -252,7 +251,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Id invalid!" };
+                    _response.ErrorMessages = new List<string>() { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 var claimExist = await _claimRepository.GetAsync(x => x.ClaimType == claimDTO.ClaimType && x.ClaimValue == claimDTO.ClaimValue, false);
@@ -260,7 +259,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Claim Type or Claim value exist!" };
+                    _response.ErrorMessages = new List<string>() { SD.DUPLICATED_MESSAGE };
                     return BadRequest(_response);
                 }
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);

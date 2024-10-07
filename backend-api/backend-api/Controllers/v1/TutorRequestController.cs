@@ -117,7 +117,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"{userId} not exist!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 TutorRequest model = _mapper.Map<TutorRequest>(tutorRequestCreateDTO);
@@ -149,7 +149,7 @@ namespace backend_api.Controllers.v1
                 //{
                 //    _response.StatusCode = HttpStatusCode.BadRequest;
                 //    _response.IsSuccess = false;
-                //    _response.ErrorMessages = new List<string> { $"{userId} is invalid!" };
+                //    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                 //    return BadRequest(_response);
                 //}
 

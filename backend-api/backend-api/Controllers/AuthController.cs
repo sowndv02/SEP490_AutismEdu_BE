@@ -52,7 +52,7 @@ namespace backend_api.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Data invalid." };
+                    _response.ErrorMessages = new List<string>() { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetUserByEmailAsync(model.Email);

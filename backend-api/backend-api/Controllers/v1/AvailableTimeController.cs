@@ -41,14 +41,14 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"Bad request!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
                 if (TimeSpan.Parse(availableTimeCreateDTO.TimeSlot.From) > TimeSpan.Parse(availableTimeCreateDTO.TimeSlot.To))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"Invalid timeslot!" };
+                    _response.ErrorMessages = new List<string> { SD.TIMESLOT_INVALID };
                     return BadRequest(_response);
                 }
                 var availableTime = await _availableTimeRepository.GetAsync(x => x.TutorId.Equals(tutorId) &&
@@ -69,7 +69,7 @@ namespace backend_api.Controllers.v1
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { $"Khung giờ mới bị trùng với khung giờ đã tồn tại {slot.From.ToString(@"hh\:mm")}-{slot.To.ToString(@"hh\:mm")}" };
+                        _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED} {slot.From.ToString(@"hh\:mm")}-{slot.To.ToString(@"hh\:mm")}" };
                         return BadRequest(_response);
                     }
                 }
@@ -101,7 +101,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { $"Bad request!" };
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
 
@@ -138,7 +138,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { "There is no timeslot with this Id!" };
+                    _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 AvailableTimeSlot model = _mapper.Map<AvailableTimeSlot>(timeslot);
