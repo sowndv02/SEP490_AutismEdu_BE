@@ -3,7 +3,6 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -110,6 +109,7 @@ namespace backend_api.Controllers.v1
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _workExperienceRepository.UpdateAsync(model);
+                    _response.Result = _mapper.Map<WorkExperienceDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
