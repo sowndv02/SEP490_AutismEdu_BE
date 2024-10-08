@@ -93,6 +93,13 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.TimeSlotId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.TimeSlot, opt => opt.MapFrom(src => $"{src.From.ToString(@"hh\:mm")}-{src.To.ToString(@"hh\:mm")}"));
 
+            CreateMap<AssessmentQuestion, AssessmentQuestionCreateDTO>().ReverseMap();
+            CreateMap<AssessmentOption, AssessmentOptionCreateDTO>().ReverseMap();
+           
+            CreateMap<AssessmentQuestion, AssessmentQuestionDTO>()
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate.ToString("dd/MM/yyyy")))
+                .ReverseMap();
+            CreateMap<AssessmentOption, AssessmentOptionDTO>().ReverseMap();
         }
     }
 }

@@ -11,5 +11,8 @@ namespace backend_api.Models
         public string? Question { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
+        public bool IsAssessment { get; set; }
+        public bool IsHidden { get; set; }
+        public List<AssessmentOption> AssessmentOptions { get; set; }
     }
 }
