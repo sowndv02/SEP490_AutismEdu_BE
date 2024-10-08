@@ -10,8 +10,6 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Claims;
 using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
@@ -41,7 +39,7 @@ namespace backend_api.Controllers.v1
             ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
-            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository, 
+            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
             ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository,
             IEmailSender emailSender)
         {
@@ -65,7 +63,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<ActionResult<APIResponse>> CreateTutorRegistrationRequestAsync([FromForm]TutorRegistrationRequestCreateDTO tutorRegistrationRequestCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateTutorRegistrationRequestAsync([FromForm] TutorRegistrationRequestCreateDTO tutorRegistrationRequestCreateDTO)
         {
             try
             {
@@ -76,14 +74,14 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { $"Bad request!" };
                     return BadRequest(_response);
                 }
-                if (_tutorRegistrationRequestRepository.GetAsync(x => x.Email.Equals(tutorRegistrationRequestCreateDTO.Email) && (x.RequestStatus == Status.PENDING || x.RequestStatus == Status.APPROVE) , true, null).GetAwaiter().GetResult() != null)
+                if (_tutorRegistrationRequestRepository.GetAsync(x => x.Email.Equals(tutorRegistrationRequestCreateDTO.Email) && (x.RequestStatus == Status.PENDING || x.RequestStatus == Status.APPROVE), true, null).GetAwaiter().GetResult() != null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR };
                     return BadRequest(_response);
                 }
-                if(tutorRegistrationRequestCreateDTO.StartAge > tutorRegistrationRequestCreateDTO.EndAge)
+                if (tutorRegistrationRequestCreateDTO.StartAge > tutorRegistrationRequestCreateDTO.EndAge)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -194,12 +192,12 @@ namespace backend_api.Controllers.v1
                     list = result;
                     totalCount = count;
                 }
-                
+
                 foreach (var item in list)
                 {
-                    foreach(var certificate in item.Certificates)
+                    foreach (var certificate in item.Certificates)
                     {
-                        var(countMedias, medias) = await _certificateMediaRepository.GetAllNotPagingAsync(x => x.CertificateId == certificate.Id, includeProperties: null, excludeProperties: null);
+                        var (countMedias, medias) = await _certificateMediaRepository.GetAllNotPagingAsync(x => x.CertificateId == certificate.Id, includeProperties: null, excludeProperties: null);
                         certificate.CertificateMedias = medias;
                     }
                 }
@@ -365,7 +363,7 @@ namespace backend_api.Controllers.v1
                     await _tutorRegistrationRequestRepository.UpdateAsync(model);
 
                     // Reject certificate
-                    if (model.Certificates != null) 
+                    if (model.Certificates != null)
                     {
                         foreach (var cert in model.Certificates)
                         {
@@ -378,7 +376,7 @@ namespace backend_api.Controllers.v1
                     }
 
                     // Reject curriculum
-                    if (model.Curriculums != null) 
+                    if (model.Curriculums != null)
                     {
                         foreach (var item in model.Curriculums)
                         {
@@ -390,7 +388,7 @@ namespace backend_api.Controllers.v1
                         }
                     }
 
-                    if (model.WorkExperiences != null) 
+                    if (model.WorkExperiences != null)
                     {
                         foreach (var item in model.WorkExperiences)
                         {
@@ -412,11 +410,12 @@ namespace backend_api.Controllers.v1
 
                     await _emailSender.SendEmailAsync(model.Email, subject, htmlMessage);
                     _response.StatusCode = HttpStatusCode.OK;
+                    _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
                     _response.IsSuccess = true;
                     return Ok(_response);
 
                 }
-                
+
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
