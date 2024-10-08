@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend_api.Data;
 
@@ -11,9 +12,10 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241008111314_UpdateTableReview")]
+    partial class UpdateTableReview
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1293,8 +1295,8 @@ namespace backend_api.Migrations
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                        .WithOne("TutorProfile")
+                        .HasForeignKey("backend_api.Models.Tutor", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1432,6 +1434,11 @@ namespace backend_api.Migrations
                     b.Navigation("Curriculums");
 
                     b.Navigation("WorkExperiences");
+                });
+
+            modelBuilder.Entity("backend_api.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("TutorProfile");
                 });
 #pragma warning restore 612, 618
         }
