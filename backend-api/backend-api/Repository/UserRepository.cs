@@ -294,7 +294,15 @@ namespace backend_api.Repository
                     AccessToken = ""
                 };
             }
-
+            var listRoles = await _userManager.GetRolesAsync(user);
+            if (listRoles != null && listRoles.Count > 0)
+            {
+                bool isValidRole = listRoles.Contains(loginRequestDTO.AuthenticationRole);
+                if (!isValidRole)
+                {
+                    throw new Exception($"Phải đăng nhập ở phía {loginRequestDTO.AuthenticationRole}");
+                }
+            }
             var jwtTokenId = $"JTI{Guid.NewGuid()}";
             var accessToken = await GetAccessToken(user, jwtTokenId);
             var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
@@ -337,12 +345,14 @@ namespace backend_api.Repository
                 var result = await _userManager.CreateAsync(user, registerationRequestDTO.Password);
                 if (result.Succeeded)
                 {
-                    if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
+                    if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult() && !_roleManager.RoleExistsAsync(SD.PARENT_ROLE).GetAwaiter().GetResult())
                     {
                         await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
+                        await _roleManager.CreateAsync(new IdentityRole(SD.PARENT_ROLE));
                     }
 
                     await _userManager.AddToRoleAsync(user, SD.USER_ROLE);
+                    await _userManager.AddToRoleAsync(user, SD.PARENT_ROLE);
                     ApplicationUser objReturn = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email == user.Email);
                     if (objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
                         objReturn.IsLockedOut = false;
@@ -815,7 +825,7 @@ namespace backend_api.Repository
                 users = users.Where(x => !x.Role.Contains(SD.STAFF_ROLE)).ToList();
             }
             query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
-            
+
             return (count, users);
         }
 
