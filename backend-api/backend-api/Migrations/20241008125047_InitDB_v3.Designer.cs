@@ -12,8 +12,8 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241006105420_UpdateTableTutor")]
-    partial class UpdateTableTutor
+    [Migration("20241008125047_InitDB_v3")]
+    partial class InitDB_v3
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -105,6 +105,87 @@ namespace backend_api.Migrations
                     b.ToTable("ApplicationClaims");
                 });
 
+            modelBuilder.Entity("backend_api.Models.AssessmentOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OptionText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Point")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId");
+
+                    b.ToTable("AssessmentOptions");
+                });
+
+            modelBuilder.Entity("backend_api.Models.AssessmentQuestion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Question")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AssessmentQuestions");
+                });
+
+            modelBuilder.Entity("backend_api.Models.AssessmentResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OptionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProgressReportId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OptionId");
+
+                    b.HasIndex("ProgressReportId");
+
+                    b.ToTable("AssessmentResults");
+                });
+
             modelBuilder.Entity("backend_api.Models.AvailableTime", b =>
                 {
                     b.Property<int>("Id")
@@ -161,6 +242,49 @@ namespace backend_api.Migrations
                     b.HasIndex("WeekdayId");
 
                     b.ToTable("AvailableTimeSlots");
+                });
+
+            modelBuilder.Entity("backend_api.Models.Blog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UrlImageDisplay")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("Blogs");
                 });
 
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
@@ -331,6 +455,51 @@ namespace backend_api.Migrations
                     b.HasIndex("TutorRegistrationRequestId");
 
                     b.ToTable("Curriculums");
+                });
+
+            modelBuilder.Entity("backend_api.Models.ProgressReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Achieved")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ChildId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Failed")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("From")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NoteFromTutor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("To")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TutorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("TutorId");
+
+                    b.ToTable("ProgressReports");
                 });
 
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
@@ -921,6 +1090,36 @@ namespace backend_api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("backend_api.Models.AssessmentOption", b =>
+                {
+                    b.HasOne("backend_api.Models.AssessmentQuestion", "Question")
+                        .WithMany()
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("backend_api.Models.AssessmentResult", b =>
+                {
+                    b.HasOne("backend_api.Models.AssessmentOption", "Option")
+                        .WithMany()
+                        .HasForeignKey("OptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.ProgressReport", "ProgressReport")
+                        .WithMany()
+                        .HasForeignKey("ProgressReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Option");
+
+                    b.Navigation("ProgressReport");
+                });
+
             modelBuilder.Entity("backend_api.Models.AvailableTime", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "Tutor")
@@ -941,6 +1140,17 @@ namespace backend_api.Migrations
                         .IsRequired();
 
                     b.Navigation("Weekday");
+                });
+
+            modelBuilder.Entity("backend_api.Models.Blog", b =>
+                {
+                    b.HasOne("backend_api.Models.ApplicationUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
@@ -1007,6 +1217,25 @@ namespace backend_api.Migrations
                     b.Navigation("TutorRegistrationRequest");
                 });
 
+            modelBuilder.Entity("backend_api.Models.ProgressReport", b =>
+                {
+                    b.HasOne("backend_api.Models.ChildInformation", "Child")
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.ApplicationUser", "Tutor")
+                        .WithMany()
+                        .HasForeignKey("TutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Child");
+
+                    b.Navigation("Tutor");
+                });
+
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "User")
@@ -1042,7 +1271,7 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Review", b =>
                 {
-                    b.HasOne("backend_api.Models.ApplicationUser", "Reviewee")
+                    b.HasOne("backend_api.Models.Tutor", "Reviewee")
                         .WithMany()
                         .HasForeignKey("RevieweeId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1066,8 +1295,8 @@ namespace backend_api.Migrations
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "User")
-                        .WithOne("TutorProfile")
-                        .HasForeignKey("backend_api.Models.Tutor", "UserId")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1205,11 +1434,6 @@ namespace backend_api.Migrations
                     b.Navigation("Curriculums");
 
                     b.Navigation("WorkExperiences");
-                });
-
-            modelBuilder.Entity("backend_api.Models.ApplicationUser", b =>
-                {
-                    b.Navigation("TutorProfile");
                 });
 #pragma warning restore 612, 618
         }
