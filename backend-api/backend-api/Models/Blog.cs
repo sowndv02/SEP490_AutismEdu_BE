@@ -12,6 +12,7 @@ namespace backend_api.Models
         public string Title { get; set; }
         [Required]
         public string Content { get; set; }
+        public string UrlImageDisplay { get; set; }
         public string AuthorId { get; set; }
         [ForeignKey(nameof(AuthorId))]
         public ApplicationUser Author { get; set; }

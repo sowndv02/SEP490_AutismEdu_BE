@@ -9,6 +9,8 @@ namespace backend_api.Models.DTOs
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
+        [Required]
+        public string AuthenticationRole { get; set; }
 
     }
 }
