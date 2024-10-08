@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -28,8 +27,8 @@ namespace backend_api.Data
         public DbSet<WorkExperience> WorkExperiences { get; set; }
         public DbSet<ChildInformation> ChildInformations { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
-		public DbSet<TutorRegistrationRequest> TutorRegistrationRequests { get; set; }
-        public DbSet<Curriculum> Curriculums { get; set; }        
+        public DbSet<TutorRegistrationRequest> TutorRegistrationRequests { get; set; }
+        public DbSet<Curriculum> Curriculums { get; set; }
         public DbSet<AvailableTime> AvailableTimes { get; set; }
         public DbSet<AvailableTimeSlot> AvailableTimeSlots { get; set; }
         public DbSet<TutorRequest> TutorRequests { get; set; }
@@ -37,6 +36,7 @@ namespace backend_api.Data
         public DbSet<AssessmentOption> AssessmentOptions { get; set; }
         public DbSet<AssessmentResult> AssessmentResults { get; set; }
         public DbSet<ProgressReport> ProgressReports { get; set; }
+        public DbSet<Blog> Blogs { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
