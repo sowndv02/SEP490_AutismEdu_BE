@@ -37,6 +37,7 @@ namespace backend_api.Data
         public DbSet<AssessmentResult> AssessmentResults { get; set; }
         public DbSet<ProgressReport> ProgressReports { get; set; }
         public DbSet<Blog> Blogs { get; set; }
+        public DbSet<TutorProfileUpdateRequest> TutorProfileUpdateRequests { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)

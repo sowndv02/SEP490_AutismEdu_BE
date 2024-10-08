@@ -74,6 +74,8 @@ builder.Services.AddScoped<IAssessmentOptionRepository, AssessmentOptionReposito
 builder.Services.AddScoped<IAssessmentResultRepository, AssessmentResultRepository>();
 builder.Services.AddScoped<IProgressReportRepository, ProgressReportRepository>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
+builder.Services.AddScoped<ITutorProfileUpdateRequestRepository, TutorProfileUpdateRequestRepository>();
+
 
 
 // Add DI requirement authorization handler

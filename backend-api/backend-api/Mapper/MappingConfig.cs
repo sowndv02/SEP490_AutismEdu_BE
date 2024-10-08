@@ -56,13 +56,12 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.EndAge, opt => opt.MapFrom(src => src.EndAge))
                 .ForMember(dest => dest.AboutMe, opt => opt.MapFrom(src => src.AboutMe))
                 .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price))
-                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.User.FullName))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ForMember(dest => dest.TotalReview, opt => opt.MapFrom(src => src.Reviews.Count))
-                .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => src.Reviews.Average(x => x.RateScore)))
+                .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => src.Reviews.Count == 0 ? src.Reviews.Average(x => x.RateScore) : 5))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.ImageUrl));
 
             CreateMap<TutorRegistrationRequest, TutorRegistrationRequestCreateDTO>().ReverseMap();
@@ -81,6 +80,7 @@ namespace backend_api.Mapper
             CreateMap<ChildInformation, ChildInformationCreateDTO>().ReverseMap();
             CreateMap<AvailableTime, AvailableTimeCreateDTO>().ReverseMap();
             CreateMap<AvailableTimeSlot, AvailableTimeSlotCreateDTO>().ReverseMap();
+            CreateMap<TutorProfileUpdateRequestCreateDTO, TutorProfileUpdateRequest>().ReverseMap();
 
 
             CreateMap<TutorRegistrationRequest, TutorRegistrationRequestDTO>().ReverseMap();

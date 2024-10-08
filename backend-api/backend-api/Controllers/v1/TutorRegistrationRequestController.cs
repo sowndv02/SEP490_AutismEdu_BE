@@ -268,7 +268,7 @@ namespace backend_api.Controllers.v1
                         Address = model.Address,
                         FullName = model.FullName,
                         PhoneNumber = model.PhoneNumber,
-                        EmailConfirmed = false,
+                        EmailConfirmed = true,
                         IsLockedOut = false,
                         ImageUrl = model.ImageUrl,
                         CreatedDate = DateTime.Now,
@@ -337,7 +337,7 @@ namespace backend_api.Controllers.v1
                     // TODO: Send mail
                     var subject = "Thông báo Chấp nhận Đơn Đăng ký Gia sư Dạy Trẻ Tự Kỷ";
 
-                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AcceptedRegistrationTemplate.cshtml");
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AcceptedTutorRegistrationRequest.cshtml");
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
 
                     var htmlMessage = templateContent

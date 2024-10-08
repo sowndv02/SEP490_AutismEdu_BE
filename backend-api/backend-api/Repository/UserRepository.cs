@@ -699,7 +699,7 @@ namespace backend_api.Repository
                 ImageUrl = user.ImageUrl,
                 UserType = user.UserType,
                 CreatedDate = DateTime.Now,
-                EmailConfirmed = user.UserType == SD.GOOGLE_USER ? true : false,
+                EmailConfirmed = user.UserType == SD.GOOGLE_USER ? true : user.EmailConfirmed,
             };
             var result = await _userManager.CreateAsync(obj, password);
 
