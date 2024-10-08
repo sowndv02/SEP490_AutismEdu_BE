@@ -1,13 +1,11 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
-using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
-using System.Security.Claims;
 
 namespace backend_api.Controllers.v1
 {
@@ -35,7 +33,7 @@ namespace backend_api.Controllers.v1
             ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
-            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository, 
+            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
             ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository)
         {
             _curriculumRepository = curriculumRepository;
@@ -56,38 +54,51 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạrch, string? searchAddress, int? reviewScore = 5, int[]? ages = null, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạrch, string? searchAddress, int? reviewScore = 5, int? ageFrom = 0, int? ageTo = 15, int pageNumber = 1)
         {
             try
             {
                 int totalCount = 0;
                 List<Tutor> list = new();
-                if(ages == null || ages.Count() == 0)
+                if (ageFrom == null || ageTo == null || ageFrom < 0 || ageTo == 0)
                 {
-                    ages = new int[2] { 0, 15 };
+                    ageFrom = 0;
+                    ageTo = 15;
                 }
-                if (ages[0] > ages[1])
+                if (ageFrom > ageTo)
                 {
-                    var temp = ages[0];
-                    ages[1] = ages[0];
-                    ages[0] = temp;
+                    var temp = ageFrom;
+                    ageTo = ageFrom;
+                    ageFrom = temp;
                 }
-                if (!string.IsNullOrEmpty(seạrch) || !string.IsNullOrEmpty(searchAddress) || reviewScore != null)
+                Expression<Func<Tutor, bool>> filter = u => u.StartAge >= ageFrom && u.EndAge <= ageTo;
+                if (!string.IsNullOrEmpty(seạrch))
                 {
-                    var (countSearch, resultSearch) = await _tutorRepository.GetAllTutorAsync(u => (!string.IsNullOrEmpty(u.User.FullName) && u.User.FullName.ToLower().Contains(seạrch.ToLower())), 
-                        filterAddress: u => (!string.IsNullOrEmpty(u.User.Address) && u.User.Address.ToLower().Contains(searchAddress.ToLower())), 
-                        reviewScore: reviewScore, ageFrom: ages[0], ages[1],
-                        includeProperties: "User,Reviews", pageSize: pageSize, pageNumber: pageNumber);
-                    list = resultSearch;
-                    totalCount = countSearch;
+                    Expression<Func<Tutor, bool>> searchNameFilter = u => u.User != null && !string.IsNullOrEmpty(u.User.FullName)
+                    && u.User.FullName.ToLower().Contains(seạrch.ToLower());
+
+                    var combinedFilter = Expression.Lambda<Func<Tutor, bool>>(
+                        Expression.AndAlso(filter.Body, Expression.Invoke(searchNameFilter, filter.Parameters)),
+                        filter.Parameters
+                    );
+                    filter = combinedFilter;
                 }
-                else
+                if (!string.IsNullOrEmpty(searchAddress))
                 {
-                    var (count, result) = await _tutorRepository.GetAllTutorAsync(null, null, reviewScore: reviewScore, 
-                        ageFrom: ages[0], ageTo: ages[1], "User,Reviews", pageSize: pageSize, pageNumber: pageNumber);
-                    list = result;
-                    totalCount = count;
+                    Expression<Func<Tutor, bool>> searchAddressFilter = u => u.User != null && !string.IsNullOrEmpty(u.User.Address)
+                    && u.User.Address.ToLower().Contains(searchAddress.ToLower());
+
+                    var combinedFilter = Expression.Lambda<Func<Tutor, bool>>(
+                        Expression.AndAlso(filter.Body, Expression.Invoke(searchAddressFilter, filter.Parameters)),
+                        filter.Parameters
+                    );
+                    filter = combinedFilter;
                 }
+
+                var (count, result) = await _tutorRepository.GetAllAsync(filter,
+                    includeProperties: "User", pageSize: pageSize, pageNumber: pageNumber);
+                list = result;
+                totalCount = count;
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<TutorDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;

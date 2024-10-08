@@ -17,6 +17,6 @@ namespace backend_api.Models
         public ApplicationUser Reviewer { get; set; }
 
         [ForeignKey(nameof(RevieweeId))]
-        public ApplicationUser Reviewee { get; set; }
+        public Tutor Reviewee { get; set; }
     }
 }
