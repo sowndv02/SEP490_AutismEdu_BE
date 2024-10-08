@@ -8,7 +8,6 @@ using backend_api.Models;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services;
-using backend_api.Services.IServices;
 using backend_api.Swagger;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,7 +19,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -75,6 +73,7 @@ builder.Services.AddScoped<IAssessmentQuestionRepository, AssessmentQuestionRepo
 builder.Services.AddScoped<IAssessmentOptionRepository, AssessmentOptionRepository>();
 builder.Services.AddScoped<IAssessmentResultRepository, AssessmentResultRepository>();
 builder.Services.AddScoped<IProgressReportRepository, ProgressReportRepository>();
+builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 
 
 // Add DI requirement authorization handler
