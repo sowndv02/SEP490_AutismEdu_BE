@@ -1,11 +1,15 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
+using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
+using System.Security.Claims;
+using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
 {
@@ -18,6 +22,7 @@ namespace backend_api.Controllers.v1
         private readonly IUserRepository _userRepository;
         private readonly ITutorRepository _tutorRepository;
         private readonly ITutorRegistrationRequestRepository _tutorRegistrationRequestRepository;
+        private readonly ITutorProfileUpdateRequestRepository _tutorProfileUpdateRequestRepository;
         private readonly ICurriculumRepository _curriculumRepository;
         private readonly IWorkExperienceRepository _workExperienceRepository;
         private readonly ICertificateMediaRepository _certificateMediaRepository;
@@ -34,8 +39,10 @@ namespace backend_api.Controllers.v1
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
             ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
-            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository)
+            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository, 
+            ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository)
         {
+            _tutorProfileUpdateRequestRepository = tutorProfileUpdateRequestRepository;
             _curriculumRepository = curriculumRepository;
             _formatString = formatString;
             _roleRepository = roleRepository;
@@ -52,6 +59,45 @@ namespace backend_api.Controllers.v1
             _tutorRegistrationRequestRepository = tutorRegistrationRequestRepository;
         }
 
+
+
+        [HttpPut("{id}")]
+        //[Authorize(Policy = "UpdateTutorPolicy")]
+        public async Task<IActionResult> UpdateAsync(TutorProfileUpdateRequestCreateDTO updateDTO)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+
+                TutorProfileUpdateRequest model = _mapper.Map<TutorProfileUpdateRequest>(updateDTO);
+                model.TutorId = userId;
+                await _tutorProfileUpdateRequestRepository.CreateAsync(model);
+                var user = await _userRepository.GetAsync(x => x.Id == userId, false, null);
+                user.Address = updateDTO.Address;
+                await _userRepository.UpdateAsync(user);
+                var tutor = await _tutorRepository.GetAsync(x => x.UserId == userId, false, "User");
+                tutor.Price = updateDTO.Price;
+                await _tutorRepository.UpdateAsync(tutor);
+                _response.Result = tutor;
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
         [HttpGet]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạrch, string? searchAddress, int? reviewScore = 5, int? ageFrom = 0, int? ageTo = 15, int pageNumber = 1)

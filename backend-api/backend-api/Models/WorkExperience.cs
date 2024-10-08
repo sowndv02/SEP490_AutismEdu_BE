@@ -20,6 +20,11 @@ namespace backend_api.Models
         public DateTime EndDate { get; set; }
         public Status RequestStatus { get; set; } = Status.PENDING;
         public string? ApprovedId { get; set; }
+        public bool IsActive { get; set; } = false;
+        public int VersionNumber { get; set; } = 1;
+        public int? OriginalCurriculumId { get; set; }
+        [ForeignKey(nameof(OriginalCurriculumId))]
+        public Curriculum? OriginalCurriculum { get; set; }
         public string? RejectionReason { get; set; }
         [ForeignKey(nameof(ApprovedId))]
         public ApplicationUser? ApprovedBy { get; set; }

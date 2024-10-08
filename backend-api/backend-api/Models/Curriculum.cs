@@ -17,6 +17,11 @@ namespace backend_api.Models
         public string? RejectionReason { get; set; }
         [ForeignKey(nameof(ApprovedId))]
         public ApplicationUser? ApprovedBy { get; set; }
+        public bool IsActive { get; set; } = false;
+        public int VersionNumber { get; set; } = 1;
+        public int? OriginalCurriculumId { get; set; }
+        [ForeignKey(nameof(OriginalCurriculumId))]
+        public Curriculum? OriginalCurriculum { get; set; }
         public string? SubmiterId { get; set; }
         [ForeignKey(nameof(SubmiterId))]
         public Tutor? Submiter { get; set; }

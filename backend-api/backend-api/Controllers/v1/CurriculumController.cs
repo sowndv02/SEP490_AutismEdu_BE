@@ -56,6 +56,40 @@ namespace backend_api.Controllers.v1
         }
 
 
+
+        [HttpPut("{id}")]
+        //[Authorize(Policy = "UpdateTutorPolicy")]
+        public async Task<IActionResult> UpdateAsync(CurriculumCreateDTO creatDTO)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+
+                Curriculum model = _mapper.Map<Curriculum>(creatDTO);
+                model.SubmiterId = userId;
+                model.IsActive = false;
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
+
         [HttpPost]
         //[Authorize]
         public async Task<ActionResult<APIResponse>> CreateAsync(CurriculumCreateDTO curriculumCreateDTO)
