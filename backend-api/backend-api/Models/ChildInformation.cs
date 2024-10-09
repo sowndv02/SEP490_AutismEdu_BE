@@ -12,7 +12,6 @@ namespace backend_api.Models
         public string? Name { get; set; }
         public bool isMale { get; set; }
         public DateTime? BirthDate { get; set; }
-        public string? InitialCondition { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         [ForeignKey(nameof(ParentId))]
