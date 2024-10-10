@@ -127,13 +127,13 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpDelete]
+        [HttpDelete("timeslotId")]
         //[Authorize]
-        public async Task<ActionResult<APIResponse>> RemoveTimeSlotFromWeekday(int id)
+        public async Task<ActionResult<APIResponse>> RemoveTimeSlotFromWeekday(int timeslotId)
         {
             try
             {
-                var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == id, true, null);
+                var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == timeslotId, true, null);
 
                 if(timeslot == null)
                 {
