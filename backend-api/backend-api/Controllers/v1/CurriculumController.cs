@@ -5,6 +5,7 @@ using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
@@ -56,38 +57,84 @@ namespace backend_api.Controllers.v1
         }
 
 
-
-        [HttpPut("{id}")]
-        //[Authorize(Policy = "UpdateTutorPolicy")]
-        public async Task<IActionResult> UpdateAsync(CurriculumCreateDTO creatDTO)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetActiveCurriculum(int id)
         {
-            try
+            var curriculum = await _curriculumRepository.GetAsync(x => x.Id == id && x.IsActive);
+            if (curriculum == null)
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
-                }
-
-                Curriculum model = _mapper.Map<Curriculum>(creatDTO);
-                model.SubmiterId = userId;
-                model.IsActive = false;
-                _response.StatusCode = HttpStatusCode.NoContent;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
+                _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                return BadRequest(_response);
             }
+
+            _response.StatusCode = HttpStatusCode.Created;
+            _response.Result = _mapper.Map<CurriculumDTO>(curriculum);
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
 
+        [HttpPost("submit")]
+        public async Task<IActionResult> SubmitCurriculumUpdate(CurriculumCreateDTO curriculumDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                return BadRequest(_response);
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var newCurriculum = _mapper.Map<Curriculum>(curriculumDto);
+
+            newCurriculum.SubmiterId = userId;
+            newCurriculum.IsActive = false;
+            newCurriculum.VersionNumber = await _curriculumRepository.GetNextVersionNumberAsync(curriculumDto.OriginalCurriculumId);
+
+            await _curriculumRepository.CreateAsync(newCurriculum);
+            _response.StatusCode = HttpStatusCode.Created;
+            _response.Result = _mapper.Map<CurriculumDTO>(newCurriculum);
+            _response.IsSuccess = true;
+            return Ok(_response);
+        }
+
+        [HttpPost("review/{id}")]
+        //[Authorize(Roles = "Staff")]
+        public async Task<IActionResult> ReviewCurriculumUpdate(int id, [FromBody] ChangeStatusDTO reviewDto)
+        {
+            var curriculum = await _curriculumRepository.GetAsync(x => x.Id == reviewDto.Id);
+            if (curriculum == null || curriculum.RequestStatus != Status.PENDING)
+            {
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                return BadRequest(_response);
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            curriculum.ApprovedId = userId;
+            curriculum.UpdatedDate = DateTime.Now;
+
+            if (reviewDto.StatusChange == (int)Status.APPROVE)
+            {
+                curriculum.RequestStatus = Status.APPROVE;
+                curriculum.IsActive = true;
+                await _curriculumRepository.DeactivatePreviousVersionsAsync(curriculum.OriginalCurriculumId);
+            }
+            else if(reviewDto.StatusChange == (int)Status.REJECT)
+            {
+                curriculum.RequestStatus = Status.REJECT;
+                curriculum.RejectionReason = reviewDto.RejectionReason;
+            }
+
+            await _curriculumRepository.UpdateAsync(curriculum);
+            _response.StatusCode = HttpStatusCode.Created;
+            _response.Result = _mapper.Map<CurriculumDTO>(curriculum);
+            _response.IsSuccess = true;
+            return Ok(_response);
+        }
 
 
         [HttpPost]
@@ -160,8 +207,6 @@ namespace backend_api.Controllers.v1
                     _response.IsSuccess = true;
                     return Ok(_response);
                 }
-
-                _response.StatusCode = HttpStatusCode.NoContent;
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);

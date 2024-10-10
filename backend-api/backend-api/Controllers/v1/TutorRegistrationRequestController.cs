@@ -297,6 +297,7 @@ namespace backend_api.Controllers.v1
                         var curiculums = model.Curriculums.Where(x => x.RequestStatus == Status.PENDING).ToList();
                         foreach (var item in curiculums)
                         {
+                            item.RequestStatus = Status.APPROVE;
                             item.ApprovedId = userId;
                             item.UpdatedDate = DateTime.Now;
                             item.SubmiterId = tutor.UserId;
@@ -310,6 +311,7 @@ namespace backend_api.Controllers.v1
                         var certificates = model.Certificates.Where(x => x.RequestStatus == Status.PENDING).ToList();
                         foreach (var cert in certificates)
                         {
+                            cert.RequestStatus = Status.APPROVE;
                             cert.SubmiterId = tutor.UserId;
                             cert.ApprovedId = userId;
                             cert.UpdatedDate = DateTime.Now;
@@ -323,6 +325,7 @@ namespace backend_api.Controllers.v1
                         var workExperiences = model.WorkExperiences.Where(x => x.RequestStatus == Status.PENDING).ToList();
                         foreach (var workExperience in workExperiences)
                         {
+                            workExperience.RequestStatus = Status.APPROVE;
                             workExperience.SubmiterId = tutor.UserId;
                             workExperience.ApprovedId = userId;
                             workExperience.UpdatedDate = DateTime.Now;
@@ -349,7 +352,7 @@ namespace backend_api.Controllers.v1
 
                     await _emailSender.SendEmailAsync(model.Email, subject, htmlMessage);
 
-                    _response.Result = _mapper.Map<TutorDTO>(tutor);
+                    _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
