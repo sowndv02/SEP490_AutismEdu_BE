@@ -12,5 +12,6 @@ namespace backend_api.Models.DTOs.CreateDTOs
         public int AgeEnd { get; set; }
         [Required]
         public string Description { get; set; }
+        public int? OriginalCurriculumId { get; set; }
     }
 }

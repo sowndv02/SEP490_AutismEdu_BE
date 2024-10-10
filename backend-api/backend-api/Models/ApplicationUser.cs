@@ -23,5 +23,6 @@ namespace backend_api.Models
         //public List<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         //public List<ApplicationClaim> ApplicationClaims { get; set; } = new List<ApplicationClaim>();
         public string? Address { get; set; }
+        public Tutor? TutorProfile { get; set; }
     }
 }

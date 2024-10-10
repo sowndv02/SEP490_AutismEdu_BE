@@ -84,7 +84,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         //[Authorize(Policy = "UpdateCertificatePolicy")]
-        public async Task<IActionResult> ApproveOrRejectCertificate(ChangeStatusCertificateDTO changeStatusCertificateDTO)
+        public async Task<IActionResult> ApproveOrRejectCertificate(ChangeStatusDTO changeStatusCertificateDTO)
         {
             try
             {

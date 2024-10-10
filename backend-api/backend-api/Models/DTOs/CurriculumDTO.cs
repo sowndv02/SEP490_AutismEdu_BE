@@ -12,6 +12,9 @@ namespace backend_api.Models.DTOs
         public string? RejectionReason { get; set; }
         public ApplicationUserDTO? ApprovedBy { get; set; }
         public TutorDTO? Submiter { get; set; }
+        public bool IsActive { get; set; } = false;
+        public int VersionNumber { get; set; } = 1;
+        public Curriculum? OriginalCurriculum { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
     }
