@@ -77,7 +77,6 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate));
 
             CreateMap<ChildInformation, ChildInformationCreateDTO>().ReverseMap();
-            CreateMap<AvailableTime, AvailableTimeCreateDTO>().ReverseMap();
             CreateMap<AvailableTimeSlot, AvailableTimeSlotCreateDTO>().ReverseMap();
             CreateMap<TutorProfileUpdateRequestCreateDTO, TutorProfileUpdateRequest>().ReverseMap();
 

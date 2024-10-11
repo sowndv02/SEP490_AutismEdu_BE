@@ -29,7 +29,6 @@ namespace backend_api.Data
         public DbSet<ActivityLog> ActivityLogs { get; set; }
         public DbSet<TutorRegistrationRequest> TutorRegistrationRequests { get; set; }
         public DbSet<Curriculum> Curriculums { get; set; }
-        public DbSet<AvailableTime> AvailableTimes { get; set; }
         public DbSet<AvailableTimeSlot> AvailableTimeSlots { get; set; }
         public DbSet<TutorRequest> TutorRequests { get; set; }
         public DbSet<AssessmentQuestion> AssessmentQuestions { get; set; }
