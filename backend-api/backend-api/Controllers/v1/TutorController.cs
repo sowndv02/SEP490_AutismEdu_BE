@@ -61,7 +61,7 @@ namespace backend_api.Controllers.v1
         }
 
 
-        [HttpGet("{id}"]
+        [HttpGet("{id}")]
         public async Task<ActionResult<APIResponse>> GetByIdAsync(string id)
         {
             try
@@ -74,14 +74,21 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                Tutor model = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User,Curriculums");
-
+                Tutor model = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User,Curriculums,AvailableTimeSlots,Certificates");
                 if (model == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
                     return NotFound(_response);
+                }
+                if(model.Curriculums != null)
+                {
+                    model.Curriculums= model.Curriculums.Where(x => x.IsActive).ToList();
+                }
+                if (model.Certificates != null) 
+                {
+                    model.Certificates = model.Certificates.Where(x => x.IdentityCardNumber == null).ToList();
                 }
                 var result = _mapper.Map<TutorDTO>(model);
 
