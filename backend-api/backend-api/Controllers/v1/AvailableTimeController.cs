@@ -16,14 +16,12 @@ namespace backend_api.Controllers.v1
     [ApiVersion("1.0")]
     public class AvailableTimeController : ControllerBase
     {
-        private readonly IAvailableTimeRepository _availableTimeRepository;
         private readonly IAvailableTimeSlotRepository _availableTimeSlotRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
 
-        public AvailableTimeController(IAvailableTimeRepository availableTimeRepository, IAvailableTimeSlotRepository availableTimeSlotRepository, IMapper mapper)
+        public AvailableTimeController(IAvailableTimeSlotRepository availableTimeSlotRepository, IMapper mapper)
         {
-            _availableTimeRepository = availableTimeRepository;
             _availableTimeSlotRepository = availableTimeSlotRepository;
             _response = new APIResponse();
             _mapper = mapper;
@@ -31,38 +29,30 @@ namespace backend_api.Controllers.v1
 
         [HttpPost]
         //[Authorize]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] AvailableTimeCreateDTO availableTimeCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] AvailableTimeSlotCreateDTO availableTimeSlotCreateDTO)
         {
             try
             {
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (availableTimeCreateDTO == null || string.IsNullOrEmpty(tutorId))
+                if (availableTimeSlotCreateDTO == null || string.IsNullOrEmpty(tutorId))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
-                if (TimeSpan.Parse(availableTimeCreateDTO.TimeSlot.From) > TimeSpan.Parse(availableTimeCreateDTO.TimeSlot.To))
+                if (TimeSpan.Parse(availableTimeSlotCreateDTO.From) > TimeSpan.Parse(availableTimeSlotCreateDTO.To))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.TIMESLOT_INVALID };
                     return BadRequest(_response);
                 }
-                var availableTime = await _availableTimeRepository.GetAsync(x => x.TutorId.Equals(tutorId) &&
-                    x.Weekday.Equals(availableTimeCreateDTO.Weekday), true, null);
-                if (availableTime == null)
-                {
-                    AvailableTime model = _mapper.Map<AvailableTime>(availableTimeCreateDTO);
-                    model.TutorId = tutorId;
-                    model.CreatedDate = DateTime.Now;
-                    availableTime = await _availableTimeRepository.CreateAsync(model);
-                }
-                AvailableTimeSlot availableTimeSlot = _mapper.Map<AvailableTimeSlot>(availableTimeCreateDTO.TimeSlot);
+
+                AvailableTimeSlot availableTimeSlot = _mapper.Map<AvailableTimeSlot>(availableTimeSlotCreateDTO);
                 
-                var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.WeekdayId == availableTime.Id, null, null);
+                var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.Weekday == availableTimeSlot.Id, null, null);
                 foreach (var slot in existingTimeSlots.list)
                 {
                     if (!(availableTimeSlot.To <= slot.From || availableTimeSlot.From >= slot.To))
@@ -74,7 +64,7 @@ namespace backend_api.Controllers.v1
                     }
                 }
 
-                availableTimeSlot.WeekdayId = availableTime.Id;
+                availableTimeSlot.TutorId = tutorId;
                 availableTimeSlot.CreatedDate = DateTime.Now;
                 await _availableTimeSlotRepository.CreateAsync(availableTimeSlot);
 
@@ -92,11 +82,11 @@ namespace backend_api.Controllers.v1
 
         [HttpGet]
         //[Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllTimeSlotFromWeekday(int weekday)
+        public async Task<ActionResult<APIResponse>> GetAllTimeSlotFromWeekday([FromQuery] string tutorId,int weekday)
         {
             try
             {
-                var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
                 if (string.IsNullOrEmpty(tutorId))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -104,15 +94,15 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
-
-                var availableTime = await _availableTimeRepository.GetAsync(x => x.TutorId.Equals(tutorId) && x.Weekday == weekday, true, null);
-                if (availableTime == null)
-                {
-                    _response.Result = null;
-                    _response.StatusCode = HttpStatusCode.OK;
-                    return Ok(_response);
-                }
-                var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.WeekdayId == availableTime.Id, null, null);
+                
+                var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.Weekday == weekday && x.TutorId.Equals(tutorId), null, null);
+                
+                //if (existingTimeSlots.list == null)
+                //{
+                //    _response.Result = null;
+                //    _response.StatusCode = HttpStatusCode.OK;
+                //    return Ok(_response);
+                //}
 
                 _response.Result = _mapper.Map<List<AvailableTimeSlotDTO>>(existingTimeSlots.list.OrderBy(x => x.From));
                 _response.StatusCode = HttpStatusCode.OK;
@@ -127,18 +117,18 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpDelete]
+        [HttpDelete("timeslotId")]
         //[Authorize]
-        public async Task<ActionResult<APIResponse>> RemoveTimeSlotFromWeekday(int weekday, int timeSlotId)
+        public async Task<ActionResult<APIResponse>> RemoveTimeSlotFromWeekday(int timeSlotId)
         {
             try
             {
-                var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == timeSlotId && x.WeekdayId == weekday, true, null);
+                var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == timeSlotId, true, null);
                 if(timeslot == null)
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { "There is no timeslot with this Id!" };
+                    _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 AvailableTimeSlot model = _mapper.Map<AvailableTimeSlot>(timeslot);

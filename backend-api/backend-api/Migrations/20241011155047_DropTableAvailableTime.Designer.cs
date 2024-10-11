@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend_api.Data;
 
@@ -11,9 +12,10 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241011155047_DropTableAvailableTime")]
+    partial class DropTableAvailableTime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -188,40 +190,6 @@ namespace backend_api.Migrations
                     b.HasIndex("ProgressReportId");
 
                     b.ToTable("AssessmentResults");
-                });
-
-            modelBuilder.Entity("backend_api.Models.AvailableTimeSlot", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<TimeSpan>("From")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan>("To")
-                        .HasColumnType("time");
-
-                    b.Property<string>("TutorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Weekday")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TutorId");
-
-                    b.ToTable("AvailableTimeSlots");
                 });
 
             modelBuilder.Entity("backend_api.Models.Blog", b =>
@@ -1166,17 +1134,6 @@ namespace backend_api.Migrations
                     b.Navigation("Option");
 
                     b.Navigation("ProgressReport");
-                });
-
-            modelBuilder.Entity("backend_api.Models.AvailableTimeSlot", b =>
-                {
-                    b.HasOne("backend_api.Models.Tutor", "Tutor")
-                        .WithMany()
-                        .HasForeignKey("TutorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("backend_api.Models.Blog", b =>

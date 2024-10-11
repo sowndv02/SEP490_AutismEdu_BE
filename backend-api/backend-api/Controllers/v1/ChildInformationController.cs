@@ -61,13 +61,13 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpGet]
+        [HttpGet("parentId")]
         //[Authorize]
-        public async Task<ActionResult<APIResponse>> GetParentChildInfo()
+        public async Task<ActionResult<APIResponse>> GetParentChildInfo(string parentId)
         {
             try
             {
-                var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
                 
                 if(string.IsNullOrEmpty(parentId))
                 {
