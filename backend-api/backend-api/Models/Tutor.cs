@@ -18,5 +18,7 @@ namespace backend_api.Models
         public DateTime? UpdatedDate { get; set; }
         public List<TutorRequest> Requests { get; set; }
         public List<Review> Reviews { get; set; }
+        public List<Curriculum> Curriculums { get; set; }
+        public List<Certificate> Certificates { get; set; }
     }
 }

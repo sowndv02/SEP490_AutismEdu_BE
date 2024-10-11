@@ -3,6 +3,7 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -45,32 +46,108 @@ namespace backend_api.Controllers.v1
             _certificateRepository = certificateRepository;
         }
 
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetActive(int id)
+        {
+            var result = await _certificateRepository.GetAsync(x => x.Id == id && x.IsActive, false, "CertificateMedias", null);
+            if (result == null)
+            {
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                return BadRequest(_response);
+            }
+
+            _response.StatusCode = HttpStatusCode.Created;
+            _response.Result = _mapper.Map<CertificateDTO>(result);
+            _response.IsSuccess = true;
+            return Ok(_response);
+        }
+
         [HttpPost]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm]CertificateCreateDTO certificateCreateDTO)
+        //[Authorize]
+        public async Task<IActionResult> CreateAsync([FromForm]CertificateCreateDTO createDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                return BadRequest(_response);
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var newModel = _mapper.Map<Certificate>(createDTO);
+
+            newModel.SubmiterId = userId;
+            newModel.IsActive = false;
+            newModel.VersionNumber = await _certificateRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
+            var certificate = await _certificateRepository.CreateAsync(newModel);
+            foreach (var media in createDTO.Medias)
+            {
+                using var stream = media.OpenReadStream();
+                var url = await _blobStorageRepository.Upload(stream, userId + Path.GetExtension(media.FileName));
+                var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
+                await _certificateMediaRepository.CreateAsync(objMedia);
+            }
+            _response.StatusCode = HttpStatusCode.Created;
+            _response.Result = _mapper.Map<CertificateDTO>(newModel);
+            _response.IsSuccess = true;
+            return Ok(_response);
+        }
+
+        [HttpPut("changeStatus/{id}")]
+        //[Authorize(Policy = "UpdateTutorPolicy")]
+        public async Task<IActionResult> ApproveOrRejectRequest(ChangeStatusDTO changeStatusDTO)
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (certificateCreateDTO == null || string.IsNullOrEmpty(userId))
+                var userId = _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id;
+                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //if (string.IsNullOrEmpty(userId))
+                //{
+                //    _response.StatusCode = HttpStatusCode.BadRequest;
+                //    _response.IsSuccess = false;
+                //    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                //    return BadRequest(_response);
+                //}
+
+                Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+                if (model == null || model.RequestStatus != Status.PENDING)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
-                Certificate model = _mapper.Map<Certificate>(certificateCreateDTO);
-                model.SubmiterId = userId;
-                model.CreatedDate = DateTime.Now;
-                var certificate = await _certificateRepository.CreateAsync(model);
-                foreach (var media in certificateCreateDTO.Medias)
+                if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
                 {
-                    using var stream = media.OpenReadStream();
-                    var url = await _blobStorageRepository.Upload(stream, userId + Path.GetExtension(media.FileName));
-                    var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
-                    await _certificateMediaRepository.CreateAsync(objMedia);
+                    model.RequestStatus = Status.APPROVE;
+                    model.UpdatedDate = DateTime.Now;
+                    model.IsActive = true;
+                    model.ApprovedId = userId;
+                    await _certificateRepository.DeactivatePreviousVersionsAsync(model.OriginalId);
+                    await _certificateRepository.UpdateAsync(model);
+                    _response.Result = _mapper.Map<CertificateDTO>(model);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
                 }
-                _response.StatusCode = HttpStatusCode.Created;
+                else if (changeStatusDTO.StatusChange == (int)Status.REJECT)
+                {
+                    // Handle for reject
+                    model.RejectionReason = changeStatusDTO.RejectionReason;
+                    model.UpdatedDate = DateTime.Now;
+                    model.ApprovedId = userId;
+                    await _certificateRepository.UpdateAsync(model);
+                    _response.Result = _mapper.Map<CertificateDTO>(model);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
+                }
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -82,100 +159,65 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpPut("changeStatus/{id}")]
-        //[Authorize(Policy = "UpdateCertificatePolicy")]
-        public async Task<IActionResult> ApproveOrRejectCertificate(ChangeStatusDTO changeStatusCertificateDTO)
-        {
-            try
-            {
-                if (changeStatusCertificateDTO.Id <= 0)
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
-                    return BadRequest(_response);
-                }
-                Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusCertificateDTO.Id, false, "CertificateMedias", null);
-                model.RequestStatus = (Status)changeStatusCertificateDTO.StatusChange;
-
-                if (!string.IsNullOrEmpty(changeStatusCertificateDTO.RejectionReason))
-                    model.RejectionReason = changeStatusCertificateDTO.RejectionReason;
-                model.UpdatedDate = DateTime.Now;
-                await _certificateRepository.UpdateAsync(model);
-                _response.Result = _mapper.Map<CertificateDTO>(model);
-                _response.StatusCode = HttpStatusCode.OK;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = "all", int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
                 int totalCount = 0;
                 List<Certificate> list = new();
-                if (!string.IsNullOrEmpty(status)) status = "all";
-                Expression<Func<Certificate, bool>> filter = null;
+                Expression<Func<Certificate, bool>> filter = u => true;
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles.Contains(SD.USER_ROLE))
+                if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    filter = cert => cert.SubmiterId == userId;
+                    Expression<Func<Certificate, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
+
+                    var combinedFilter = Expression.Lambda<Func<Certificate, bool>>(
+                        Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
+                        filter.Parameters
+                    );
+                    filter = combinedFilter;
                 }
-                switch (status)
+                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
+
+                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
-                    case "all":
-                        var (count, result) = await _certificateRepository.GetAllAsync(filter, "CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
-                        list = result;
-                        totalCount = count;
-                        break;
-                    case "approve":
-                        var (countResult, resultObj) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)), "CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
-                        list = resultObj;
-                        totalCount = countResult;
-                        break;
-                    case "reject":
-                        var (countObj, results) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)), "CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
-                        list = results;
-                        totalCount = countObj;
-                        break;
-                    default:
-                        var (defaultCount, defaultResult) = await _certificateRepository.GetAllAsync(filter, "CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, true);
-                        list = defaultResult;
-                        totalCount = defaultCount;
-                        break;
+                    switch (status.ToLower())
+                    {
+                        case "approve":
+                            var (countApprove, resultApprove) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)),
+                                "Submiter,CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                            list = resultApprove;
+                            totalCount = countApprove;
+                            break;
+                        case "reject":
+                            var (countReject, resultReject) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)),
+                                "Submiter,CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                            list = resultReject;
+                            totalCount = countReject;
+                            break;
+                        case "pending":
+                            var (countPending, resultPending) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.PENDING && (filter == null || filter.Compile()(x)),
+                                "Submiter,CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                            list = resultPending;
+                            totalCount = countPending;
+                            break;
+                    }
                 }
+                else
+                {
+                    var (count, result) = await _certificateRepository.GetAllAsync(filter,
+                                "Submiter,CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                    list = result;
+                    totalCount = count;
+                }
+
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<CertificateDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<APIResponse>> GetById(int id)
-        {
-            try
-            {
-                var result = await _certificateRepository.GetAsync(x => x.Id == id, false, "CertificateMedias", null);
-                _response.Result = _mapper.Map<CertificateDTO>(result);
-                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)

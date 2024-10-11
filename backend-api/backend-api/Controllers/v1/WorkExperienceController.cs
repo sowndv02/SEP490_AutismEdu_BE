@@ -3,10 +3,12 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 using static backend_api.SD;
@@ -43,25 +45,65 @@ namespace backend_api.Controllers.v1
         }
 
 
-        [HttpPost]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> CreateAsync(WorkExperienceCreateDTO workExperienceCreateDTO)
+
+        [HttpGet]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (workExperienceCreateDTO == null || string.IsNullOrEmpty(userId))
+                int totalCount = 0;
+                List<WorkExperience> list = new();
+                Expression<Func<WorkExperience, bool>> filter = u => true;
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    Expression<Func<WorkExperience, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
+
+                    var combinedFilter = Expression.Lambda<Func<WorkExperience, bool>>(
+                        Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
+                        filter.Parameters
+                    );
+                    filter = combinedFilter;
                 }
-                WorkExperience model = _mapper.Map<WorkExperience>(workExperienceCreateDTO);
-                model.SubmiterId = userId;
-                model.CreatedDate = DateTime.Now;
-                await _workExperienceRepository.CreateAsync(model);
-                _response.StatusCode = HttpStatusCode.Created;
+                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
+
+                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
+                {
+                    switch (status.ToLower())
+                    {
+                        case "approve":
+                            var (countApprove, resultApprove) = await _workExperienceRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)),
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                            list = resultApprove;
+                            totalCount = countApprove;
+                            break;
+                        case "reject":
+                            var (countReject, resultReject) = await _workExperienceRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)),
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                            list = resultReject;
+                            totalCount = countReject;
+                            break;
+                        case "pending":
+                            var (countPending, resultPending) = await _workExperienceRepository.GetAllAsync(x => x.RequestStatus == Status.PENDING && (filter == null || filter.Compile()(x)),
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                            list = resultPending;
+                            totalCount = countPending;
+                            break;
+                    }
+                }
+                else
+                {
+                    var (count, result) = await _workExperienceRepository.GetAllAsync(filter,
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                    list = result;
+                    totalCount = count;
+                }
+
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                _response.Result = _mapper.Map<List<WorkExperienceDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -74,9 +116,54 @@ namespace backend_api.Controllers.v1
         }
 
 
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetActive(int id)
+        {
+            var model = await _workExperienceRepository.GetAsync(x => x.Id == id && x.IsActive);
+            if (model == null)
+            {
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                return BadRequest(_response);
+            }
+
+            _response.StatusCode = HttpStatusCode.Created;
+            _response.Result = _mapper.Map<WorkExperienceDTO>(model);
+            _response.IsSuccess = true;
+            return Ok(_response);
+        }
+
+        [HttpPost]
+        //[Authorize]
+        public async Task<IActionResult> CreateAsync(WorkExperienceCreateDTO createDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                return BadRequest(_response);
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var newModel = _mapper.Map<WorkExperience>(createDTO);
+
+            newModel.SubmiterId = userId;
+            newModel.IsActive = false;
+            newModel.VersionNumber = await _workExperienceRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
+
+            await _workExperienceRepository.CreateAsync(newModel);
+            _response.StatusCode = HttpStatusCode.Created;
+            _response.Result = _mapper.Map<WorkExperienceDTO>(newModel);
+            _response.IsSuccess = true;
+            return Ok(_response);
+        }
+
         [HttpPut("changeStatus/{id}")]
         //[Authorize(Policy = "UpdateTutorPolicy")]
-        public async Task<IActionResult> ApproveOrRejectWorkExperienceRequest(ChangeStatusDTO workExperienceChangeStatusDTO)
+        public async Task<IActionResult> ApproveOrRejectRequest(ChangeStatusDTO changeStatusDTO)
         {
             try
             {
@@ -90,22 +177,31 @@ namespace backend_api.Controllers.v1
                 //    return BadRequest(_response);
                 //}
 
-                WorkExperience model = await _workExperienceRepository.GetAsync(x => x.Id == workExperienceChangeStatusDTO.Id, false, null, null);
-                if (workExperienceChangeStatusDTO.StatusChange == (int)Status.APPROVE)
+                WorkExperience model = await _workExperienceRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+                if (model == null || model.RequestStatus != Status.PENDING)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+                if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
                 {
                     model.RequestStatus = Status.APPROVE;
                     model.UpdatedDate = DateTime.Now;
+                    model.IsActive = true;
                     model.ApprovedId = userId;
+                    await _workExperienceRepository.DeactivatePreviousVersionsAsync(model.OriginalId);
                     await _workExperienceRepository.UpdateAsync(model);
                     _response.Result = _mapper.Map<WorkExperienceDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
                 }
-                else if (workExperienceChangeStatusDTO.StatusChange == (int)Status.REJECT)
+                else if (changeStatusDTO.StatusChange == (int)Status.REJECT)
                 {
                     // Handle for reject
-                    model.RejectionReason = workExperienceChangeStatusDTO.RejectionReason;
+                    model.RejectionReason = changeStatusDTO.RejectionReason;
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _workExperienceRepository.UpdateAsync(model);
@@ -113,9 +209,7 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
-
                 }
-
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -128,6 +222,5 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
-
     }
 }

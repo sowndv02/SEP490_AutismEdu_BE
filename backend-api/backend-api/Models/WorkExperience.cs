@@ -22,9 +22,9 @@ namespace backend_api.Models
         public string? ApprovedId { get; set; }
         public bool IsActive { get; set; } = false;
         public int VersionNumber { get; set; } = 1;
-        public int? OriginalCurriculumId { get; set; }
-        [ForeignKey(nameof(OriginalCurriculumId))]
-        public Curriculum? OriginalCurriculum { get; set; }
+        public int? OriginalId { get; set; }
+        [ForeignKey(nameof(OriginalId))]
+        public WorkExperience? OriginalWorkExperience { get; set; }
         public string? RejectionReason { get; set; }
         [ForeignKey(nameof(ApprovedId))]
         public ApplicationUser? ApprovedBy { get; set; }

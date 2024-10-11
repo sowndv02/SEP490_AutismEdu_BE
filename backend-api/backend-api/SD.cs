@@ -121,5 +121,11 @@
         public const string STATUS_REJECT = "reject";
         public const string STATUS_ALL = "all";
 
+
+        // sort Order
+        public const string ORDER_DESC = "desc";
+        public const string ORDER_ASC = "asc";
+
+
     }
 }
