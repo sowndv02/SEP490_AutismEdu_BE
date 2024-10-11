@@ -11,5 +11,6 @@ namespace backend_api.Models.DTOs.CreateDTOs
         public DateTime? IssuingDate { get; set; }
         public DateTime? ExpirationDate { get; set; }
         public List<IFormFile> Medias { get; set; }
+        public int? OriginalId { get; set; }
     }
 }

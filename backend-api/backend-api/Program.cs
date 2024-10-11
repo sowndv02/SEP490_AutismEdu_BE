@@ -232,7 +232,6 @@ void ApplyMigration()
         {
             var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-
             // Check for pending migrations and apply them if any
             var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
             if (pendingMigrations.Count > 0)

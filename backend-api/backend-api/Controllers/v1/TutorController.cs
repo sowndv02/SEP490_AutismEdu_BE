@@ -3,6 +3,7 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -59,6 +60,44 @@ namespace backend_api.Controllers.v1
             _tutorRegistrationRequestRepository = tutorRegistrationRequestRepository;
         }
 
+
+        [HttpGet("{id}"]
+        public async Task<ActionResult<APIResponse>> GetByIdAsync(string id)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(id))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+
+                Tutor model = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User,Curriculums");
+
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
+                    return NotFound(_response);
+                }
+                var result = _mapper.Map<TutorDTO>(model);
+
+                _response.Result = result;
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
 
         [HttpPut("{id}")]

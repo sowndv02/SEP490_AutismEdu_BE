@@ -11,5 +11,6 @@ namespace backend_api.Models.DTOs.CreateDTOs
         [Required]
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public int? OriginalId { get; set; }
     }
 }
