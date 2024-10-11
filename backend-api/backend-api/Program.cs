@@ -75,6 +75,7 @@ builder.Services.AddScoped<IAssessmentResultRepository, AssessmentResultReposito
 builder.Services.AddScoped<IProgressReportRepository, ProgressReportRepository>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<ITutorProfileUpdateRequestRepository, TutorProfileUpdateRequestRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 
 
