@@ -7,6 +7,7 @@ using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 using static backend_api.SD;
@@ -57,6 +58,76 @@ namespace backend_api.Controllers.v1
         }
 
 
+        [HttpGet]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.ORDER_DESC, int pageNumber = 1)
+        {
+            try
+            {
+                int totalCount = 0;
+                List<Curriculum> list = new();
+                Expression<Func<Curriculum, bool>> filter = u => true;
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    Expression<Func<WorkExperience, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
+
+                    var combinedFilter = Expression.Lambda<Func<Curriculum, bool>>(
+                        Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
+                        filter.Parameters
+                    );
+                    filter = combinedFilter;
+                }
+                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
+
+                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
+                {
+                    switch (status.ToLower())
+                    {
+                        case "approve":
+                            var (countApprove, resultApprove) = await _curriculumRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)),
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                            list = resultApprove;
+                            totalCount = countApprove;
+                            break;
+                        case "reject":
+                            var (countReject, resultReject) = await _curriculumRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)),
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                            list = resultReject;
+                            totalCount = countReject;
+                            break;
+                        case "pending":
+                            var (countPending, resultPending) = await _curriculumRepository.GetAllAsync(x => x.RequestStatus == Status.PENDING && (filter == null || filter.Compile()(x)),
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                            list = resultPending;
+                            totalCount = countPending;
+                            break;
+                    }
+                }
+                else
+                {
+                    var (count, result) = await _curriculumRepository.GetAllAsync(filter,
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                    list = result;
+                    totalCount = count;
+                }
+
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                _response.Result = _mapper.Map<List<CurriculumDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetActiveCurriculum(int id)
         {
@@ -75,8 +146,9 @@ namespace backend_api.Controllers.v1
             return Ok(_response);
         }
 
-        [HttpPost("submit")]
-        public async Task<IActionResult> SubmitCurriculumUpdate(CurriculumCreateDTO curriculumDto)
+        [HttpPost]
+        //[Authorize]
+        public async Task<IActionResult> CreateAsync(CurriculumCreateDTO curriculumDto)
         {
             if (!ModelState.IsValid)
             {
@@ -100,73 +172,6 @@ namespace backend_api.Controllers.v1
             return Ok(_response);
         }
 
-        [HttpPost("review/{id}")]
-        //[Authorize(Roles = "Staff")]
-        public async Task<IActionResult> ReviewCurriculumUpdate(int id, [FromBody] ChangeStatusDTO reviewDto)
-        {
-            var curriculum = await _curriculumRepository.GetAsync(x => x.Id == reviewDto.Id);
-            if (curriculum == null || curriculum.RequestStatus != Status.PENDING)
-            {
-                _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                return BadRequest(_response);
-            }
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            curriculum.ApprovedId = userId;
-            curriculum.UpdatedDate = DateTime.Now;
-
-            if (reviewDto.StatusChange == (int)Status.APPROVE)
-            {
-                curriculum.RequestStatus = Status.APPROVE;
-                curriculum.IsActive = true;
-                await _curriculumRepository.DeactivatePreviousVersionsAsync(curriculum.OriginalCurriculumId);
-            }
-            else if(reviewDto.StatusChange == (int)Status.REJECT)
-            {
-                curriculum.RequestStatus = Status.REJECT;
-                curriculum.RejectionReason = reviewDto.RejectionReason;
-            }
-
-            await _curriculumRepository.UpdateAsync(curriculum);
-            _response.StatusCode = HttpStatusCode.Created;
-            _response.Result = _mapper.Map<CurriculumDTO>(curriculum);
-            _response.IsSuccess = true;
-            return Ok(_response);
-        }
-
-
-        [HttpPost]
-        //[Authorize]
-        public async Task<ActionResult<APIResponse>> CreateAsync(CurriculumCreateDTO curriculumCreateDTO)
-        {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (curriculumCreateDTO == null || string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
-                }
-                Curriculum model = _mapper.Map<Curriculum>(curriculumCreateDTO);
-                model.SubmiterId = userId;
-                model.CreatedDate = DateTime.Now;
-                await _curriculumRepository.CreateAsync(model);
-                _response.StatusCode = HttpStatusCode.Created;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
         [HttpPut("changeStatus/{id}")]
         //[Authorize(Policy = "UpdateTutorPolicy")]
         public async Task<IActionResult> ApproveOrRejectCurriculumRequest(ChangeStatusDTO changeStatusDTO)
@@ -184,11 +189,20 @@ namespace backend_api.Controllers.v1
                 //}
 
                 Curriculum model = await _curriculumRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+                if (model == null || model.RequestStatus != Status.PENDING)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
                 {
                     model.RequestStatus = Status.APPROVE;
                     model.UpdatedDate = DateTime.Now;
+                    model.IsActive = true;
                     model.ApprovedId = userId;
+                    await _curriculumRepository.DeactivatePreviousVersionsAsync(model.OriginalCurriculumId);
                     await _curriculumRepository.UpdateAsync(model);
                     _response.Result = _mapper.Map<CurriculumDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;

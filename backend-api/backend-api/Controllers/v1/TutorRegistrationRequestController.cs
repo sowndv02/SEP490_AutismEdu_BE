@@ -216,25 +216,6 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<APIResponse>> GetById(string id)
-        {
-            try
-            {
-                var result = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User", null);
-                _response.Result = _mapper.Map<TutorDTO>(result);
-                _response.StatusCode = HttpStatusCode.OK;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
         [HttpPut("changeStatus/{id}")]
         //[Authorize(Policy = "UpdateTutorPolicy")]
         public async Task<IActionResult> ApproveOrRejectTutorRegistrationRequest(ChangeStatusDTO tutorRegistrationRequestChange)
@@ -257,7 +238,7 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     return BadRequest(_response);
                 }
-                TutorRegistrationRequest model = await _tutorRegistrationRequestRepository.GetAsync(x => x.Id == tutorRegistrationRequestChange.Id, false, "ApprovedBy,Curriculums,WorkExperiences,Certificates", null);
+                TutorRegistrationRequest model = await _tutorRegistrationRequestRepository.GetAsync(x => x.Id == tutorRegistrationRequestChange.Id, false, "Curriculums,WorkExperiences,Certificates", null);
                 if (tutorRegistrationRequestChange.StatusChange == (int)Status.APPROVE)
                 {
                     string passsword = PasswordGenerator.GeneratePassword();
@@ -362,6 +343,7 @@ namespace backend_api.Controllers.v1
                     // Handle for reject
                     model.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
                     model.UpdatedDate = DateTime.Now;
+                    model.RequestStatus = Status.REJECT;
                     model.ApprovedId = userId;
                     await _tutorRegistrationRequestRepository.UpdateAsync(model);
 
