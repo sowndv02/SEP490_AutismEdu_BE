@@ -4,7 +4,7 @@
     {
         // Const default account
         public static string ADMIN_EMAIL_DEFAULT = "admin@admin.com";
-        public static string ADMIN_PASSWORD_DEFAULT = "Sa12345@";
+        public static string ADMIN_PASSWORD_DEFAULT = "AQAAAAEAACcQAAAAEMfzOeOO9vzt2uHUdlns8ebc2aVoyC5+OObRsN6FtyfK3AnJryToE034lhhgLoXGEQ==";
 
         // Const role
         public const string USER_ROLE = "User";
