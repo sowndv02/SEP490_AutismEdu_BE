@@ -37,7 +37,10 @@ namespace backend_api.Data
         public DbSet<ProgressReport> ProgressReports { get; set; }
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<TutorProfileUpdateRequest> TutorProfileUpdateRequests { get; set; }
-
+        public DbSet<InitialAssessmentResult> InitialAssessmentResults { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<ScheduleTimeSlot> ScheduleTimeSlots { get; set; }
+        public DbSet<StudentProfile> StudentProfiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -67,6 +70,24 @@ namespace backend_api.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<ProgressReport>()
+                .HasOne(pr => pr.Tutor)
+                .WithMany()
+                .HasForeignKey(pr => pr.TutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<StudentProfile>()
+                .HasOne(pr => pr.Tutor)
+                .WithMany()
+                .HasForeignKey(pr => pr.TutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ScheduleTimeSlot>()
+                .HasOne(pr => pr.StudentProfile)
+                .WithMany()
+                .HasForeignKey(pr => pr.StudentProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Schedule>()
                 .HasOne(pr => pr.Tutor)
                 .WithMany()
                 .HasForeignKey(pr => pr.TutorId)
