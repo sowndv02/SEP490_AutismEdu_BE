@@ -115,6 +115,21 @@
             REJECT = 0
         }
 
+        // enum exercise pass status
+        public enum PassingStatus
+        {
+            PASSED = 1,
+            NOT_PASSED = 0
+        }
+
+        // enum schedule attend status
+        public enum AttendanceStatus
+        {
+            NOT_YET = 2,
+            ATTENDED = 1,
+            ABSENT = 0
+        }
+
         // Status string
         public const string STATUS_PENDING = "pending";
         public const string STATUS_APPROVE = "approve";
