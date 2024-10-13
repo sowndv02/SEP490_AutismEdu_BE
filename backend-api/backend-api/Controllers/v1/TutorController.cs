@@ -82,14 +82,6 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
                     return NotFound(_response);
                 }
-                if(model.Curriculums != null)
-                {
-                    model.Curriculums= model.Curriculums.Where(x => x.IsActive).ToList();
-                }
-                if (model.Certificates != null) 
-                {
-                    model.Certificates = model.Certificates.Where(x => x.IdentityCardNumber == null).ToList();
-                }
                 var result = _mapper.Map<TutorDTO>(model);
 
                 _response.Result = result;
