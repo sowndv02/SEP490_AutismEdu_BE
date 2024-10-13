@@ -191,8 +191,9 @@ namespace backend_api.Controllers.v1
                     includeProperties: "User,Certificates,Curriculums,WorkExperiences", pageSize: 9, pageNumber: pageNumber);
                 list = result;
                 totalCount = count;
+                List<TutorDTO> tutorDTOList = _mapper.Map<List<TutorDTO>>(list);
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 9, Total = totalCount };
-                _response.Result = _mapper.Map<List<TutorDTO>>(list);
+                _response.Result = tutorDTOList;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);
