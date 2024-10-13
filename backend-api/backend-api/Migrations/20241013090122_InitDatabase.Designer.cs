@@ -12,8 +12,8 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241013084421_InitDatabase_v2")]
-    partial class InitDatabase_v2
+    [Migration("20241013090122_InitDatabase")]
+    partial class InitDatabase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -642,6 +642,9 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -657,16 +660,14 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("TutorUserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ParentId");
 
                     b.HasIndex("TutorId");
-
-                    b.HasIndex("TutorUserId");
 
                     b.ToTable("Reviews");
                 });
@@ -1488,18 +1489,14 @@ namespace backend_api.Migrations
                     b.HasOne("backend_api.Models.ApplicationUser", "Parent")
                         .WithMany()
                         .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("backend_api.Models.Tutor", "Tutor")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("TutorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("backend_api.Models.Tutor", null)
-                        .WithMany("Reviews")
-                        .HasForeignKey("TutorUserId");
 
                     b.Navigation("Parent");
 

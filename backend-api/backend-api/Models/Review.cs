@@ -18,5 +18,7 @@ namespace backend_api.Models
 
         [ForeignKey(nameof(TutorId))]
         public Tutor Tutor { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime? UpdatedDate { get; set; }
     }
 }
