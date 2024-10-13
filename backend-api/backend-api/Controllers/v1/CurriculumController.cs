@@ -59,7 +59,7 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy= SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -78,27 +78,35 @@ namespace backend_api.Controllers.v1
                     );
                     filter = combinedFilter;
                 }
-                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
-
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+                Expression<Func<Curriculum, object>>? order = null;
+                if (orderBy != null && orderBy == SD.CREADTED_DATE)
+                {
+                    order = x => x.CreatedDate;
+                }
+                else if (orderBy != null && orderBy == SD.AGE_FROM) 
+                {
+                    order = x => x.AgeFrom;
+                }
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
                     switch (status.ToLower())
                     {
                         case "approve":
                             var (countApprove, resultApprove) = await _curriculumRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)),
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, order, isDesc);
                             list = resultApprove;
                             totalCount = countApprove;
                             break;
                         case "reject":
                             var (countReject, resultReject) = await _curriculumRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)),
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, order, isDesc);
                             list = resultReject;
                             totalCount = countReject;
                             break;
                         case "pending":
                             var (countPending, resultPending) = await _curriculumRepository.GetAllAsync(x => x.RequestStatus == Status.PENDING && (filter == null || filter.Compile()(x)),
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, order, isDesc);
                             list = resultPending;
                             totalCount = countPending;
                             break;
@@ -107,7 +115,7 @@ namespace backend_api.Controllers.v1
                 else
                 {
                     var (count, result) = await _curriculumRepository.GetAllAsync(filter,
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, order, isDesc);
                     list = result;
                     totalCount = count;
                 }
@@ -157,6 +165,7 @@ namespace backend_api.Controllers.v1
                 _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                 return BadRequest(_response);
             }
+            // TODO: Update age from end 
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var newCurriculum = _mapper.Map<Curriculum>(curriculumDto);
