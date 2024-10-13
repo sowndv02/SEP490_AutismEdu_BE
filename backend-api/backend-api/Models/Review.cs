@@ -10,13 +10,13 @@ namespace backend_api.Models
         public int Id { get; set; }
         public decimal RateScore { get; set; }
         public string Description { get; set; }
-        public string ReviewerId { get; set; }
-        public string RevieweeId { get; set; }
+        public string ParentId { get; set; }
+        public string TutorId { get; set; }
 
-        [ForeignKey(nameof(ReviewerId))]
-        public ApplicationUser Reviewer { get; set; }
+        [ForeignKey(nameof(ParentId))]
+        public ApplicationUser Parent { get; set; }
 
-        [ForeignKey(nameof(RevieweeId))]
-        public Tutor Reviewee { get; set; }
+        [ForeignKey(nameof(TutorId))]
+        public Tutor Tutor { get; set; }
     }
 }

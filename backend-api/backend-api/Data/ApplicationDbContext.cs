@@ -58,15 +58,15 @@ namespace backend_api.Data
                 .OnDelete(DeleteBehavior.Restrict); // Change Cascade to Restrict
 
             builder.Entity<Review>()
-                .HasOne(r => r.Reviewer)
+                .HasOne(r => r.Parent)
                 .WithMany()
-                .HasForeignKey(r => r.ReviewerId)
+                .HasForeignKey(r => r.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Review>()
-                .HasOne(r => r.Reviewee)
+                .HasOne(r => r.Tutor)
                 .WithMany()
-                .HasForeignKey(r => r.RevieweeId)
+                .HasForeignKey(r => r.TutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<ProgressReport>()
