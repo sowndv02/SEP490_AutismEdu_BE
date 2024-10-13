@@ -2,6 +2,7 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
+using backend_api.Models.DTOs.UpdateDTOs;
 using Microsoft.AspNetCore.Identity;
 
 namespace backend_api.Mapper
@@ -119,6 +120,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate.ToString("dd/MM/yyyy")))
                 .ReverseMap();
             CreateMap<AssessmentOption, AssessmentOptionDTO>().ReverseMap();
+            CreateMap<ChildInformation, ChildInformationUpdateDTO>().ReverseMap();
         }
     }
 }

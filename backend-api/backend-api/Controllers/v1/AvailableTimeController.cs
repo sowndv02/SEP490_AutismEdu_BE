@@ -117,7 +117,7 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpDelete("timeslotId")]
+        [HttpDelete("{timeslotId}")]
         //[Authorize]
         public async Task<ActionResult<APIResponse>> RemoveTimeSlotFromWeekday(int timeSlotId)
         {
