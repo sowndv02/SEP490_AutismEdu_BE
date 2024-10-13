@@ -61,7 +61,7 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpGet("parentId")]
+        [HttpGet("{parentId}")]
         //[Authorize]
         public async Task<ActionResult<APIResponse>> GetParentChildInfo(string parentId)
         {
