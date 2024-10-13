@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -53,19 +54,13 @@ namespace backend_api.Data
 
             builder.Entity<TutorRequest>()
                 .HasOne(tr => tr.Parent)
-                .WithMany()  // or define the correct navigation property
-                .HasForeignKey(tr => tr.ParentId)
-                .OnDelete(DeleteBehavior.Restrict); // Change Cascade to Restrict
-
-            builder.Entity<Review>()
-                .HasOne(r => r.Parent)
                 .WithMany()
-                .HasForeignKey(r => r.ParentId)
+                .HasForeignKey(tr => tr.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<Review>()
-                .HasOne(r => r.Tutor)
-                .WithMany()
+            builder.Entity<Tutor>()
+                .HasMany(t => t.Reviews)
+                .WithOne(r => r.Tutor)
                 .HasForeignKey(r => r.TutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 

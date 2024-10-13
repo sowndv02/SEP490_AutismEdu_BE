@@ -607,30 +607,26 @@ namespace backend_api.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     RateScore = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ReviewerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    RevieweeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    TutorUserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    ParentId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reviews", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Reviews_Tutors_RevieweeId",
-                        column: x => x.RevieweeId,
+                        name: "FK_Reviews_Tutors_TutorId",
+                        column: x => x.TutorId,
                         principalTable: "Tutors",
                         principalColumn: "UserId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Reviews_Tutors_TutorUserId",
-                        column: x => x.TutorUserId,
-                        principalTable: "Tutors",
-                        principalColumn: "UserId");
-                    table.ForeignKey(
-                        name: "FK_Reviews_Users_ReviewerId",
-                        column: x => x.ReviewerId,
+                        name: "FK_Reviews_Users_ParentId",
+                        column: x => x.ParentId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1019,19 +1015,14 @@ namespace backend_api.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_RevieweeId",
+                name: "IX_Reviews_ParentId",
                 table: "Reviews",
-                column: "RevieweeId");
+                column: "ParentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_ReviewerId",
+                name: "IX_Reviews_TutorId",
                 table: "Reviews",
-                column: "ReviewerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reviews_TutorUserId",
-                table: "Reviews",
-                column: "TutorUserId");
+                column: "TutorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoleClaims_RoleId",
