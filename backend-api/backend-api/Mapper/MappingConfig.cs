@@ -60,9 +60,9 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ForMember(dest => dest.TotalReview, opt => opt.MapFrom(src => src.Reviews.Count))
-                .ForMember(dest => dest.Certificates, opt => opt.MapFrom(src => src.Certificates.Where(x => string.IsNullOrEmpty(x.IdentityCardNumber))))
-                .ForMember(dest => dest.Curriculums, opt => opt.MapFrom(src => src.Curriculums))
-                .ForMember(dest => dest.WorkExperiences, opt => opt.MapFrom(src => src.WorkExperiences))
+                .ForMember(dest => dest.Certificates, opt => opt.MapFrom(src => src.Certificates.Where(x => string.IsNullOrEmpty(x.IdentityCardNumber) && x.IsActive)))
+                .ForMember(dest => dest.Curriculums, opt => opt.MapFrom(src => src.Curriculums.Where(x => x.IsActive)))
+                .ForMember(dest => dest.WorkExperiences, opt => opt.MapFrom(src => src.WorkExperiences.Where(x => x.IsActive)))
                 .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => src.Reviews.Count > 0 ? src.Reviews.Average(x => x.RateScore) : 5))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.ImageUrl));
 
