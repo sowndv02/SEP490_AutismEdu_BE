@@ -20,6 +20,7 @@ namespace backend_api.Models
         public List<Review> Reviews { get; set; }
         public List<Curriculum> Curriculums { get; set; }
         public List<Certificate> Certificates { get; set; }
+        public List<WorkExperience> WorkExperiences { get; set; }
         public List<AvailableTimeSlot> AvailableTimeSlots { get; set; }
     }
 }

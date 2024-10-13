@@ -30,7 +30,7 @@ namespace backend_api.Models
         public Status RequestStatus { get; set; } = Status.PENDING;
         public string? SubmiterId { get; set; }
         [ForeignKey(nameof(SubmiterId))]
-        public ApplicationUser? Submiter { get; set; }
+        public Tutor? Submiter { get; set; }
         public List<CertificateMedia> CertificateMedias { get; set; }
     }
 }

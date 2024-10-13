@@ -21,7 +21,7 @@
         public const string URL_FE_TUTOR_REGISTRATION_REQUEST = "http://localhost:5173/autismedu/tutor-registration";
         public const string URL_FE_FULL = "http://localhost:5173/autismedu";
         public const string URL_FE_TUTOR_LOGIN = "http://localhost:5173/autismtutor/tutor-login";
-        public const string URL_IMAGE_DEFAULT_BLOB = "https://storagesep.blob.core.windows.net/logos-public/default-avatar.png";
+        public const string URL_IMAGE_DEFAULT_BLOB = "https://sep490g50v1.blob.core.windows.net/logos-public/default-avatar.png";
 
         // Const folder mail save
         public const string FOLDER_NAME_LOG_EMAIL = "MailSave";

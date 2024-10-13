@@ -54,7 +54,7 @@ namespace backend_api.Data
             builder.Entity<TutorRequest>()
                 .HasOne(tr => tr.Parent)
                 .WithMany()  // or define the correct navigation property
-                .HasForeignKey(tr => tr.UserId)
+                .HasForeignKey(tr => tr.ParentId)
                 .OnDelete(DeleteBehavior.Restrict); // Change Cascade to Restrict
 
             builder.Entity<Review>()
