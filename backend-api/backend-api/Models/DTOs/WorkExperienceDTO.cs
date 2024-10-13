@@ -6,7 +6,6 @@ namespace backend_api.Models.DTOs
     public class WorkExperienceDTO
     {
         public int Id { get; set; }
-        public ApplicationUserDTO? Submiter { get; set; }
         public string CompanyName { get; set; }
         public string Position { get; set; }
         public DateTime StartDate { get; set; }

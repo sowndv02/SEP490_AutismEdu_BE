@@ -45,7 +45,6 @@ namespace backend_api.Mapper
 
             CreateMap<WorkExperience, WorkExperienceCreateDTO>().ReverseMap();
             CreateMap<Certificate, CertificateCreateDTO>().ReverseMap();
-            CreateMap<Certificate, CertificateDTO>().ReverseMap();
             CreateMap<CertificateMedia, CertificateMediaDTO>().ReverseMap();
             CreateMap<Tutor, TutorInfoDTO>().ReverseMap();
 
@@ -61,11 +60,17 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ForMember(dest => dest.TotalReview, opt => opt.MapFrom(src => src.Reviews.Count))
-                .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => src.Reviews.Count == 0 ? src.Reviews.Average(x => x.RateScore) : 5))
+                .ForMember(dest => dest.Certificates, opt => opt.MapFrom(src => src.Certificates.Where(x => string.IsNullOrEmpty(x.IdentityCardNumber))))
+                .ForMember(dest => dest.Curriculums, opt => opt.MapFrom(src => src.Curriculums))
+                .ForMember(dest => dest.WorkExperiences, opt => opt.MapFrom(src => src.WorkExperiences))
+                .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => src.Reviews.Count > 0 ? src.Reviews.Average(x => x.RateScore) : 5))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.ImageUrl));
 
             CreateMap<TutorRegistrationRequest, TutorRegistrationRequestCreateDTO>().ReverseMap();
+            CreateMap<TutorDTO, Tutor>();
+
             CreateMap<Curriculum, CurriculumCreateDTO>().ReverseMap();
+            CreateMap<Certificate, CertificateDTO>().ReverseMap();
             CreateMap<CertificateMedia, CertificateMediaCreateDTO>().ReverseMap();
 
             CreateMap<ChildInformation, ChildInformationDTO>()
@@ -83,7 +88,22 @@ namespace backend_api.Mapper
 
             CreateMap<TutorRegistrationRequest, TutorRegistrationRequestDTO>().ReverseMap();
             CreateMap<WorkExperience, WorkExperienceDTO>().ReverseMap();
-            CreateMap<Curriculum, CurriculumDTO>().ReverseMap();
+            CreateMap<Curriculum, CurriculumDTO>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.AgeFrom, opt => opt.MapFrom(src => src.AgeFrom))
+                .ForMember(dest => dest.AgeEnd, opt => opt.MapFrom(src => src.AgeEnd))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.RequestStatus, opt => opt.MapFrom(src => src.RequestStatus))
+                .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason))
+                .ForMember(dest => dest.ApprovedBy, opt => opt.MapFrom(src => src.ApprovedBy))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
+                .ForMember(dest => dest.VersionNumber, opt => opt.MapFrom(src => src.VersionNumber))
+                .ForMember(dest => dest.OrifinalDescription, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.Description : string.Empty))
+                .ForMember(dest => dest.OrifinalAgeFrom, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.AgeFrom : 0))
+                .ForMember(dest => dest.OrifinalAgeEnd, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.AgeEnd : 0))
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
+                .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
+                .ReverseMap();
             CreateMap<TutorRequest, TutorRequestCreateDTO>().ReverseMap();
             CreateMap<TutorRequest, TutorRequestDTO>().ReverseMap();
             CreateMap<Blog, BlogCreateDTO>().ReverseMap();

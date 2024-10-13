@@ -17,9 +17,9 @@ namespace backend_api.Models.DTOs
         public int TotalReview { get; set; }
         public double ReviewScore { get; set; }
         public string Address { get; set; }
-        public List<CertificateDTO> Certificates { get; set; }
-        public List<WorkExperienceDTO> WorkExperiences { get; set; }
-        public List<CurriculumDTO> Curriculums { get; set; }
+        public List<CertificateDTO>? Certificates { get; set; }
+        public List<WorkExperienceDTO>? WorkExperiences { get; set; }
+        public List<CurriculumDTO>? Curriculums { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
     }
