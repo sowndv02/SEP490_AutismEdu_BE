@@ -188,10 +188,10 @@ namespace backend_api.Controllers.v1
                 }
 
                 var (count, result) = await _tutorRepository.GetAllAsync(filter,
-                    includeProperties: "User", pageSize: pageSize, pageNumber: pageNumber);
+                    includeProperties: "User,Certificates,Curriculums,WorkExperiences", pageSize: 9, pageNumber: pageNumber);
                 list = result;
                 totalCount = count;
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 9, Total = totalCount };
                 _response.Result = _mapper.Map<List<TutorDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;

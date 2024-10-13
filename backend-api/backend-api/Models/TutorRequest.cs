@@ -12,8 +12,8 @@ namespace backend_api.Models
         public int ChildId { get; set; }
         [ForeignKey(nameof(ChildId))]
         public ChildInformation ChildInformation { get; set; }
-        public string UserId { get; set; }
-        [ForeignKey(nameof(UserId))]
+        public string ParentId { get; set; }
+        [ForeignKey(nameof(ParentId))]
         public ApplicationUser Parent { get; set; }
         public string? Description { get; set; }
         public Status RequestStatus { get; set; } = Status.APPROVE;

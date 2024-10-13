@@ -315,9 +315,6 @@ namespace backend_api.Migrations
                     b.Property<int?>("TutorRegistrationRequestId")
                         .HasColumnType("int");
 
-                    b.Property<string>("TutorUserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
@@ -333,8 +330,6 @@ namespace backend_api.Migrations
                     b.HasIndex("SubmiterId");
 
                     b.HasIndex("TutorRegistrationRequestId");
-
-                    b.HasIndex("TutorUserId");
 
                     b.ToTable("Certificates");
                 });
@@ -939,6 +934,10 @@ namespace backend_api.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ParentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("RejectionReason")
                         .HasColumnType("nvarchar(max)");
 
@@ -955,19 +954,15 @@ namespace backend_api.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ChildId");
 
+                    b.HasIndex("ParentId");
+
                     b.HasIndex("TutorId");
 
                     b.HasIndex("TutorUserId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("TutorRequests");
                 });
@@ -1349,17 +1344,13 @@ namespace backend_api.Migrations
                         .WithMany()
                         .HasForeignKey("OriginalId");
 
-                    b.HasOne("backend_api.Models.ApplicationUser", "Submiter")
-                        .WithMany()
+                    b.HasOne("backend_api.Models.Tutor", "Submiter")
+                        .WithMany("Certificates")
                         .HasForeignKey("SubmiterId");
 
                     b.HasOne("backend_api.Models.TutorRegistrationRequest", "TutorRegistrationRequest")
                         .WithMany("Certificates")
                         .HasForeignKey("TutorRegistrationRequestId");
-
-                    b.HasOne("backend_api.Models.Tutor", null)
-                        .WithMany("Certificates")
-                        .HasForeignKey("TutorUserId");
 
                     b.Navigation("ApprovedBy");
 
@@ -1611,6 +1602,12 @@ namespace backend_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("backend_api.Models.ApplicationUser", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("backend_api.Models.Tutor", "Tutor")
                         .WithMany()
                         .HasForeignKey("TutorId")
@@ -1620,12 +1617,6 @@ namespace backend_api.Migrations
                     b.HasOne("backend_api.Models.Tutor", null)
                         .WithMany("Requests")
                         .HasForeignKey("TutorUserId");
-
-                    b.HasOne("backend_api.Models.ApplicationUser", "Parent")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
 
                     b.Navigation("ChildInformation");
 
@@ -1644,8 +1635,8 @@ namespace backend_api.Migrations
                         .WithMany()
                         .HasForeignKey("OriginalId");
 
-                    b.HasOne("backend_api.Models.ApplicationUser", "Submiter")
-                        .WithMany()
+                    b.HasOne("backend_api.Models.Tutor", "Submiter")
+                        .WithMany("WorkExperiences")
                         .HasForeignKey("SubmiterId");
 
                     b.HasOne("backend_api.Models.TutorRegistrationRequest", "TutorRegistrationRequest")
@@ -1740,6 +1731,8 @@ namespace backend_api.Migrations
                     b.Navigation("Requests");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("WorkExperiences");
                 });
 
             modelBuilder.Entity("backend_api.Models.TutorRegistrationRequest", b =>
