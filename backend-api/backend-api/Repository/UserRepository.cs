@@ -383,7 +383,8 @@ namespace backend_api.Repository
             {
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(JwtRegisteredClaimNames.Jti,  jwtTokenId)
+                new Claim(JwtRegisteredClaimNames.Jti, jwtTokenId),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id)
             };
             foreach (var role in roles)
             {
@@ -393,7 +394,7 @@ namespace backend_api.Repository
             var token = new JwtSecurityToken(
                 issuer: _configuration["ApiSettings:JWT:ValidIssuer"],
                 audience: _configuration["ApiSettings:JWT:ValidAudience"],
-                expires: DateTime.UtcNow.AddMinutes(30),
+                expires: DateTime.UtcNow.AddHours(2),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authenKey, SecurityAlgorithms.HmacSha512Signature)
             );
