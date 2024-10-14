@@ -79,13 +79,11 @@ namespace backend_api.Repository
             int pageSize = 0, int pageNumber = 1, Expression<Func<T, object>>? orderBy = null, bool isDesc = true)
         {
             IQueryable<T> query = dbset;
-            IQueryable<T> queryCount = query;
             if (filter != null)
             {
                 query = query.Where(filter);
-                queryCount = query;
             }
-
+            int totalCount = await query.CountAsync();
             if (pageSize > 0)
             {
                 query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
@@ -105,7 +103,8 @@ namespace backend_api.Repository
                 else 
                     query = query.OrderBy(orderBy);
             }
-            return (queryCount.ToListAsync().GetAwaiter().GetResult().Count, await query.ToListAsync());
+            var list = await query.ToListAsync();
+            return (totalCount, list);
         }
 
         public async Task SaveAsync()
