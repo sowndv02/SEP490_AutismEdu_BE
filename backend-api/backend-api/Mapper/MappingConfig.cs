@@ -54,6 +54,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
                 .ForMember(dest => dest.StartAge, opt => opt.MapFrom(src => src.StartAge))
                 .ForMember(dest => dest.EndAge, opt => opt.MapFrom(src => src.EndAge))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.User.Address))
                 .ForMember(dest => dest.AboutMe, opt => opt.MapFrom(src => src.AboutMe))
                 .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
