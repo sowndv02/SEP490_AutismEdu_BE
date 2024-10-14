@@ -46,11 +46,21 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
+                var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(childInformationCreateDTO.Name) && x.ParentId.Equals(userId));
+                if (isChildExist != null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.CHILD_NAME_DUPLICATE };
+                    return BadRequest(_response);
+                }
+
                 ChildInformation model = _mapper.Map<ChildInformation>(childInformationCreateDTO);
                 model.ParentId = userId;
                 model.CreatedDate = DateTime.Now;
                 var childInfo = await _childInfoRepository.CreateAsync(model);
 
+                _response.Result = childInfo;
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
@@ -107,6 +117,15 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+
+                var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(updateDTO.Name) && !x.Name.Equals(model.Name) && x.ParentId.Equals(model.ParentId));
+                if (isChildExist != null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.CHILD_NAME_DUPLICATE };
+                    return BadRequest(_response);
                 }
 
                 if (!string.IsNullOrEmpty(updateDTO.Name))
