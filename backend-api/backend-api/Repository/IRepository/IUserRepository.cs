@@ -13,7 +13,6 @@ namespace backend_api.Repository.IRepository
         Task<ApplicationUser> Register(RegisterationRequestDTO registerationRequestDTO);
         Task<TokenDTO> RefreshAccessToken(TokenDTO tokenDTO);
         Task RevokeRefreshToken(TokenDTO tokenDTO);
-
         Task<ApplicationUser> GetAsync(Expression<Func<ApplicationUser, bool>>? filter = null, bool tracked = true, string? includeProperties = null);
         Task<List<UserClaim>> GetClaimByUserIdAsync(string userId);
         Task<ApplicationUser> GetUserByEmailAsync(string email);
@@ -39,7 +38,6 @@ namespace backend_api.Repository.IRepository
         Task<bool> RemoveRoleByUserId(string userId, List<string> userRoleIds);
         Task<bool> AddRoleToUser(string userId, List<string> roleIds);
         Task<List<IdentityRole>> GetRoleByUserId(string userId);
-
         Task<bool> CheckUserInRole(string userId, string roleName);
 
     }

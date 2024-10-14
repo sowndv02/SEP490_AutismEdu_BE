@@ -4,6 +4,7 @@ using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
@@ -35,6 +36,34 @@ namespace backend_api.Controllers.v1
             _response = new();
             _blobStorageRepository = blobStorageRepository;
             _logger = logger;
+        }
+
+        [HttpPut("password/{id}", Name = "UpdatePassword")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetPasswordByIdAsync(string id, [FromBody] UpdatePasswordRequestDTO updatePasswordRequestDTO)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(id) || userId != id || userId != updatePasswordRequestDTO.Id)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { $"{id} is invalid!" };
+                    return BadRequest(_response);
+                }
+                await _userRepository.UpdatePasswordAsync(updatePasswordRequestDTO);
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
         }
 
         [HttpDelete("role/{userId}")]

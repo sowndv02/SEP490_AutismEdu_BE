@@ -297,10 +297,21 @@ namespace backend_api.Repository
             var listRoles = await _userManager.GetRolesAsync(user);
             if (listRoles != null && listRoles.Count > 0)
             {
-                bool isValidRole = listRoles.Contains(loginRequestDTO.AuthenticationRole);
-                if (!isValidRole)
+                if (checkPassword)
                 {
-                    throw new Exception($"Phải đăng nhập ở phía {loginRequestDTO.AuthenticationRole}");
+                    bool isValidRole = listRoles.Contains(loginRequestDTO.AuthenticationRole);
+                    if (!isValidRole)
+                    {
+                        throw new Exception($"Phải đăng nhập ở phía {loginRequestDTO.AuthenticationRole}");
+                    }
+                }
+                else
+                {
+                    bool isValidRole = listRoles.Contains(SD.PARENT_ROLE);
+                    if (!isValidRole)
+                    {
+                        throw new Exception($"Phải đăng nhập ở phía {SD.PARENT_ROLE}");
+                    }
                 }
             }
             var jwtTokenId = $"JTI{Guid.NewGuid()}";
@@ -336,6 +347,8 @@ namespace backend_api.Repository
                 UserName = registerationRequestDTO.Email,
                 FullName = registerationRequestDTO.FullName,
                 Email = registerationRequestDTO.Email,
+                Address = registerationRequestDTO.Address,
+                PhoneNumber = registerationRequestDTO.PhoneNumber,
                 NormalizedEmail = registerationRequestDTO.Email,
                 PasswordHash = registerationRequestDTO.Password,
                 LockoutEnabled = true
@@ -635,21 +648,24 @@ namespace backend_api.Repository
 
         public async Task<ApplicationUser> UpdatePasswordAsync(UpdatePasswordRequestDTO updatePasswordRequestDTO)
         {
-            var user = await _userManager.FindByEmailAsync(updatePasswordRequestDTO.Email);
+            var user = await _userManager.FindByIdAsync(updatePasswordRequestDTO.Id);
 
             if (user == null)
             {
                 throw new Exception("User not found.");
             }
-
-            bool isValid = await _userManager.CheckPasswordAsync(user, updatePasswordRequestDTO.Password);
+            if(user.UserType == SD.GOOGLE_USER)
+            {
+                throw new Exception("Người dùng Google không thể đối mật khẩu");
+            }
+            bool isValid = await _userManager.CheckPasswordAsync(user, updatePasswordRequestDTO.OldPassword);
 
             if (!isValid)
             {
                 throw new Exception("Invalid current password.");
             }
 
-            var result = await _userManager.ChangePasswordAsync(user, updatePasswordRequestDTO.Password, updatePasswordRequestDTO.NewPassword);
+            var result = await _userManager.ChangePasswordAsync(user, updatePasswordRequestDTO.OldPassword, updatePasswordRequestDTO.NewPassword);
 
             if (!result.Succeeded)
             {
@@ -663,8 +679,8 @@ namespace backend_api.Repository
             var user_role = await _userManager.GetRolesAsync(user) as List<string>;
             var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
             var claimString = user_claim.Select(x => $"{x.Type}-{x.Value}").ToList();
-            user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
-            user.Role = String.Join(",", user_role);
+            objReturn.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
+            objReturn.Role = String.Join(",", user_role);
             return objReturn;
         }
 
