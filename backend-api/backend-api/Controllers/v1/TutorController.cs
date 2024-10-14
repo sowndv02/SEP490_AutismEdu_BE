@@ -138,7 +138,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? seạrch, string? searchAddress, int? reviewScore = 5, int? ageFrom = 0, int? ageTo = 15, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? searchAddress, int? reviewScore = 5, int? ageFrom = 0, int? ageTo = 15, int pageNumber = 1)
         {
             try
             {
@@ -155,32 +155,22 @@ namespace backend_api.Controllers.v1
                     ageTo = ageFrom;
                     ageFrom = temp;
                 }
-                Expression<Func<Tutor, bool>> filter = u => u.StartAge >= ageFrom && u.EndAge <= ageTo;
-                if (!string.IsNullOrEmpty(seạrch))
+                Expression<Func<Tutor, bool>> filterAge = u => u.StartAge >= ageFrom && u.EndAge <= ageTo;
+                Expression<Func<Tutor, bool>> searchNameFilter = null;
+                Expression<Func<Tutor, bool>> searchAddressFilter = null;
+                if (!string.IsNullOrEmpty(search))
                 {
-                    Expression<Func<Tutor, bool>> searchNameFilter = u => u.User != null && !string.IsNullOrEmpty(u.User.FullName)
-                    && u.User.FullName.ToLower().Contains(seạrch.ToLower());
-
-                    var combinedFilter = Expression.Lambda<Func<Tutor, bool>>(
-                        Expression.AndAlso(filter.Body, Expression.Invoke(searchNameFilter, filter.Parameters)),
-                        filter.Parameters
-                    );
-                    filter = combinedFilter;
+                    searchNameFilter = u => u.User != null && !string.IsNullOrEmpty(u.User.FullName)
+                    && u.User.FullName.ToLower().Contains(search.ToLower());
                 }
                 if (!string.IsNullOrEmpty(searchAddress))
                 {
-                    Expression<Func<Tutor, bool>> searchAddressFilter = u => u.User != null && !string.IsNullOrEmpty(u.User.Address)
+                    searchAddressFilter = u => u.User != null && !string.IsNullOrEmpty(u.User.Address)
                     && u.User.Address.ToLower().Contains(searchAddress.ToLower());
-
-                    var combinedFilter = Expression.Lambda<Func<Tutor, bool>>(
-                        Expression.AndAlso(filter.Body, Expression.Invoke(searchAddressFilter, filter.Parameters)),
-                        filter.Parameters
-                    );
-                    filter = combinedFilter;
                 }
 
-                var (count, result) = await _tutorRepository.GetAllAsync(filter,
-                    includeProperties: "User,Certificates,Curriculums,WorkExperiences", pageSize: 9, pageNumber: pageNumber);
+                var (count, result) = await _tutorRepository.GetAllTutorAsync(filterName: searchNameFilter, filterAddress: searchAddressFilter, filterScore: reviewScore,
+                    filterAge: filterAge, includeProperties: "User,Certificates,Curriculums,WorkExperiences", pageSize: 9, pageNumber: pageNumber);
                 list = result;
                 totalCount = count;
                 List<TutorDTO> tutorDTOList = _mapper.Map<List<TutorDTO>>(list);

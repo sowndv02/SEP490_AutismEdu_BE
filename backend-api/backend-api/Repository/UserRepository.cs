@@ -268,7 +268,6 @@ namespace backend_api.Repository
                     RefreshToken = ""
                 };
             }
-
             // Check if the user's email is confirmed
             if (!user.EmailConfirmed)
             {
@@ -728,6 +727,10 @@ namespace backend_api.Repository
                     await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
                 }
                 var resultAddRole = await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
+                if (user.UserType == SD.GOOGLE_USER)
+                {
+                    await _userManager.AddToRoleAsync(user, SD.PARENT_ROLE);
+                }
                 if (resultAddRole.Succeeded)
                 {
                     Console.WriteLine("Add user to role user");
