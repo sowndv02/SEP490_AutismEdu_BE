@@ -8,7 +8,6 @@
         public string? BirthDate { get; set; }
         public string? ParentPhoneNumber { get; set; }
         public string? Address { get; set; }
-        public string? InitialCondition { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
     }

@@ -106,6 +106,7 @@
         public const string NOT_FOUND_MESSAGE = "Không tìm thấy dữ liệu";
         public const string DUPLICATED_MESSAGE = "Dữ liệu đã tồn tại";
         public const string INTERNAL_SERVER_ERROR_MESSAGE = "Hệ thống đang xảy ra lỗi! Vui lòng thử lại sau!";
+        public const string CHILD_NAME_DUPLICATE = "Đã tồn tại trẻ với tên này";
 
         // enum status
         public enum Status 
