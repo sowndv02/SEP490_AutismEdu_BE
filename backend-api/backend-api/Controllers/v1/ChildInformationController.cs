@@ -18,6 +18,7 @@ namespace backend_api.Controllers.v1
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
+    [Authorize]
     public class ChildInformationController : ControllerBase
     {
         private readonly IChildInformationRepository _childInfoRepository;
@@ -32,7 +33,6 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        //[Authorize]
         public async Task<ActionResult<APIResponse>> CreateAsync(ChildInformationCreateDTO childInformationCreateDTO)
         {
             try
@@ -75,7 +75,6 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet("{parentId}")]
-        //[Authorize]
         public async Task<ActionResult<APIResponse>> GetParentChildInfo(string parentId)
         {
             try
@@ -106,7 +105,6 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut]
-        //[Authorize]
         public async Task<IActionResult> UpdateAsync([FromBody] ChildInformationUpdateDTO updateDTO)
         {
             try
