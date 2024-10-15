@@ -74,7 +74,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                Tutor model = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User,Curriculums,AvailableTimeSlots,Certificates");
+                Tutor model = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User,Curriculums,AvailableTimeSlots,Certificates,WorkExperiences,Reviews");
                 if (model == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
@@ -170,7 +170,7 @@ namespace backend_api.Controllers.v1
                 }
 
                 var (count, result) = await _tutorRepository.GetAllTutorAsync(filterName: searchNameFilter, filterAddress: searchAddressFilter, filterScore: reviewScore,
-                    filterAge: filterAge, includeProperties: "User,Certificates,Curriculums,WorkExperiences", pageSize: 9, pageNumber: pageNumber);
+                    filterAge: filterAge, includeProperties: "User,Certificates,Curriculums,WorkExperiences,AvailableTimeSlots,Reviews", pageSize: 9, pageNumber: pageNumber);
                 list = result;
                 totalCount = count;
                 List<TutorDTO> tutorDTOList = _mapper.Map<List<TutorDTO>>(list);

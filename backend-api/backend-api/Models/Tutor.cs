@@ -22,5 +22,9 @@ namespace backend_api.Models
         public List<Certificate> Certificates { get; set; }
         public List<WorkExperience> WorkExperiences { get; set; }
         public List<AvailableTimeSlot> AvailableTimeSlots { get; set; }
+        [NotMapped]
+        public double ReviewScore { get; set; }
+        [NotMapped]
+        public int TotalReview { get; set; }
     }
 }
