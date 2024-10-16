@@ -5,7 +5,6 @@ using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -59,7 +58,7 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy= SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -79,46 +78,43 @@ namespace backend_api.Controllers.v1
                     filter = combinedFilter;
                 }
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
-                Expression<Func<Curriculum, object>>? order = null;
-                if (orderBy != null && orderBy == SD.CREADTED_DATE)
+                Expression<Func<Curriculum, object>>? orderByQuery = null;
+
+                if (orderBy != null)
                 {
-                    order = x => x.CreatedDate;
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        case SD.AGE_FROM:
+                            orderByQuery = x => x.AgeFrom;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
                 }
-                else if (orderBy != null && orderBy == SD.AGE_FROM) 
-                {
-                    order = x => x.AgeFrom;
-                }
+
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
                     switch (status.ToLower())
                     {
                         case "approve":
-                            var (countApprove, resultApprove) = await _curriculumRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)),
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, order, isDesc);
-                            list = resultApprove;
-                            totalCount = countApprove;
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE);
                             break;
                         case "reject":
-                            var (countReject, resultReject) = await _curriculumRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)),
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, order, isDesc);
-                            list = resultReject;
-                            totalCount = countReject;
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT);
                             break;
                         case "pending":
-                            var (countPending, resultPending) = await _curriculumRepository.GetAllAsync(x => x.RequestStatus == Status.PENDING && (filter == null || filter.Compile()(x)),
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, order, isDesc);
-                            list = resultPending;
-                            totalCount = countPending;
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.PENDING);
                             break;
                     }
                 }
-                else
-                {
-                    var (count, result) = await _curriculumRepository.GetAllAsync(filter,
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, order, isDesc);
-                    list = result;
-                    totalCount = count;
-                }
+                var (count, result) = await _curriculumRepository.GetAllAsync(filter,
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                list = result;
+                totalCount = count;
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<CurriculumDTO>>(list);

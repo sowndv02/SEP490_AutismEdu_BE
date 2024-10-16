@@ -159,63 +159,69 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
                 int totalCount = 0;
                 List<Certificate> list = new();
                 Expression<Func<Certificate, bool>> filter = u => true;
+                Expression<Func<Certificate, object>> orderByQuery = u => true;
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    Expression<Func<Certificate, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
-
-                    var combinedFilter = Expression.Lambda<Func<Certificate, bool>>(
-                        Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
-                        filter.Parameters
-                    );
-                    filter = combinedFilter;
+                    filter = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
                 }
-                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
 
+                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
                     switch (status.ToLower())
                     {
                         case "approve":
-                            var (countApprove, resultApprove) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)),
-                                "Submiter,CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
-                            list = resultApprove;
-                            totalCount = countApprove;
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE);
                             break;
                         case "reject":
-                            var (countReject, resultReject) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)),
-                                "Submiter,CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
-                            list = resultReject;
-                            totalCount = countReject;
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT);
                             break;
                         case "pending":
-                            var (countPending, resultPending) = await _certificateRepository.GetAllAsync(x => x.RequestStatus == Status.PENDING && (filter == null || filter.Compile()(x)),
-                                "Submiter,CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
-                            list = resultPending;
-                            totalCount = countPending;
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.PENDING);
                             break;
                     }
                 }
-                else
-                {
-                    var (count, result) = await _certificateRepository.GetAllAsync(filter,
-                                "Submiter,CertificateMedias", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
-                    list = result;
-                    totalCount = count;
-                }
 
+                var (count, result) = await _certificateRepository.GetAllAsync(
+                    filter,
+                    "Submiter,CertificateMedias",
+                    pageSize: pageSize,
+                    pageNumber: pageNumber,
+                    orderByQuery,
+                    isDesc
+                );
+
+                list = result;
+                totalCount = count;
+
+                // Setup pagination and response
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<CertificateDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
+
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -226,6 +232,7 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
 
     }
 }
