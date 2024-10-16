@@ -3,10 +3,8 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -67,7 +65,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPost]
         //[Authorize]
-        public async Task<IActionResult> CreateAsync([FromForm]CertificateCreateDTO createDTO)
+        public async Task<IActionResult> CreateAsync([FromForm] CertificateCreateDTO createDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -87,7 +85,7 @@ namespace backend_api.Controllers.v1
             foreach (var media in createDTO.Medias)
             {
                 using var stream = media.OpenReadStream();
-                var url = await _blobStorageRepository.Upload(stream, userId + Path.GetExtension(media.FileName));
+                var url = await _blobStorageRepository.Upload(stream, string.Concat(Path.GetExtension(media.FileName), Guid.NewGuid().ToString()));
                 var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
                 await _certificateMediaRepository.CreateAsync(objMedia);
             }
