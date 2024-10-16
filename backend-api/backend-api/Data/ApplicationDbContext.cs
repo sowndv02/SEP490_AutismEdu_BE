@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -128,7 +127,12 @@ namespace backend_api.Data
                 roleParent = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.PARENT_ROLE, NormalizedName = SD.PARENT_ROLE.ToUpper() };
                 Roles.Add(roleParent);
             }
-
+            var roleManager = Roles.FirstOrDefault(x => x.Name.Equals(SD.MANAGER_ROLE));
+            if (roleManager == null)
+            {
+                roleManager = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.MANAGER_ROLE, NormalizedName = SD.MANAGER_ROLE.ToUpper() };
+                Roles.Add(roleManager);
+            }
             var roleAdmin = Roles.FirstOrDefault(x => x.Name.Equals(SD.ADMIN_ROLE));
             var adminUser = ApplicationUsers.FirstOrDefault(x => x.Email.Equals("admin@admin.com"));
             if (roleAdmin == null)

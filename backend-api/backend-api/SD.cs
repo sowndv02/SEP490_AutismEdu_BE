@@ -8,6 +8,7 @@
 
         // Const role
         public const string USER_ROLE = "User";
+        public const string MANAGER_ROLE = "Manager";
         public const string PARENT_ROLE = "Parent";
         public const string STAFF_ROLE = "Staff";
         public const string ADMIN_ROLE = "Admin";
@@ -109,7 +110,7 @@
         public const string CHILD_NAME_DUPLICATE = "Đã tồn tại trẻ với tên này";
 
         // enum status
-        public enum Status 
+        public enum Status
         {
             PENDING = 2,
             APPROVE = 1,
