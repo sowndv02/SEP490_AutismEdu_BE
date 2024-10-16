@@ -96,15 +96,14 @@ namespace backend_api.Repository
                     query = query.Include(includeProp);
                 }
             }
-            if(orderBy != null)
+            if (orderBy != null)
             {
-                if(isDesc)
+                if (isDesc)
                     query = query.OrderByDescending(orderBy);
-                else 
+                else
                     query = query.OrderBy(orderBy);
             }
-            var list = await query.ToListAsync();
-            return (totalCount, list);
+            return (totalCount, await query.ToListAsync());
         }
 
         public async Task SaveAsync()
@@ -112,7 +111,8 @@ namespace backend_api.Repository
             try
             {
                 await _context.SaveChangesAsync();
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }

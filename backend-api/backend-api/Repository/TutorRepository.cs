@@ -3,7 +3,6 @@ using backend_api.Models;
 using backend_api.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using System.Linq;
 
 namespace backend_api.Repository
 {
@@ -15,18 +14,17 @@ namespace backend_api.Repository
             _context = context;
         }
 
-        public async Task<(int TotalCount, List<Tutor> list)> GetAllTutorAsync(Expression<Func<Tutor, bool>>? filterName = null, 
-            Expression<Func<Tutor, bool>>? filterAddress = null, int? filterScore = null, Expression<Func<Tutor, bool>>? filterAge = null, 
+        public async Task<(int TotalCount, List<Tutor> list)> GetAllTutorAsync(Expression<Func<Tutor, bool>>? filterName = null,
+            Expression<Func<Tutor, bool>>? filterAddress = null, int? filterScore = null, Expression<Func<Tutor, bool>>? filterAge = null,
             string? includeProperties = null, int pageSize = 0, int pageNumber = 1, Expression<Func<Tutor, object>>? orderBy = null, bool isDesc = true)
         {
             IQueryable<Tutor> query = dbset.AsNoTracking();
-            
-            IQueryable<Tutor> queryCount = query;
+
             if (filterName != null)
                 query = query.Where(filterName);
             if (filterAddress != null)
                 query = query.Include(x => x.User).Where(filterAddress);
-            if(filterAge != null)
+            if (filterAge != null)
                 query = query.Where(filterAge);
 
             IQueryable<Tutor> storageQuery = query;
@@ -75,7 +73,7 @@ namespace backend_api.Repository
             var filteredQuery = query
                 .Where(t => reviews.Any(r => r.TutorId == t.UserId));
 
-            return filteredQuery; 
+            return filteredQuery;
         }
 
 

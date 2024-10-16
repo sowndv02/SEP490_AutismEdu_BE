@@ -3,10 +3,8 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -47,17 +45,18 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.CREADTED_DATE, int pageNumber = 1)
         {
             try
             {
                 int totalCount = 0;
                 List<WorkExperience> list = new();
                 Expression<Func<WorkExperience, bool>> filter = u => true;
+                Expression<Func<WorkExperience, object>> orderByQuery = u => true;
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     Expression<Func<WorkExperience, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
 
                     var combinedFilter = Expression.Lambda<Func<WorkExperience, bool>>(
@@ -67,38 +66,37 @@ namespace backend_api.Controllers.v1
                     filter = combinedFilter;
                 }
                 bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
-
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
                     switch (status.ToLower())
                     {
                         case "approve":
-                            var (countApprove, resultApprove) = await _workExperienceRepository.GetAllAsync(x => x.RequestStatus == Status.APPROVE && (filter == null || filter.Compile()(x)),
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
-                            list = resultApprove;
-                            totalCount = countApprove;
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE);
                             break;
                         case "reject":
-                            var (countReject, resultReject) = await _workExperienceRepository.GetAllAsync(x => x.RequestStatus == Status.REJECT && (filter == null || filter.Compile()(x)),
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
-                            list = resultReject;
-                            totalCount = countReject;
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT);
                             break;
                         case "pending":
-                            var (countPending, resultPending) = await _workExperienceRepository.GetAllAsync(x => x.RequestStatus == Status.PENDING && (filter == null || filter.Compile()(x)),
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
-                            list = resultPending;
-                            totalCount = countPending;
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.PENDING);
                             break;
                     }
                 }
-                else
-                {
-                    var (count, result) = await _workExperienceRepository.GetAllAsync(filter,
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
-                    list = result;
-                    totalCount = count;
-                }
+                var (count, result) = await _workExperienceRepository.GetAllAsync(filter,
+                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                list = result;
+                totalCount = count;
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<WorkExperienceDTO>>(list);
