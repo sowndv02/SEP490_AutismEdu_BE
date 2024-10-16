@@ -10,7 +10,7 @@ namespace backend_api.Models
         public int Id { get; set; }
         public int QuestionId { get; set; }
         public string? OptionText { get; set; }
-        public int Point { get; set; }
+        public double Point { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         [ForeignKey(nameof(QuestionId))]
