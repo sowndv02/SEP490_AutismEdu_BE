@@ -95,7 +95,7 @@ namespace backend_api.Controllers.v1
                 {
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(tutorRegistrationRequestCreateDTO.Image.FileName);
                     using var stream = tutorRegistrationRequestCreateDTO.Image.OpenReadStream();
-                    model.ImageUrl = await _blobStorageRepository.Upload(stream, fileName);
+                    model.ImageUrl = await _blobStorageRepository.Upload(stream, string.Concat(fileName, Guid.NewGuid().ToString()));
                 }
 
                 model = await _tutorRegistrationRequestRepository.CreateAsync(model);
@@ -114,7 +114,7 @@ namespace backend_api.Controllers.v1
                             {
                                 string mediaFileName = Guid.NewGuid().ToString() + Path.GetExtension(media.FileName);
                                 using var mediaStream = media.OpenReadStream();
-                                string mediaUrl = await _blobStorageRepository.Upload(mediaStream, mediaFileName);
+                                string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(mediaFileName, Guid.NewGuid().ToString()));
 
                                 CertificateMedia certificateMedia = new CertificateMedia
                                 {
