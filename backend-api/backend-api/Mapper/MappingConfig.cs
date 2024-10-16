@@ -65,7 +65,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Certificates, opt => opt.MapFrom(src => src.Certificates.Where(x => string.IsNullOrEmpty(x.IdentityCardNumber) && x.IsActive)))
                 .ForMember(dest => dest.Curriculums, opt => opt.MapFrom(src => src.Curriculums.Where(x => x.IsActive).OrderBy(x => x.AgeFrom)))
                 .ForMember(dest => dest.WorkExperiences, opt => opt.MapFrom(src => src.WorkExperiences.Where(x => x.IsActive).OrderBy(x => x.StartDate)))
-                .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => src.ReviewScore))
+                .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => src.ReviewScore == 0 ? 5 : src.ReviewScore))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.ImageUrl));
 
             CreateMap<TutorRegistrationRequest, TutorRegistrationRequestCreateDTO>().ReverseMap();
@@ -116,7 +116,7 @@ namespace backend_api.Mapper
 
             CreateMap<AssessmentQuestion, AssessmentQuestionCreateDTO>().ReverseMap();
             CreateMap<AssessmentOption, AssessmentOptionCreateDTO>().ReverseMap();
-           
+
             CreateMap<AssessmentQuestion, AssessmentQuestionDTO>()
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate.ToString("dd/MM/yyyy")))
                 .ReverseMap();

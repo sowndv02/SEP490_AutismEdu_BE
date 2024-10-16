@@ -132,6 +132,20 @@
             ABSENT = 0
         }
 
+        // enum reject type
+        public enum RejectType
+        {
+            Approved = -1,
+            IncompatibilityWithCurriculum = 1,
+            SchedulingConflicts = 2,
+            Other = 3
+        }
+
+        public const string IncompatibilityWithCurriculumMsg = "Không tương thích với chương trình giảng dạy";
+        public const string SchedulingConflictsMsg = "Xung đột lịch trình";
+        public const string OtherMsg = "Khác";
+
+
         // Status string
         public const string STATUS_PENDING = "pending";
         public const string STATUS_APPROVE = "approve";

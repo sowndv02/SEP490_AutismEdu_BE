@@ -148,7 +148,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -159,7 +159,7 @@ namespace backend_api.Controllers.v1
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
                 if (!string.IsNullOrEmpty(search))
                 {
-                    filter = u => !string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(search.ToLower());
+                    filter = u => !string.IsNullOrEmpty(u.Email) && u.Email.ToLower().Contains(search.ToLower()) && !string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(search.ToLower());
                 }
 
                 if (orderBy != null)
@@ -173,6 +173,14 @@ namespace backend_api.Controllers.v1
                             orderByQuery = x => x.CreatedDate;
                             break;
                     }
+                }
+                if (startDate != null)
+                {
+                    filter = filter.AndAlso(u => u.CreatedDate >= startDate);
+                }
+                if (endDate != null)
+                {
+                    filter = filter.AndAlso(u => u.CreatedDate <= endDate);
                 }
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)

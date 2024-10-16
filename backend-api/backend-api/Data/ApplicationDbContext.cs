@@ -45,16 +45,17 @@ namespace backend_api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
             builder.Entity<TutorRequest>()
-                .HasOne(t => t.Tutor)
-                .WithMany()
-                .HasForeignKey(t => t.TutorId)
+                .HasOne(tr => tr.Tutor)
+                .WithMany(t => t.Requests)
+                .HasForeignKey(tr => tr.TutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<TutorRequest>()
-                .HasOne(tr => tr.Parent)
-                .WithMany()
-                .HasForeignKey(tr => tr.ParentId)
+                .HasOne(tr => tr.Parent) // Assuming TutorRequest has a Parent navigation property
+                .WithMany(p => p.TutorRequests) // Assuming Parent has a collection of TutorRequests
+                .HasForeignKey(tr => tr.ParentId) // Foreign key property
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Tutor>()

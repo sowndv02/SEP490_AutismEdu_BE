@@ -939,6 +939,9 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int>("RejectType")
+                        .HasColumnType("int");
+
                     b.Property<string>("RejectionReason")
                         .HasColumnType("nvarchar(max)");
 
@@ -947,9 +950,6 @@ namespace backend_api.Migrations
 
                     b.Property<string>("TutorId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("TutorUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime?>("UpdatedDate")
@@ -962,8 +962,6 @@ namespace backend_api.Migrations
                     b.HasIndex("ParentId");
 
                     b.HasIndex("TutorId");
-
-                    b.HasIndex("TutorUserId");
 
                     b.ToTable("TutorRequests");
                 });
@@ -1600,20 +1598,16 @@ namespace backend_api.Migrations
                         .IsRequired();
 
                     b.HasOne("backend_api.Models.ApplicationUser", "Parent")
-                        .WithMany()
+                        .WithMany("TutorRequests")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("backend_api.Models.Tutor", "Tutor")
-                        .WithMany()
+                        .WithMany("Requests")
                         .HasForeignKey("TutorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("backend_api.Models.Tutor", null)
-                        .WithMany("Requests")
-                        .HasForeignKey("TutorUserId");
 
                     b.Navigation("ChildInformation");
 
@@ -1744,6 +1738,8 @@ namespace backend_api.Migrations
             modelBuilder.Entity("backend_api.Models.ApplicationUser", b =>
                 {
                     b.Navigation("TutorProfile");
+
+                    b.Navigation("TutorRequests");
                 });
 #pragma warning restore 612, 618
         }
