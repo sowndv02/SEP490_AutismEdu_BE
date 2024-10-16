@@ -337,12 +337,12 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var model = await _userRepository.GetAsync(x => x.Id == id);
+                var model = await _userRepository.GetAsync(x => x.Id == userId);
                 if (updateDTO.Image != null)
                 {
                     string fileName = userId + Path.GetExtension(updateDTO.Image.FileName);
                     using var stream = updateDTO.Image.OpenReadStream();
-                    model.ImageUrl = await _blobStorageRepository.Upload(stream, fileName);
+                    model.ImageUrl = await _blobStorageRepository.Upload(stream, string.Concat(fileName, Guid.NewGuid().ToString()));
                 }
                 if (!string.IsNullOrEmpty(updateDTO.Address))
                     model.Address = updateDTO.Address;
