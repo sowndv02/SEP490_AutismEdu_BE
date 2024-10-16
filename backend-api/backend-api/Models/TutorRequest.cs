@@ -16,7 +16,7 @@ namespace backend_api.Models
         [ForeignKey(nameof(ParentId))]
         public ApplicationUser Parent { get; set; }
         public string? Description { get; set; }
-        public Status RequestStatus { get; set; } = Status.APPROVE;
+        public Status RequestStatus { get; set; } = Status.PENDING;
         public string? RejectionReason { get; set; }
         public string TutorId { get; set; }
         [ForeignKey(nameof(TutorId))]

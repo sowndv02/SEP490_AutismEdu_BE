@@ -1,6 +1,4 @@
-﻿using MimeKit.Tnef;
-
-namespace backend_api.Models.DTOs
+﻿namespace backend_api.Models.DTOs
 {
     public class TutorDTO
     {
@@ -15,7 +13,7 @@ namespace backend_api.Models.DTOs
         public string? PhoneNumber { get; set; }
         public string? ImageUrl { get; set; }
         public int TotalReview { get; set; }
-        public double ReviewScore { get; set; }
+        public decimal ReviewScore { get; set; }
         public string Address { get; set; }
         public List<CertificateDTO>? Certificates { get; set; }
         public List<WorkExperienceDTO>? WorkExperiences { get; set; }

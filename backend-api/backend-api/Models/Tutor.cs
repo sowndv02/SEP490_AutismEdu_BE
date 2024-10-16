@@ -23,7 +23,7 @@ namespace backend_api.Models
         public List<WorkExperience> WorkExperiences { get; set; }
         public List<AvailableTimeSlot> AvailableTimeSlots { get; set; }
         [NotMapped]
-        public double ReviewScore { get; set; }
+        public decimal ReviewScore { get; set; }
         [NotMapped]
         public int TotalReview { get; set; }
     }

@@ -2,15 +2,12 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
-using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
 {
@@ -40,7 +37,7 @@ namespace backend_api.Controllers.v1
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
             ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
-            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository, 
+            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository,
             ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository)
         {
             _tutorProfileUpdateRequestRepository = tutorProfileUpdateRequestRepository;
@@ -75,6 +72,8 @@ namespace backend_api.Controllers.v1
                 }
 
                 Tutor model = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User,Curriculums,AvailableTimeSlots,Certificates,WorkExperiences,Reviews");
+                model.TotalReview = model.Reviews.Count;
+                model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Average(x => x.RateScore) : 5;
                 if (model == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
@@ -170,7 +169,7 @@ namespace backend_api.Controllers.v1
                 }
 
                 var (count, result) = await _tutorRepository.GetAllTutorAsync(filterName: searchNameFilter, filterAddress: searchAddressFilter, filterScore: reviewScore,
-                    filterAge: filterAge, includeProperties: "User,Certificates,Curriculums,WorkExperiences,AvailableTimeSlots,Reviews", pageSize: 9, pageNumber: pageNumber);
+                    filterAge: filterAge, includeProperties: "User,Certificates,Curriculums,WorkExperiences,AvailableTimeSlots", pageSize: 9, pageNumber: pageNumber);
                 list = result;
                 totalCount = count;
                 List<TutorDTO> tutorDTOList = _mapper.Map<List<TutorDTO>>(list);
