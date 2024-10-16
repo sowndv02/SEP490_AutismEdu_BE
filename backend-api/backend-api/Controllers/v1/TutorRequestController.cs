@@ -48,7 +48,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = "r92972957644640329143";
                 int totalCount = 0;
                 List<TutorRequest> list = new();
                 Expression<Func<TutorRequest, bool>> filter = u => u.TutorId == userId;
@@ -56,7 +56,7 @@ namespace backend_api.Controllers.v1
 
                 if (!string.IsNullOrEmpty(search))
                 {
-                    filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.Parent.FullName) && u.Parent.FullName.ToLower().Contains(search.ToLower()));
+                    filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.Parent.Email) && !string.IsNullOrEmpty(u.Parent.FullName) && (u.Parent.Email.ToLower().Contains(search.ToLower()) || u.Parent.FullName.ToLower().Contains(search.ToLower())));
                 }
                 bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
 
@@ -88,13 +88,13 @@ namespace backend_api.Controllers.v1
                             break;
                     }
                 }
-                var (count, result) = await _tutorRequestRepository.GetAllAsync(filter,
-                               "ApprovedBy,Curriculums,WorkExperiences,Certificates", pageSize: 5, pageNumber: pageNumber, x => x.CreatedDate, true);
+                var (count, result) = await _tutorRequestRepository.GetAllWithIncludeAsync(filter,
+                               "Parent,ChildInformation", pageSize: 5, pageNumber: pageNumber, orderByQuery, isDesc);
                 list = result;
                 totalCount = count;
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-                _response.Result = _mapper.Map<List<TutorRegistrationRequestDTO>>(list);
+                _response.Result = _mapper.Map<List<TutorRequestDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);
@@ -141,7 +141,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         //[Authorize(Policy = "UpdateTutorPolicy")]
-        public async Task<IActionResult> ApproveOrRejectWorkExperienceRequest(ChangeStatusDTO changeStatusDTO)
+        public async Task<IActionResult> ApproveOrRejectWorkExperienceRequest(ChangeStatusTutorRequestDTO changeStatusDTO)
         {
             try
             {
@@ -160,6 +160,7 @@ namespace backend_api.Controllers.v1
                 {
                     model.RequestStatus = Status.APPROVE;
                     model.UpdatedDate = DateTime.Now;
+                    model.RejectType = RejectType.Approved;
                     await _tutorRequestRepository.UpdateAsync(model);
                     _response.Result = _mapper.Map<TutorRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -170,6 +171,7 @@ namespace backend_api.Controllers.v1
                 {
                     // Handle for reject
                     model.RejectionReason = changeStatusDTO.RejectionReason;
+                    model.RejectType = changeStatusDTO.RejectType;
                     model.UpdatedDate = DateTime.Now;
                     await _tutorRequestRepository.UpdateAsync(model);
                     _response.StatusCode = HttpStatusCode.OK;

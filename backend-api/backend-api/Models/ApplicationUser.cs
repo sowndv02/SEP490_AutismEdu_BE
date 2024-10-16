@@ -20,8 +20,7 @@ namespace backend_api.Models
         public bool IsLockedOut { get; set; }
         public string UserType { get; set; } = SD.APPLICATION_USER;
 
-        //public List<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
-        //public List<ApplicationClaim> ApplicationClaims { get; set; } = new List<ApplicationClaim>();
+        public List<TutorRequest> TutorRequests { get; set; }
         public string? Address { get; set; }
         public Tutor? TutorProfile { get; set; }
     }

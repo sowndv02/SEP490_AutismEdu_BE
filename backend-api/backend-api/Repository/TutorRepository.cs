@@ -34,7 +34,7 @@ namespace backend_api.Repository
 
                 if (!query.Any() && filterScore == 5)
                 {
-                    query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
+                    query = storageQuery.Include(x => x.Reviews).Where(x => x.Reviews.Any());
                 }
             }
             int totalCount = await query.CountAsync();
@@ -66,13 +66,22 @@ namespace backend_api.Repository
                 .Select(g => new
                 {
                     TutorId = g.Key,
-                    AvgScore = g.Average(r => r.RateScore)
+                    AvgScore = g.Average(r => r.RateScore),
+                    TotalReview = g.Key.Count()
                 })
                 .Where(x => x.AvgScore >= filterScore && x.AvgScore < filterScore + 1);
 
             var filteredQuery = query
                 .Where(t => reviews.Any(r => r.TutorId == t.UserId));
-
+            foreach (var item in filteredQuery)
+            {
+                var review = reviews.FirstOrDefault(x => x.TutorId == item.UserId);
+                if (review != null)
+                {
+                    item.TotalReview = review.TotalReview;
+                    item.ReviewScore = review.AvgScore == 0 ? 5 : review.AvgScore;
+                }
+            }
             return filteredQuery;
         }
 

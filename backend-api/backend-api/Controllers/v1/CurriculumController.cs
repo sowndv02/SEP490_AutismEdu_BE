@@ -131,25 +131,6 @@ namespace backend_api.Controllers.v1
             }
         }
 
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetActiveCurriculum(int id)
-        {
-            var curriculum = await _curriculumRepository.GetAsync(x => x.Id == id && x.IsActive);
-            if (curriculum == null)
-            {
-                _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                return BadRequest(_response);
-            }
-
-            _response.StatusCode = HttpStatusCode.Created;
-            _response.Result = _mapper.Map<CurriculumDTO>(curriculum);
-            _response.IsSuccess = true;
-            return Ok(_response);
-        }
-
         [HttpPost]
         //[Authorize]
         public async Task<IActionResult> CreateAsync(CurriculumCreateDTO curriculumDto)
