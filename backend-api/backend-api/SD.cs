@@ -110,8 +110,7 @@
         public const string CHILD_NAME_DUPLICATE = "Đã tồn tại trẻ với tên này";
         public const string NO_REVIEWS_FOUND = "Không có đánh giá";
         public const string REVIEW_ALREADY_EXISTS = "Đã đánh giá gia sư này";
-        public const string BAD_DELETE_REVIEW = "Không tìm thấy đánh giá hoặc không có quyền thay đổi đánh giá này";
-        public const string BAD_EDIT_REVIEW = "Không tìm thấy đánh giá hoặc không có quyền thay đổi đánh giá này";
+        public const string BAD_ACTION_REVIEW = "Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này";
 
         // enum status
         public enum Status
