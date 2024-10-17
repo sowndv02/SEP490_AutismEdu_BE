@@ -122,6 +122,8 @@ namespace backend_api.Mapper
                 .ReverseMap();
             CreateMap<AssessmentOption, AssessmentOptionDTO>().ReverseMap();
             CreateMap<ChildInformation, ChildInformationUpdateDTO>().ReverseMap();
+            CreateMap<Review, ReviewDTO>().ReverseMap();
+            CreateMap<Review, ReviewCreateDTO>().ReverseMap();
         }
     }
 }
