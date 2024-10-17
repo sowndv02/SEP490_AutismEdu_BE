@@ -18,11 +18,6 @@ namespace backend_api.Models
         public DateTime? ExpirationDate { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
-        public bool IsActive { get; set; } = false;
-        public int VersionNumber { get; set; } = 1;
-        public int? OriginalId { get; set; }
-        [ForeignKey(nameof(OriginalId))]
-        public Certificate? OriginalCertificate { get; set; }
         public string? ApprovedId { get; set; }
         public string? RejectionReason { get; set; }
         [ForeignKey(nameof(ApprovedId))]

@@ -154,7 +154,7 @@ namespace backend_api.Controllers.v1
                     ageTo = ageFrom;
                     ageFrom = temp;
                 }
-                Expression<Func<Tutor, bool>> filterAge = u => u.StartAge >= ageFrom && u.EndAge <= ageTo;
+                Expression<Func<Tutor, bool>> filterAge = u => u.StartAge >= ageFrom || u.EndAge <= ageTo;
                 Expression<Func<Tutor, bool>> searchNameFilter = null;
                 Expression<Func<Tutor, bool>> searchAddressFilter = null;
                 if (!string.IsNullOrEmpty(search))
