@@ -169,7 +169,7 @@ namespace backend_api.Controllers.v1
                 }
 
                 var (count, result) = await _tutorRepository.GetAllTutorAsync(filterName: searchNameFilter, filterAddress: searchAddressFilter, filterScore: reviewScore,
-                    filterAge: filterAge, includeProperties: "User,Certificates,Curriculums,WorkExperiences,AvailableTimeSlots", pageSize: 9, pageNumber: pageNumber);
+                    filterAge: filterAge, includeProperties: "User", pageSize: 9, pageNumber: pageNumber);
                 list = result;
                 totalCount = count;
                 List<TutorDTO> tutorDTOList = _mapper.Map<List<TutorDTO>>(list);
