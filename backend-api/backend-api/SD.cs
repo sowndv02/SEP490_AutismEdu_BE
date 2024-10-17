@@ -109,7 +109,10 @@
         public const string INTERNAL_SERVER_ERROR_MESSAGE = "Hệ thống đang xảy ra lỗi! Vui lòng thử lại sau!";
         public const string CHILD_NAME_DUPLICATE = "Đã tồn tại trẻ với tên này";
         public const string CHILD_ALREADY_STUDING_THIS_TUTOR = "Đã tồn tại hồ sơ học sinh của trẻ này";
-
+		public const string NO_REVIEWS_FOUND = "Không có đánh giá";
+        public const string REVIEW_ALREADY_EXISTS = "Đã đánh giá gia sư này";
+        public const string BAD_DELETE_REVIEW = "Không tìm thấy đánh giá hoặc không có quyền thay đổi đánh giá này";
+        public const string BAD_EDIT_REVIEW = "Không tìm thấy đánh giá hoặc không có quyền thay đổi đánh giá này";
         // enum status
         public enum Status
         {

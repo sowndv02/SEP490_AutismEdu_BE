@@ -117,7 +117,7 @@ namespace backend_api.Mapper
             CreateMap<TutorRequest, TutorRequestDTO>().ReverseMap();
             CreateMap<Blog, BlogCreateDTO>().ReverseMap();
             CreateMap<ReviewCreateDTO, Review>().ReverseMap();
-
+			CreateMap<Review, ReviewDTO>().ReverseMap();
             CreateMap<AvailableTimeSlot, AvailableTimeSlotDTO>()
                 .ForMember(dest => dest.TimeSlotId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.TimeSlot, opt => opt.MapFrom(src => $"{src.From.ToString(@"hh\:mm")}-{src.To.ToString(@"hh\:mm")}"));
