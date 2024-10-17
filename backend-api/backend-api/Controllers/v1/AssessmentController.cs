@@ -32,7 +32,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPost]
         //[Authorize]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm]AssessmentQuestionCreateDTO assessmentQuestionCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody]AssessmentQuestionCreateDTO assessmentQuestionCreateDTO)
         {
             try
             {
