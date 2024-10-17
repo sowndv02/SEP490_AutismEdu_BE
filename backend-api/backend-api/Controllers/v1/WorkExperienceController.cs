@@ -201,6 +201,7 @@ namespace backend_api.Controllers.v1
                     // Handle for reject
                     model.RejectionReason = changeStatusDTO.RejectionReason;
                     model.UpdatedDate = DateTime.Now;
+                    model.RequestStatus = Status.REJECT;
                     model.ApprovedId = userId;
                     await _workExperienceRepository.UpdateAsync(model);
                     _response.Result = _mapper.Map<WorkExperienceDTO>(model);
