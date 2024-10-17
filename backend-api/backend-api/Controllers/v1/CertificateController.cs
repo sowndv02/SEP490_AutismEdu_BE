@@ -48,7 +48,7 @@ namespace backend_api.Controllers.v1
         [HttpGet("{id}")]
         public async Task<IActionResult> GetActive(int id)
         {
-            var result = await _certificateRepository.GetAsync(x => x.Id == id && x.IsActive, false, "CertificateMedias", null);
+            var result = await _certificateRepository.GetAsync(x => x.Id == id, false, "CertificateMedias", null);
             if (result == null)
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
@@ -79,8 +79,6 @@ namespace backend_api.Controllers.v1
             var newModel = _mapper.Map<Certificate>(createDTO);
 
             newModel.SubmiterId = userId;
-            newModel.IsActive = false;
-            newModel.VersionNumber = await _certificateRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
             var certificate = await _certificateRepository.CreateAsync(newModel);
             foreach (var media in createDTO.Medias)
             {
@@ -123,9 +121,7 @@ namespace backend_api.Controllers.v1
                 {
                     model.RequestStatus = Status.APPROVE;
                     model.UpdatedDate = DateTime.Now;
-                    model.IsActive = true;
                     model.ApprovedId = userId;
-                    await _certificateRepository.DeactivatePreviousVersionsAsync(model.OriginalId);
                     await _certificateRepository.UpdateAsync(model);
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
