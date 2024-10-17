@@ -341,9 +341,8 @@ namespace backend_api.Controllers.v1
                 var model = await _userRepository.GetAsync(x => x.Id == userId);
                 if (updateDTO.Image != null)
                 {
-                    string fileName = userId + Path.GetExtension(updateDTO.Image.FileName);
                     using var stream = updateDTO.Image.OpenReadStream();
-                    model.ImageUrl = await _blobStorageRepository.Upload(stream, string.Concat(fileName, Guid.NewGuid().ToString()));
+                    model.ImageUrl = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(updateDTO.Image.FileName)));
                 }
                 if (!string.IsNullOrEmpty(updateDTO.Address))
                     model.Address = updateDTO.Address;

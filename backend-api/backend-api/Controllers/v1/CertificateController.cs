@@ -33,8 +33,10 @@ namespace backend_api.Controllers.v1
         protected int pageSize = 0;
         public CertificateController(IUserRepository userRepository, ICertificateRepository certificateRepository,
             ILogger<CertificateController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString)
+            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString, 
+            ICertificateMediaRepository certificateMediaRepository)
         {
+            _certificateMediaRepository = certificateMediaRepository;
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -85,7 +87,7 @@ namespace backend_api.Controllers.v1
             foreach (var media in createDTO.Medias)
             {
                 using var stream = media.OpenReadStream();
-                var url = await _blobStorageRepository.Upload(stream, string.Concat(Path.GetExtension(media.FileName), Guid.NewGuid().ToString()));
+                var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(),Path.GetExtension(media.FileName)));
                 var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
                 await _certificateMediaRepository.CreateAsync(objMedia);
             }
