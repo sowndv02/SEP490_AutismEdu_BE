@@ -19,6 +19,7 @@ namespace backend_api.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         public string? ApprovedId { get; set; }
+        public bool IsActive { get; set; } = false;
         public string? RejectionReason { get; set; }
         [ForeignKey(nameof(ApprovedId))]
         public ApplicationUser? ApprovedBy { get; set; }

@@ -5,7 +5,9 @@ using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -168,7 +170,7 @@ namespace backend_api.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    filter = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
+                    filter = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId && u.IsActive;
                 }
 
                 bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
@@ -229,6 +231,45 @@ namespace backend_api.Controllers.v1
             }
         }
 
+
+        [HttpDelete("{id:int}", Name = "DeleteCertificate")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+                if (id == 0) return BadRequest();
+                var model = await _certificateRepository.GetAsync(x => x.Id == id && x.SubmiterId == userId, false, null);
+
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+                model.IsActive = false;
+                await _certificateRepository.UpdateAsync(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+            }
+            return _response;
+        }
 
     }
 }
