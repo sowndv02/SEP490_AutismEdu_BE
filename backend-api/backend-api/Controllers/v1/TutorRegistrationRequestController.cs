@@ -176,11 +176,11 @@ namespace backend_api.Controllers.v1
                 }
                 if (startDate != null)
                 {
-                    filter = filter.AndAlso(u => u.CreatedDate >= startDate);
+                    filter = filter.AndAlso(u => u.CreatedDate.Date >= startDate.Value.Date);
                 }
                 if (endDate != null)
                 {
-                    filter = filter.AndAlso(u => u.CreatedDate <= endDate);
+                    filter = filter.AndAlso(u => u.CreatedDate.Date <= endDate.Value.Date);
                 }
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
