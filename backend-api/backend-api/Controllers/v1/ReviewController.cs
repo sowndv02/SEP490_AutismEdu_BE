@@ -91,7 +91,7 @@ namespace backend_api.Controllers.v1
 
                 Review model = _mapper.Map<Review>(reviewCreateDTO);
                 /*model.ReviewerId = userId;*/
-                model.RevieweeId = reviewCreateDTO.RevieweeId;
+                model.TutorId = reviewCreateDTO.RevieweeId;
                 await _reviewRepository.CreateAsync(model);
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
