@@ -471,7 +471,7 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpGet("email/{id}", Name = "GetUserByEmail")]
+        [HttpGet("email/{email}", Name = "GetUserByEmail")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> GetByEmailAsync(string email)
         {
