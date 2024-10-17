@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
+using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
 {
@@ -19,6 +20,7 @@ namespace backend_api.Controllers.v1
     {
         private readonly IUserRepository _userRepository;
         private readonly ITutorRepository _tutorRepository;
+        private readonly ITutorRequestRepository _tutorRequestRepository;
         private readonly ITutorRegistrationRequestRepository _tutorRegistrationRequestRepository;
         private readonly ITutorProfileUpdateRequestRepository _tutorProfileUpdateRequestRepository;
         private readonly ICurriculumRepository _curriculumRepository;
@@ -38,7 +40,7 @@ namespace backend_api.Controllers.v1
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
             ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
             ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository,
-            ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository)
+            ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository, ITutorRequestRepository tutorRequestRepository)
         {
             _tutorProfileUpdateRequestRepository = tutorProfileUpdateRequestRepository;
             _curriculumRepository = curriculumRepository;
@@ -55,6 +57,7 @@ namespace backend_api.Controllers.v1
             _certificateRepository = certificateRepository;
             _certificateMediaRepository = certificateMediaRepository;
             _tutorRegistrationRequestRepository = tutorRegistrationRequestRepository;
+            _tutorRequestRepository = tutorRequestRepository;
         }
 
 
@@ -63,6 +66,18 @@ namespace backend_api.Controllers.v1
         {
             try
             {
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                var requests = new List<int>();
+                if (userRoles != null && userRoles.Contains(SD.PARENT_ROLE))
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var parent = await _userRepository.GetAsync(x => x.Id == userId, false, "TutorRequests");
+                    var (total, listRequests) = await _tutorRequestRepository.GetAllNotPagingAsync(x => x.TutorId == id && x.ParentId == userId && x.RejectType == RejectType.IncompatibilityWithCurriculum, null, null);
+                    requests = listRequests.Select(x => x.ChildId).ToList();
+                }
+
+
                 if (string.IsNullOrEmpty(id))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -82,7 +97,7 @@ namespace backend_api.Controllers.v1
                     return NotFound(_response);
                 }
                 var result = _mapper.Map<TutorDTO>(model);
-
+                result.RejectChildIds = requests;
                 _response.Result = result;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;

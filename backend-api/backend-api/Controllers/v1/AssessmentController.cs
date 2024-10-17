@@ -69,7 +69,7 @@ namespace backend_api.Controllers.v1
             {
                 var result = await _assessmentQuestionRepository.GetAllNotPagingAsync(null, "AssessmentOptions", null);
 
-                _response.Result = _mapper.Map<List<AssessmentQuestionDTO>>(result.list.OrderBy(x => x.Id));
+                _response.Result = _mapper.Map<List<AssessmentQuestionDTO>>(result.list.OrderBy(x => x.Id).ToList());
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
