@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_api.Models.DTOs
 {
@@ -8,7 +7,9 @@ namespace backend_api.Models.DTOs
         public int Id { get; set; }
         public decimal RateScore { get; set; }
         public string Description { get; set; }
-        public string ReviewerId { get; set; }
-        public string RevieweeId { get; set; }
+        public string ParentId { get; set; }
+        public string TutorId { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime? UpdatedDate { get; set; }
     }
 }
