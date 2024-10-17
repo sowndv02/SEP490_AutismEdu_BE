@@ -134,6 +134,7 @@ namespace backend_api.Controllers.v1
                 {
                     // Handle for reject
                     model.RejectionReason = changeStatusDTO.RejectionReason;
+                    model.RequestStatus = Status.REJECT;
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _certificateRepository.UpdateAsync(model);
