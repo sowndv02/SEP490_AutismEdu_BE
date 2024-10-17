@@ -118,9 +118,7 @@ namespace backend_api.Mapper
             CreateMap<AssessmentQuestion, AssessmentQuestionCreateDTO>().ReverseMap();
             CreateMap<AssessmentOption, AssessmentOptionCreateDTO>().ReverseMap();
 
-            CreateMap<AssessmentQuestion, AssessmentQuestionDTO>()
-                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate.ToString("dd/MM/yyyy")))
-                .ReverseMap();
+            CreateMap<AssessmentQuestion, AssessmentQuestionDTO>().ReverseMap();
             CreateMap<AssessmentOption, AssessmentOptionDTO>().ReverseMap();
             CreateMap<ChildInformation, ChildInformationUpdateDTO>().ReverseMap();
         }
