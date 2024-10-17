@@ -48,7 +48,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var userId = "r92972957644640329143";
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<TutorRequest> list = new();
                 Expression<Func<TutorRequest, bool>> filter = u => u.TutorId == userId;
