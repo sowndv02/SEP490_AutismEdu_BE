@@ -15,6 +15,7 @@
         public int TotalReview { get; set; }
         public decimal ReviewScore { get; set; }
         public string Address { get; set; }
+        public List<int> RejectChildIds {  get; set; }
         public List<CertificateDTO>? Certificates { get; set; }
         public List<WorkExperienceDTO>? WorkExperiences { get; set; }
         public List<CurriculumDTO>? Curriculums { get; set; }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
@@ -469,6 +470,43 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
+        [HttpGet("email/{id}", Name = "GetUserByEmail")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> GetByEmailAsync(string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+                ApplicationUser model = await _userRepository.GetAsync(x => x.Email == email, false, null);
+                if (model.Role.Contains(SD.PARENT_ROLE))
+                {
+                    _response.Result = _mapper.Map<ApplicationUserDTO>(model);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    return Ok(_response);
+                }
+                else
+                {
+                    _response.StatusCode = HttpStatusCode.OK;
+                    return Ok(_response);
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
 
         [HttpGet("lock/{userId}")]
         public async Task<IActionResult> LockoutUser(string userId)
