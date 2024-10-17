@@ -7,6 +7,6 @@ namespace backend_api.Models.DTOs.CreateDTOs
         [Required]
         public string? OptionText { get; set; }
         [Required]
-        public int Point { get; set; }
+        public double Point { get; set; }
     }
 }
