@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend_api.Data;
 
@@ -11,9 +12,10 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241018082653_UpdateScheduleTimeSlotFK")]
+    partial class UpdateScheduleTimeSlotFK
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -462,9 +464,6 @@ namespace backend_api.Migrations
                     b.Property<int>("OptionId")
                         .HasColumnType("int");
 
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
                     b.Property<int>("StudentProfileId")
                         .HasColumnType("int");
 
@@ -474,8 +473,6 @@ namespace backend_api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OptionId");
-
-                    b.HasIndex("QuestionId");
 
                     b.HasIndex("StudentProfileId");
 
@@ -760,9 +757,6 @@ namespace backend_api.Migrations
 
                     b.Property<string>("InitialCondition")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
 
                     b.Property<string>("TutorId")
                         .IsRequired()
@@ -1406,12 +1400,6 @@ namespace backend_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend_api.Models.AssessmentQuestion", "Question")
-                        .WithMany()
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("backend_api.Models.StudentProfile", "StudentProfile")
                         .WithMany("InitialAssessmentResults")
                         .HasForeignKey("StudentProfileId")
@@ -1419,8 +1407,6 @@ namespace backend_api.Migrations
                         .IsRequired();
 
                     b.Navigation("Option");
-
-                    b.Navigation("Question");
 
                     b.Navigation("StudentProfile");
                 });

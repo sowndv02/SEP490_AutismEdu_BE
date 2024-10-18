@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using static backend_api.SD;
 
 namespace backend_api.Models
 {
@@ -13,6 +14,7 @@ namespace backend_api.Models
         public string? InitialCondition { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
+        public StudentProfileStatus Status { get; set; }
         [ForeignKey(nameof(TutorId))]
         public Tutor Tutor { get; set; }
         [ForeignKey(nameof(ChildId))]
