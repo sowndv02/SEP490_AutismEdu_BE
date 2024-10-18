@@ -70,12 +70,15 @@ namespace backend_api.Controllers.v1
             {
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                TutorProfileUpdateRequest model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, false, null, null);
+                var (total, list) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, null, null);
+                TutorProfileUpdateRequest model = null;
+                model = list.OrderByDescending(x => x.CreatedDate).ToList().FirstOrDefault();
                 Tutor result = null;
                 if(model == null)
                 {
-                    model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.TutorId == userId && x.RequestStatus == Status.APPROVE, false, null, null);
-                    if(model == null)
+                    var (totalResult, listResult) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.APPROVE, null, null);
+                    model = listResult.OrderByDescending(x => x.CreatedDate).ToList().FirstOrDefault();
+                    if (model == null)
                     {
                         result = await _tutorRepository.GetAsync(x => x.UserId == userId, false, "User", null);
                     }
