@@ -125,7 +125,8 @@ namespace backend_api.Controllers.v1
                 TutorRequest model = _mapper.Map<TutorRequest>(tutorRequestCreateDTO);
                 model.ParentId = userId;
                 model.CreatedDate = DateTime.Now;
-                await _tutorRequestRepository.CreateAsync(model);
+                var createdObject = await _tutorRequestRepository.CreateAsync(model);
+                _response.Result = _mapper.Map<TutorRequestDTO>(createdObject);
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
@@ -173,7 +174,8 @@ namespace backend_api.Controllers.v1
                     model.RejectionReason = changeStatusDTO.RejectionReason;
                     model.RejectType = changeStatusDTO.RejectType;
                     model.UpdatedDate = DateTime.Now;
-                    await _tutorRequestRepository.UpdateAsync(model);
+                    var returnObject = await _tutorRequestRepository.UpdateAsync(model);
+                    _response.Result = _mapper.Map<TutorRequestDTO>(returnObject);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
