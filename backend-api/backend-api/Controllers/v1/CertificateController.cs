@@ -7,7 +7,6 @@ using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -33,7 +32,7 @@ namespace backend_api.Controllers.v1
         protected int pageSize = 0;
         public CertificateController(IUserRepository userRepository, ICertificateRepository certificateRepository,
             ILogger<CertificateController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString, 
+            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString,
             ICertificateMediaRepository certificateMediaRepository)
         {
             _certificateMediaRepository = certificateMediaRepository;
@@ -87,7 +86,7 @@ namespace backend_api.Controllers.v1
             foreach (var media in createDTO.Medias)
             {
                 using var stream = media.OpenReadStream();
-                var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(),Path.GetExtension(media.FileName)));
+                var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
                 var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
                 await _certificateMediaRepository.CreateAsync(objMedia);
             }
@@ -113,7 +112,7 @@ namespace backend_api.Controllers.v1
                 //    return BadRequest(_response);
                 //}
 
-                Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+                Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
