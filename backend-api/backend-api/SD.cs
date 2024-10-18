@@ -108,6 +108,7 @@
         public const string DUPLICATED_MESSAGE = "Dữ liệu đã tồn tại";
         public const string INTERNAL_SERVER_ERROR_MESSAGE = "Hệ thống đang xảy ra lỗi! Vui lòng thử lại sau!";
         public const string CHILD_NAME_DUPLICATE = "Đã tồn tại trẻ với tên này";
+        public const string CHILD_ALREADY_STUDING_THIS_TUTOR = "Đã tồn tại hồ sơ học sinh của trẻ này";
 
         // enum status
         public enum Status
@@ -139,6 +140,15 @@
             IncompatibilityWithCurriculum = 1,
             SchedulingConflicts = 2,
             Other = 3
+        }
+
+        // enum student teaching status
+        public enum StudentProfileStatus
+        {
+            Pening = 3,
+            Reject = 2,
+            Teaching = 1,
+            Stop = 0
         }
 
         public const string IncompatibilityWithCurriculumMsg = "Không tương thích với chương trình giảng dạy";

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -86,6 +87,18 @@ namespace backend_api.Data
                 .HasOne(pr => pr.Tutor)
                 .WithMany()
                 .HasForeignKey(pr => pr.TutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<StudentProfile>()
+                .HasMany(sp => sp.ScheduleTimeSlots)
+                .WithOne(st => st.StudentProfile)
+                .HasForeignKey(st => st.StudentProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<InitialAssessmentResult>()
+                .HasOne(pr => pr.Question)
+                .WithMany()
+                .HasForeignKey(pr => pr.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             foreach (var entityType in builder.Model.GetEntityTypes())

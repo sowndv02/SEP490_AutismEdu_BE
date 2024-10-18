@@ -127,6 +127,30 @@ namespace backend_api.Mapper
             CreateMap<AssessmentQuestion, AssessmentQuestionDTO>().ReverseMap();
             CreateMap<AssessmentOption, AssessmentOptionDTO>().ReverseMap();
             CreateMap<ChildInformation, ChildInformationUpdateDTO>().ReverseMap();
+
+            CreateMap<StudentProfile, StudentProfileCreateDTO>().ReverseMap();
+            CreateMap<ScheduleTimeSlot, ScheduleTimeSlotCreateDTO>().ReverseMap();
+            CreateMap<InitialAssessmentResult, InitialAssessmentResultCreateDTO>().ReverseMap();
+
+            CreateMap<InitialAssessmentResult, InitialAssessmentResultDTO>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Question, opt => opt.MapFrom(src => src.Option.Question.Question))
+                .ForMember(dest => dest.OptionText, opt => opt.MapFrom(src => src.Option.OptionText))
+                .ForMember(dest => dest.Point, opt => opt.MapFrom(src => src.Option.Point))
+                .ReverseMap();
+            CreateMap<StudentProfile, StudentProfileDTO>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.TutorId, opt => opt.MapFrom(src => src.TutorId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Child.Name))
+                .ForMember(dest => dest.isMale, opt => opt.MapFrom(src => src.Child.isMale))
+                .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.Child.BirthDate))
+                .ForMember(dest => dest.InitialCondition, opt => opt.MapFrom(src => src.InitialCondition))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Child.Parent.Address))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.Child.Parent.Address))
+                .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
+                .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
+                .ReverseMap();
+            CreateMap<ScheduleTimeSlot, ScheduleTimeSlotDTO>().ReverseMap();
         }
     }
 }
