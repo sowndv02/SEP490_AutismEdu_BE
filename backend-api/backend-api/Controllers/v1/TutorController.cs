@@ -61,6 +61,44 @@ namespace backend_api.Controllers.v1
         }
 
 
+        [HttpGet("profile")]
+        public async Task<ActionResult<APIResponse>> GetProfileTutor()
+        {
+            try
+            {
+
+                var userId = "y01557057632106892166";
+                TutorProfileUpdateRequest model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, false, null, null);
+                Tutor result = null;
+                if(model == null)
+                {
+                    model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.TutorId == userId && x.RequestStatus == Status.APPROVE, false, null, null);
+                    if(model == null)
+                    {
+                        result = await _tutorRepository.GetAsync(x => x.UserId == userId, false, "User", null);
+                    }
+                }
+                if(model != null)
+                {
+                    _response.Result = _mapper.Map<TutorProfileUpdateRequestDTO>(model);
+                }else if(result != null)
+                {
+                    _response.Result = _mapper.Map<TutorDTO>(result);
+                }
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
         [HttpGet("{id}")]
         public async Task<ActionResult<APIResponse>> GetByIdAsync(string id)
         {
@@ -130,14 +168,8 @@ namespace backend_api.Controllers.v1
 
                 TutorProfileUpdateRequest model = _mapper.Map<TutorProfileUpdateRequest>(updateDTO);
                 model.TutorId = userId;
-                await _tutorProfileUpdateRequestRepository.CreateAsync(model);
-                var user = await _userRepository.GetAsync(x => x.Id == userId, false, null);
-                user.Address = updateDTO.Address;
-                await _userRepository.UpdateAsync(user);
-                var tutor = await _tutorRepository.GetAsync(x => x.UserId == userId, false, "User");
-                tutor.Price = updateDTO.Price;
-                await _tutorRepository.UpdateAsync(tutor);
-                _response.Result = tutor;
+                var result = await _tutorProfileUpdateRequestRepository.CreateAsync(model);
+                _response.Result = _mapper.Map<TutorProfileUpdateRequestDTO>(result);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
