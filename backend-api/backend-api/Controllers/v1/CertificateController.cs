@@ -23,6 +23,8 @@ namespace backend_api.Controllers.v1
         private readonly IUserRepository _userRepository;
         private readonly ICertificateRepository _certificateRepository;
         private readonly ICertificateMediaRepository _certificateMediaRepository;
+        private readonly ICurriculumRepository _curriculumRepository;
+        private readonly IWorkExperienceRepository _workExperienceRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<CertificateController> _logger;
@@ -33,8 +35,11 @@ namespace backend_api.Controllers.v1
         public CertificateController(IUserRepository userRepository, ICertificateRepository certificateRepository,
             ILogger<CertificateController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString,
-            ICertificateMediaRepository certificateMediaRepository)
+            ICertificateMediaRepository certificateMediaRepository, ICurriculumRepository curriculumRepository,
+            IWorkExperienceRepository workExperienceRepository)
         {
+            _workExperienceRepository = workExperienceRepository;
+            _curriculumRepository = curriculumRepository;
             _certificateMediaRepository = certificateMediaRepository;
             _formatString = formatString;
             _roleRepository = roleRepository;
@@ -51,7 +56,17 @@ namespace backend_api.Controllers.v1
         [HttpGet("{id}")]
         public async Task<IActionResult> GetActive(int id)
         {
-            var result = await _certificateRepository.GetAsync(x => x.Id == id, false, "CertificateMedias", null);
+            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            var result = new Certificate();
+            if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+            {
+                result = await _certificateRepository.GetAsync(x => x.Id == id && !x.IsDeleted, false, "CertificateMedias", null);
+            }
+            else
+            {
+                result = await _certificateRepository.GetAsync(x => x.Id == id, false, "CertificateMedias", null);
+            }
+
             if (result == null)
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
@@ -172,9 +187,12 @@ namespace backend_api.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    filter = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId && u.IsActive;
+                    filter = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId && !u.IsDeleted;
                 }
-
+                if(search != null && !string.IsNullOrEmpty(search))
+                {
+                    filter = filter.AndAlso(x => x.CertificateName.ToLower().Contains(search.ToLower()));
+                }
                 bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
                 if (orderBy != null)
                 {
@@ -215,7 +233,14 @@ namespace backend_api.Controllers.v1
 
                 list = result;
                 totalCount = count;
-
+                foreach(var item in list)
+                {
+                    item.Submiter.User = await _userRepository.GetAsync(x => x.Id == item.Submiter.UserId, false, null);
+                    var(total, curriculums) = await _curriculumRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.UserId && x.IsActive, null, null);
+                    item.Submiter.Curriculums = curriculums;
+                    var (totalWorkExperience, workexperiences) = await _workExperienceRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.UserId && x.IsActive, null, null);
+                    item.Submiter.WorkExperiences = workexperiences;
+                }
                 // Setup pagination and response
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<CertificateDTO>>(list);
@@ -258,7 +283,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
-                model.IsActive = false;
+                model.IsDeleted = true;
                 await _certificateRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
