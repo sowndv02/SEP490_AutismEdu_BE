@@ -4,6 +4,7 @@ using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -62,12 +63,13 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet("profile")]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> GetProfileTutor()
         {
             try
             {
 
-                var userId = "y01557057632106892166";
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 TutorProfileUpdateRequest model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, false, null, null);
                 Tutor result = null;
                 if(model == null)
