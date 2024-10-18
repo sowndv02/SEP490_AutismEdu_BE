@@ -10,6 +10,13 @@ namespace backend_api.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string TutorId { get; set; }
+        [ForeignKey(nameof(TutorId))]
+        public Tutor Tutor { get; set; }
+        public decimal Price { get; set; }
+        public string PhoneNumber { get; set; }
+        public int StartAge { get; set; }
+        public int EndAge { get; set; }
+        public string Address { get; set; }
         public string AboutMe { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }

@@ -76,6 +76,7 @@ namespace backend_api.Mapper
 
             CreateMap<TutorRegistrationRequest, TutorRegistrationRequestCreateDTO>().ReverseMap();
             CreateMap<TutorDTO, Tutor>();
+            CreateMap<TutorProfileUpdateRequestDTO, TutorProfileUpdateRequest>().ReverseMap();
 
             CreateMap<Curriculum, CurriculumCreateDTO>().ReverseMap();
             CreateMap<Certificate, CertificateDTO>().ReverseMap();
