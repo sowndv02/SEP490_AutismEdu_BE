@@ -47,7 +47,13 @@ namespace backend_api.Mapper
             CreateMap<WorkExperience, WorkExperienceCreateDTO>().ReverseMap();
             CreateMap<Certificate, CertificateCreateDTO>().ReverseMap();
             CreateMap<CertificateMedia, CertificateMediaDTO>().ReverseMap();
-            CreateMap<Tutor, TutorInfoDTO>().ReverseMap();
+            CreateMap<Tutor, TutorInfoDTO>()
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.User.FullName))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.ImageUrl))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.User.Address))
+                .ReverseMap();
 
             CreateMap<Tutor, TutorDTO>()
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.User.Id))
@@ -62,7 +68,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ForMember(dest => dest.TotalReview, opt => opt.MapFrom(src => src.TotalReview))
-                .ForMember(dest => dest.Certificates, opt => opt.MapFrom(src => src.Certificates.Where(x => string.IsNullOrEmpty(x.IdentityCardNumber) && x.IsActive)))
+                .ForMember(dest => dest.Certificates, opt => opt.MapFrom(src => src.Certificates.Where(x => string.IsNullOrEmpty(x.IdentityCardNumber) && !x.IsDeleted)))
                 .ForMember(dest => dest.Curriculums, opt => opt.MapFrom(src => src.Curriculums.Where(x => x.IsActive).OrderBy(x => x.AgeFrom)))
                 .ForMember(dest => dest.WorkExperiences, opt => opt.MapFrom(src => src.WorkExperiences.Where(x => x.IsActive).OrderBy(x => x.StartDate)))
                 .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => src.ReviewScore == 0 ? 5 : src.ReviewScore))
