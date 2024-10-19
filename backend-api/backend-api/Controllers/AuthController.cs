@@ -22,13 +22,14 @@ namespace backend_api.Controllers
         protected APIResponse _response;
         private readonly IMapper _mapper;
         private string audience = string.Empty;
+        private readonly FormatString _formatString;
         private readonly IEmailSender _emailSender;
         private static int ValidateTime = 0;
         private static string clientId = string.Empty;
         private static string clientSecret = string.Empty;
         public AuthController(IUserRepository userRepository, IMapper mapper,
             IConfiguration configuration, IEmailSender emailSender, DateTimeEncryption dateTimeEncryption,
-            TokenEcryption tokenEncryption)
+            TokenEcryption tokenEncryption, FormatString formatString)
         {
             ValidateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
             clientId = configuration.GetValue<string>("Authentication:Google:ClientId");
@@ -39,6 +40,7 @@ namespace backend_api.Controllers
             _response = new();
             _emailSender = emailSender;
             _tokenEncryption = tokenEncryption;
+            _formatString = formatString;
         }
 
         [HttpPost("resend-confirm-email")]
@@ -242,6 +244,7 @@ namespace backend_api.Controllers
         {
             try
             {
+                model.AuthenticationRole = _formatString.FormatStringUpperCaseFirstChar(model.AuthenticationRole);
                 var tokenDto = await _userRepository.Login(model);
                 if (tokenDto == null)
                 {
