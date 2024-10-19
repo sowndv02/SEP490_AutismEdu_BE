@@ -172,6 +172,7 @@ namespace backend_api.Controllers.v1
                 {
                     // Handle for reject
                     model.RejectionReason = changeStatusDTO.RejectionReason;
+                    model.RequestStatus = Status.REJECT;
                     model.RejectType = changeStatusDTO.RejectType;
                     model.UpdatedDate = DateTime.Now;
                     var returnObject = await _tutorRequestRepository.UpdateAsync(model);
