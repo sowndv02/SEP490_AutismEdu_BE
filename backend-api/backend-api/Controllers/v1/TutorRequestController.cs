@@ -93,7 +93,7 @@ namespace backend_api.Controllers.v1
                 list = result;
                 totalCount = count;
 
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
                 _response.Result = _mapper.Map<List<TutorRequestDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
