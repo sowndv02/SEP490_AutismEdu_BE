@@ -708,6 +708,7 @@ namespace backend_api.Repository
                 PhoneNumber = user.PhoneNumber,
                 FullName = user.FullName,
                 PasswordHash = password,
+                Address = user.Address,
                 Email = user.Email,
                 NormalizedEmail = user.Email,
                 LockoutEnabled = true,
