@@ -152,6 +152,11 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ReverseMap();
             CreateMap<ScheduleTimeSlot, ScheduleTimeSlotDTO>().ReverseMap();
+            CreateMap<StudentProfile, GetAllStudentProfileTimeSlotDTO>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Child.Name))
+                .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
+                .ReverseMap();
         }
     }
 }
