@@ -3,6 +3,7 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -42,7 +43,64 @@ namespace backend_api.Controllers.v1
             _workExperienceRepository = workExperienceRepository;
         }
 
+        [HttpGet("updateRequest")]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                int totalCount = 0;
+                List<WorkExperience> list = new();
+                Expression<Func<WorkExperience, bool>> filter = u => u.SubmiterId == userId;
+                Expression<Func<WorkExperience, object>> orderByQuery = u => true;
 
+                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
+
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
+                {
+                    switch (status.ToLower())
+                    {
+                        case "approve":
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE);
+                            break;
+                        case "reject":
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT);
+                            break;
+                        case "pending":
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.PENDING);
+                            break;
+                    }
+                }
+                var (count, result) = await _workExperienceRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
+                list = result;
+                totalCount = count;
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
+                _response.Result = _mapper.Map<List<TutorProfileUpdateRequestDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
         [HttpGet]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.CREADTED_DATE, int pageNumber = 1)
