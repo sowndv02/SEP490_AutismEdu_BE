@@ -730,7 +730,7 @@ namespace backend_api.Repository
                 var resultAddRole = await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
                 if (user.UserType == SD.GOOGLE_USER)
                 {
-                    await _userManager.AddToRoleAsync(user, SD.PARENT_ROLE);
+                    await _userManager.AddToRoleAsync(obj, SD.PARENT_ROLE);
                 }
                 if (resultAddRole.Succeeded)
                 {
