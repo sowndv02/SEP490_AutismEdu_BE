@@ -43,6 +43,16 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
+
+                var assessmentExist = await _assessmentQuestionRepository.GetAsync(x => x.Question.Equals(assessmentQuestionCreateDTO.Question));
+                if(assessmentExist != null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.DUPLICATED_MESSAGE };
+                    return BadRequest(_response);
+                }
+
                 AssessmentQuestion model = _mapper.Map<AssessmentQuestion>(assessmentQuestionCreateDTO);
                 model.IsAssessment = true;
                 model.IsHidden = false;
