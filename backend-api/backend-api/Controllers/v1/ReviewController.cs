@@ -181,7 +181,7 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO, string tutorId)
+        public async Task<ActionResult<APIResponse>> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO)
         {
             try
             {
@@ -195,7 +195,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var existingReview = await _reviewRepository.GetAsync(x => x.TutorId == tutorId && x.ParentId == userId);
+                var existingReview = await _reviewRepository.GetAsync(x => x.TutorId == reviewCreateDTO.TutorId && x.ParentId == userId);
                 if (existingReview != null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -206,7 +206,7 @@ namespace backend_api.Controllers.v1
 
                 var reviewModel = _mapper.Map<Review>(reviewCreateDTO);
                 reviewModel.ParentId = userId;  
-                reviewModel.TutorId = tutorId;  
+                reviewModel.TutorId = reviewCreateDTO.TutorId;  
                 reviewModel.CreatedDate = DateTime.Now;
 
                 var createdReview = await _reviewRepository.CreateAsync(reviewModel);
