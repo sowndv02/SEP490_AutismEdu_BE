@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Net;
+using System.Runtime.ConstrainedExecution;
 using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
@@ -288,6 +289,7 @@ namespace backend_api.Controllers.v1
                         {
                             item.RequestStatus = Status.APPROVE;
                             item.ApprovedId = userId;
+                            item.IsActive = true;
                             item.UpdatedDate = DateTime.Now;
                             item.SubmiterId = tutor.UserId;
                             await _curriculumRepository.UpdateAsync(item);
@@ -303,6 +305,7 @@ namespace backend_api.Controllers.v1
                             cert.RequestStatus = Status.APPROVE;
                             cert.SubmiterId = tutor.UserId;
                             cert.ApprovedId = userId;
+                            cert.IsActive = true;
                             cert.UpdatedDate = DateTime.Now;
                             await _certificateRepository.UpdateAsync(cert);
                         }
@@ -317,6 +320,7 @@ namespace backend_api.Controllers.v1
                             workExperience.RequestStatus = Status.APPROVE;
                             workExperience.SubmiterId = tutor.UserId;
                             workExperience.ApprovedId = userId;
+                            workExperience.IsActive = true;
                             workExperience.UpdatedDate = DateTime.Now;
                             await _workExperienceRepository.UpdateAsync(workExperience);
                         }
@@ -361,6 +365,7 @@ namespace backend_api.Controllers.v1
                         foreach (var cert in model.Certificates)
                         {
                             cert.ApprovedId = userId;
+                            cert.IsDeleted = true;
                             cert.UpdatedDate = DateTime.Now;
                             cert.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
                             cert.RequestStatus = Status.REJECT;
@@ -374,6 +379,7 @@ namespace backend_api.Controllers.v1
                         foreach (var item in model.Curriculums)
                         {
                             item.ApprovedId = userId;
+                            item.IsActive = false;
                             item.UpdatedDate = DateTime.Now;
                             item.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
                             item.RequestStatus = Status.REJECT;
@@ -387,6 +393,7 @@ namespace backend_api.Controllers.v1
                         {
                             item.ApprovedId = userId;
                             item.UpdatedDate = DateTime.Now;
+                            item.IsActive = false;
                             item.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
                             item.RequestStatus = Status.REJECT;
                             await _workExperienceRepository.UpdateAsync(item);
