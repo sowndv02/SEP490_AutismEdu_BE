@@ -11,6 +11,7 @@ namespace backend_api.Models
         public int Id { get; set; }
         public string TutorId { get; set; }
         public int ChildId { get; set; }
+        public string? StudentCode { get; set; }
         public string? InitialCondition { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
