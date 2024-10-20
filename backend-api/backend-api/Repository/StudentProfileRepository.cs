@@ -16,5 +16,19 @@ namespace backend_api.Repository
         {
             _context = context;
         }
+
+        public async Task<StudentProfile> UpdateAsync(StudentProfile model)
+        {
+            try
+            {
+                _context.StudentProfiles.Update(model);
+                await _context.SaveChangesAsync();
+                return model;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }

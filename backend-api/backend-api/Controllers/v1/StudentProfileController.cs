@@ -125,6 +125,24 @@ namespace backend_api.Controllers.v1
                     }
                 }
 
+                var child = await _childInfoRepository.GetAsync(x => x.Id == createDTO.ChildId);
+
+                if (child == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
+                    return BadRequest(_response);
+                }
+
+
+                string[] names = child.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                foreach (var name in names)
+                {
+                    model.StudentCode += name.ToUpper().ElementAt(0);
+                }
+                model.StudentCode += model.ChildId;
+
                 await _studentProfileRepository.CreateAsync(model);
 
                 //TODO: send email
