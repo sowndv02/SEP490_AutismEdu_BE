@@ -305,7 +305,6 @@ namespace backend_api.Controllers.v1
                             cert.RequestStatus = Status.APPROVE;
                             cert.SubmiterId = tutor.UserId;
                             cert.ApprovedId = userId;
-                            cert.IsActive = true;
                             cert.UpdatedDate = DateTime.Now;
                             await _certificateRepository.UpdateAsync(cert);
                         }
