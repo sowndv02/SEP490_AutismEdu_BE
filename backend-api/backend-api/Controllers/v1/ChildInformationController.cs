@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -24,12 +25,14 @@ namespace backend_api.Controllers.v1
         private readonly IChildInformationRepository _childInfoRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
+        private readonly IStudentProfileRepository _studentProfileRepository;
 
-        public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper)
+        public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper, IStudentProfileRepository studentProfileRepository)
         {
             _childInfoRepository = childInfoRepository;
             _response = new APIResponse();
             _mapper = mapper;
+            _studentProfileRepository = studentProfileRepository;
         }
 
         [HttpPost]
@@ -130,6 +133,21 @@ namespace backend_api.Controllers.v1
                 if (!string.IsNullOrEmpty(updateDTO.Name))
                 {
                     model.Name = updateDTO.Name;
+
+                    var studentProfile = await _studentProfileRepository.GetAsync(x => x.ChildId == model.Id);
+
+                    if(studentProfile != null)
+                    {
+                        string[] names = updateDTO.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                        studentProfile.StudentCode = "";
+                        foreach (var name in names)
+                        {
+                            studentProfile.StudentCode += name.ToUpper().ElementAt(0);
+                        }
+                        studentProfile.StudentCode += studentProfile.ChildId;
+
+                        await _studentProfileRepository.UpdateAsync(studentProfile);
+                    }
                 }
                 if (!string.IsNullOrEmpty(updateDTO.BirthDate.ToString()))
                 {

@@ -5,6 +5,6 @@ namespace backend_api.Repository.IRepository
 {
     public interface IStudentProfileRepository : IRepository<StudentProfile>
     {
-
+        Task<StudentProfile> UpdateAsync(StudentProfile model);
     }
 }
