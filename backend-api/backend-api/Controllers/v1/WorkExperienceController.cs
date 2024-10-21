@@ -3,7 +3,6 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -125,7 +124,7 @@ namespace backend_api.Controllers.v1
                     );
                     filter = combinedFilter;
                 }
-                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 if (orderBy != null)
                 {
                     switch (orderBy)
@@ -211,7 +210,10 @@ namespace backend_api.Controllers.v1
             newModel.SubmiterId = userId;
             newModel.IsActive = false;
             newModel.VersionNumber = await _workExperienceRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
-
+            if (createDTO.OriginalId == 0)
+            {
+                newModel.OriginalId = null;
+            }
             await _workExperienceRepository.CreateAsync(newModel);
             _response.StatusCode = HttpStatusCode.Created;
             _response.Result = _mapper.Map<WorkExperienceDTO>(newModel);

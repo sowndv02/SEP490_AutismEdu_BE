@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace backend_api.Migrations
 {
-    public partial class InitDatabase : Migration
+    public partial class InitDb_v1 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -79,7 +79,7 @@ namespace backend_api.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     QuestionId = table.Column<int>(type: "int", nullable: false),
                     OptionText = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Point = table.Column<int>(type: "int", nullable: false),
+                    Point = table.Column<double>(type: "float", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -264,30 +264,6 @@ namespace backend_api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TutorProfileUpdateRequests",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TutorId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AboutMe = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    RequestStatus = table.Column<int>(type: "int", nullable: false),
-                    ApprovedId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    RejectionReason = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TutorProfileUpdateRequests", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TutorProfileUpdateRequests_Users_ApprovedId",
-                        column: x => x.ApprovedId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "TutorRegistrationRequests",
                 columns: table => new
                 {
@@ -323,7 +299,7 @@ namespace backend_api.Migrations
                 name: "Tutors",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     StartAge = table.Column<int>(type: "int", nullable: false),
                     EndAge = table.Column<int>(type: "int", nullable: false),
@@ -334,10 +310,10 @@ namespace backend_api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tutors", x => x.UserId);
+                    table.PrimaryKey("PK_Tutors", x => x.TutorId);
                     table.ForeignKey(
-                        name: "FK_Tutors_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Tutors_Users_TutorId",
+                        column: x => x.TutorId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -429,6 +405,28 @@ namespace backend_api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ChildInformationMedias",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ChildInformationId = table.Column<int>(type: "int", nullable: false),
+                    UrlPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChildInformationMedias", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChildInformationMedias_ChildInformations_ChildInformationId",
+                        column: x => x.ChildInformationId,
+                        principalTable: "ChildInformations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProgressReports",
                 columns: table => new
                 {
@@ -503,7 +501,7 @@ namespace backend_api.Migrations
                         name: "FK_AvailableTimeSlots_Tutors_TutorId",
                         column: x => x.TutorId,
                         principalTable: "Tutors",
-                        principalColumn: "UserId",
+                        principalColumn: "TutorId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -521,10 +519,8 @@ namespace backend_api.Migrations
                     ExpirationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    VersionNumber = table.Column<int>(type: "int", nullable: false),
-                    OriginalId = table.Column<int>(type: "int", nullable: true),
                     ApprovedId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RejectionReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RequestStatus = table.Column<int>(type: "int", nullable: false),
                     SubmiterId = table.Column<string>(type: "nvarchar(450)", nullable: true)
@@ -532,11 +528,6 @@ namespace backend_api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Certificates", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Certificates_Certificates_OriginalId",
-                        column: x => x.OriginalId,
-                        principalTable: "Certificates",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Certificates_TutorRegistrationRequests_TutorRegistrationRequestId",
                         column: x => x.TutorRegistrationRequestId,
@@ -546,7 +537,7 @@ namespace backend_api.Migrations
                         name: "FK_Certificates_Tutors_SubmiterId",
                         column: x => x.SubmiterId,
                         principalTable: "Tutors",
-                        principalColumn: "UserId");
+                        principalColumn: "TutorId");
                     table.ForeignKey(
                         name: "FK_Certificates_Users_ApprovedId",
                         column: x => x.ApprovedId,
@@ -591,7 +582,7 @@ namespace backend_api.Migrations
                         name: "FK_Curriculums_Tutors_SubmiterId",
                         column: x => x.SubmiterId,
                         principalTable: "Tutors",
-                        principalColumn: "UserId");
+                        principalColumn: "TutorId");
                     table.ForeignKey(
                         name: "FK_Curriculums_Users_ApprovedId",
                         column: x => x.ApprovedId,
@@ -619,7 +610,7 @@ namespace backend_api.Migrations
                         name: "FK_Reviews_Tutors_TutorId",
                         column: x => x.TutorId,
                         principalTable: "Tutors",
-                        principalColumn: "UserId",
+                        principalColumn: "TutorId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Reviews_Users_ParentId",
@@ -637,9 +628,11 @@ namespace backend_api.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ChildId = table.Column<int>(type: "int", nullable: false),
+                    StudentCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     InitialCondition = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -654,8 +647,43 @@ namespace backend_api.Migrations
                         name: "FK_StudentProfiles_Tutors_TutorId",
                         column: x => x.TutorId,
                         principalTable: "Tutors",
-                        principalColumn: "UserId",
+                        principalColumn: "TutorId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TutorProfileUpdateRequests",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StartAge = table.Column<int>(type: "int", nullable: false),
+                    EndAge = table.Column<int>(type: "int", nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AboutMe = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RequestStatus = table.Column<int>(type: "int", nullable: false),
+                    ApprovedId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    RejectionReason = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TutorProfileUpdateRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TutorProfileUpdateRequests_Tutors_TutorId",
+                        column: x => x.TutorId,
+                        principalTable: "Tutors",
+                        principalColumn: "TutorId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TutorProfileUpdateRequests_Users_ApprovedId",
+                        column: x => x.ApprovedId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -669,10 +697,10 @@ namespace backend_api.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RequestStatus = table.Column<int>(type: "int", nullable: false),
                     RejectionReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RejectType = table.Column<int>(type: "int", nullable: false),
                     TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TutorUserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -687,13 +715,8 @@ namespace backend_api.Migrations
                         name: "FK_TutorRequests_Tutors_TutorId",
                         column: x => x.TutorId,
                         principalTable: "Tutors",
-                        principalColumn: "UserId",
+                        principalColumn: "TutorId",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_TutorRequests_Tutors_TutorUserId",
-                        column: x => x.TutorUserId,
-                        principalTable: "Tutors",
-                        principalColumn: "UserId");
                     table.ForeignKey(
                         name: "FK_TutorRequests_Users_ParentId",
                         column: x => x.ParentId,
@@ -735,7 +758,7 @@ namespace backend_api.Migrations
                         name: "FK_WorkExperiences_Tutors_SubmiterId",
                         column: x => x.SubmiterId,
                         principalTable: "Tutors",
-                        principalColumn: "UserId");
+                        principalColumn: "TutorId");
                     table.ForeignKey(
                         name: "FK_WorkExperiences_Users_ApprovedId",
                         column: x => x.ApprovedId,
@@ -804,6 +827,7 @@ namespace backend_api.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    QuestionId = table.Column<int>(type: "int", nullable: false),
                     OptionId = table.Column<int>(type: "int", nullable: false),
                     StudentProfileId = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -818,6 +842,12 @@ namespace backend_api.Migrations
                         principalTable: "AssessmentOptions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_InitialAssessmentResults_AssessmentQuestions_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "AssessmentQuestions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_InitialAssessmentResults_StudentProfiles_StudentProfileId",
                         column: x => x.StudentProfileId,
@@ -837,8 +867,7 @@ namespace backend_api.Migrations
                     From = table.Column<TimeSpan>(type: "time", nullable: false),
                     To = table.Column<TimeSpan>(type: "time", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    StudentProfileId1 = table.Column<int>(type: "int", nullable: true)
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -849,11 +878,6 @@ namespace backend_api.Migrations
                         principalTable: "StudentProfiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_ScheduleTimeSlots_StudentProfiles_StudentProfileId1",
-                        column: x => x.StudentProfileId1,
-                        principalTable: "StudentProfiles",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -890,7 +914,7 @@ namespace backend_api.Migrations
                         name: "FK_Schedules_Tutors_TutorId",
                         column: x => x.TutorId,
                         principalTable: "Tutors",
-                        principalColumn: "UserId",
+                        principalColumn: "TutorId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -940,11 +964,6 @@ namespace backend_api.Migrations
                 column: "ApprovedId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Certificates_OriginalId",
-                table: "Certificates",
-                column: "OriginalId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Certificates_SubmiterId",
                 table: "Certificates",
                 column: "SubmiterId");
@@ -953,6 +972,11 @@ namespace backend_api.Migrations
                 name: "IX_Certificates_TutorRegistrationRequestId",
                 table: "Certificates",
                 column: "TutorRegistrationRequestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChildInformationMedias_ChildInformationId",
+                table: "ChildInformationMedias",
+                column: "ChildInformationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ChildInformations_ParentId",
@@ -983,6 +1007,11 @@ namespace backend_api.Migrations
                 name: "IX_InitialAssessmentResults_OptionId",
                 table: "InitialAssessmentResults",
                 column: "OptionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InitialAssessmentResults_QuestionId",
+                table: "InitialAssessmentResults",
+                column: "QuestionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_InitialAssessmentResults_StudentProfileId",
@@ -1057,11 +1086,6 @@ namespace backend_api.Migrations
                 column: "StudentProfileId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ScheduleTimeSlots_StudentProfileId1",
-                table: "ScheduleTimeSlots",
-                column: "StudentProfileId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_StudentProfiles_ChildId",
                 table: "StudentProfiles",
                 column: "ChildId");
@@ -1075,6 +1099,11 @@ namespace backend_api.Migrations
                 name: "IX_TutorProfileUpdateRequests_ApprovedId",
                 table: "TutorProfileUpdateRequests",
                 column: "ApprovedId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TutorProfileUpdateRequests_TutorId",
+                table: "TutorProfileUpdateRequests",
+                column: "TutorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TutorRegistrationRequests_ApprovedId",
@@ -1095,11 +1124,6 @@ namespace backend_api.Migrations
                 name: "IX_TutorRequests_TutorId",
                 table: "TutorRequests",
                 column: "TutorId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TutorRequests_TutorUserId",
-                table: "TutorRequests",
-                column: "TutorUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserClaims_UserId",
@@ -1168,6 +1192,9 @@ namespace backend_api.Migrations
 
             migrationBuilder.DropTable(
                 name: "CertificateMedias");
+
+            migrationBuilder.DropTable(
+                name: "ChildInformationMedias");
 
             migrationBuilder.DropTable(
                 name: "Curriculums");

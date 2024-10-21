@@ -58,7 +58,7 @@ namespace backend_api.Controllers.v1
                 {
                     filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.Parent.Email) && !string.IsNullOrEmpty(u.Parent.FullName) && (u.Parent.Email.ToLower().Contains(search.ToLower()) || u.Parent.FullName.ToLower().Contains(search.ToLower())));
                 }
-                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
 
                 if (orderBy != null)
                 {

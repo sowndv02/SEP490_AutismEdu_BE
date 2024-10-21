@@ -72,10 +72,10 @@ namespace backend_api.Repository
                 .Where(x => x.AvgScore >= filterScore && x.AvgScore < filterScore + 1);
 
             var filteredQuery = query
-                .Where(t => reviews.Any(r => r.TutorId == t.UserId));
+                .Where(t => reviews.Any(r => r.TutorId == t.TutorId));
             foreach (var item in filteredQuery)
             {
-                var review = reviews.FirstOrDefault(x => x.TutorId == item.UserId);
+                var review = reviews.FirstOrDefault(x => x.TutorId == item.TutorId);
                 if (review != null)
                 {
                     item.TotalReview = review.TotalReview;

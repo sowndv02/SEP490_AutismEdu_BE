@@ -236,10 +236,10 @@ namespace backend_api.Controllers.v1
                 totalCount = count;
                 foreach (var item in list)
                 {
-                    item.Submiter.User = await _userRepository.GetAsync(x => x.Id == item.Submiter.UserId, false, null);
-                    var (total, curriculums) = await _curriculumRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.UserId && x.IsActive, null, null);
+                    item.Submiter.User = await _userRepository.GetAsync(x => x.Id == item.Submiter.TutorId, false, null);
+                    var (total, curriculums) = await _curriculumRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.TutorId && x.IsActive, null, null);
                     item.Submiter.Curriculums = curriculums;
-                    var (totalWorkExperience, workexperiences) = await _workExperienceRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.UserId && x.IsActive, null, null);
+                    var (totalWorkExperience, workexperiences) = await _workExperienceRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.TutorId && x.IsActive, null, null);
                     item.Submiter.WorkExperiences = workexperiences;
                 }
                 // Setup pagination and response
