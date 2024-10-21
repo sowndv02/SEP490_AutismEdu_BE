@@ -124,6 +124,7 @@
         // enum exercise pass status
         public enum PassingStatus
         {
+            NOT_YET = 2,
             PASSED = 1,
             NOT_PASSED = 0
         }
