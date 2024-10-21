@@ -46,7 +46,7 @@ namespace backend_api.Services
                 }
 
                 int total = await context.SaveChangesAsync();
-                _logger.LogWarning("Background service generate schedule for tutor");
+                _logger.LogWarning($"Background service generate schedule for tutor. Total {total} records");
             }
         }
     }
