@@ -25,6 +25,7 @@ namespace backend_api.Controllers.v1
         private readonly IAssessmentQuestionRepository _assessmentQuestionRepository;
         private readonly IChildInformationRepository _childInfoRepository;
         private readonly ITutorRequestRepository _tutorRequestRepository;
+        private readonly ITutorRepository _tutorRepository;
 
         protected APIResponse _response;
         private readonly IMapper _mapper;
@@ -33,7 +34,7 @@ namespace backend_api.Controllers.v1
         public StudentProfileController(IStudentProfileRepository studentProfileRepository, IAssessmentQuestionRepository assessmentQuestionRepository,
             IScheduleTimeSlotRepository scheduleTimeSlotRepository, IInitialAssessmentResultRepository initialAssessmentResultRepository
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository, 
-            IMapper mapper, IConfiguration configuration)
+            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository)
         {
             _studentProfileRepository = studentProfileRepository;
             _assessmentQuestionRepository = assessmentQuestionRepository;
@@ -44,6 +45,7 @@ namespace backend_api.Controllers.v1
             _response = new APIResponse();
             _mapper = mapper;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            _tutorRepository = tutorRepository;
         }
 
         [HttpPost]
@@ -109,7 +111,7 @@ namespace backend_api.Controllers.v1
                 model.TutorId = tutorId;
                 if (createDTO.TutorRequestId <= 0)
                 {
-                    model.Status = SD.StudentProfileStatus.Pening;
+                    model.Status = SD.StudentProfileStatus.Pending;
                 }
                 else
                 {
@@ -178,16 +180,16 @@ namespace backend_api.Controllers.v1
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
-                }    
+                }
 
-                filter.AndAlso(x => x.TutorId.Equals(tutorId));
+                filter = filter.AndAlso(x => x.TutorId.Equals(tutorId));
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
                     switch (status.ToLower())
                     {
                         case "pending":
-                            filter = filter.AndAlso(x => x.Status == SD.StudentProfileStatus.Pening);
+                            filter = filter.AndAlso(x => x.Status == SD.StudentProfileStatus.Pending);
                             break;
                         case "reject":
                             filter = filter.AndAlso(x => x.Status == SD.StudentProfileStatus.Reject);
@@ -259,6 +261,78 @@ namespace backend_api.Controllers.v1
                 var scheduleTimeSlots = await _studentProfileRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId) && x.Status == SD.StudentProfileStatus.Teaching, "ScheduleTimeSlots,Child");
 
                 _response.Result = _mapper.Map<List<GetAllStudentProfileTimeSlotDTO>>(scheduleTimeSlots.list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet("GetAllChildStudentProfile")]
+        public async Task<ActionResult<APIResponse>> GetAllChildStudentProfile([FromQuery] string? status = SD.STATUS_ALL)
+        {
+            try
+            {
+                var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                
+
+                if (string.IsNullOrEmpty(parentId))
+                {
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+
+                var childs = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId));
+
+                if(childs.list == null)
+                {
+                    _response.Result = null;
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
+                }
+
+                List<StudentProfile> studentProfiles = new List<StudentProfile>();
+
+                foreach (var child in childs.list)
+                {
+                    Expression<Func<StudentProfile, bool>> filter = u => true;
+                    filter = filter.AndAlso(x => x.ChildId.Equals(child.Id));                    
+                    if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
+                    {
+                        switch (status.ToLower())
+                        {
+                            case "pending":
+                                filter = filter.AndAlso(x => x.Status == SD.StudentProfileStatus.Pending);                               
+                                break;
+                            case "reject":
+                                filter = filter.AndAlso(x => x.Status == SD.StudentProfileStatus.Reject);
+                                break;
+                            case "teaching":
+                                filter = filter.AndAlso(x => x.Status == SD.StudentProfileStatus.Teaching);
+                                break;
+                            case "stop":
+                                filter = filter.AndAlso(x => x.Status == SD.StudentProfileStatus.Stop);
+                                break;
+                        }                       
+                    }
+                    var profile = await _studentProfileRepository.GetAsync(filter,true,"Child,Tutor");
+                    if(profile != null)
+                    {
+                        profile.Tutor = await _tutorRepository.GetAsync(x => x.UserId.Equals(profile.TutorId), true, "User");
+                        studentProfiles.Add(profile);
+                    }                
+                }                               
+
+                _response.Result = _mapper.Map<List<ChildStudentProfileDTO>>(studentProfiles);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);

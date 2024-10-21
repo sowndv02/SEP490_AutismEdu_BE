@@ -147,7 +147,7 @@
         // enum student teaching status
         public enum StudentProfileStatus
         {
-            Pening = 3,
+            Pending = 3,
             Reject = 2,
             Teaching = 1,
             Stop = 0
