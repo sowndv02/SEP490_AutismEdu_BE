@@ -10,17 +10,19 @@ namespace backend_api.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string TutorId { get; set; }
-        public int ChildId { get; set; }
+        public int StudentProfileId { get; set; }
         public int ScheduleTimeSlotId { get; set; }
         public DateTime ScheduleDate { get; set; }
+        public TimeSpan Start { get; set; }
+        public TimeSpan End { get; set; }
         public AttendanceStatus AttendanceStatus { get; set; }
         public PassingStatus PassingStatus { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         [ForeignKey(nameof(TutorId))]
         public Tutor Tutor { get; set; }
-        [ForeignKey(nameof(ChildId))]
-        public ChildInformation Child { get; set; }
+        [ForeignKey(nameof(StudentProfileId))]
+        public StudentProfile StudentProfile { get; set; }
         [ForeignKey(nameof(ScheduleTimeSlotId))]
         public ScheduleTimeSlot ScheduleTimeSlot { get; set; }
     }
