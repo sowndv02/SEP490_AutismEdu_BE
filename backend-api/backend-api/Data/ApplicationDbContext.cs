@@ -42,6 +42,7 @@ namespace backend_api.Data
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<ScheduleTimeSlot> ScheduleTimeSlots { get; set; }
         public DbSet<StudentProfile> StudentProfiles { get; set; }
+        public DbSet<ChildInformationMedia> ChildInformationMedias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -99,6 +100,12 @@ namespace backend_api.Data
                 .HasOne(pr => pr.Question)
                 .WithMany()
                 .HasForeignKey(pr => pr.QuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ChildInformation>()
+                .HasMany(ci => ci.ChildInformationMedias)
+                .WithOne(cm => cm.ChildInformation)
+                .HasForeignKey(cm => cm.ChildInformationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             foreach (var entityType in builder.Model.GetEntityTypes())
