@@ -129,7 +129,7 @@ namespace backend_api.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    Expression<Func<WorkExperience, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
+                    Expression<Func<Curriculum, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
 
                     var combinedFilter = Expression.Lambda<Func<Curriculum, bool>>(
                         Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
