@@ -88,7 +88,10 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.isMale ? "Male" : "Female"))
                 .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate.Value.ToString("dd/MM/yyyy")))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
-                .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate));
+                .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
+                .ForMember(dest => dest.ParentPhoneNumber, opt => opt.MapFrom(src => src.Parent.PhoneNumber))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Parent.Address))
+                .ForMember(dest => dest.ChildInformationMedias, opt => opt.MapFrom(src => src.ChildInformationMedias));
 
             CreateMap<ChildInformation, ChildInformationCreateDTO>().ReverseMap();
             CreateMap<AvailableTimeSlot, AvailableTimeSlotCreateDTO>().ReverseMap();
@@ -157,6 +160,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Child.Name))
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ReverseMap();
+            CreateMap<ChildInformationMedia, ChildInformationMediaDTO>().ReverseMap();
         }
     }
 }

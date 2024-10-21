@@ -15,6 +15,7 @@ namespace backend_api.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         [ForeignKey(nameof(ParentId))]
-        public ApplicationUser Parent { get; set; }
+        public ApplicationUser Parent { get; set; }        
+        public List<ChildInformationMedia> ChildInformationMedias { get; set; }
     }
 }

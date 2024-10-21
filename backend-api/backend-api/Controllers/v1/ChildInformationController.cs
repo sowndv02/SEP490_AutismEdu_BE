@@ -26,21 +26,27 @@ namespace backend_api.Controllers.v1
         protected APIResponse _response;
         private readonly IMapper _mapper;
         private readonly IStudentProfileRepository _studentProfileRepository;
+        private readonly IBlobStorageRepository _blobStorageRepository;
+        private readonly IChildInformationMediaRepository _childInformationMediaRepository;
 
-        public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper, IStudentProfileRepository studentProfileRepository)
+        public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper,
+            IStudentProfileRepository studentProfileRepository, IBlobStorageRepository blobStorageRepository
+            , IChildInformationMediaRepository childInformationMediaRepository)
         {
             _childInfoRepository = childInfoRepository;
             _response = new APIResponse();
             _mapper = mapper;
             _studentProfileRepository = studentProfileRepository;
+            _blobStorageRepository = blobStorageRepository;
+            _childInformationMediaRepository = childInformationMediaRepository;
         }
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateAsync(ChildInformationCreateDTO childInformationCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] ChildInformationCreateDTO childInformationCreateDTO)
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;                
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (childInformationCreateDTO == null || string.IsNullOrEmpty(userId))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -63,6 +69,28 @@ namespace backend_api.Controllers.v1
                 model.CreatedDate = DateTime.Now;
                 var childInfo = await _childInfoRepository.CreateAsync(model);
 
+                // Handle certificate media uploads
+                if (childInformationCreateDTO.Medias != null)
+                {
+                    for (int i = 0; i < childInformationCreateDTO.Medias.Count; i++)
+                    {
+                        var media = childInformationCreateDTO.Medias[i];
+
+                        if (media != null)
+                        {
+                            using var mediaStream = media.OpenReadStream();
+                            string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
+
+                            ChildInformationMedia childMedia = new ChildInformationMedia
+                            {
+                                ChildInformationId = childInfo.Id,
+                                UrlPath = mediaUrl
+                            };
+                            await _childInformationMediaRepository.CreateAsync(childMedia);
+                        }
+                    }
+                }
+
                 _response.Result = _mapper.Map<ChildInformationDTO>(childInfo);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.IsSuccess = true;
@@ -83,8 +111,8 @@ namespace backend_api.Controllers.v1
             try
             {
 
-                
-                if(string.IsNullOrEmpty(parentId))
+
+                if (string.IsNullOrEmpty(parentId))
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -92,9 +120,9 @@ namespace backend_api.Controllers.v1
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
 
-                var childInfos = await _childInfoRepository.GetParentChildInformationAsync(parentId);
-                
-                _response.Result = _mapper.Map<List<ChildInformationDTO>>(childInfos);
+                var childInfos = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId), "ChildInformationMedias,Parent");
+
+                _response.Result = _mapper.Map<List<ChildInformationDTO>>(childInfos.list);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
@@ -113,7 +141,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 var model = await _childInfoRepository.GetAsync(x => x.Id == updateDTO.ChildId);
-                if(model == null)
+                if (model == null)
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -136,7 +164,7 @@ namespace backend_api.Controllers.v1
 
                     var studentProfile = await _studentProfileRepository.GetAsync(x => x.ChildId == model.Id);
 
-                    if(studentProfile != null)
+                    if (studentProfile != null)
                     {
                         string[] names = updateDTO.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                         studentProfile.StudentCode = "";
@@ -154,7 +182,28 @@ namespace backend_api.Controllers.v1
                     model.BirthDate = updateDTO.BirthDate;
                 }
 
-                model.isMale = updateDTO.isMale;     
+                //TODO: update child media
+                //// Handle certificate media uploads
+                //if (updateDTO.Medias != null)
+                //{
+                //    for (int i = 0; i < updateDTO.Medias.Count; i++)
+                //    {
+                //        var media = updateDTO.Medias[i];
+
+                //        if (media != null)
+                //        {
+                //            using var mediaStream = media.OpenReadStream();
+                //            string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
+
+                //            ChildInformationMedia childMedia = await _childInformationMediaRepository.GetAsync(x => x.ChildInformationId == model.Id);
+                //            childMedia.UrlPath = mediaUrl;
+
+                //            await _childInformationMediaRepository.UpdateAsync(childMedia);
+                //        }
+                //    }
+                //}
+
+                model.isMale = updateDTO.isMale;
                 model.UpdatedDate = DateTime.Now;
                 var childInfo = await _childInfoRepository.UpdateAsync(model);
 
