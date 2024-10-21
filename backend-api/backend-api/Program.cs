@@ -78,6 +78,7 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IScheduleTimeSlotRepository, ScheduleTimeSlotRepository>();
 builder.Services.AddScoped<IInitialAssessmentResultRepository, InitialAssessmentResultRepository>();
 builder.Services.AddScoped<IStudentProfileRepository, StudentProfileRepository>();
+builder.Services.AddScoped<IChildInformationMediaRepository, ChildInformationMediaRepository>();
 
 
 // Add DI requirement authorization handler
