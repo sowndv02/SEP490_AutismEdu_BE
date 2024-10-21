@@ -19,7 +19,7 @@ namespace backend_api.Models
         [ForeignKey(nameof(TutorId))]
         public Tutor Tutor { get; set; }
         [ForeignKey(nameof(ChildId))]
-        public ChildInformation Child {  get; set; }
+        public ChildInformation Child { get; set; }
         public List<InitialAssessmentResult> InitialAssessmentResults { get; set; }
         public List<ScheduleTimeSlot> ScheduleTimeSlots { get; set; }
     }

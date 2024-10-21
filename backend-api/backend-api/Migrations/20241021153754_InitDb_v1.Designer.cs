@@ -12,8 +12,8 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241018082926_UpdateInitialAssessmentResult")]
-    partial class UpdateInitialAssessmentResult
+    [Migration("20241021153754_InitDb_v1")]
+    partial class InitDb_v1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -293,7 +293,7 @@ namespace backend_api.Migrations
                     b.Property<string>("IdentityCardNumber")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("IssuingDate")
@@ -387,6 +387,33 @@ namespace backend_api.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("ChildInformations");
+                });
+
+            modelBuilder.Entity("backend_api.Models.ChildInformationMedia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("ChildInformationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UrlPath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildInformationId");
+
+                    b.ToTable("ChildInformationMedias");
                 });
 
             modelBuilder.Entity("backend_api.Models.Curriculum", b =>
@@ -766,6 +793,9 @@ namespace backend_api.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<string>("StudentCode")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("TutorId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -784,7 +814,7 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
                 {
-                    b.Property<string>("UserId")
+                    b.Property<string>("TutorId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("AboutMe")
@@ -808,7 +838,7 @@ namespace backend_api.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("UserId");
+                    b.HasKey("TutorId");
 
                     b.ToTable("Tutors");
                 });
@@ -825,11 +855,25 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ApprovedId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("EndAge")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("RejectionReason")
                         .HasColumnType("nvarchar(max)");
@@ -837,9 +881,12 @@ namespace backend_api.Migrations
                     b.Property<int>("RequestStatus")
                         .HasColumnType("int");
 
+                    b.Property<int>("StartAge")
+                        .HasColumnType("int");
+
                     b.Property<string>("TutorId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
@@ -847,6 +894,8 @@ namespace backend_api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ApprovedId");
+
+                    b.HasIndex("TutorId");
 
                     b.ToTable("TutorProfileUpdateRequests");
                 });
@@ -1373,6 +1422,17 @@ namespace backend_api.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("backend_api.Models.ChildInformationMedia", b =>
+                {
+                    b.HasOne("backend_api.Models.ChildInformation", "ChildInformation")
+                        .WithMany("ChildInformationMedias")
+                        .HasForeignKey("ChildInformationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ChildInformation");
+                });
+
             modelBuilder.Entity("backend_api.Models.Curriculum", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
@@ -1559,7 +1619,7 @@ namespace backend_api.Migrations
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "User")
                         .WithOne("TutorProfile")
-                        .HasForeignKey("backend_api.Models.Tutor", "UserId")
+                        .HasForeignKey("backend_api.Models.Tutor", "TutorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1572,7 +1632,15 @@ namespace backend_api.Migrations
                         .WithMany()
                         .HasForeignKey("ApprovedId");
 
+                    b.HasOne("backend_api.Models.Tutor", "Tutor")
+                        .WithMany()
+                        .HasForeignKey("TutorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("ApprovedBy");
+
+                    b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("backend_api.Models.TutorRegistrationRequest", b =>
@@ -1697,6 +1765,11 @@ namespace backend_api.Migrations
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
                 {
                     b.Navigation("CertificateMedias");
+                });
+
+            modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
+                {
+                    b.Navigation("ChildInformationMedias");
                 });
 
             modelBuilder.Entity("backend_api.Models.StudentProfile", b =>

@@ -8,10 +8,8 @@ using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Net;
-using System.Runtime.ConstrainedExecution;
 using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
@@ -271,7 +269,7 @@ namespace backend_api.Controllers.v1
                     // Create tutor profile
                     var tutor = await _tutorRepository.CreateAsync(new Tutor()
                     {
-                        UserId = user.Id,
+                        TutorId = user.Id,
                         Price = model.Price,
                         AboutMe = model.Description,
                         DateOfBirth = model.DateOfBirth,
@@ -291,7 +289,7 @@ namespace backend_api.Controllers.v1
                             item.ApprovedId = userId;
                             item.IsActive = true;
                             item.UpdatedDate = DateTime.Now;
-                            item.SubmiterId = tutor.UserId;
+                            item.SubmiterId = tutor.TutorId;
                             await _curriculumRepository.UpdateAsync(item);
                         }
                     }
@@ -303,7 +301,7 @@ namespace backend_api.Controllers.v1
                         foreach (var cert in certificates)
                         {
                             cert.RequestStatus = Status.APPROVE;
-                            cert.SubmiterId = tutor.UserId;
+                            cert.SubmiterId = tutor.TutorId;
                             cert.ApprovedId = userId;
                             cert.UpdatedDate = DateTime.Now;
                             await _certificateRepository.UpdateAsync(cert);
@@ -317,7 +315,7 @@ namespace backend_api.Controllers.v1
                         foreach (var workExperience in workExperiences)
                         {
                             workExperience.RequestStatus = Status.APPROVE;
-                            workExperience.SubmiterId = tutor.UserId;
+                            workExperience.SubmiterId = tutor.TutorId;
                             workExperience.ApprovedId = userId;
                             workExperience.IsActive = true;
                             workExperience.UpdatedDate = DateTime.Now;

@@ -61,6 +61,65 @@ namespace backend_api.Controllers.v1
             _tutorRequestRepository = tutorRequestRepository;
         }
 
+        [HttpGet("updateRequest")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                int totalCount = 0;
+                List<TutorProfileUpdateRequest> list = new();
+                Expression<Func<TutorProfileUpdateRequest, bool>> filter = u => u.TutorId == userId;
+                Expression<Func<TutorProfileUpdateRequest, object>> orderByQuery = u => true;
+
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
+                {
+                    switch (status.ToLower())
+                    {
+                        case "approve":
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE);
+                            break;
+                        case "reject":
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT);
+                            break;
+                        case "pending":
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.PENDING);
+                            break;
+                    }
+                }
+                var (count, result) = await _tutorProfileUpdateRequestRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
+                list = result;
+                totalCount = count;
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
+                _response.Result = _mapper.Map<List<TutorProfileUpdateRequestDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
         [HttpGet("profile")]
         [Authorize]
@@ -74,19 +133,20 @@ namespace backend_api.Controllers.v1
                 TutorProfileUpdateRequest model = null;
                 model = list.OrderByDescending(x => x.CreatedDate).ToList().FirstOrDefault();
                 Tutor result = null;
-                if(model == null)
+                if (model == null)
                 {
                     var (totalResult, listResult) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.APPROVE, null, null);
                     model = listResult.OrderByDescending(x => x.CreatedDate).ToList().FirstOrDefault();
                     if (model == null)
                     {
-                        result = await _tutorRepository.GetAsync(x => x.UserId == userId, false, "User", null);
+                        result = await _tutorRepository.GetAsync(x => x.TutorId == userId, false, "User", null);
                     }
                 }
-                if(model != null)
+                if (model != null)
                 {
                     _response.Result = _mapper.Map<TutorProfileUpdateRequestDTO>(model);
-                }else if(result != null)
+                }
+                else if (result != null)
                 {
                     _response.Result = _mapper.Map<TutorDTO>(result);
                 }
@@ -129,7 +189,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                Tutor model = await _tutorRepository.GetAsync(x => x.UserId == id, false, "User,Curriculums,AvailableTimeSlots,Certificates,WorkExperiences,Reviews");
+                Tutor model = await _tutorRepository.GetAsync(x => x.TutorId == id, false, "User,Curriculums,AvailableTimeSlots,Certificates,WorkExperiences,Reviews");
                 model.TotalReview = model.Reviews.Count;
                 model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Average(x => x.RateScore) : 5;
                 if (model == null)

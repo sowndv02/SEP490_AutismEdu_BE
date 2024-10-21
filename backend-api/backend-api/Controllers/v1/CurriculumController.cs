@@ -3,7 +3,6 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -70,7 +69,7 @@ namespace backend_api.Controllers.v1
                 Expression<Func<Curriculum, bool>> filter = u => u.SubmiterId == userId;
                 Expression<Func<Curriculum, object>> orderByQuery = u => true;
 
-                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
 
                 if (orderBy != null)
                 {
@@ -206,12 +205,26 @@ namespace backend_api.Controllers.v1
             // TODO: Update age from end 
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmiterId == userId);
+            foreach (var item in list)
+            {
+                if (item.AgeFrom >= curriculumDto.AgeFrom || item.AgeEnd >= curriculumDto.AgeEnd)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { SD.AGE_FROM_AGE_END_EXISTED };
+                    return BadRequest(_response);
+                }
+            }
             var newCurriculum = _mapper.Map<Curriculum>(curriculumDto);
 
             newCurriculum.SubmiterId = userId;
             newCurriculum.IsActive = false;
             newCurriculum.VersionNumber = await _curriculumRepository.GetNextVersionNumberAsync(curriculumDto.OriginalCurriculumId);
-
+            if (curriculumDto.OriginalCurriculumId == 0)
+            {
+                newCurriculum.OriginalCurriculumId = null;
+            }
             await _curriculumRepository.CreateAsync(newCurriculum);
             _response.StatusCode = HttpStatusCode.Created;
             _response.Result = _mapper.Map<CurriculumDTO>(newCurriculum);

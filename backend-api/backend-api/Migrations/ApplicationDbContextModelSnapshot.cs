@@ -812,7 +812,7 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
                 {
-                    b.Property<string>("UserId")
+                    b.Property<string>("TutorId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("AboutMe")
@@ -836,7 +836,7 @@ namespace backend_api.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("UserId");
+                    b.HasKey("TutorId");
 
                     b.ToTable("Tutors");
                 });
@@ -1617,7 +1617,7 @@ namespace backend_api.Migrations
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "User")
                         .WithOne("TutorProfile")
-                        .HasForeignKey("backend_api.Models.Tutor", "UserId")
+                        .HasForeignKey("backend_api.Models.Tutor", "TutorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
