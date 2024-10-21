@@ -94,6 +94,7 @@ builder.Services.AddSingleton<DateTimeEncryption>();
 builder.Services.AddSingleton<TokenEcryption>();
 builder.Services.AddSingleton<FormatString>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
+builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
 
 
 
