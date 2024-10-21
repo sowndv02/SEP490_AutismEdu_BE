@@ -157,6 +157,15 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Child.Name))
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ReverseMap();
+
+            CreateMap<StudentProfile, ChildStudentProfileDTO>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.ChildName, opt => opt.MapFrom(src => src.Child.Name))
+                .ForMember(dest => dest.TutorName, opt => opt.MapFrom(src => src.Tutor.User.FullName))
+                .ForMember(dest => dest.TutorPhoneNumber, opt => opt.MapFrom(src => src.Tutor.User.PhoneNumber))
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ReverseMap();
         }
     }
 }
