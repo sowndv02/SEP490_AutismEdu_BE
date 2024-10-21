@@ -190,11 +190,11 @@ namespace backend_api.Controllers.v1
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     filter = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId && !u.IsDeleted;
                 }
-                if(search != null && !string.IsNullOrEmpty(search))
+                if (search != null && !string.IsNullOrEmpty(search))
                 {
                     filter = filter.AndAlso(x => x.CertificateName.ToLower().Contains(search.ToLower()));
                 }
-                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 if (orderBy != null)
                 {
                     switch (orderBy)
@@ -226,7 +226,7 @@ namespace backend_api.Controllers.v1
                 var (count, result) = await _certificateRepository.GetAllAsync(
                     filter,
                     "Submiter,CertificateMedias",
-                    pageSize: pageSize,
+                    pageSize: 5,
                     pageNumber: pageNumber,
                     orderByQuery,
                     isDesc
@@ -234,16 +234,16 @@ namespace backend_api.Controllers.v1
 
                 list = result;
                 totalCount = count;
-                foreach(var item in list)
+                foreach (var item in list)
                 {
                     item.Submiter.User = await _userRepository.GetAsync(x => x.Id == item.Submiter.UserId, false, null);
-                    var(total, curriculums) = await _curriculumRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.UserId && x.IsActive, null, null);
+                    var (total, curriculums) = await _curriculumRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.UserId && x.IsActive, null, null);
                     item.Submiter.Curriculums = curriculums;
                     var (totalWorkExperience, workexperiences) = await _workExperienceRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.UserId && x.IsActive, null, null);
                     item.Submiter.WorkExperiences = workexperiences;
                 }
                 // Setup pagination and response
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
                 _response.Result = _mapper.Map<List<CertificateDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
