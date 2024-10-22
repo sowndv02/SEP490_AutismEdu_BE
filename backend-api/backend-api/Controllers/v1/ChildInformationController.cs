@@ -64,7 +64,7 @@ namespace backend_api.Controllers.v1
                 model.CreatedDate = DateTime.Now;
                 var childInfo = await _childInfoRepository.CreateAsync(model);
 
-                // Handle certificate media uploads
+                // Handle child media uploads
                 if (childInformationCreateDTO.Medias != null)
                 {
                     for (int i = 0; i < childInformationCreateDTO.Medias.Count; i++)
@@ -131,7 +131,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateAsync([FromBody] ChildInformationUpdateDTO updateDTO)
+        public async Task<IActionResult> UpdateAsync([FromForm] ChildInformationUpdateDTO updateDTO)
         {
             try
             {
@@ -177,28 +177,31 @@ namespace backend_api.Controllers.v1
                     model.BirthDate = updateDTO.BirthDate;
                 }
 
-                //TODO: update child media
-                //// Handle certificate media uploads
-                //if (updateDTO.Medias != null)
-                //{
-                //    for (int i = 0; i < updateDTO.Medias.Count; i++)
-                //    {
-                //        var media = updateDTO.Medias[i];
+                // Update child media
+                if (updateDTO.Medias != null)
+                {
+                    for (int i = 0; i < updateDTO.Medias.Count; i++)
+                    {
+                        var media = updateDTO.Medias[i];
 
-                //        if (media != null)
-                //        {
-                //            using var mediaStream = media.OpenReadStream();
-                //            string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
+                        if (media != null)
+                        {
+                            using var mediaStream = media.OpenReadStream();
+                            string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
 
-                //            ChildInformationMedia childMedia = await _childInformationMediaRepository.GetAsync(x => x.ChildInformationId == model.Id);
-                //            childMedia.UrlPath = mediaUrl;
+                            ChildInformationMedia childMedia = await _childInformationMediaRepository.GetAsync(x => x.ChildInformationId == model.Id);
+                            childMedia.UrlPath = mediaUrl;
+                            childMedia.UpdatedDate = DateTime.Now;
+                            await _childInformationMediaRepository.UpdateAsync(childMedia);
+                        }
+                    }
+                }
 
-                //            await _childInformationMediaRepository.UpdateAsync(childMedia);
-                //        }
-                //    }
-                //}
-
-                model.isMale = updateDTO.isMale;
+                if(model.isMale != null)
+                {
+                    model.isMale = updateDTO.isMale;
+                }
+               
                 model.UpdatedDate = DateTime.Now;
                 var childInfo = await _childInfoRepository.UpdateAsync(model);
 
