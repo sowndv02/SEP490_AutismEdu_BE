@@ -24,6 +24,7 @@
         public const string URL_FE_TUTOR_LOGIN = "http://localhost:5173/autismtutor/tutor-login";
         public const string URL_IMAGE_DEFAULT_BLOB = "https://sep490g50v1.blob.core.windows.net/logos-public/default-avatar.png";
         public const string URL_FE_STUDENT_PROFILE_DETAIL = "#";
+        public const string URL_FE_PARENT_LOGIN = "";
 
         // Const folder mail save
         public const string FOLDER_NAME_LOG_EMAIL = "MailSave";
@@ -114,6 +115,10 @@
         public const string REVIEW_ALREADY_EXISTS = "Đã đánh giá gia sư này";
         public const string BAD_ACTION_REVIEW = "Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này";
         public const string AGE_FROM_AGE_END_EXISTED = "Độ tuổi đã tồn tại";
+        public const string DUPLICATED_EMAIL_MESSAGE = "Đã tồn tại tài khoản với email này";
+        public const string CHILD_NOT_FOUND = "Không tìm thấy dữ liệu trẻ";
+        public const string MISSING_PARENT_CHILD_INFORMATION = "Không nhập đủ dữ liệu phụ huynh và trẻ";
+
         // enum status
         public enum Status
         {

@@ -30,6 +30,9 @@ namespace backend_api.Controllers.v1
         private readonly ITutorRequestRepository _tutorRequestRepository;
         private readonly ITutorRepository _tutorRepository;
         private readonly IEmailSender _emailSender;
+        private readonly IUserRepository _userRepository;
+        private readonly IRoleRepository _roleRepository;
+        private readonly IBlobStorageRepository _blobStorageRepository;
 
         protected APIResponse _response;
         private readonly IMapper _mapper;
@@ -38,7 +41,8 @@ namespace backend_api.Controllers.v1
         public StudentProfileController(IStudentProfileRepository studentProfileRepository, IAssessmentQuestionRepository assessmentQuestionRepository,
             IScheduleTimeSlotRepository scheduleTimeSlotRepository, IInitialAssessmentResultRepository initialAssessmentResultRepository
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository,
-            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IEmailSender emailSender)
+            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IEmailSender emailSender, 
+            IUserRepository userRepository, IRoleRepository roleRepository, IBlobStorageRepository blobStorageRepository)
         {
             _studentProfileRepository = studentProfileRepository;
             _assessmentQuestionRepository = assessmentQuestionRepository;
@@ -51,10 +55,13 @@ namespace backend_api.Controllers.v1
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _tutorRepository = tutorRepository;
             _emailSender = emailSender;
+            _userRepository = userRepository;
+            _roleRepository = roleRepository;
+            _blobStorageRepository = blobStorageRepository;
         }
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] StudentProfileCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] StudentProfileCreateDTO createDTO)
         {
             try
             {
@@ -65,6 +72,81 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+
+                if (!string.IsNullOrEmpty(createDTO.Email) &&
+                    !string.IsNullOrEmpty(createDTO.ParentFullName) &&
+                    !string.IsNullOrEmpty(createDTO.Address) &&
+                    !string.IsNullOrEmpty(createDTO.PhoneNumber) &&
+                    !string.IsNullOrEmpty(createDTO.ChildName) &&
+                    createDTO.isMale != null &&
+                    !string.IsNullOrEmpty(createDTO.BirthDate.ToString()) &&
+                    createDTO.Media != null)
+                {
+                    // Tao account parent
+                    var parentEmailExist = await _userRepository.GetAsync(x => x.Email.Equals(createDTO.Email));
+                    if(parentEmailExist != null)
+                    {
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string> { SD.DUPLICATED_EMAIL_MESSAGE };
+                        return BadRequest(_response);
+                    }
+
+                    string passsword = PasswordGenerator.GeneratePassword();
+                    var parent = await _userRepository.CreateAsync(new ApplicationUser
+                    {
+                        Email = createDTO.Email,
+                        Address = createDTO.Address,
+                        FullName = createDTO.ParentFullName,
+                        PhoneNumber = createDTO.PhoneNumber,
+                        EmailConfirmed = true,
+                        IsLockedOut = false,
+                        ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB,
+                        CreatedDate = DateTime.Now,
+                        UserName = createDTO.Email,
+                        UserType = SD.APPLICATION_USER,
+                        LockoutEnabled = true,
+                        RoleIds = new List<string>() { _roleRepository.GetByNameAsync(SD.PARENT_ROLE).GetAwaiter().GetResult().Id }
+                    }, passsword);
+
+                    // TODO: Send mail
+                    var subject = "Thông báo ";
+
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateParentAndChild.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", parent.FullName)
+                        .Replace("@Model.Username", parent.Email)
+                        .Replace("@Model.Password", passsword)
+                        .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
+
+                    await _emailSender.SendEmailAsync(parent.Email, subject, htmlMessage);
+
+                    // Tao child
+                    using var mediaStream = createDTO.Media.OpenReadStream();
+                    string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(createDTO.Media.FileName)));
+
+                    var childInformation = await _childInfoRepository.CreateAsync(new ChildInformation()
+                    {
+                        ParentId = parent.Id,
+                        Name = createDTO.ChildName,
+                        isMale = (bool) createDTO.isMale,
+                        ImageUrlPath = mediaUrl,
+                        BirthDate = createDTO.BirthDate,
+                        CreatedDate = DateTime.Now
+                    });
+
+                    createDTO.ChildId = childInformation.Id;
+                }
+
+                if(createDTO.ChildId <= 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.MISSING_PARENT_CHILD_INFORMATION };
                     return BadRequest(_response);
                 }
 
@@ -137,12 +219,12 @@ namespace backend_api.Controllers.v1
                 }
 
                 var child = await _childInfoRepository.GetAsync(x => x.Id == createDTO.ChildId, true,"Parent");
-
+                model.Child = child;
                 if (child == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
+                    _response.ErrorMessages = new List<string> { SD.CHILD_NOT_FOUND };
                     return BadRequest(_response);
                 }
 
@@ -153,19 +235,19 @@ namespace backend_api.Controllers.v1
                     model.StudentCode += name.ToUpper().ElementAt(0);
                 }
                 model.StudentCode += model.ChildId;
-
+                model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId));
                 await _studentProfileRepository.CreateAsync(model);
 
                 //TODO: send email
                 if (createDTO.TutorRequestId <= 0)
                 {
-                    var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
+                    //var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
                     var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateStudentProfileTemplate.cshtml");
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
                     var htmlMessage = templateContent
                         .Replace("@Model.ParentName", child.Parent.FullName)
-                        .Replace("@Model.TutorName", tutor.User.FullName)
+                        //.Replace("@Model.TutorName", model.Tutor.User.FullName)
                         .Replace("@Model.StudentName", child.Name)
                         .Replace("@Model.Email", child.Parent.Email)
                         .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL)

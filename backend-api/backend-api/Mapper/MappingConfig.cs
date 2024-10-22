@@ -133,8 +133,7 @@ namespace backend_api.Mapper
             CreateMap<AssessmentQuestion, AssessmentQuestionDTO>().ReverseMap();
             CreateMap<AssessmentOption, AssessmentOptionDTO>().ReverseMap();
             CreateMap<ChildInformation, ChildInformationUpdateDTO>().ReverseMap();
-
-            CreateMap<StudentProfile, StudentProfileCreateDTO>().ReverseMap();
+            
             CreateMap<ScheduleTimeSlot, ScheduleTimeSlotCreateDTO>().ReverseMap();
             CreateMap<InitialAssessmentResult, InitialAssessmentResultCreateDTO>().ReverseMap();
 
@@ -171,6 +170,13 @@ namespace backend_api.Mapper
                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                .ReverseMap();
+
+            CreateMap<StudentProfile, StudentProfileCreateDTO>()
+                .ForMember(dest => dest.ChildId, opt => opt.MapFrom(src => src.ChildId))
+                .ForMember(dest => dest.InitialCondition, opt => opt.MapFrom(src => src.InitialCondition))
+                .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
+                .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
+                .ReverseMap();
         }
     }
 }
