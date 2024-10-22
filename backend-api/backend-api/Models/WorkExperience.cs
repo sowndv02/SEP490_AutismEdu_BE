@@ -21,6 +21,7 @@ namespace backend_api.Models
         public Status RequestStatus { get; set; } = Status.PENDING;
         public string? ApprovedId { get; set; }
         public bool IsActive { get; set; } = false;
+        public bool IsDeleted { get; set; } = false;
         public int VersionNumber { get; set; } = 1;
         public int? OriginalId { get; set; }
         [ForeignKey(nameof(OriginalId))]
