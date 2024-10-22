@@ -6,6 +6,7 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -30,6 +31,7 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<TutorController> _logger;
         private readonly IMapper _mapper;
+        private readonly IEmailSender _emailSender;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
@@ -39,8 +41,10 @@ namespace backend_api.Controllers.v1
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
             ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
-            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository)
+            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository,
+            IEmailSender emailSender)
         {
+            _emailSender = emailSender;
             _curriculumRepository = curriculumRepository;
             _formatString = formatString;
             _roleRepository = roleRepository;
@@ -296,6 +300,7 @@ namespace backend_api.Controllers.v1
                 //}
 
                 Curriculum model = await _curriculumRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmiterId);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -311,6 +316,17 @@ namespace backend_api.Controllers.v1
                     model.ApprovedId = userId;
                     await _curriculumRepository.DeactivatePreviousVersionsAsync(model.OriginalCurriculumId);
                     await _curriculumRepository.UpdateAsync(model);
+
+                    // Send mail
+                    var subject = "Yêu cập nhật khung chương trình của bạn đã được chấp nhận!";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", tutor.FullName)
+                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật khung chương trình của bạn")
+                        .Replace("@Model.IsApproved", Status.APPROVE.ToString());
+                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
+
                     _response.Result = _mapper.Map<CurriculumDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -324,6 +340,18 @@ namespace backend_api.Controllers.v1
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _curriculumRepository.UpdateAsync(model);
+
+                    // Send mail
+                    var subject = "Yêu cập nhật khung chương trình của bạn đã bị từ chối!";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", tutor.FullName)
+                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật khung chương trình của bạn")
+                        .Replace("@Model.IsApproved", Status.REJECT.ToString())
+                        .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
+                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
+
                     _response.Result = _mapper.Map<CurriculumDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;

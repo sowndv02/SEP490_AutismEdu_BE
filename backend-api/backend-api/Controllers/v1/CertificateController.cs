@@ -6,6 +6,7 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -29,6 +30,7 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<CertificateController> _logger;
         private readonly IMapper _mapper;
+        private readonly IEmailSender _emailSender;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
@@ -36,7 +38,7 @@ namespace backend_api.Controllers.v1
             ILogger<CertificateController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString,
             ICertificateMediaRepository certificateMediaRepository, ICurriculumRepository curriculumRepository,
-            IWorkExperienceRepository workExperienceRepository)
+            IWorkExperienceRepository workExperienceRepository, IEmailSender emailSender)
         {
             _workExperienceRepository = workExperienceRepository;
             _curriculumRepository = curriculumRepository;
@@ -50,6 +52,7 @@ namespace backend_api.Controllers.v1
             _logger = logger;
             _userRepository = userRepository;
             _certificateRepository = certificateRepository;
+            _emailSender = emailSender;
         }
 
 
@@ -128,6 +131,7 @@ namespace backend_api.Controllers.v1
                 //}
 
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmiterId);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -141,6 +145,18 @@ namespace backend_api.Controllers.v1
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _certificateRepository.UpdateAsync(model);
+
+                    // Send mail
+                    var subject = "Yêu cập nhật chứng chỉ của bạn đã được chấp nhận!";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", tutor.FullName)
+                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật chứng chỉ {model.CertificateName} của bạn")
+                        .Replace("@Model.IsApproved", Status.APPROVE.ToString());
+                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
+
+
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -154,6 +170,18 @@ namespace backend_api.Controllers.v1
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _certificateRepository.UpdateAsync(model);
+
+                    //Send mail
+                    var subject = "Yêu cập nhật chứng chỉ của bạn đã bị từ chối!";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", tutor.FullName)
+                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật chứng chỉ {model.CertificateName} của bạn")
+                        .Replace("@Model.IsApproved", Status.REJECT.ToString())
+                        .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
+                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
+
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;

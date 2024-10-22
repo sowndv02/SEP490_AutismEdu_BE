@@ -6,6 +6,7 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -25,13 +26,16 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<WorkExperienceController> _logger;
         private readonly IMapper _mapper;
+        private readonly IEmailSender _emailSender;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
         public TutorRequestController(IUserRepository userRepository, ITutorRequestRepository tutorRequestRepository,
             ILogger<WorkExperienceController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString)
+            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString,
+            IEmailSender emailSender)
         {
+            _emailSender = emailSender; 
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -192,6 +196,33 @@ namespace backend_api.Controllers.v1
                 model.ParentId = userId;
                 model.CreatedDate = DateTime.Now;
                 var createdObject = await _tutorRequestRepository.CreateAsync(model);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId);
+                var parent = await _userRepository.GetAsync(x => x.Id == model.ParentId);
+                // Send mail for parent
+
+                var subjectForParent = "Xác nhận Yêu cầu Dạy học";
+                var parentTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ParentRequestConfirmationTemplate.cshtml");
+                var parentTemplateContent = await System.IO.File.ReadAllTextAsync(parentTemplatePath);
+                var parentHtmlMessage = parentTemplateContent
+                    .Replace("@Model.ParentFullName", parent.FullName)
+                    .Replace("@Model.TutorFullName", tutor.FullName)
+                    .Replace("@Model.TutorEmail", tutor.Email)
+                    .Replace("@Model.TutorPhoneNumber", tutor.PhoneNumber)
+                    .Replace("@Model.RequestDescription", model.Description);
+                await _emailSender.SendEmailAsync(parent.Email, subjectForParent, parentHtmlMessage);
+
+
+                // Send mail for tutor
+
+                var subjectForTutor = "Thông báo Yêu cầu Dạy học Mới";
+                var tutorTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TutorRequestNotificationTemplate.cshtml");
+                var tutorTemplateContent = await System.IO.File.ReadAllTextAsync(tutorTemplatePath);
+                var tutorHtmlMessage = tutorTemplateContent
+                    .Replace("@Model.TutorFullName", tutor.FullName)
+                    .Replace("@Model.ParentFullName", parent.FullName)
+                    .Replace("@Model.RequestDescription", model.Description);
+                await _emailSender.SendEmailAsync(tutor.Email, subjectForTutor, tutorHtmlMessage);
+
                 _response.Result = _mapper.Map<TutorRequestDTO>(createdObject);
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
@@ -222,13 +253,24 @@ namespace backend_api.Controllers.v1
                 //    return BadRequest(_response);
                 //}
 
-                TutorRequest model = await _tutorRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+                TutorRequest model = await _tutorRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "Parent,Tutor", null);
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
                 {
                     model.RequestStatus = Status.APPROVE;
                     model.UpdatedDate = DateTime.Now;
                     model.RejectType = RejectType.Approved;
                     await _tutorRequestRepository.UpdateAsync(model);
+                    var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId);
+                    // Send mail
+                    var subject = "Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã được chấp nhận";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", model.Parent.FullName)
+                        .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
+                        .Replace("@Model.IsApproved", Status.APPROVE.ToString());
+                    await _emailSender.SendEmailAsync(model.Parent.Email, subject, htmlMessage);
+
                     _response.Result = _mapper.Map<TutorRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -242,6 +284,35 @@ namespace backend_api.Controllers.v1
                     model.RejectType = changeStatusDTO.RejectType;
                     model.UpdatedDate = DateTime.Now;
                     var returnObject = await _tutorRequestRepository.UpdateAsync(model);
+                    var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId);
+                    // Send mail
+                    var reason = string.Empty;
+                    switch (changeStatusDTO.RejectType)
+                    {
+                        case RejectType.SchedulingConflicts:
+                            reason = SD.SchedulingConflictsMsg + "\n" + changeStatusDTO.RejectionReason;
+                            break;
+                        case RejectType.IncompatibilityWithCurriculum:
+                            reason = SD.IncompatibilityWithCurriculumMsg + "\n" + changeStatusDTO.RejectionReason;
+                            break;
+                        case RejectType.Other:
+                            reason = changeStatusDTO.RejectionReason;
+                            break;
+                        default:
+                            reason = changeStatusDTO.RejectionReason; 
+                            break;
+                    }
+
+                    var subject = "Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", model.Parent.FullName)
+                        .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
+                        .Replace("@Model.IsApproved", Status.REJECT.ToString()
+                        .Replace("@Model.RejectionReason", reason));
+                    await _emailSender.SendEmailAsync(model.Parent.Email, subject, htmlMessage);
+
                     _response.Result = _mapper.Map<TutorRequestDTO>(returnObject);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
