@@ -127,7 +127,6 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var (total, list) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, null, null);
                 TutorProfileUpdateRequest model = null;

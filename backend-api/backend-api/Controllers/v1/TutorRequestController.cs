@@ -43,6 +43,72 @@ namespace backend_api.Controllers.v1
             _tutorRequestRepository = tutorRequestRepository;
         }
 
+
+        [HttpGet("history")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetAllHistoryRequestAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                int totalCount = 0;
+                List<TutorRequest> list = new();
+                Expression<Func<TutorRequest, bool>> filter = u => u.ParentId == userId;
+                Expression<Func<TutorRequest, object>> orderByQuery = u => true;
+
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
+                {
+                    switch (status.ToLower())
+                    {
+                        case "approve":
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE);
+                            break;
+                        case "reject":
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT);
+                            break;
+                        case "pending":
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.PENDING);
+                            break;
+                    }
+                }
+                var (count, result) = await _tutorRequestRepository.GetAllWithIncludeAsync(filter,
+                               "Tutor,ChildInformation", pageSize: 5, pageNumber: pageNumber, orderByQuery, isDesc);
+                list = result;
+                totalCount = count;
+                foreach (var item in list) 
+                {
+                    item.Tutor.User = await _userRepository.GetAsync(x => x.Id == item.TutorId);
+                }
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
+                _response.Result = _mapper.Map<List<TutorRequestDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
         [HttpGet]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
