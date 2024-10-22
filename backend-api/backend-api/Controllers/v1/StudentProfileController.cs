@@ -130,6 +130,10 @@ namespace backend_api.Controllers.v1
                         _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
                         return BadRequest(_response);
                     }
+
+                    tutorRequest.RequestStatus = SD.Status.APPROVE;
+                    tutorRequest.UpdatedDate = DateTime.Now;
+                    await _tutorRequestRepository.UpdateAsync(tutorRequest);
                 }
 
                 var child = await _childInfoRepository.GetAsync(x => x.Id == createDTO.ChildId, true,"Parent");
