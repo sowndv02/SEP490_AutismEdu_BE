@@ -8,6 +8,7 @@ namespace backend_api.Models.DTOs
         public int Id { get; set; }
         public ChildInformationDTO ChildInformation { get; set; }
         public ApplicationUserDTO Parent { get; set; }
+        public TutorDTO? Tutor { get; set; }
         public string? Description { get; set; }
         public Status RequestStatus { get; set; }
         public string? RejectionReason { get; set; }
