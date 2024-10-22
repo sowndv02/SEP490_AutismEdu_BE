@@ -10,6 +10,6 @@
         public string? Address { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
-        public List<ChildInformationMediaDTO> ChildInformationMedias { get; set; }
+        public string? ImageUrlPath { get; set; }
     }
 }
