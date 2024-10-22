@@ -15,7 +15,9 @@ namespace backend_api.Models.DTOs
         public DateTime DateOfBirth { get; set; }
         public int StartAge { get; set; }
         public int EndAge { get; set; }
-        public decimal? Price { get; set; }
+        public decimal PriceFrom { get; set; }
+        public decimal PriceEnd { get; set; }
+        public float SessionHours { get; set; }
         public string? Description { get; set; }
         public Status RequestStatus { get; set; }
         public string? RejectionReason { get; set; }

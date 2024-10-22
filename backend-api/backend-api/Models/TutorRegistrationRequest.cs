@@ -19,13 +19,19 @@ namespace backend_api.Models
         [Required]
         public string Address { get; set; }
         [Required]
+        public decimal PriceFrom { get; set; }
+        [Required]
+        public decimal PriceEnd { get; set; }
+        [Required]
+        public float SessionHours { get; set; }
+        [Required]
         public DateTime DateOfBirth { get; set; }
         [Required]
         public int StartAge { get; set; }
         [Required]
         public int EndAge { get; set; }
-        public decimal? Price { get; set; }
-        public string? Description { get; set; }
+        [Required]
+        public string AboutMe { get; set; }
         public Status RequestStatus { get; set; } = Status.PENDING;
         public string? ApprovedId { get; set; }
         public string? RejectionReason { get; set; }

@@ -12,7 +12,9 @@ namespace backend_api.Models
         public string TutorId { get; set; }
         [ForeignKey(nameof(TutorId))]
         public Tutor Tutor { get; set; }
-        public decimal Price { get; set; }
+        public decimal PriceFrom { get; set; }
+        public decimal PriceEnd { get; set; }
+        public float SessionHours { get; set; }
         public string PhoneNumber { get; set; }
         public int StartAge { get; set; }
         public int EndAge { get; set; }

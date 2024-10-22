@@ -825,6 +825,7 @@ namespace backend_api.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("AboutMe")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedDate")
@@ -836,8 +837,14 @@ namespace backend_api.Migrations
                     b.Property<int>("EndAge")
                         .HasColumnType("int");
 
-                    b.Property<decimal?>("Price")
+                    b.Property<decimal>("PriceEnd")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PriceFrom")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<float>("SessionHours")
+                        .HasColumnType("real");
 
                     b.Property<int>("StartAge")
                         .HasColumnType("int");
@@ -879,7 +886,10 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Price")
+                    b.Property<decimal>("PriceEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PriceFrom")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("RejectionReason")
@@ -887,6 +897,9 @@ namespace backend_api.Migrations
 
                     b.Property<int>("RequestStatus")
                         .HasColumnType("int");
+
+                    b.Property<float>("SessionHours")
+                        .HasColumnType("real");
 
                     b.Property<int>("StartAge")
                         .HasColumnType("int");
@@ -915,6 +928,10 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<string>("AboutMe")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -927,9 +944,6 @@ namespace backend_api.Migrations
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -949,7 +963,10 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("Price")
+                    b.Property<decimal>("PriceEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PriceFrom")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("RejectionReason")
@@ -957,6 +974,9 @@ namespace backend_api.Migrations
 
                     b.Property<int>("RequestStatus")
                         .HasColumnType("int");
+
+                    b.Property<float>("SessionHours")
+                        .HasColumnType("real");
 
                     b.Property<int>("StartAge")
                         .HasColumnType("int");

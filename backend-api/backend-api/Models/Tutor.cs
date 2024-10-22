@@ -7,11 +7,13 @@ namespace backend_api.Models
     {
         [Key]
         public string TutorId { get; set; }
-        public decimal? Price { get; set; }
+        public decimal PriceFrom { get; set; }
+        public decimal PriceEnd { get; set; }
+        public float SessionHours { get; set; }
         public int StartAge { get; set; }
         public int EndAge { get; set; }
         public DateTime DateOfBirth { get; set; }
-        public string? AboutMe { get; set; }
+        public string AboutMe { get; set; }
         [ForeignKey(nameof(TutorId))]
         public ApplicationUser User { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;

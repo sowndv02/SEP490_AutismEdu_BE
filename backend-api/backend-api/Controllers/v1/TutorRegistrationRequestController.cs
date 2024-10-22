@@ -270,8 +270,9 @@ namespace backend_api.Controllers.v1
                     var tutor = await _tutorRepository.CreateAsync(new Tutor()
                     {
                         TutorId = user.Id,
-                        Price = model.Price,
-                        AboutMe = model.Description,
+                        PriceFrom = model.PriceFrom,
+                        PriceEnd = model.PriceEnd,
+                        AboutMe = model.AboutMe,
                         DateOfBirth = model.DateOfBirth,
                         StartAge = model.StartAge,
                         EndAge = model.EndAge,

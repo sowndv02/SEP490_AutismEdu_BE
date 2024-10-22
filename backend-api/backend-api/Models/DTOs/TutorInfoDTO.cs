@@ -8,8 +8,10 @@ namespace backend_api.Models.DTOs
         public DateTime DateOfBirth { get; set; }
         public int StartAge { get; set; }
         public int EndAge { get; set; }
-        public string? AboutMe { get; set; }
-        public decimal? Price { get; set; }
+        public string AboutMe { get; set; }
+        public decimal PriceFrom { get; set; }
+        public decimal PriceEnd { get; set; }
+        public float SessionHours { get; set; }
         public string Email { get; set; }
         public string FullName { get; set; }
         public string? PhoneNumber { get; set; }
