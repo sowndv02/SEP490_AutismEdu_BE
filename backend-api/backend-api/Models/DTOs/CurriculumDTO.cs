@@ -13,9 +13,9 @@ namespace backend_api.Models.DTOs
         public ApplicationUserDTO? ApprovedBy { get; set; }
         public bool IsActive { get; set; } = false;
         public int VersionNumber { get; set; } = 1;
-        public string OrifinalDescription { get; set; }
-        public int OrifinalAgeFrom { get; set; }
-        public int OrifinalAgeEnd { get; set; }
+        public string OriginalDescription { get; set; }
+        public int OriginalAgeFrom { get; set; }
+        public int OriginalAgeEnd { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
     }

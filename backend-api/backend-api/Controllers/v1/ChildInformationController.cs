@@ -3,14 +3,9 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 
@@ -42,7 +37,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] ChildInformationCreateDTO childInformationCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] ChildInformationCreateDTO childInformationCreateDTO)
         {
             try
             {
