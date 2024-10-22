@@ -86,7 +86,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.isMale ? "Male" : "Female"))
-                .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate.Value.ToString("dd/MM/yyyy")))
+                .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate.Value))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
                 .ForMember(dest => dest.ParentPhoneNumber, opt => opt.MapFrom(src => src.Parent.PhoneNumber))
@@ -110,9 +110,9 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.ApprovedBy, opt => opt.MapFrom(src => src.ApprovedBy))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
                 .ForMember(dest => dest.VersionNumber, opt => opt.MapFrom(src => src.VersionNumber))
-                .ForMember(dest => dest.OrifinalDescription, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.Description : string.Empty))
-                .ForMember(dest => dest.OrifinalAgeFrom, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.AgeFrom : 0))
-                .ForMember(dest => dest.OrifinalAgeEnd, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.AgeEnd : 0))
+                .ForMember(dest => dest.OriginalDescription, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.Description : string.Empty))
+                .ForMember(dest => dest.OriginalAgeFrom, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.AgeFrom : 0))
+                .ForMember(dest => dest.OriginalAgeEnd, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.AgeEnd : 0))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
                 .ReverseMap();
@@ -120,7 +120,7 @@ namespace backend_api.Mapper
             CreateMap<TutorRequest, TutorRequestDTO>().ReverseMap();
             CreateMap<Blog, BlogCreateDTO>().ReverseMap();
             CreateMap<ReviewCreateDTO, Review>().ReverseMap();
-			CreateMap<Review, ReviewDTO>().ReverseMap();
+            CreateMap<Review, ReviewDTO>().ReverseMap();
             CreateMap<AvailableTimeSlot, AvailableTimeSlotDTO>()
                 .ForMember(dest => dest.TimeSlotId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.TimeSlot, opt => opt.MapFrom(src => $"{src.From.ToString(@"hh\:mm")}-{src.To.ToString(@"hh\:mm")}"));
@@ -161,13 +161,14 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ReverseMap();
             CreateMap<ChildInformationMedia, ChildInformationMediaDTO>().ReverseMap();
-			 CreateMap<StudentProfile, ChildStudentProfileDTO>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.ChildName, opt => opt.MapFrom(src => src.Child.Name))
-                .ForMember(dest => dest.TutorName, opt => opt.MapFrom(src => src.Tutor.User.FullName))
-                .ForMember(dest => dest.TutorPhoneNumber, opt => opt.MapFrom(src => src.Tutor.User.PhoneNumber))
-                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
-                .ReverseMap();        }
+            CreateMap<StudentProfile, ChildStudentProfileDTO>()
+               .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+               .ForMember(dest => dest.ChildName, opt => opt.MapFrom(src => src.Child.Name))
+               .ForMember(dest => dest.TutorName, opt => opt.MapFrom(src => src.Tutor.User.FullName))
+               .ForMember(dest => dest.TutorPhoneNumber, opt => opt.MapFrom(src => src.Tutor.User.PhoneNumber))
+               .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
+               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+               .ReverseMap();
+        }
     }
 }
