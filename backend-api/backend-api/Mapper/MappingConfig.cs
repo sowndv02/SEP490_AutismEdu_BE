@@ -93,7 +93,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
                 .ForMember(dest => dest.ParentPhoneNumber, opt => opt.MapFrom(src => src.Parent.PhoneNumber))
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Parent.Address))
-                .ForMember(dest => dest.ChildInformationMedias, opt => opt.MapFrom(src => src.ChildInformationMedias));
+                .ForMember(dest => dest.ImageUrlPath, opt => opt.MapFrom(src => src.ImageUrlPath));
 
             CreateMap<ChildInformation, ChildInformationCreateDTO>().ReverseMap();
             CreateMap<AvailableTimeSlot, AvailableTimeSlotCreateDTO>().ReverseMap();
@@ -162,7 +162,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Child.Name))
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ReverseMap();
-            CreateMap<ChildInformationMedia, ChildInformationMediaDTO>().ReverseMap();
+
             CreateMap<StudentProfile, ChildStudentProfileDTO>()
                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                .ForMember(dest => dest.ChildName, opt => opt.MapFrom(src => src.Child.Name))

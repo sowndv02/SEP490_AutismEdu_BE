@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend_api.Data;
 
@@ -11,9 +12,10 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241022152645_UpdateDatabaseChildMedia")]
+    partial class UpdateDatabaseChildMedia
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -801,7 +803,6 @@ namespace backend_api.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("AboutMe")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedDate")
@@ -813,14 +814,8 @@ namespace backend_api.Migrations
                     b.Property<int>("EndAge")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("PriceEnd")
+                    b.Property<decimal?>("Price")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PriceFrom")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<float>("SessionHours")
-                        .HasColumnType("real");
 
                     b.Property<int>("StartAge")
                         .HasColumnType("int");
@@ -862,10 +857,7 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("PriceEnd")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PriceFrom")
+                    b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("RejectionReason")
@@ -873,9 +865,6 @@ namespace backend_api.Migrations
 
                     b.Property<int>("RequestStatus")
                         .HasColumnType("int");
-
-                    b.Property<float>("SessionHours")
-                        .HasColumnType("real");
 
                     b.Property<int>("StartAge")
                         .HasColumnType("int");
@@ -904,10 +893,6 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("AboutMe")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -920,6 +905,9 @@ namespace backend_api.Migrations
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -939,10 +927,7 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("PriceEnd")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PriceFrom")
+                    b.Property<decimal?>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("RejectionReason")
@@ -950,9 +935,6 @@ namespace backend_api.Migrations
 
                     b.Property<int>("RequestStatus")
                         .HasColumnType("int");
-
-                    b.Property<float>("SessionHours")
-                        .HasColumnType("real");
 
                     b.Property<int>("StartAge")
                         .HasColumnType("int");

@@ -12,10 +12,10 @@ namespace backend_api.Models
         public string? Name { get; set; }
         public bool isMale { get; set; }
         public DateTime? BirthDate { get; set; }
+        public string? ImageUrlPath { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         [ForeignKey(nameof(ParentId))]
         public ApplicationUser Parent { get; set; }        
-        public List<ChildInformationMedia> ChildInformationMedias { get; set; }
     }
 }
