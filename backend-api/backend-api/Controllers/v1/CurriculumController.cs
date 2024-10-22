@@ -57,6 +57,53 @@ namespace backend_api.Controllers.v1
             _tutorRegistrationRequestRepository = tutorRegistrationRequestRepository;
         }
 
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+                if (id == 0)
+                {
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+                var model = await _curriculumRepository.GetAsync(x => x.Id == id && x.SubmiterId == userId, false, null);
+
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+                model.IsActive = false;
+                model.IsDeleted = true;
+                await _curriculumRepository.UpdateAsync(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+            }
+            return _response;
+        }
+
+
         [HttpGet("updateRequest")]
         [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
@@ -66,7 +113,7 @@ namespace backend_api.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<Curriculum> list = new();
-                Expression<Func<Curriculum, bool>> filter = u => u.SubmiterId == userId;
+                Expression<Func<Curriculum, bool>> filter = u => u.SubmiterId == userId && !u.IsDeleted;
                 Expression<Func<Curriculum, object>> orderByQuery = u => true;
 
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
@@ -129,7 +176,7 @@ namespace backend_api.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    Expression<Func<Curriculum, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId;
+                    Expression<Func<Curriculum, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId && !u.IsDeleted;
 
                     var combinedFilter = Expression.Lambda<Func<Curriculum, bool>>(
                         Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
@@ -202,10 +249,10 @@ namespace backend_api.Controllers.v1
                 _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                 return BadRequest(_response);
             }
-            // TODO: Update age from end 
 
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmiterId == userId);
+            //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = "a09752778505389093199";
+            var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmiterId == userId &&  !x.IsDeleted && x.IsActive);
             foreach (var item in list)
             {
                 if (item.AgeFrom >= curriculumDto.AgeFrom || item.AgeEnd >= curriculumDto.AgeEnd)

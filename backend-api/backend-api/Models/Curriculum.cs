@@ -18,6 +18,7 @@ namespace backend_api.Models
         [ForeignKey(nameof(ApprovedId))]
         public ApplicationUser? ApprovedBy { get; set; }
         public bool IsActive { get; set; } = false;
+        public bool IsDeleted { get; set; } = false;
         public int VersionNumber { get; set; } = 1;
         public int? OriginalCurriculumId { get; set; }
         [ForeignKey(nameof(OriginalCurriculumId))]
