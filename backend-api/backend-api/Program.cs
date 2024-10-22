@@ -95,6 +95,7 @@ builder.Services.AddSingleton<TokenEcryption>();
 builder.Services.AddSingleton<FormatString>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
 builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
+builder.Services.AddHostedService<AutoRejectStudentProfile>();
 
 
 

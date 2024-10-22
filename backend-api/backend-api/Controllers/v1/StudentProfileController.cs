@@ -6,6 +6,7 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
@@ -28,6 +29,7 @@ namespace backend_api.Controllers.v1
         private readonly IChildInformationRepository _childInfoRepository;
         private readonly ITutorRequestRepository _tutorRequestRepository;
         private readonly ITutorRepository _tutorRepository;
+        private readonly IEmailSender _emailSender;
 
         protected APIResponse _response;
         private readonly IMapper _mapper;
@@ -36,7 +38,7 @@ namespace backend_api.Controllers.v1
         public StudentProfileController(IStudentProfileRepository studentProfileRepository, IAssessmentQuestionRepository assessmentQuestionRepository,
             IScheduleTimeSlotRepository scheduleTimeSlotRepository, IInitialAssessmentResultRepository initialAssessmentResultRepository
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository,
-            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository)
+            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IEmailSender emailSender)
         {
             _studentProfileRepository = studentProfileRepository;
             _assessmentQuestionRepository = assessmentQuestionRepository;
@@ -48,6 +50,7 @@ namespace backend_api.Controllers.v1
             _mapper = mapper;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _tutorRepository = tutorRepository;
+            _emailSender = emailSender;
         }
 
         [HttpPost]
@@ -129,7 +132,7 @@ namespace backend_api.Controllers.v1
                     }
                 }
 
-                var child = await _childInfoRepository.GetAsync(x => x.Id == createDTO.ChildId);
+                var child = await _childInfoRepository.GetAsync(x => x.Id == createDTO.ChildId, true,"Parent");
 
                 if (child == null)
                 {
@@ -150,7 +153,21 @@ namespace backend_api.Controllers.v1
                 await _studentProfileRepository.CreateAsync(model);
 
                 //TODO: send email
-
+                if (createDTO.TutorRequestId <= 0)
+                {
+                    var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
+                    var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateStudentProfileTemplate.cshtml");
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.ParentName", child.Parent.FullName)
+                        .Replace("@Model.TutorName", tutor.User.FullName)
+                        .Replace("@Model.StudentName", child.Name)
+                        .Replace("@Model.Email", child.Parent.Email)
+                        .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL)
+                        .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
+                    await _emailSender.SendEmailAsync(child.Parent.Email, subject, htmlMessage);
+                }              
 
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
