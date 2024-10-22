@@ -22,18 +22,15 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         private readonly IStudentProfileRepository _studentProfileRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
-        private readonly IChildInformationMediaRepository _childInformationMediaRepository;
 
         public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper,
-            IStudentProfileRepository studentProfileRepository, IBlobStorageRepository blobStorageRepository
-            , IChildInformationMediaRepository childInformationMediaRepository)
+            IStudentProfileRepository studentProfileRepository, IBlobStorageRepository blobStorageRepository)
         {
             _childInfoRepository = childInfoRepository;
             _response = new APIResponse();
             _mapper = mapper;
             _studentProfileRepository = studentProfileRepository;
             _blobStorageRepository = blobStorageRepository;
-            _childInformationMediaRepository = childInformationMediaRepository;
         }
 
         [HttpPost]
@@ -65,25 +62,11 @@ namespace backend_api.Controllers.v1
                 var childInfo = await _childInfoRepository.CreateAsync(model);
 
                 // Handle child media uploads
-                if (childInformationCreateDTO.Medias != null)
+                if (childInformationCreateDTO.Media != null)
                 {
-                    for (int i = 0; i < childInformationCreateDTO.Medias.Count; i++)
-                    {
-                        var media = childInformationCreateDTO.Medias[i];
-
-                        if (media != null)
-                        {
-                            using var mediaStream = media.OpenReadStream();
-                            string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
-
-                            ChildInformationMedia childMedia = new ChildInformationMedia
-                            {
-                                ChildInformationId = childInfo.Id,
-                                UrlPath = mediaUrl
-                            };
-                            await _childInformationMediaRepository.CreateAsync(childMedia);
-                        }
-                    }
+                    using var mediaStream = childInformationCreateDTO.Media.OpenReadStream();
+                    string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(childInformationCreateDTO.Media.FileName)));
+                    model.ImageUrlPath = mediaUrl;
                 }
 
                 _response.Result = _mapper.Map<ChildInformationDTO>(childInfo);
@@ -95,7 +78,8 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { ex.Message
+};
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -178,30 +162,19 @@ namespace backend_api.Controllers.v1
                 }
 
                 // Update child media
-                if (updateDTO.Medias != null)
+                if (updateDTO.Media != null)
                 {
-                    for (int i = 0; i < updateDTO.Medias.Count; i++)
-                    {
-                        var media = updateDTO.Medias[i];
+                    using var mediaStream = updateDTO.Media.OpenReadStream();
+                    string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(updateDTO.Media.FileName)));
 
-                        if (media != null)
-                        {
-                            using var mediaStream = media.OpenReadStream();
-                            string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
-
-                            ChildInformationMedia childMedia = await _childInformationMediaRepository.GetAsync(x => x.ChildInformationId == model.Id);
-                            childMedia.UrlPath = mediaUrl;
-                            childMedia.UpdatedDate = DateTime.Now;
-                            await _childInformationMediaRepository.UpdateAsync(childMedia);
-                        }
-                    }
+                    model.ImageUrlPath = mediaUrl;
                 }
 
-                if(model.isMale != null)
+                if (model.isMale != null)
                 {
                     model.isMale = updateDTO.isMale;
                 }
-               
+
                 model.UpdatedDate = DateTime.Now;
                 var childInfo = await _childInfoRepository.UpdateAsync(model);
 
