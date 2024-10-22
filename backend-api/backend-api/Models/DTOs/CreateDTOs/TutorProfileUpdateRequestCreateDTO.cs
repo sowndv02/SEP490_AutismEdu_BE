@@ -5,7 +5,9 @@ namespace backend_api.Models.DTOs.CreateDTOs
     public class TutorProfileUpdateRequestCreateDTO
     {
         [Required]
-        public decimal Price { get; set; }
+        public decimal PriceFrom { get; set; }
+        public decimal PriceEnd { get; set; }
+        public float SessionHours { get; set; }
         [Required]
         public string Address { get; set; }
         [Required]

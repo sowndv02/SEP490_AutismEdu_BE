@@ -14,6 +14,12 @@ namespace backend_api.Models.DTOs.CreateDTOs
         public string PhoneNumber { get; set; }
         [Required]
         public string Address { get; set; }
+        [Required]
+        public decimal PriceFrom { get; set; }
+        [Required]
+        public decimal PriceEnd { get; set; }
+        [Required]
+        public float SessionHours { get; set; }
         public IFormFile Image { get; set; }
         [Required]
         public DateTime DateOfBirth { get; set; }
@@ -21,9 +27,9 @@ namespace backend_api.Models.DTOs.CreateDTOs
         public int StartAge { get; set; }
         [Required]
         public int EndAge { get; set; }
-        public decimal? Price { get; set; }
         public List<CurriculumCreateDTO>? Curriculums { get; set; }
-        public string? Description { get; set; }
+        [Required]
+        public string AboutMe { get; set; }
         public List<WorkExperienceCreateDTO>? WorkExperiences { get; set; }
         public List<CertificateCreateDTO> Certificates { get; set; }
     }
