@@ -5,6 +5,7 @@ using backend_api.Data;
 using backend_api.Mapper;
 using backend_api.Middlewares;
 using backend_api.Models;
+using backend_api.RabbitMQSender;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services;
@@ -100,6 +101,10 @@ builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
 builder.Services.AddHostedService<AutoRejectStudentProfile>();
 
 
+// Config RabbitMQ
+var rabbitMQSettings = builder.Configuration.GetSection("RabbitMQSettings");
+builder.Services.AddHostedService<EmailConsumerService>();
+builder.Services.AddScoped<IRabbitMQMessageSender, RabbitMQMessageSender>();
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingConfig));
