@@ -27,6 +27,7 @@ namespace backend_api.Controllers
         private readonly IRabbitMQMessageSender _messageBus;
         private static int ValidateTime = 0;
         private static string clientId = string.Empty;
+        private static string queueName = string.Empty;
         private static string clientSecret = string.Empty;
         public AuthController(IUserRepository userRepository, IMapper mapper,
             IConfiguration configuration, IRabbitMQMessageSender messageBus, DateTimeEncryption dateTimeEncryption,
@@ -35,6 +36,7 @@ namespace backend_api.Controllers
             ValidateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
             clientId = configuration.GetValue<string>("Authentication:Google:ClientId");
             clientSecret = configuration.GetValue<string>("Authentication:Google:ClientSecret");
+            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _dateTimeEncryption = dateTimeEncryption;
             _mapper = mapper;
             _userRepository = userRepository;
@@ -68,7 +70,7 @@ namespace backend_api.Controllers
                 }
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
-                await _emailSender.SendEmailAsync(user.Email, "Confirm Email", $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>");
+                _messageBus.SendMessage(new EmailLogger() { Email = user.Email, Subject = "Confirm Email", Message = $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>" }, queueName);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -225,7 +227,12 @@ namespace backend_api.Controllers
 
                 var callbackUrl = $"{SD.URL_FE_FULL}/reset-password?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
 
-                await _emailSender.SendEmailAsync(forgotPasswordDTO.Email, "Reset password", $"Expiration time 5 minutes. \nPlease reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
+                _messageBus.SendMessage(new EmailLogger()
+                {
+                    Email = forgotPasswordDTO.Email,
+                    Subject = "Reset password",
+                    Message = $"Expiration time 5 minutes. \nPlease reset your password by clicking here: <a href='{callbackUrl}'>link</a>"
+                }, queueName);
 
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -312,7 +319,12 @@ namespace backend_api.Controllers
 
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
-                await _emailSender.SendEmailAsync(user.Email, "Confirm Email", $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>");
+                _messageBus.SendMessage(new EmailLogger()
+                {
+                    Email = user.Email,
+                    Subject = "Confirm Email",
+                    Message = $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>"
+                }, queueName);
 
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;

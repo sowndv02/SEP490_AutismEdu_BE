@@ -33,6 +33,7 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<TutorController> _logger;
         private readonly IMapper _mapper;
+        private string queueName = string.Empty;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
@@ -49,6 +50,7 @@ namespace backend_api.Controllers.v1
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _response = new APIResponse();
             _mapper = mapper;
             _blobStorageRepository = blobStorageRepository;
@@ -133,7 +135,12 @@ namespace backend_api.Controllers.v1
                     .Replace("@Model.FullName", model.FullName)
                     .Replace("@Model.Email", model.Email)
                     .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
-                await _emailSender.SendEmailAsync(model.Email, subject, htmlMessage);
+                _messageBus.SendMessage(new EmailLogger()
+                {
+                    Email = model.Email,
+                    Subject = subject,
+                    Message = htmlMessage
+                }, queueName);
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
@@ -342,7 +349,12 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.LoginUrl", SD.URL_FE_TUTOR_LOGIN);
 
 
-                    await _emailSender.SendEmailAsync(model.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = model.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -407,7 +419,12 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.FullName", model.FullName)
                         .Replace("@Model.RejectionReason", model.RejectionReason ?? "Không có lý do cụ thể.");
 
-                    await _emailSender.SendEmailAsync(model.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = model.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
                     _response.IsSuccess = true;

@@ -27,6 +27,7 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<WorkExperienceController> _logger;
         private readonly IMapper _mapper;
+        private string queueName = string.Empty;
         private readonly IRabbitMQMessageSender _messageBus;
         private readonly FormatString _formatString;
         protected APIResponse _response;
@@ -36,10 +37,11 @@ namespace backend_api.Controllers.v1
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString,
             IRabbitMQMessageSender messageBus)
         {
-            _messageBus = messageBus; 
+            _messageBus = messageBus;
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _response = new APIResponse();
             _mapper = mapper;
             _blobStorageRepository = blobStorageRepository;
@@ -95,7 +97,7 @@ namespace backend_api.Controllers.v1
                                "Tutor,ChildInformation", pageSize: 5, pageNumber: pageNumber, orderByQuery, isDesc);
                 list = result;
                 totalCount = count;
-                foreach (var item in list) 
+                foreach (var item in list)
                 {
                     item.Tutor.User = await _userRepository.GetAsync(x => x.Id == item.TutorId);
                 }
@@ -210,7 +212,12 @@ namespace backend_api.Controllers.v1
                     .Replace("@Model.TutorEmail", tutor.Email)
                     .Replace("@Model.TutorPhoneNumber", tutor.PhoneNumber)
                     .Replace("@Model.RequestDescription", model.Description);
-                await _emailSender.SendEmailAsync(parent.Email, subjectForParent, parentHtmlMessage);
+                _messageBus.SendMessage(new EmailLogger()
+                {
+                    Email = parent.Email,
+                    Subject = subjectForParent,
+                    Message = parentHtmlMessage
+                }, queueName);
 
 
                 // Send mail for tutor
@@ -222,7 +229,8 @@ namespace backend_api.Controllers.v1
                     .Replace("@Model.TutorFullName", tutor.FullName)
                     .Replace("@Model.ParentFullName", parent.FullName)
                     .Replace("@Model.RequestDescription", model.Description);
-                await _emailSender.SendEmailAsync(tutor.Email, subjectForTutor, tutorHtmlMessage);
+                _messageBus.SendMessage(
+                    new EmailLogger() { Email = tutor.Email, Subject = subjectForTutor, Message = tutorHtmlMessage }, queueName);
 
                 _response.Result = _mapper.Map<TutorRequestDTO>(createdObject);
                 _response.StatusCode = HttpStatusCode.Created;
@@ -270,7 +278,12 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.FullName", model.Parent.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
                         .Replace("@Model.IsApproved", Status.APPROVE.ToString());
-                    await _emailSender.SendEmailAsync(model.Parent.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = model.Parent.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     _response.Result = _mapper.Map<TutorRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -300,7 +313,7 @@ namespace backend_api.Controllers.v1
                             reason = changeStatusDTO.RejectionReason;
                             break;
                         default:
-                            reason = changeStatusDTO.RejectionReason; 
+                            reason = changeStatusDTO.RejectionReason;
                             break;
                     }
 
@@ -312,7 +325,12 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
                         .Replace("@Model.IsApproved", Status.REJECT.ToString()
                         .Replace("@Model.RejectionReason", reason));
-                    await _emailSender.SendEmailAsync(model.Parent.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = model.Parent.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     _response.Result = _mapper.Map<TutorRequestDTO>(returnObject);
                     _response.StatusCode = HttpStatusCode.OK;

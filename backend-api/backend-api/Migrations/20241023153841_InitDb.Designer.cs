@@ -12,8 +12,8 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241021153754_InitDb_v1")]
-    partial class InitDb_v1
+    [Migration("20241023153841_InitDb")]
+    partial class InitDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -369,6 +369,9 @@ namespace backend_api.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ImageUrlPath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -387,33 +390,6 @@ namespace backend_api.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("ChildInformations");
-                });
-
-            modelBuilder.Entity("backend_api.Models.ChildInformationMedia", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int>("ChildInformationId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UrlPath")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChildInformationId");
-
-                    b.ToTable("ChildInformationMedias");
                 });
 
             modelBuilder.Entity("backend_api.Models.Curriculum", b =>
@@ -441,6 +417,9 @@ namespace backend_api.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<int?>("OriginalCurriculumId")
@@ -475,6 +454,34 @@ namespace backend_api.Migrations
                     b.HasIndex("TutorRegistrationRequestId");
 
                     b.ToTable("Curriculums");
+                });
+
+            modelBuilder.Entity("backend_api.Models.EmailLogger", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmailLoggers");
                 });
 
             modelBuilder.Entity("backend_api.Models.InitialAssessmentResult", b =>
@@ -707,11 +714,11 @@ namespace backend_api.Migrations
                     b.Property<int>("AttendanceStatus")
                         .HasColumnType("int");
 
-                    b.Property<int>("ChildId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("End")
+                        .HasColumnType("time");
 
                     b.Property<int>("PassingStatus")
                         .HasColumnType("int");
@@ -720,6 +727,12 @@ namespace backend_api.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("ScheduleTimeSlotId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("Start")
+                        .HasColumnType("time");
+
+                    b.Property<int>("StudentProfileId")
                         .HasColumnType("int");
 
                     b.Property<string>("TutorId")
@@ -731,9 +744,9 @@ namespace backend_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChildId");
-
                     b.HasIndex("ScheduleTimeSlotId");
+
+                    b.HasIndex("StudentProfileId");
 
                     b.HasIndex("TutorId");
 
@@ -818,6 +831,7 @@ namespace backend_api.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("AboutMe")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedDate")
@@ -829,8 +843,14 @@ namespace backend_api.Migrations
                     b.Property<int>("EndAge")
                         .HasColumnType("int");
 
-                    b.Property<decimal?>("Price")
+                    b.Property<decimal>("PriceEnd")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PriceFrom")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<float>("SessionHours")
+                        .HasColumnType("real");
 
                     b.Property<int>("StartAge")
                         .HasColumnType("int");
@@ -872,7 +892,10 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Price")
+                    b.Property<decimal>("PriceEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PriceFrom")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("RejectionReason")
@@ -880,6 +903,9 @@ namespace backend_api.Migrations
 
                     b.Property<int>("RequestStatus")
                         .HasColumnType("int");
+
+                    b.Property<float>("SessionHours")
+                        .HasColumnType("real");
 
                     b.Property<int>("StartAge")
                         .HasColumnType("int");
@@ -908,6 +934,10 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<string>("AboutMe")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -920,9 +950,6 @@ namespace backend_api.Migrations
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -942,7 +969,10 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("Price")
+                    b.Property<decimal>("PriceEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PriceFrom")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("RejectionReason")
@@ -950,6 +980,9 @@ namespace backend_api.Migrations
 
                     b.Property<int>("RequestStatus")
                         .HasColumnType("int");
+
+                    b.Property<float>("SessionHours")
+                        .HasColumnType("real");
 
                     b.Property<int>("StartAge")
                         .HasColumnType("int");
@@ -1034,6 +1067,9 @@ namespace backend_api.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<int?>("OriginalId")
@@ -1422,17 +1458,6 @@ namespace backend_api.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("backend_api.Models.ChildInformationMedia", b =>
-                {
-                    b.HasOne("backend_api.Models.ChildInformation", "ChildInformation")
-                        .WithMany("ChildInformationMedias")
-                        .HasForeignKey("ChildInformationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ChildInformation");
-                });
-
             modelBuilder.Entity("backend_api.Models.Curriculum", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "ApprovedBy")
@@ -1560,15 +1585,15 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Schedule", b =>
                 {
-                    b.HasOne("backend_api.Models.ChildInformation", "Child")
-                        .WithMany()
-                        .HasForeignKey("ChildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("backend_api.Models.ScheduleTimeSlot", "ScheduleTimeSlot")
                         .WithMany()
                         .HasForeignKey("ScheduleTimeSlotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.StudentProfile", "StudentProfile")
+                        .WithMany()
+                        .HasForeignKey("StudentProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1578,9 +1603,9 @@ namespace backend_api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Child");
-
                     b.Navigation("ScheduleTimeSlot");
+
+                    b.Navigation("StudentProfile");
 
                     b.Navigation("Tutor");
                 });
@@ -1765,11 +1790,6 @@ namespace backend_api.Migrations
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
                 {
                     b.Navigation("CertificateMedias");
-                });
-
-            modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
-                {
-                    b.Navigation("ChildInformationMedias");
                 });
 
             modelBuilder.Entity("backend_api.Models.StudentProfile", b =>

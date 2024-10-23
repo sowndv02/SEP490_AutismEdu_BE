@@ -32,6 +32,7 @@ namespace backend_api.Controllers.v1
         private readonly ILogger<CertificateController> _logger;
         private readonly IMapper _mapper;
         private readonly IRabbitMQMessageSender _messageBus;
+        private string queueName = string.Empty;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
@@ -47,6 +48,7 @@ namespace backend_api.Controllers.v1
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _response = new APIResponse();
             _mapper = mapper;
             _blobStorageRepository = blobStorageRepository;
@@ -155,8 +157,13 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.FullName", tutor.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật chứng chỉ {model.CertificateName} của bạn")
                         .Replace("@Model.IsApproved", Status.APPROVE.ToString());
-                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
 
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = tutor.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -181,7 +188,12 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật chứng chỉ {model.CertificateName} của bạn")
                         .Replace("@Model.IsApproved", Status.REJECT.ToString())
                         .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
-                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = tutor.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
