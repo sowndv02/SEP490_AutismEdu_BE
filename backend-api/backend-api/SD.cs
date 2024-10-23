@@ -119,6 +119,38 @@
         public const string CHILD_NOT_FOUND = "Không tìm thấy dữ liệu trẻ";
         public const string MISSING_PARENT_CHILD_INFORMATION = "Không nhập đủ dữ liệu phụ huynh và trẻ";
 
+        // const exercise type
+        public const string DEFAULT_EXERCISE_TYPE_1 = "Tập phát âm thuở ban đầu - nhưng âm thanh của trẻ nhỏ";
+        public const string DEFAULT_EXERCISE_TYPE_2 = "Tập phát âm thuở ban đầu - lời nói đầu tiên";
+        public const string DEFAULT_EXERCISE_TYPE_3 = "Nghe: Chú ý - nhận biết các âm";
+        public const string DEFAULT_EXERCISE_TYPE_4 = "Nghe: Chú ý - tìm kiếm và dõi theo các âm thanh";
+        public const string DEFAULT_EXERCISE_TYPE_5 = "Nghe: Chú ý - đáp lại sự chú ý bằng cách mỉm cười và phát ra âm thanh";
+        public const string DEFAULT_EXERCISE_TYPE_6 = "Nghe: Chú ý - làm cho người khác phải chú ý đến mình";
+        public const string DEFAULT_EXERCISE_TYPE_7 = "Bắt chước - các cử chỉ (lần lượt - con làm gì đó và bố/ mẹ sẽ làm việc gì đó)";
+        public const string DEFAULT_EXERCISE_TYPE_8 = "Bắt chước - âm thanh";
+        public const string DEFAULT_EXERCISE_TYPE_9 = "Đáp lại lời nói";
+        public const string DEFAULT_EXERCISE_TYPE_10 = "Những tiếng nói đầu tiên - những từ chỉ đồ vật";
+        public const string DEFAULT_EXERCISE_TYPE_11 = "Những tiếng nói đầu tiên - những cấu trúc đầu tiên";
+        public const string DEFAULT_EXERCISE_TYPE_12 = "Nghe - Chú ý";
+        public const string DEFAULT_EXERCISE_TYPE_13 = "Bắt chước";
+        public const string DEFAULT_EXERCISE_TYPE_14 = "Chơi với truyện tranh";
+        public const string DEFAULT_EXERCISE_TYPE_15 = "Đáp lại ngôn ngữ";
+        public const string DEFAULT_EXERCISE_TYPE_16= "Những tiếng nói đầu tiên - động từ, tính từ và cụm có hai từ";
+        public const string DEFAULT_EXERCISE_TYPE_17 = "Những tiếng nói đầu tiên - câu hỏi";
+        public const string DEFAULT_EXERCISE_TYPE_18 = "Những tiếng nói đầu tiên - cấu trúc câu";
+        public const string DEFAULT_EXERCISE_TYPE_19 = "Lắng nghe - Chú ý";
+        public const string DEFAULT_EXERCISE_TYPE_20 = "Bắt chước";
+        public const string DEFAULT_EXERCISE_TYPE_21 = "Chơi với các quyển sách tranh";
+        public const string DEFAULT_EXERCISE_TYPE_22 = "Đáp lại lời nói của người khác";
+        public const string DEFAULT_EXERCISE_TYPE_23 = "Lời nói ban đầu - Giao tiếp";
+        public const string DEFAULT_EXERCISE_TYPE_24 = "Những lời nói đầu tiên - sử dụng các khái niệm nhận thức";
+        public const string DEFAULT_EXERCISE_TYPE_25 = "Những tiếng nói đầu tiên - Câu hỏi";
+        public const string DEFAULT_EXERCISE_TYPE_26 = "Những tiếng nói đầu tiên - Cấu trúc câu";
+        public const string DEFAULT_EXERCISE_TYPE_27 = "Lắng nghe - Chú ý";
+        public const string DEFAULT_EXERCISE_TYPE_28 = "Bắt chước";
+        public const string DEFAULT_EXERCISE_TYPE_29 = "Trò chơi và sách tranh";
+        public const string DEFAULT_EXERCISE_TYPE_30 = "Đáp ứng ngôn ngữ";
+
         // enum status
         public enum Status
         {
