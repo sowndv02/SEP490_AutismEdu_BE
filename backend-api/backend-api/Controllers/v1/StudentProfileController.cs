@@ -28,7 +28,7 @@ namespace backend_api.Controllers.v1
         private readonly ITutorRequestRepository _tutorRequestRepository;
         private readonly ITutorRepository _tutorRepository;
         private readonly IRabbitMQMessageSender _messageBus;
-		private string queueName = string.Empty;
+        private string queueName = string.Empty;
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
@@ -40,7 +40,7 @@ namespace backend_api.Controllers.v1
         public StudentProfileController(IStudentProfileRepository studentProfileRepository, IAssessmentQuestionRepository assessmentQuestionRepository,
             IScheduleTimeSlotRepository scheduleTimeSlotRepository, IInitialAssessmentResultRepository initialAssessmentResultRepository
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository,
-            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IRabbitMQMessageSender messageBus, 
+            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IRabbitMQMessageSender messageBus,
             IUserRepository userRepository, IRoleRepository roleRepository, IBlobStorageRepository blobStorageRepository)
         {
             _studentProfileRepository = studentProfileRepository;
@@ -86,7 +86,7 @@ namespace backend_api.Controllers.v1
                 {
                     // Tao account parent
                     var parentEmailExist = await _userRepository.GetAsync(x => x.Email.Equals(createDTO.Email));
-                    if(parentEmailExist != null)
+                    if (parentEmailExist != null)
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
@@ -123,7 +123,12 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.Password", passsword)
                         .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
 
-                    await _emailSender.SendEmailAsync(parent.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = parent.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     // Tao child
                     using var mediaStream = createDTO.Media.OpenReadStream();
@@ -133,7 +138,7 @@ namespace backend_api.Controllers.v1
                     {
                         ParentId = parent.Id,
                         Name = createDTO.ChildName,
-                        isMale = (bool) createDTO.isMale,
+                        isMale = (bool)createDTO.isMale,
                         ImageUrlPath = mediaUrl,
                         BirthDate = createDTO.BirthDate,
                         CreatedDate = DateTime.Now
@@ -142,7 +147,7 @@ namespace backend_api.Controllers.v1
                     createDTO.ChildId = childInformation.Id;
                 }
 
-                if(createDTO.ChildId <= 0)
+                if (createDTO.ChildId <= 0)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
