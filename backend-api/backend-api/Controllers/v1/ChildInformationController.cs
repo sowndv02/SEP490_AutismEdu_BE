@@ -59,7 +59,6 @@ namespace backend_api.Controllers.v1
                 ChildInformation model = _mapper.Map<ChildInformation>(childInformationCreateDTO);
                 model.ParentId = userId;
                 model.CreatedDate = DateTime.Now;
-                var childInfo = await _childInfoRepository.CreateAsync(model);
 
                 // Handle child media uploads
                 if (childInformationCreateDTO.Media != null)
@@ -68,6 +67,8 @@ namespace backend_api.Controllers.v1
                     string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(childInformationCreateDTO.Media.FileName)));
                     model.ImageUrlPath = mediaUrl;
                 }
+
+                var childInfo = await _childInfoRepository.CreateAsync(model);
 
                 _response.Result = _mapper.Map<ChildInformationDTO>(childInfo);
                 _response.StatusCode = HttpStatusCode.Created;
@@ -170,11 +171,7 @@ namespace backend_api.Controllers.v1
                     model.ImageUrlPath = mediaUrl;
                 }
 
-                if (model.isMale != null)
-                {
-                    model.isMale = updateDTO.isMale;
-                }
-
+                model.isMale = updateDTO.isMale;
                 model.UpdatedDate = DateTime.Now;
                 var childInfo = await _childInfoRepository.UpdateAsync(model);
 
