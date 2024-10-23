@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
 using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.UI.Services;
+
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
@@ -23,12 +24,12 @@ namespace backend_api.Controllers
         private readonly IMapper _mapper;
         private string audience = string.Empty;
         private readonly FormatString _formatString;
-        private readonly IEmailSender _emailSender;
+        private readonly IRabbitMQMessageSender _messageBus;
         private static int ValidateTime = 0;
         private static string clientId = string.Empty;
         private static string clientSecret = string.Empty;
         public AuthController(IUserRepository userRepository, IMapper mapper,
-            IConfiguration configuration, IEmailSender emailSender, DateTimeEncryption dateTimeEncryption,
+            IConfiguration configuration, IRabbitMQMessageSender messageBus, DateTimeEncryption dateTimeEncryption,
             TokenEcryption tokenEncryption, FormatString formatString)
         {
             ValidateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
@@ -38,7 +39,7 @@ namespace backend_api.Controllers
             _mapper = mapper;
             _userRepository = userRepository;
             _response = new();
-            _emailSender = emailSender;
+            _messageBus = messageBus;
             _tokenEncryption = tokenEncryption;
             _formatString = formatString;
         }

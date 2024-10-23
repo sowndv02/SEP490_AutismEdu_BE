@@ -3,11 +3,11 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.RabbitMQSender;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -27,16 +27,16 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<WorkExperienceController> _logger;
         private readonly IMapper _mapper;
-        private readonly IEmailSender _emailSender;
+        private readonly IRabbitMQMessageSender _messageBus;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
         public WorkExperienceController(IUserRepository userRepository, IWorkExperienceRepository workExperienceRepository,
             ILogger<WorkExperienceController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString, 
-            IEmailSender emailSender)
+            IRabbitMQMessageSender messageBus)
         {
-            _emailSender = emailSender;
+            _messageBus = messageBus;
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
