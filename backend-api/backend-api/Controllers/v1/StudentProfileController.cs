@@ -205,6 +205,10 @@ namespace backend_api.Controllers.v1
                 {
                     model.Status = SD.StudentProfileStatus.Pending;
                 }
+                if(createDTO.TutorRequestId <= 0 && createDTO.ChildId > 0)
+                {
+                    model.Status = SD.StudentProfileStatus.Teaching;
+                }
                 else
                 {
                     model.Status = SD.StudentProfileStatus.Teaching;
@@ -244,7 +248,7 @@ namespace backend_api.Controllers.v1
                 await _studentProfileRepository.CreateAsync(model);
 
                 //TODO: send email
-                if (createDTO.TutorRequestId <= 0)
+                if (createDTO.TutorRequestId <= 0 && createDTO.ChildId > 0)
                 {
                     //var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
                     var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
