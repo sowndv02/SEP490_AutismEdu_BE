@@ -99,7 +99,7 @@ namespace backend_api.Controllers.v1
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
 
-                var childInfos = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId), "ChildInformationMedias,Parent");
+                var childInfos = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId), "Parent");
 
                 _response.Result = _mapper.Map<List<ChildInformationDTO>>(childInfos.list);
                 _response.StatusCode = HttpStatusCode.OK;

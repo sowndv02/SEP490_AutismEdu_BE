@@ -75,6 +75,10 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
+                StudentProfile model = _mapper.Map<StudentProfile>(createDTO);
+                model.CreatedDate = DateTime.Now;
+                model.TutorId = tutorId;
+
                 if (!string.IsNullOrEmpty(createDTO.Email) &&
                     !string.IsNullOrEmpty(createDTO.ParentFullName) &&
                     !string.IsNullOrEmpty(createDTO.Address) &&
@@ -84,6 +88,7 @@ namespace backend_api.Controllers.v1
                     !string.IsNullOrEmpty(createDTO.BirthDate.ToString()) &&
                     createDTO.Media != null)
                 {
+                    model.Status = SD.StudentProfileStatus.Teaching;
                     // Tao account parent
                     var parentEmailExist = await _userRepository.GetAsync(x => x.Email.Equals(createDTO.Email));
                     if (parentEmailExist != null)
@@ -144,7 +149,11 @@ namespace backend_api.Controllers.v1
                         CreatedDate = DateTime.Now
                     });
 
-                    createDTO.ChildId = childInformation.Id;
+                    model.ChildId = childInformation.Id;
+                }
+                else
+                {
+                    model.Status = SD.StudentProfileStatus.Pending;
                 }
 
                 if (createDTO.ChildId <= 0)
@@ -198,35 +207,6 @@ namespace backend_api.Controllers.v1
                     }
                 }
 
-                StudentProfile model = _mapper.Map<StudentProfile>(createDTO);
-                model.CreatedDate = DateTime.Now;
-                model.TutorId = tutorId;
-                if (createDTO.TutorRequestId <= 0)
-                {
-                    model.Status = SD.StudentProfileStatus.Pending;
-                }
-                if(createDTO.TutorRequestId <= 0 && createDTO.ChildId > 0)
-                {
-                    model.Status = SD.StudentProfileStatus.Teaching;
-                }
-                else
-                {
-                    model.Status = SD.StudentProfileStatus.Teaching;
-
-                    var tutorRequest = await _tutorRequestRepository.GetAsync(x => x.Id == createDTO.TutorRequestId);
-                    if (tutorRequest == null)
-                    {
-                        _response.StatusCode = HttpStatusCode.BadRequest;
-                        _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
-                        return BadRequest(_response);
-                    }
-
-                    tutorRequest.RequestStatus = SD.Status.APPROVE;
-                    tutorRequest.UpdatedDate = DateTime.Now;
-                    await _tutorRequestRepository.UpdateAsync(tutorRequest);
-                }
-
                 var child = await _childInfoRepository.GetAsync(x => x.Id == createDTO.ChildId, true, "Parent");
                 model.Child = child;
                 if (child == null)
@@ -244,11 +224,11 @@ namespace backend_api.Controllers.v1
                     model.StudentCode += name.ToUpper().ElementAt(0);
                 }
                 model.StudentCode += model.ChildId;
-                model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId));
+                model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
                 await _studentProfileRepository.CreateAsync(model);
 
                 //TODO: send email
-                if (createDTO.TutorRequestId <= 0 && createDTO.ChildId > 0)
+                if (createDTO.ChildId > 0)
                 {
                     //var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
                     var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
@@ -256,7 +236,7 @@ namespace backend_api.Controllers.v1
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
                     var htmlMessage = templateContent
                         .Replace("@Model.ParentName", child.Parent.FullName)
-                        //.Replace("@Model.TutorName", model.Tutor.User.FullName)
+                        .Replace("@Model.TutorName", model.Tutor.User.FullName)
                         .Replace("@Model.StudentName", child.Name)
                         .Replace("@Model.Email", child.Parent.Email)
                         .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL)
