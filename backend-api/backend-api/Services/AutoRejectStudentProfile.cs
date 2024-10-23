@@ -1,7 +1,6 @@
 ﻿using backend_api.Data;
 using backend_api.Models;
 using backend_api.RabbitMQSender;
-using Castle.Core.Smtp;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -12,12 +11,13 @@ namespace backend_api.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<RefreshTokenCleanupService> _logger;
         private readonly IRabbitMQMessageSender _messageBus;
-
-        public AutoRejectStudentProfile(IServiceProvider serviceProvider, ILogger<RefreshTokenCleanupService> logger, 
-            IRabbitMQMessageSender messageBus)
+        private string queueName = string.Empty;
+        public AutoRejectStudentProfile(IServiceProvider serviceProvider, ILogger<RefreshTokenCleanupService> logger,
+            IRabbitMQMessageSender messageBus, IConfiguration configuration)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
+            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _messageBus = messageBus;
         }
 
@@ -62,7 +62,12 @@ namespace backend_api.Services
                         .Replace("@Model.StudentName", profile.Child.Name)
                         .Replace("@Model.Email", profile.Child.Parent.Email)
                         .Replace("@Model.ProfileCreationDate", profile.CreatedDate.ToString("dd/MM/yyyy"));
-                    await _emailSender.SendEmailAsync(profile.Child.Parent.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = profile.Child.Parent.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     _logger.LogWarning($"Profile {profile.Id} has been rejected automatically after 24 hours.");
                 }

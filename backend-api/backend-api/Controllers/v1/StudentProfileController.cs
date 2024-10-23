@@ -4,13 +4,10 @@ using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -31,6 +28,7 @@ namespace backend_api.Controllers.v1
         private readonly ITutorRequestRepository _tutorRequestRepository;
         private readonly ITutorRepository _tutorRepository;
         private readonly IRabbitMQMessageSender _messageBus;
+		private string queueName = string.Empty;
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
@@ -50,6 +48,7 @@ namespace backend_api.Controllers.v1
             _scheduleTimeSlotRepository = scheduleTimeSlotRepository;
             _initialAssessmentResultRepository = initialAssessmentResultRepository;
             _childInfoRepository = childInfoRepository;
+            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _tutorRequestRepository = tutorRequestRepository;
             _response = new APIResponse();
             _mapper = mapper;
@@ -219,7 +218,7 @@ namespace backend_api.Controllers.v1
                     await _tutorRequestRepository.UpdateAsync(tutorRequest);
                 }
 
-                var child = await _childInfoRepository.GetAsync(x => x.Id == createDTO.ChildId, true,"Parent");
+                var child = await _childInfoRepository.GetAsync(x => x.Id == createDTO.ChildId, true, "Parent");
                 model.Child = child;
                 if (child == null)
                 {
@@ -253,8 +252,13 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.Email", child.Parent.Email)
                         .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL)
                         .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
-                    await _emailSender.SendEmailAsync(child.Parent.Email, subject, htmlMessage);
-                }              
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = child.Parent.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
+                }
 
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
@@ -496,7 +500,7 @@ namespace backend_api.Controllers.v1
                         studentProfile.UpdatedDate = DateTime.Now;
                         break;
                 }
-                
+
                 List<InitialAssessmentResult> initialAssessmentResults = new List<InitialAssessmentResult>();
                 foreach (var assessment in studentProfile.InitialAssessmentResults)
                 {
