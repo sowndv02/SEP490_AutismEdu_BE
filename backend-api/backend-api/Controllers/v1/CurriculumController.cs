@@ -32,6 +32,7 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<TutorController> _logger;
         private readonly IMapper _mapper;
+        private string queueName = string.Empty;
         private readonly IRabbitMQMessageSender _messageBus;
         private readonly FormatString _formatString;
         protected APIResponse _response;
@@ -50,6 +51,7 @@ namespace backend_api.Controllers.v1
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _response = new APIResponse();
             _mapper = mapper;
             _blobStorageRepository = blobStorageRepository;
@@ -257,7 +259,7 @@ namespace backend_api.Controllers.v1
 
             //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var userId = "a09752778505389093199";
-            var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmiterId == userId &&  !x.IsDeleted && x.IsActive);
+            var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmiterId == userId && !x.IsDeleted && x.IsActive);
             foreach (var item in list)
             {
                 if (item.AgeFrom >= curriculumDto.AgeFrom || item.AgeEnd >= curriculumDto.AgeEnd)
@@ -326,7 +328,12 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.FullName", tutor.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật khung chương trình của bạn")
                         .Replace("@Model.IsApproved", Status.APPROVE.ToString());
-                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = tutor.Email,
+                        Message = htmlMessage,
+                        Subject = subject
+                    }, queueName);
 
                     _response.Result = _mapper.Map<CurriculumDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -351,7 +358,12 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật khung chương trình của bạn")
                         .Replace("@Model.IsApproved", Status.REJECT.ToString())
                         .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
-                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = tutor.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     _response.Result = _mapper.Map<CurriculumDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;

@@ -4,7 +4,6 @@ using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -27,19 +26,21 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<WorkExperienceController> _logger;
         private readonly IMapper _mapper;
+        private string queueName = string.Empty;
         private readonly IRabbitMQMessageSender _messageBus;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
         public WorkExperienceController(IUserRepository userRepository, IWorkExperienceRepository workExperienceRepository,
             ILogger<WorkExperienceController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString, 
+            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString,
             IRabbitMQMessageSender messageBus)
         {
             _messageBus = messageBus;
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _response = new APIResponse();
             _mapper = mapper;
             _blobStorageRepository = blobStorageRepository;
@@ -315,7 +316,13 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.FullName", tutor.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
                         .Replace("@Model.IsApproved", Status.APPROVE.ToString());
-                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = tutor.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
+
 
                     _response.Result = _mapper.Map<WorkExperienceDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -340,7 +347,12 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
                         .Replace("@Model.IsApproved", Status.REJECT.ToString())
                         .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
-                    await _emailSender.SendEmailAsync(tutor.Email, subject, htmlMessage);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = tutor.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     _response.Result = _mapper.Map<WorkExperienceDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;

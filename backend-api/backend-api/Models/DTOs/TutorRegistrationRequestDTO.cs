@@ -1,6 +1,4 @@
 ﻿using static backend_api.SD;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 
 namespace backend_api.Models.DTOs
 {
@@ -18,7 +16,7 @@ namespace backend_api.Models.DTOs
         public decimal PriceFrom { get; set; }
         public decimal PriceEnd { get; set; }
         public float SessionHours { get; set; }
-        public string? Description { get; set; }
+        public string? AboutMe { get; set; }
         public Status RequestStatus { get; set; }
         public string? RejectionReason { get; set; }
         public ApplicationUserDTO? ApprovedBy { get; set; }

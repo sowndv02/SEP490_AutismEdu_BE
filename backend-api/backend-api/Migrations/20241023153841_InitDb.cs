@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace backend_api.Migrations
 {
-    public partial class InitDb_v1 : Migration
+    public partial class InitDb : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -24,6 +24,22 @@ namespace backend_api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AssessmentQuestions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EmailLoggers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Subject = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmailLoggers", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -201,6 +217,7 @@ namespace backend_api.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     isMale = table.Column<bool>(type: "bit", nullable: false),
                     BirthDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ImageUrlPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -274,11 +291,13 @@ namespace backend_api.Migrations
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PriceFrom = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PriceEnd = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SessionHours = table.Column<float>(type: "real", nullable: false),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
                     StartAge = table.Column<int>(type: "int", nullable: false),
                     EndAge = table.Column<int>(type: "int", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AboutMe = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RequestStatus = table.Column<int>(type: "int", nullable: false),
                     ApprovedId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     RejectionReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -300,11 +319,13 @@ namespace backend_api.Migrations
                 columns: table => new
                 {
                     TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    PriceFrom = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PriceEnd = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SessionHours = table.Column<float>(type: "real", nullable: false),
                     StartAge = table.Column<int>(type: "int", nullable: false),
                     EndAge = table.Column<int>(type: "int", nullable: false),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    AboutMe = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AboutMe = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -402,28 +423,6 @@ namespace backend_api.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ChildInformationMedias",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ChildInformationId = table.Column<int>(type: "int", nullable: false),
-                    UrlPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ChildInformationMedias", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ChildInformationMedias_ChildInformations_ChildInformationId",
-                        column: x => x.ChildInformationId,
-                        principalTable: "ChildInformations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -558,6 +557,7 @@ namespace backend_api.Migrations
                     ApprovedId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     RejectionReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     VersionNumber = table.Column<int>(type: "int", nullable: false),
                     OriginalCurriculumId = table.Column<int>(type: "int", nullable: true),
                     SubmiterId = table.Column<string>(type: "nvarchar(450)", nullable: true),
@@ -658,7 +658,9 @@ namespace backend_api.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PriceFrom = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PriceEnd = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SessionHours = table.Column<float>(type: "real", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StartAge = table.Column<int>(type: "int", nullable: false),
                     EndAge = table.Column<int>(type: "int", nullable: false),
@@ -740,6 +742,7 @@ namespace backend_api.Migrations
                     RequestStatus = table.Column<int>(type: "int", nullable: false),
                     ApprovedId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     VersionNumber = table.Column<int>(type: "int", nullable: false),
                     OriginalId = table.Column<int>(type: "int", nullable: true),
                     RejectionReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -887,9 +890,11 @@ namespace backend_api.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ChildId = table.Column<int>(type: "int", nullable: false),
+                    StudentProfileId = table.Column<int>(type: "int", nullable: false),
                     ScheduleTimeSlotId = table.Column<int>(type: "int", nullable: false),
                     ScheduleDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Start = table.Column<TimeSpan>(type: "time", nullable: false),
+                    End = table.Column<TimeSpan>(type: "time", nullable: false),
                     AttendanceStatus = table.Column<int>(type: "int", nullable: false),
                     PassingStatus = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -899,15 +904,15 @@ namespace backend_api.Migrations
                 {
                     table.PrimaryKey("PK_Schedules", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Schedules_ChildInformations_ChildId",
-                        column: x => x.ChildId,
-                        principalTable: "ChildInformations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
                         name: "FK_Schedules_ScheduleTimeSlots_ScheduleTimeSlotId",
                         column: x => x.ScheduleTimeSlotId,
                         principalTable: "ScheduleTimeSlots",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Schedules_StudentProfiles_StudentProfileId",
+                        column: x => x.StudentProfileId,
+                        principalTable: "StudentProfiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -972,11 +977,6 @@ namespace backend_api.Migrations
                 name: "IX_Certificates_TutorRegistrationRequestId",
                 table: "Certificates",
                 column: "TutorRegistrationRequestId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ChildInformationMedias_ChildInformationId",
-                table: "ChildInformationMedias",
-                column: "ChildInformationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ChildInformations_ParentId",
@@ -1066,14 +1066,14 @@ namespace backend_api.Migrations
                 filter: "[NormalizedName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Schedules_ChildId",
-                table: "Schedules",
-                column: "ChildId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Schedules_ScheduleTimeSlotId",
                 table: "Schedules",
                 column: "ScheduleTimeSlotId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Schedules_StudentProfileId",
+                table: "Schedules",
+                column: "StudentProfileId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Schedules_TutorId",
@@ -1194,10 +1194,10 @@ namespace backend_api.Migrations
                 name: "CertificateMedias");
 
             migrationBuilder.DropTable(
-                name: "ChildInformationMedias");
+                name: "Curriculums");
 
             migrationBuilder.DropTable(
-                name: "Curriculums");
+                name: "EmailLoggers");
 
             migrationBuilder.DropTable(
                 name: "InitialAssessmentResults");
