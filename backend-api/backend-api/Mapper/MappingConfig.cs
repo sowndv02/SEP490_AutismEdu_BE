@@ -177,6 +177,9 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ReverseMap();
+            CreateMap<Exercise, ExerciseDTO>().ReverseMap();
+            CreateMap<ExerciseType, ExerciseTypeDTO>().ReverseMap();
+            CreateMap<ExerciseCreateDTO, Exercise>();
         }
     }
 }

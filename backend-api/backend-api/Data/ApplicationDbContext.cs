@@ -42,6 +42,8 @@ namespace backend_api.Data
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<ScheduleTimeSlot> ScheduleTimeSlots { get; set; }
         public DbSet<StudentProfile> StudentProfiles { get; set; }
+        public DbSet<ExerciseType> ExerciseType { get; set; }
+        public DbSet<Exercise> Exercise { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -325,6 +327,135 @@ namespace backend_api.Data
                         CreatedDate = DateTime.Now,
                         UserId = adminUser.Id
                     }
+                );
+
+                await SaveChangesAsync();
+            }
+
+            if (!ExerciseType.Any())
+            {
+                ExerciseType.AddRange(
+
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_1
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_2
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_3
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_4
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_5
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_6
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_7
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_8
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_9
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_10
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_11
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_12
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_13
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_14
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_15
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_16
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_17
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_18
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_19
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_20
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_21
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_22
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_23
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_24
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_25
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_26
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_27
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_28
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_29
+                    },
+                    new ExerciseType
+                    {
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_30
+                    }                    
                 );
 
                 await SaveChangesAsync();
