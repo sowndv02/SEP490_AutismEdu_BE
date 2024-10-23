@@ -3,10 +3,11 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.RabbitMQSender;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
-using Microsoft.AspNetCore.Identity.UI.Services;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace backend_api.Controllers.v1
         private readonly IChildInformationRepository _childInfoRepository;
         private readonly ITutorRequestRepository _tutorRequestRepository;
         private readonly ITutorRepository _tutorRepository;
-        private readonly IEmailSender _emailSender;
+        private readonly IRabbitMQMessageSender _messageBus;
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
@@ -41,7 +42,7 @@ namespace backend_api.Controllers.v1
         public StudentProfileController(IStudentProfileRepository studentProfileRepository, IAssessmentQuestionRepository assessmentQuestionRepository,
             IScheduleTimeSlotRepository scheduleTimeSlotRepository, IInitialAssessmentResultRepository initialAssessmentResultRepository
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository,
-            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IEmailSender emailSender, 
+            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IRabbitMQMessageSender messageBus, 
             IUserRepository userRepository, IRoleRepository roleRepository, IBlobStorageRepository blobStorageRepository)
         {
             _studentProfileRepository = studentProfileRepository;
@@ -54,7 +55,7 @@ namespace backend_api.Controllers.v1
             _mapper = mapper;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _tutorRepository = tutorRepository;
-            _emailSender = emailSender;
+            _messageBus = messageBus;
             _userRepository = userRepository;
             _roleRepository = roleRepository;
             _blobStorageRepository = blobStorageRepository;

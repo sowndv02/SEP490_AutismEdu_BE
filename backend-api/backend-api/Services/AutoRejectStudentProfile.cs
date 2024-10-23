@@ -1,7 +1,8 @@
 ﻿using backend_api.Data;
 using backend_api.Models;
+using backend_api.RabbitMQSender;
 using Castle.Core.Smtp;
-using Microsoft.AspNetCore.Identity.UI.Services;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace backend_api.Services
@@ -10,14 +11,14 @@ namespace backend_api.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<RefreshTokenCleanupService> _logger;
-        private readonly Microsoft.AspNetCore.Identity.UI.Services.IEmailSender _emailSender;
+        private readonly IRabbitMQMessageSender _messageBus;
 
         public AutoRejectStudentProfile(IServiceProvider serviceProvider, ILogger<RefreshTokenCleanupService> logger, 
-            Microsoft.AspNetCore.Identity.UI.Services.IEmailSender emailSender)
+            IRabbitMQMessageSender messageBus)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
-            _emailSender = emailSender;
+            _messageBus = messageBus;
         }
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
