@@ -43,6 +43,19 @@ namespace backend_api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ExerciseType",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ExerciseTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExerciseType", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -591,6 +604,36 @@ namespace backend_api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Exercise",
+                columns: table => new
+                {
+                    ExerciseId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ExerciseName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExerciseTypeId = table.Column<int>(type: "int", nullable: false),
+                    ExerciseContent = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Exercise", x => x.ExerciseId);
+                    table.ForeignKey(
+                        name: "FK_Exercise_ExerciseType_ExerciseTypeId",
+                        column: x => x.ExerciseTypeId,
+                        principalTable: "ExerciseType",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Exercise_Tutors_TutorId",
+                        column: x => x.TutorId,
+                        principalTable: "Tutors",
+                        principalColumn: "TutorId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Reviews",
                 columns: table => new
                 {
@@ -1004,6 +1047,16 @@ namespace backend_api.Migrations
                 column: "TutorRegistrationRequestId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Exercise_ExerciseTypeId",
+                table: "Exercise",
+                column: "ExerciseTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Exercise_TutorId",
+                table: "Exercise",
+                column: "TutorId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_InitialAssessmentResults_OptionId",
                 table: "InitialAssessmentResults",
                 column: "OptionId");
@@ -1200,6 +1253,9 @@ namespace backend_api.Migrations
                 name: "EmailLoggers");
 
             migrationBuilder.DropTable(
+                name: "Exercise");
+
+            migrationBuilder.DropTable(
                 name: "InitialAssessmentResults");
 
             migrationBuilder.DropTable(
@@ -1243,6 +1299,9 @@ namespace backend_api.Migrations
 
             migrationBuilder.DropTable(
                 name: "Certificates");
+
+            migrationBuilder.DropTable(
+                name: "ExerciseType");
 
             migrationBuilder.DropTable(
                 name: "AssessmentOptions");
