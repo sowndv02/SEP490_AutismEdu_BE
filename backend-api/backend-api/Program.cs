@@ -3,12 +3,14 @@ using backend_api.Authorize;
 using backend_api.Authorize.Requirements;
 using backend_api.Data;
 using backend_api.Mapper;
+using backend_api.Messaging;
 using backend_api.Middlewares;
 using backend_api.Models;
 using backend_api.RabbitMQSender;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services;
+using backend_api.Services.IServices;
 using backend_api.Swagger;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -92,19 +94,21 @@ builder.Services.AddScoped<IAuthorizationHandler, RequiredClaimHandler>();
 // Add DI other Service
 var mailsettings = builder.Configuration.GetSection("MailSettings");
 builder.Services.Configure<MailSettings>(mailsettings);
-builder.Services.AddTransient<IEmailSender, SendMailService>();
+builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddSingleton<DateTimeEncryption>();
 builder.Services.AddSingleton<TokenEcryption>();
 builder.Services.AddSingleton<FormatString>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
 builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
-builder.Services.AddHostedService<AutoRejectStudentProfile>();
 
 
-// Config RabbitMQ
+// Config Message Queue
 var rabbitMQSettings = builder.Configuration.GetSection("RabbitMQSettings");
-builder.Services.AddHostedService<EmailConsumerService>();
+builder.Services.AddHostedService<RabbitMQConsumer>();
 builder.Services.AddScoped<IRabbitMQMessageSender, RabbitMQMessageSender>();
+
+//builder.Services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
+
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingConfig));
