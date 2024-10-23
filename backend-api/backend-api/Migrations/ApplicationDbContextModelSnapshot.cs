@@ -454,45 +454,7 @@ namespace backend_api.Migrations
                     b.ToTable("Curriculums");
                 });
 
-            modelBuilder.Entity("backend_api.Models.Exercise", b =>
-                {
-                    b.Property<int>("ExerciseId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExerciseId"), 1L, 1);
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ExerciseContent")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ExerciseName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ExerciseTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TutorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ExerciseId");
-
-                    b.HasIndex("ExerciseTypeId");
-
-                    b.HasIndex("TutorId");
-
-                    b.ToTable("Exercise");
-                });
-
-            modelBuilder.Entity("backend_api.Models.ExerciseType", b =>
+            modelBuilder.Entity("backend_api.Models.EmailLogger", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -500,13 +462,24 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("ExerciseTypeName")
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subject")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ExerciseType");
+                    b.ToTable("EmailLoggers");
                 });
 
             modelBuilder.Entity("backend_api.Models.InitialAssessmentResult", b =>
@@ -1508,25 +1481,6 @@ namespace backend_api.Migrations
                     b.Navigation("Submiter");
 
                     b.Navigation("TutorRegistrationRequest");
-                });
-
-            modelBuilder.Entity("backend_api.Models.Exercise", b =>
-                {
-                    b.HasOne("backend_api.Models.ExerciseType", "ExerciseType")
-                        .WithMany()
-                        .HasForeignKey("ExerciseTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("backend_api.Models.Tutor", "Tutor")
-                        .WithMany()
-                        .HasForeignKey("TutorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ExerciseType");
-
-                    b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("backend_api.Models.InitialAssessmentResult", b =>

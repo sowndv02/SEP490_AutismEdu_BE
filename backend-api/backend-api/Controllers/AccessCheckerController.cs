@@ -1,4 +1,5 @@
 ﻿using backend_api.Models;
+using backend_api.RabbitMQSender;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -13,11 +14,33 @@ namespace backend_api.Controllers
     {
         protected APIResponse _response;
         private readonly ILogger<AccessCheckerController> _logger;
+        private IRabbitMQMessageSender _messageBus;
+        private IConfiguration _configuration;
 
-        public AccessCheckerController(ILogger<AccessCheckerController> logger)
+        public AccessCheckerController(ILogger<AccessCheckerController> logger, IRabbitMQMessageSender messageBus, IConfiguration configuration)
         {
+            _messageBus = messageBus;
             _logger = logger;
             _response = new();
+            _configuration = configuration;
+        }
+
+
+        [HttpGet("SendMailRabbitMQ")]
+        [AllowAnonymous]
+        public object SendMailRabbitMQ()
+        {
+            try
+            {
+                _messageBus.SendMessage(new EmailLogger() { Email = "daoson03112002@gmail.com", Message = "Hello vietnam", Subject= "Test RabbitMQ"}, _configuration.GetValue<string>("RabbitMQSettings:QueueName"));
+                _response.Result = true;
+            }
+            catch (Exception ex)
+            {
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.IsSuccess = false;
+            }
+            return _response;
         }
 
         //Anyone can access this
