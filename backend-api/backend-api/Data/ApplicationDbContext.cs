@@ -16,6 +16,12 @@ namespace backend_api.Data
             _httpContextAccessor = httpContextAccessor;
         }
 
+
+        public ApplicationDbContext(DbContextOptions options)
+          : base(options)
+        {
+        }
+
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<ApplicationClaim> ApplicationClaims { get; set; }
@@ -42,6 +48,7 @@ namespace backend_api.Data
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<ScheduleTimeSlot> ScheduleTimeSlots { get; set; }
         public DbSet<StudentProfile> StudentProfiles { get; set; }
+        public DbSet<EmailLogger> EmailLoggers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
