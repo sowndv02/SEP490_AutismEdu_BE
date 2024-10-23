@@ -3,10 +3,11 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.UI.Services;
+
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -31,7 +32,7 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<TutorController> _logger;
         private readonly IMapper _mapper;
-        private readonly IEmailSender _emailSender;
+        private readonly IRabbitMQMessageSender _messageBus;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
@@ -42,9 +43,9 @@ namespace backend_api.Controllers.v1
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
             ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
             ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository,
-            IEmailSender emailSender)
+            IRabbitMQMessageSender messageBus)
         {
-            _emailSender = emailSender;
+            _messageBus = messageBus;
             _curriculumRepository = curriculumRepository;
             _formatString = formatString;
             _roleRepository = roleRepository;

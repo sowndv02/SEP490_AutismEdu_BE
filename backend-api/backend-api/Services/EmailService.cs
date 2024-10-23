@@ -2,7 +2,7 @@
 using backend_api.Models;
 using backend_api.Services.IServices;
 using MailKit.Security;
-using Microsoft.AspNetCore.Identity.UI.Services;
+
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
