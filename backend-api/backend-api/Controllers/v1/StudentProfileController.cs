@@ -358,7 +358,8 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var scheduleTimeSlots = await _studentProfileRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId) && x.Status == SD.StudentProfileStatus.Teaching, "ScheduleTimeSlots,Child");
+                var scheduleTimeSlots = await _studentProfileRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId) 
+                && (x.Status == SD.StudentProfileStatus.Teaching || x.Status == SD.StudentProfileStatus.Teaching), "ScheduleTimeSlots,Child");
 
                 _response.Result = _mapper.Map<List<GetAllStudentProfileTimeSlotDTO>>(scheduleTimeSlots.list);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -517,6 +518,18 @@ namespace backend_api.Controllers.v1
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+ 
+                var role = await _userRepository.GetRoleByUserId(userId);
+                var r = role.FirstOrDefault(x => x.Name.Equals("Parent"));
+
                 var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == id, true, "InitialAssessmentResults,ScheduleTimeSlots");
 
                 if (studentProfile == null)
@@ -536,8 +549,17 @@ namespace backend_api.Controllers.v1
                     initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id, true, "Question,Option"));
                 }
                 studentProfile.InitialAssessmentResults = initialAssessmentResults;
+                studentProfile.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(studentProfile.TutorId), true, "User");
 
-                _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
+                if(r == null)
+                {
+                    _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
+                }
+                else
+                {
+                    _response.Result = _mapper.Map<StudentProfileDetailDTO>(studentProfile);
+                }
+                
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
