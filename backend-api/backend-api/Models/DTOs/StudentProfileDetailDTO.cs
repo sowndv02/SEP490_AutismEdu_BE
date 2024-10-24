@@ -8,6 +8,7 @@
         public string? StudentCode { get; set; }
         public bool isMale { get; set; }
         public DateTime? BirthDate { get; set; }
+        public string? ImageUrlPath { get; set; }
         public string? InitialCondition { get; set; }
         public SD.StudentProfileStatus Status { get; set; }
         public TutorDTO Tutor { get; set; }
