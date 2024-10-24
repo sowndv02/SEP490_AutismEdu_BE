@@ -156,7 +156,7 @@ namespace backend_api.Controllers.v1
                     model.Status = SD.StudentProfileStatus.Pending;
                 }
 
-                if (createDTO.ChildId <= 0)
+                if (model.ChildId <= 0)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -207,7 +207,7 @@ namespace backend_api.Controllers.v1
                     }
                 }
 
-                var child = await _childInfoRepository.GetAsync(x => x.Id == createDTO.ChildId, true, "Parent");
+                var child = await _childInfoRepository.GetAsync(x => x.Id == model.ChildId, true, "Parent");
                 model.Child = child;
                 if (child == null)
                 {
@@ -224,7 +224,7 @@ namespace backend_api.Controllers.v1
                     model.StudentCode += name.ToUpper().ElementAt(0);
                 }
                 model.StudentCode += model.ChildId;
-                model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
+                model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(tutorId), true, "User");
                 await _studentProfileRepository.CreateAsync(model);
 
                 //TODO: send email
@@ -250,6 +250,7 @@ namespace backend_api.Controllers.v1
                 }
 
                 _response.StatusCode = HttpStatusCode.Created;
+                _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)
