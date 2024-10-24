@@ -151,7 +151,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.Child.BirthDate))
                 .ForMember(dest => dest.InitialCondition, opt => opt.MapFrom(src => src.InitialCondition))
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Child.Parent.Address))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.Child.Parent.Address))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.Child.Parent.PhoneNumber))
                 .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ReverseMap();
