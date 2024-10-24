@@ -180,6 +180,25 @@ namespace backend_api.Mapper
             CreateMap<Exercise, ExerciseDTO>().ReverseMap();
             CreateMap<ExerciseType, ExerciseTypeDTO>().ReverseMap();
             CreateMap<ExerciseCreateDTO, Exercise>();
+
+            CreateMap<StudentProfile, StudentProfileDetailDTO>()
+               .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+               .ForMember(dest => dest.ChildId, opt => opt.MapFrom(src => src.ChildId))
+               .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Child.Name))
+               .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))
+               .ForMember(dest => dest.isMale, opt => opt.MapFrom(src => src.Child.isMale))
+               .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.Child.BirthDate))
+               .ForMember(dest => dest.InitialCondition, opt => opt.MapFrom(src => src.InitialCondition))
+               .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Child.Parent.Address))
+               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+               .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Tutor.User.Email))
+               .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.Tutor.User.FullName))
+               .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.Tutor.User.PhoneNumber))
+               .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Tutor.User.Address))
+               .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Tutor.User.ImageUrl))
+               .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
+               .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
+               .ReverseMap();
         }
     }
 }
