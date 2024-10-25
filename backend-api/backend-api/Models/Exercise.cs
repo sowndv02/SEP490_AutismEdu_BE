@@ -11,6 +11,7 @@ namespace backend_api.Models
         public string ExerciseName { get; set; }
         public int ExerciseTypeId { get; set; }
         public string ExerciseContent { get; set; }
+        public bool IsDeleted { get; set; } = false;
         public string TutorId { get; set; }
 
         [ForeignKey(nameof(ExerciseTypeId))]

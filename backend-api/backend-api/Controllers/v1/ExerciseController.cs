@@ -71,7 +71,8 @@ namespace backend_api.Controllers.v1
             {
                 int totalCount = 0;
                 List<ExerciseType> list = new();
-                Expression<Func<ExerciseType, bool>> filter = e => true;
+                //Expression<Func<ExerciseType, bool>> filter = e => true;
+                Expression<Func<ExerciseType, bool>> filter = e => !e.IsDeleted;
 
                 if (!string.IsNullOrEmpty(search))
                 {
@@ -401,14 +402,11 @@ namespace backend_api.Controllers.v1
             }
         }
 
-
-
-        [HttpDelete("{exerciseId}")]
-        public async Task<ActionResult<APIResponse>> DeleteExerciseByIdAsync(int exerciseId)
+        public async Task<IActionResult> DeleteExerciseAsync(int id)
         {
             try
             {
-                var exercise = await _exerciseRepository.GetAsync(e => e.ExerciseId == exerciseId);
+                var exercise = await _exerciseRepository.GetAsync(x => x.ExerciseId == id && !x.IsDeleted);
                 if (exercise == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
@@ -417,12 +415,12 @@ namespace backend_api.Controllers.v1
                     return NotFound(_response);
                 }
 
-                // Delete the exercise
-                await _exerciseRepository.RemoveAsync(exercise);
+                exercise.IsDeleted = true;
+                await _exerciseRepository.UpdateAsync(exercise);
 
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
-                return NoContent();
+                return Ok(_response);
             }
             catch (Exception ex)
             {
@@ -434,11 +432,11 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpDelete("{exerciseTypeId}")]
-        public async Task<ActionResult<APIResponse>> DeleteExerciseTypeByIdAsync(int exerciseTypeId)
+        public async Task<IActionResult> DeleteExerciseTypeByIdAsync(int id)
         {
             try
             {
-                var exerciseType = await _exerciseTypeRepository.GetAsync(e => e.Id == exerciseTypeId);
+                var exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == id && !x.IsDeleted);
                 if (exerciseType == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
@@ -447,11 +445,12 @@ namespace backend_api.Controllers.v1
                     return NotFound(_response);
                 }
 
-                await _exerciseTypeRepository.RemoveAsync(exerciseType);
+                exerciseType.IsDeleted = true;
+                await _exerciseTypeRepository.UpdateAsync(exerciseType);
 
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
-                return NoContent();
+                return Ok(_response);
             }
             catch (Exception ex)
             {
