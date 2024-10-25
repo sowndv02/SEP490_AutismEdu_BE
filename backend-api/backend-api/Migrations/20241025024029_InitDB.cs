@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace backend_api.Migrations
 {
-    public partial class InitDb : Migration
+    public partial class InitDB : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -40,19 +40,6 @@ namespace backend_api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_EmailLoggers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ExerciseType",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ExerciseTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ExerciseType", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -604,33 +591,25 @@ namespace backend_api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Exercise",
+                name: "ExerciseType",
                 columns: table => new
                 {
-                    ExerciseId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ExerciseName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ExerciseTypeId = table.Column<int>(type: "int", nullable: false),
-                    ExerciseContent = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    ExerciseTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AgeFrom = table.Column<int>(type: "int", nullable: false),
+                    AgeTo = table.Column<int>(type: "int", nullable: false),
+                    RequestStatus = table.Column<int>(type: "int", nullable: false),
+                    TutorId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Exercise", x => x.ExerciseId);
+                    table.PrimaryKey("PK_ExerciseType", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Exercise_ExerciseType_ExerciseTypeId",
-                        column: x => x.ExerciseTypeId,
-                        principalTable: "ExerciseType",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Exercise_Tutors_TutorId",
+                        name: "FK_ExerciseType_Tutors_TutorId",
                         column: x => x.TutorId,
                         principalTable: "Tutors",
-                        principalColumn: "TutorId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "TutorId");
                 });
 
             migrationBuilder.CreateTable(
@@ -868,6 +847,36 @@ namespace backend_api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Exercise",
+                columns: table => new
+                {
+                    ExerciseId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ExerciseName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExerciseTypeId = table.Column<int>(type: "int", nullable: false),
+                    ExerciseContent = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TutorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Exercise", x => x.ExerciseId);
+                    table.ForeignKey(
+                        name: "FK_Exercise_ExerciseType_ExerciseTypeId",
+                        column: x => x.ExerciseTypeId,
+                        principalTable: "ExerciseType",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Exercise_Tutors_TutorId",
+                        column: x => x.TutorId,
+                        principalTable: "Tutors",
+                        principalColumn: "TutorId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "InitialAssessmentResults",
                 columns: table => new
                 {
@@ -1054,6 +1063,11 @@ namespace backend_api.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Exercise_TutorId",
                 table: "Exercise",
+                column: "TutorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExerciseType_TutorId",
+                table: "ExerciseType",
                 column: "TutorId");
 
             migrationBuilder.CreateIndex(

@@ -3,7 +3,7 @@
     public class ExerciseTypeCreateDTO
     {
         public string ExerciseTypeName { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public DateTime? UpdatedDate { get; set; }
+        public int AgeFrom { get; set; }
+        public int AgeTo { get; set; }
     }
 }

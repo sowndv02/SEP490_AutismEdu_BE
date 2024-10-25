@@ -179,7 +179,8 @@ namespace backend_api.Mapper
                 .ReverseMap();
             CreateMap<Exercise, ExerciseDTO>().ReverseMap();
             CreateMap<ExerciseType, ExerciseTypeDTO>().ReverseMap();
-            CreateMap<ExerciseCreateDTO, Exercise>();
+            CreateMap<ExerciseCreateDTO, Exercise>().ReverseMap();
+            CreateMap<ExerciseTypeCreateDTO, ExerciseType>().ReverseMap();
         }
     }
 }
