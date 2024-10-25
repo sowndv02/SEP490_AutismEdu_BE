@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend_api.Data;
 
@@ -11,9 +12,10 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241025030325_UpdateAsssessmentResultProgressReport")]
+    partial class UpdateAsssessmentResultProgressReport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,7 +61,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ActivityLogs", (string)null);
+                    b.ToTable("ActivityLogs");
                 });
 
             modelBuilder.Entity("backend_api.Models.ApplicationClaim", b =>
@@ -100,7 +102,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ApplicationClaims", (string)null);
+                    b.ToTable("ApplicationClaims");
                 });
 
             modelBuilder.Entity("backend_api.Models.AssessmentOption", b =>
@@ -130,7 +132,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("AssessmentOptions", (string)null);
+                    b.ToTable("AssessmentOptions");
                 });
 
             modelBuilder.Entity("backend_api.Models.AssessmentQuestion", b =>
@@ -158,7 +160,7 @@ namespace backend_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AssessmentQuestions", (string)null);
+                    b.ToTable("AssessmentQuestions");
                 });
 
             modelBuilder.Entity("backend_api.Models.AssessmentResult", b =>
@@ -192,7 +194,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("AssessmentResults", (string)null);
+                    b.ToTable("AssessmentResults");
                 });
 
             modelBuilder.Entity("backend_api.Models.AvailableTimeSlot", b =>
@@ -226,7 +228,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorId");
 
-                    b.ToTable("AvailableTimeSlots", (string)null);
+                    b.ToTable("AvailableTimeSlots");
                 });
 
             modelBuilder.Entity("backend_api.Models.Blog", b =>
@@ -269,7 +271,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("AuthorId");
 
-                    b.ToTable("Blogs", (string)null);
+                    b.ToTable("Blogs");
                 });
 
             modelBuilder.Entity("backend_api.Models.Certificate", b =>
@@ -328,7 +330,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorRegistrationRequestId");
 
-                    b.ToTable("Certificates", (string)null);
+                    b.ToTable("Certificates");
                 });
 
             modelBuilder.Entity("backend_api.Models.CertificateMedia", b =>
@@ -355,7 +357,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("CertificateId");
 
-                    b.ToTable("CertificateMedias", (string)null);
+                    b.ToTable("CertificateMedias");
                 });
 
             modelBuilder.Entity("backend_api.Models.ChildInformation", b =>
@@ -392,7 +394,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("ChildInformations", (string)null);
+                    b.ToTable("ChildInformations");
                 });
 
             modelBuilder.Entity("backend_api.Models.Curriculum", b =>
@@ -456,7 +458,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorRegistrationRequestId");
 
-                    b.ToTable("Curriculums", (string)null);
+                    b.ToTable("Curriculums");
                 });
 
             modelBuilder.Entity("backend_api.Models.EmailLogger", b =>
@@ -484,7 +486,7 @@ namespace backend_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EmailLoggers", (string)null);
+                    b.ToTable("EmailLoggers");
                 });
 
             modelBuilder.Entity("backend_api.Models.Exercise", b =>
@@ -522,7 +524,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorId");
 
-                    b.ToTable("Exercise", (string)null);
+                    b.ToTable("Exercise");
                 });
 
             modelBuilder.Entity("backend_api.Models.ExerciseType", b =>
@@ -539,7 +541,7 @@ namespace backend_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ExerciseType", (string)null);
+                    b.ToTable("ExerciseType");
                 });
 
             modelBuilder.Entity("backend_api.Models.InitialAssessmentResult", b =>
@@ -573,7 +575,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("StudentProfileId");
 
-                    b.ToTable("InitialAssessmentResults", (string)null);
+                    b.ToTable("InitialAssessmentResults");
                 });
 
             modelBuilder.Entity("backend_api.Models.ProgressReport", b =>
@@ -587,6 +589,9 @@ namespace backend_api.Migrations
                     b.Property<string>("Achieved")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("ChildId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
@@ -598,9 +603,6 @@ namespace backend_api.Migrations
 
                     b.Property<string>("NoteFromTutor")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("StudentProfileId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("To")
                         .HasColumnType("datetime2");
@@ -614,11 +616,11 @@ namespace backend_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StudentProfileId");
+                    b.HasIndex("ChildId");
 
                     b.HasIndex("TutorId");
 
-                    b.ToTable("ProgressReports", (string)null);
+                    b.ToTable("ProgressReports");
                 });
 
             modelBuilder.Entity("backend_api.Models.RefreshToken", b =>
@@ -655,7 +657,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("backend_api.Models.Report", b =>
@@ -692,7 +694,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reports", (string)null);
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("backend_api.Models.ReportMedia", b =>
@@ -720,7 +722,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("ReportId");
 
-                    b.ToTable("ReportMedias", (string)null);
+                    b.ToTable("ReportMedias");
                 });
 
             modelBuilder.Entity("backend_api.Models.Review", b =>
@@ -758,7 +760,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorId");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("backend_api.Models.Schedule", b =>
@@ -808,7 +810,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorId");
 
-                    b.ToTable("Schedules", (string)null);
+                    b.ToTable("Schedules");
                 });
 
             modelBuilder.Entity("backend_api.Models.ScheduleTimeSlot", b =>
@@ -841,7 +843,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("StudentProfileId");
 
-                    b.ToTable("ScheduleTimeSlots", (string)null);
+                    b.ToTable("ScheduleTimeSlots");
                 });
 
             modelBuilder.Entity("backend_api.Models.StudentProfile", b =>
@@ -880,7 +882,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorId");
 
-                    b.ToTable("StudentProfiles", (string)null);
+                    b.ToTable("StudentProfiles");
                 });
 
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
@@ -918,7 +920,7 @@ namespace backend_api.Migrations
 
                     b.HasKey("TutorId");
 
-                    b.ToTable("Tutors", (string)null);
+                    b.ToTable("Tutors");
                 });
 
             modelBuilder.Entity("backend_api.Models.TutorProfileUpdateRequest", b =>
@@ -981,7 +983,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorId");
 
-                    b.ToTable("TutorProfileUpdateRequests", (string)null);
+                    b.ToTable("TutorProfileUpdateRequests");
                 });
 
             modelBuilder.Entity("backend_api.Models.TutorRegistrationRequest", b =>
@@ -1052,7 +1054,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("ApprovedId");
 
-                    b.ToTable("TutorRegistrationRequests", (string)null);
+                    b.ToTable("TutorRegistrationRequests");
                 });
 
             modelBuilder.Entity("backend_api.Models.TutorRequest", b =>
@@ -1100,7 +1102,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorId");
 
-                    b.ToTable("TutorRequests", (string)null);
+                    b.ToTable("TutorRequests");
                 });
 
             modelBuilder.Entity("backend_api.Models.WorkExperience", b =>
@@ -1168,7 +1170,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("TutorRegistrationRequestId");
 
-                    b.ToTable("WorkExperiences", (string)null);
+                    b.ToTable("WorkExperiences");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -1599,9 +1601,9 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.ProgressReport", b =>
                 {
-                    b.HasOne("backend_api.Models.StudentProfile", "StudentProfile")
+                    b.HasOne("backend_api.Models.ChildInformation", "Child")
                         .WithMany()
-                        .HasForeignKey("StudentProfileId")
+                        .HasForeignKey("ChildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1611,7 +1613,7 @@ namespace backend_api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("StudentProfile");
+                    b.Navigation("Child");
 
                     b.Navigation("Tutor");
                 });
