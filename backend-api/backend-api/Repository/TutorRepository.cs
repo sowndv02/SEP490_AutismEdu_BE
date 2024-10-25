@@ -34,7 +34,7 @@ namespace backend_api.Repository
 
                 if (!query.Any() && filterScore == 5)
                 {
-                    query = storageQuery.Include(x => x.Reviews).Where(x => x.Reviews.Any());
+                    query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
                 }
             }
             int totalCount = await query.CountAsync();
