@@ -75,6 +75,31 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
+                List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTO.ScheduleTimeSlots);
+                foreach (var slot in scheduleTimeSlot)
+                {
+                    var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot && x.Weekday == slot.Weekday && 
+                                                            !(slot.To <= x.From || slot.From >= x.To)).FirstOrDefault();
+                    if (isTimeSlotDuplicate == null)
+                    {
+                        isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday && x.StudentProfile.TutorId.Equals(tutorId) && !(slot.To <= x.From || slot.From >= x.To));
+                        if (isTimeSlotDuplicate != null)
+                        {
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            _response.IsSuccess = false;
+                            _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED} {isTimeSlotDuplicate.From.ToString(@"hh\:mm")}-{isTimeSlotDuplicate.To.ToString(@"hh\:mm")}" };
+                            return BadRequest(_response);
+                        }
+                    }
+                    else
+                    {
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED} {isTimeSlotDuplicate.From.ToString(@"hh\:mm")}-{isTimeSlotDuplicate.To.ToString(@"hh\:mm")}" };
+                        return BadRequest(_response);
+                    }
+                }
+
                 StudentProfile model = _mapper.Map<StudentProfile>(createDTO);
                 model.CreatedDate = DateTime.Now;
                 model.TutorId = tutorId;
@@ -173,39 +198,7 @@ namespace backend_api.Controllers.v1
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.CHILD_ALREADY_STUDING_THIS_TUTOR };
                     return BadRequest(_response);
-                }
-
-                List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTO.ScheduleTimeSlots);
-
-                for (int i = 0; i < scheduleTimeSlot.Count; i++)
-                {
-                    for (int j = i + 1; j < scheduleTimeSlot.Count; j++)
-                    {
-                        if (scheduleTimeSlot[i].Weekday == scheduleTimeSlot[j].Weekday &&
-                            !(scheduleTimeSlot[i].To <= scheduleTimeSlot[j].From || scheduleTimeSlot[i].From >= scheduleTimeSlot[j].To))
-                        {
-                            _response.StatusCode = HttpStatusCode.BadRequest;
-                            _response.IsSuccess = false;
-                            _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED} {scheduleTimeSlot[i].From.ToString(@"hh\:mm")}-{scheduleTimeSlot[i].To.ToString(@"hh\:mm")}" };
-                            return BadRequest(_response);
-                        }
-                    }
-                }
-
-                foreach (var slot in scheduleTimeSlot)
-                {
-                    var existingTimeSlots = await _scheduleTimeSlotRepository.GetAllNotPagingAsync(x => x.Weekday == slot.Weekday && x.StudentProfile.TutorId.Equals(tutorId), "StudentProfile", null);
-                    foreach (var existingTimeSlot in existingTimeSlots.list)
-                    {
-                        if (!(slot.To <= existingTimeSlot.From || slot.From >= existingTimeSlot.To))
-                        {
-                            _response.StatusCode = HttpStatusCode.BadRequest;
-                            _response.IsSuccess = false;
-                            _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED} {existingTimeSlot.From.ToString(@"hh\:mm")}-{existingTimeSlot.To.ToString(@"hh\:mm")}" };
-                            return BadRequest(_response);
-                        }
-                    }
-                }
+                }              
 
                 var child = await _childInfoRepository.GetAsync(x => x.Id == model.ChildId, true, "Parent");
                 model.Child = child;
@@ -216,7 +209,6 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { SD.CHILD_NOT_FOUND };
                     return BadRequest(_response);
                 }
-
 
                 string[] names = child.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                 foreach (var name in names)
@@ -239,7 +231,7 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.TutorName", model.Tutor.User.FullName)
                         .Replace("@Model.StudentName", child.Name)
                         .Replace("@Model.Email", child.Parent.Email)
-                        .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL)
+                        .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL + model.Id)
                         .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
                     _messageBus.SendMessage(new EmailLogger()
                     {
@@ -358,7 +350,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var scheduleTimeSlots = await _studentProfileRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId) 
+                var scheduleTimeSlots = await _studentProfileRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId)
                 && (x.Status == SD.StudentProfileStatus.Teaching || x.Status == SD.StudentProfileStatus.Teaching), "ScheduleTimeSlots,Child");
 
                 _response.Result = _mapper.Map<List<GetAllStudentProfileTimeSlotDTO>>(scheduleTimeSlots.list);
@@ -406,7 +398,7 @@ namespace backend_api.Controllers.v1
                 foreach (var child in childs.list)
                 {
                     Expression<Func<StudentProfile, bool>> filter = u => true;
-                    filter = filter.AndAlso(x => x.ChildId.Equals(child.Id));
+                    filter = u => u.ChildId.Equals(child.Id);
                     if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                     {
                         switch (status.ToLower())
@@ -472,6 +464,17 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
+                if(changeStatusDTO.StatusChange == (int) StudentProfileStatus.Teaching)
+                {
+                    if(studentProfile.CreatedDate.AddHours(24) <= DateTime.Now)
+                    {
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string> { SD.STUDENT_PROFILE_EXPIRED };
+                        return BadRequest(_response);
+                    }
+                }
+
                 switch (changeStatusDTO.StatusChange)
                 {
                     case 0:
@@ -526,7 +529,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
- 
+
                 var role = await _userRepository.GetRoleByUserId(userId);
                 var r = role.FirstOrDefault(x => x.Name.Equals("Parent"));
 
@@ -551,7 +554,7 @@ namespace backend_api.Controllers.v1
                 studentProfile.InitialAssessmentResults = initialAssessmentResults;
                 studentProfile.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(studentProfile.TutorId), true, "User");
 
-                if(r == null)
+                if (r == null)
                 {
                     _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
                 }
@@ -559,7 +562,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.Result = _mapper.Map<StudentProfileDetailDTO>(studentProfile);
                 }
-                
+
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
