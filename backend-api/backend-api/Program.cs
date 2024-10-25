@@ -100,7 +100,7 @@ builder.Services.AddSingleton<TokenEcryption>();
 builder.Services.AddSingleton<FormatString>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
 builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
-
+builder.Services.AddHostedService<AutoRejectStudentProfile>();
 
 // Config Message Queue
 var rabbitMQSettings = builder.Configuration.GetSection("RabbitMQSettings");
