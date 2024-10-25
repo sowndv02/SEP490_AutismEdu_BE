@@ -16,21 +16,27 @@ namespace backend_api.Repository
 
         public async Task<(int TotalCount, List<Exercise>)> GetByExerciseTypeAsync(int exerciseTypeId)
         {
-            // Get all exercises matching the provided ExerciseTypeId
             var exercises = await _context.Exercise
                                      .Where(e => e.ExerciseTypeId == exerciseTypeId)
                                      .ToListAsync();
 
-            // Get the total count of the exercises that match the ExerciseTypeId
             var totalCount = exercises.Count;
 
-            // Return the total count and the list of exercises
             return (totalCount, exercises);
         }
 
-        public Task<Exercise> UpdateAsync(Exercise model)
+        public async Task<Exercise> UpdateAsync(Exercise model)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _context.Exercise.Update(model);
+                await _context.SaveChangesAsync();
+                return model;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }
