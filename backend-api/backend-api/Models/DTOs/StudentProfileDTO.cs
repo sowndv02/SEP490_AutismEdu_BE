@@ -14,6 +14,7 @@
         public string? Address { get; set; }
         public string? PhoneNumber { get; set; }
         public SD.StudentProfileStatus Status { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
         public List<InitialAssessmentResultDTO> InitialAssessmentResults { get; set; }
         public List<ScheduleTimeSlotDTO> ScheduleTimeSlots { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
