@@ -10,15 +10,13 @@ namespace backend_api.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<RefreshTokenCleanupService> _logger;
-        private readonly IRabbitMQMessageSender _messageBus;
         private string queueName = string.Empty;
         public AutoRejectStudentProfile(IServiceProvider serviceProvider, ILogger<RefreshTokenCleanupService> logger,
-            IRabbitMQMessageSender messageBus, IConfiguration configuration)
+            IConfiguration configuration)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
             queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
-            _messageBus = messageBus;
         }
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -35,6 +33,7 @@ namespace backend_api.Services
             using (var scope = _serviceProvider.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var messageBus = scope.ServiceProvider.GetRequiredService<IRabbitMQMessageSender>();
 
                 // Get all student profiles that were created more than 24 hours ago and have not been approved/rejected
                 var profilesToReject = context.StudentProfiles
@@ -64,7 +63,7 @@ namespace backend_api.Services
                         .Replace("@Model.StudentName", profile.Child.Name)
                         .Replace("@Model.Email", profile.Child.Parent.Email)
                         .Replace("@Model.ProfileCreationDate", profile.CreatedDate.ToString("dd/MM/yyyy"));
-                    _messageBus.SendMessage(new EmailLogger()
+                    messageBus.SendMessage(new EmailLogger()
                     {
                         Email = profile.Child.Parent.Email,
                         Subject = subject,
