@@ -284,6 +284,7 @@ namespace backend_api.Controllers.v1
                         DateOfBirth = model.DateOfBirth,
                         StartAge = model.StartAge,
                         EndAge = model.EndAge,
+                        SessionHours = model.SessionHours,
                         CreatedDate = DateTime.Now,
                         UpdatedDate = DateTime.Now
                     });
