@@ -156,7 +156,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.CREADTED_DATE, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -256,8 +256,7 @@ namespace backend_api.Controllers.v1
                 return BadRequest(_response);
             }
 
-            //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;\
-            var userId = "a09752778505389093199";
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var newModel = _mapper.Map<WorkExperience>(createDTO);
 
             newModel.SubmiterId = userId;

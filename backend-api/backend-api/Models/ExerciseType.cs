@@ -10,6 +10,8 @@ namespace backend_api.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string ExerciseTypeName { get; set; }
+        public List<Exercise> Exercises { get; set; }
+        public List<SyllabusExercise> SyllabusExercises { get; set; }
         public int VersionNumber { get; set; } = 1;
         public int? OriginalId { get; set; }
         [ForeignKey(nameof(OriginalId))]
@@ -17,7 +19,6 @@ namespace backend_api.Models
         public bool IsDeleted { get; set; } = false;
         public bool IsActive { get; set; } = false;
         public string SubmitterId { get; set; }
-        public List<Exercise> Exercises { get; set; }
         [ForeignKey(nameof(SubmitterId))]
         public ApplicationUser Submitter { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;

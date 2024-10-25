@@ -52,6 +52,7 @@ namespace backend_api.Data
         public DbSet<ExerciseType> ExerciseTypes { get; set; }
         public DbSet<Exercise> Exercisese { get; set; }
         public DbSet<Syllabus> Syllabuses { get; set; }
+        public DbSet<SyllabusExercise> SyllabusExercises { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -61,6 +62,27 @@ namespace backend_api.Data
                 .HasOne(tr => tr.Tutor)
                 .WithMany(t => t.Requests)
                 .HasForeignKey(tr => tr.TutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SyllabusExercise>()
+         .HasKey(se => new { se.SyllabusId, se.ExerciseTypeId, se.ExerciseId });
+
+            builder.Entity<SyllabusExercise>()
+                .HasOne(se => se.Syllabus)
+                .WithMany(s => s.SyllabusExercises)
+                .HasForeignKey(se => se.SyllabusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SyllabusExercise>()
+                .HasOne(se => se.ExerciseType)
+                .WithMany(et => et.SyllabusExercises)
+                .HasForeignKey(se => se.ExerciseTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SyllabusExercise>()
+                .HasOne(se => se.Exercise)
+                .WithMany(e => e.SyllabusExercises)
+                .HasForeignKey(se => se.ExerciseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<TutorRequest>()

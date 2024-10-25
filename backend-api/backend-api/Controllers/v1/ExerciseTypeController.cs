@@ -35,6 +35,35 @@ namespace backend_api.Controllers.v1
             _exerciseTypeRepository = exerciseTypeRepository;
         }
 
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<APIResponse>> GetById(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { SD.BAD_REQUEST_MESSAGE };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+
+                var exercise = await _exerciseTypeRepository.GetAsync(x => x.Id == id, false, null, null);
+
+                _response.Result = _mapper.Map<ExerciseTypeDTO>(exercise);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
         [HttpGet]
         [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, int pageNumber = 1, int pageSize = 9)
@@ -77,7 +106,7 @@ namespace backend_api.Controllers.v1
         }
 
 
-        [HttpGet("{id}")]
+        [HttpGet("exercise/{id}")]
         public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute]int id, [FromQuery] string? search, int pageNumber = 1, int pageSize = 10, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
