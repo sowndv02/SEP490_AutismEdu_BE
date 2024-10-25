@@ -9,7 +9,7 @@ namespace backend_api.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string TutorId { get; set; }
-        public int ChildId { get; set; }
+        public int StudentProfileId { get; set; }
         public DateTime From { get; set; }
         public DateTime To { get; set; }
         public string? Achieved { get; set; }
@@ -19,7 +19,8 @@ namespace backend_api.Models
         public DateTime? UpdatedDate { get; set; }
         [ForeignKey(nameof(TutorId))]
         public ApplicationUser Tutor { get; set; }
-        [ForeignKey(nameof(ChildId))]
-        public ChildInformation Child { get; set; }
+        [ForeignKey(nameof(StudentProfileId))]
+        public StudentProfile StudentProfile { get; set; }
+        public List<AssessmentResult> AssessmentResults { get; set; }
     }
 }

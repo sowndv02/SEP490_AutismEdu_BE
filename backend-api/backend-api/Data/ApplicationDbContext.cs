@@ -110,6 +110,12 @@ namespace backend_api.Data
                 .HasForeignKey(pr => pr.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<AssessmentResult>()
+                .HasOne(pr => pr.Question)
+                .WithMany()
+                .HasForeignKey(pr => pr.QuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
             foreach (var entityType in builder.Model.GetEntityTypes())
             {
