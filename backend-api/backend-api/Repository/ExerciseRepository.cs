@@ -14,22 +14,43 @@ namespace backend_api.Repository
             _context = context;
         }
 
-        public async Task<(int TotalCount, List<Exercise>)> GetByExerciseTypeAsync(int exerciseTypeId)
+        public async Task DeactivatePreviousVersionsAsync(int? originalId)
         {
-            var exercises = await _context.Exercise
-                                     .Where(e => e.ExerciseTypeId == exerciseTypeId)
-                                     .ToListAsync();
+            var previousVersions = await _context.Exercisese
+                .Where(c => c.OriginalId == originalId && c.IsActive)
+                .ToListAsync();
 
-            var totalCount = exercises.Count;
+            if (previousVersions == null || !previousVersions.Any())
+            {
+                return;
+            }
 
-            return (totalCount, exercises);
+            foreach (var version in previousVersions)
+            {
+                version.IsActive = false;
+                _context.Exercisese.Update(version);
+            }
+            await _context.SaveChangesAsync();
         }
 
+        public async Task<int> GetNextVersionNumberAsync(int? originalId)
+        {
+            var previousVersions = await _context.Exercisese
+                .Where(c => c.OriginalId == originalId)
+                .ToListAsync();
+
+            if (previousVersions == null || !previousVersions.Any())
+            {
+                return 1;
+            }
+
+            return previousVersions.Max(c => c.VersionNumber) + 1;
+        }
         public async Task<Exercise> UpdateAsync(Exercise model)
         {
             try
             {
-                _context.Exercise.Update(model);
+                _context.Exercisese.Update(model);
                 await _context.SaveChangesAsync();
                 return model;
             }

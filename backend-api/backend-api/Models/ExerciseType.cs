@@ -10,13 +10,17 @@ namespace backend_api.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string ExerciseTypeName { get; set; }
-        public int AgeFrom { get; set; }
-        public int AgeTo { get; set; }
-        public Status RequestStatus { get; set; } = Status.PENDING;
+        public int VersionNumber { get; set; } = 1;
+        public int? OriginalId { get; set; }
+        [ForeignKey(nameof(OriginalId))]
+        public Exercise? Original { get; set; }
         public bool IsDeleted { get; set; } = false;
-        public string? TutorId { get; set; }
+        public bool IsActive { get; set; } = false;
+        public string SubmitterId { get; set; }
 
-        [ForeignKey(nameof(TutorId))]
-        public Tutor? Tutor { get; set; }
+        [ForeignKey(nameof(SubmitterId))]
+        public ApplicationUser Submitter { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime? UpdatedDate { get; set; }
     }
 }

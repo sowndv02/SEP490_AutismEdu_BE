@@ -3,8 +3,10 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -34,35 +36,25 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, int pageNumber = 1, int pageSize = 9)
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, int pageNumber = 1, int pageSize = 9)
         {
             try
             {
                 int totalCount = 0;
                 List<ExerciseType> list = new();
-                //Expression<Func<ExerciseType, bool>> filter = e => true;
-                Expression<Func<ExerciseType, bool>> filter = e => !e.IsDeleted;
+                Expression<Func<ExerciseType, bool>> filter = e => true;
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
+                if (userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive);
+                }
                 if (!string.IsNullOrEmpty(search))
                 {
                     filter = filter.AndAlso(e => e.ExerciseTypeName.Contains(search));
                 }
-                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
-                {
-                    switch (status.ToLower())
-                    {
-                        case "approve":
-                            filter = filter.AndAlso(e => e.RequestStatus == Status.APPROVE);
-                            break;
-                        case "reject":
-                            filter = filter.AndAlso(e => e.RequestStatus == Status.REJECT);
-                            break;
-                        case "pending":
-                            filter = filter.AndAlso(e => e.RequestStatus == Status.PENDING);
-                            break;
-                    }
-                }
-
                 var (count, result) = await _exerciseTypeRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber);
                 list = result;
                 totalCount = count;
@@ -84,78 +76,22 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpGet("tutor")]
-        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesByTutorAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, int pageNumber = 1, int pageSize = 10)
-        {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
-                    return Unauthorized(_response);
-                }
 
-                int totalCount = 0;
-                List<ExerciseType> list = new();
-                Expression<Func<ExerciseType, bool>> filter = e => e.TutorId == userId;
-
-                if (!string.IsNullOrEmpty(search))
-                {
-                    filter = filter.AndAlso(e => e.ExerciseTypeName.Contains(search));
-                }
-
-                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
-                {
-                    switch (status.ToLower())
-                    {
-                        case "approve":
-                            filter = filter.AndAlso(e => e.RequestStatus == Status.APPROVE);
-                            break;
-                        case "reject":
-                            filter = filter.AndAlso(e => e.RequestStatus == Status.REJECT);
-                            break;
-                        case "pending":
-                            filter = filter.AndAlso(e => e.RequestStatus == Status.PENDING);
-                            break;
-                    }
-                }
-
-                var (count, result) = await _exerciseTypeRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber);
-                list = result;
-                totalCount = count;
-
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-
-                _response.Result = _mapper.Map<List<ExerciseTypeDTO>>(list);
-                _response.StatusCode = HttpStatusCode.OK;
-                _response.Pagination = pagination;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-
-        [HttpGet("{exerciseTypeId}")]
-        public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync(int exerciseTypeId, [FromQuery] string? search, int pageNumber = 1, int pageSize = 10, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute]int id, [FromQuery] string? search, int pageNumber = 1, int pageSize = 10, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
             {
                 int totalCount = 0;
                 List<Exercise> list = new();
-                Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == exerciseTypeId;
+                Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == id;
                 Expression<Func<Exercise, object>> orderByQuery = u => true;
-
-
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive && e.TutorId == userId);
+                }
                 if (!string.IsNullOrEmpty(search))
                 {
                     filter = filter.AndAlso(e => e.ExerciseName.Contains(search));
@@ -199,51 +135,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        public async Task<ActionResult<APIResponse>> CreateExerciseAsync(ExerciseCreateDTO exerciseCreateDTO)
-        {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //var userId = "78123797-c58d-4d92-8671-8d4b1f6bd4a9";
-
-                if (exerciseCreateDTO == null || string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
-                }
-
-                var exerciseModel = _mapper.Map<Exercise>(exerciseCreateDTO);
-                exerciseModel.TutorId = userId;
-                exerciseModel.CreatedDate = DateTime.Now;
-
-                var createdExercise = await _exerciseRepository.CreateAsync(exerciseModel);
-
-                var exerciseDTO = new ExerciseDTO
-                {
-                    Id = createdExercise.ExerciseId,
-                    ExerciseName = createdExercise.ExerciseName,
-                    ExerciseContent = createdExercise.ExerciseContent,
-                    TutorId = createdExercise.TutorId,
-                    ExerciseTypeId = createdExercise.ExerciseTypeId
-                };
-
-                _response.Result = exerciseDTO;
-                _response.StatusCode = HttpStatusCode.Created;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-        [HttpPost("ExerciseTypeCreate")]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<IActionResult> CreateExerciseTypeAsync(ExerciseTypeCreateDTO exerciseTypeCreateDTO)
         {
             try
@@ -257,14 +149,15 @@ namespace backend_api.Controllers.v1
                 }
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //var userId = "78123797-c58d-4d92-8671-8d4b1f6bd4a9";
-
                 var newExerciseType = _mapper.Map<ExerciseType>(exerciseTypeCreateDTO);
-                newExerciseType.TutorId = userId;
-                newExerciseType.RequestStatus = Status.PENDING;
-
+                newExerciseType.SubmitterId = userId;
+                if (exerciseTypeCreateDTO.OriginalId == null || exerciseTypeCreateDTO.OriginalId == 0)
+                {
+                    newExerciseType = null;
+                }
+                newExerciseType.VersionNumber = await _exerciseTypeRepository.GetNextVersionNumberAsync(exerciseTypeCreateDTO.OriginalId);
+                await _exerciseRepository.DeactivatePreviousVersionsAsync(newExerciseType.OriginalId);
                 await _exerciseTypeRepository.CreateAsync(newExerciseType);
-
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<ExerciseTypeDTO>(newExerciseType);
                 _response.IsSuccess = true;
@@ -279,125 +172,57 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpPut("changeStatus/{id}")]
-        public async Task<IActionResult> ApproveOrRejectExerciseCreateRequest(ChangeStatusDTO changeStatusDTO)
-        {
-            try
-            {
-                ExerciseType exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
-                if (exerciseType == null || exerciseType.RequestStatus != Status.PENDING)
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
-                }
+        //[HttpPut("changeStatus/{id}")]
+        //public async Task<IActionResult> ApproveOrRejectExerciseCreateRequest(ChangeStatusDTO changeStatusDTO)
+        //{
+        //    try
+        //    {
+        //        ExerciseType exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+        //        if (exerciseType == null || exerciseType.RequestStatus != Status.PENDING)
+        //        {
+        //            _response.StatusCode = HttpStatusCode.BadRequest;
+        //            _response.IsSuccess = false;
+        //            _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+        //            return BadRequest(_response);
+        //        }
 
-                if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
-                {
-                    exerciseType.RequestStatus = Status.APPROVE;
+        //        if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
+        //        {
+        //            exerciseType.RequestStatus = Status.APPROVE;
 
-                    await _exerciseTypeRepository.UpdateAsync(exerciseType);
+        //            await _exerciseTypeRepository.UpdateAsync(exerciseType);
 
-                    _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
-                    _response.StatusCode = HttpStatusCode.OK;
-                    _response.IsSuccess = true;
-                    return Ok(_response);
-                }
-                else if (changeStatusDTO.StatusChange == (int)Status.REJECT)
-                {
-                    exerciseType.RequestStatus = Status.REJECT;
+        //            _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
+        //            _response.StatusCode = HttpStatusCode.OK;
+        //            _response.IsSuccess = true;
+        //            return Ok(_response);
+        //        }
+        //        else if (changeStatusDTO.StatusChange == (int)Status.REJECT)
+        //        {
+        //            exerciseType.RequestStatus = Status.REJECT;
 
-                    await _exerciseTypeRepository.UpdateAsync(exerciseType);
+        //            await _exerciseTypeRepository.UpdateAsync(exerciseType);
 
-                    _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
-                    _response.StatusCode = HttpStatusCode.OK;
-                    _response.IsSuccess = true;
-                    return Ok(_response);
-                }
+        //            _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
+        //            _response.StatusCode = HttpStatusCode.OK;
+        //            _response.IsSuccess = true;
+        //            return Ok(_response);
+        //        }
 
-                _response.StatusCode = HttpStatusCode.NoContent;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
+        //        _response.StatusCode = HttpStatusCode.NoContent;
+        //        _response.IsSuccess = true;
+        //        return Ok(_response);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _response.IsSuccess = false;
+        //        _response.StatusCode = HttpStatusCode.InternalServerError;
+        //        _response.ErrorMessages = new List<string> { ex.Message };
+        //        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+        //    }
+        //}
 
-        [HttpPut("{exerciseId}")]
-        public async Task<IActionResult> UpdateExercise(int exerciseId, ExerciseUpdateDTO exerciseUpdateDTO)
-        {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //var userId = "78123797-c58d-4d92-8671-8d4b1f6bd4a9";
-
-                var existingExercise = await _exerciseRepository.GetAsync(e => e.ExerciseId == exerciseId);
-
-                if (existingExercise == null || existingExercise.TutorId != userId)
-                {
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { "Unauthorized to update this exercise." };
-                    return Forbid();
-                }
-
-                existingExercise.ExerciseName = exerciseUpdateDTO.ExerciseName;
-                existingExercise.ExerciseContent = exerciseUpdateDTO.ExerciseContent;
-                existingExercise.UpdatedDate = DateTime.UtcNow;
-
-                await _exerciseRepository.UpdateAsync(existingExercise);
-
-                _response.Result = _mapper.Map<ExerciseDTO>(existingExercise);
-                _response.StatusCode = HttpStatusCode.OK;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-        [HttpDelete]
-        public async Task<IActionResult> DeleteExerciseAsync(int id)
-        {
-            try
-            {
-                var exercise = await _exerciseRepository.GetAsync(x => x.ExerciseId == id && !x.IsDeleted);
-                if (exercise == null)
-                {
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
-                    return NotFound(_response);
-                }
-
-                exercise.IsDeleted = true;
-                await _exerciseRepository.UpdateAsync(exercise);
-
-                _response.StatusCode = HttpStatusCode.NoContent;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-        [HttpDelete("{exerciseTypeId}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteExerciseTypeByIdAsync(int id)
         {
             try
