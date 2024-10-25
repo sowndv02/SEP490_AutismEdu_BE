@@ -498,7 +498,7 @@ namespace backend_api.Controllers.v1
                     initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id, true, "Question,Option"));
                 }
                 studentProfile.InitialAssessmentResults = initialAssessmentResults;
-
+                await _studentProfileRepository.UpdateAsync(studentProfile);
                 _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
