@@ -7,6 +7,7 @@ namespace backend_api.Models.DTOs
         public int Id { get; set; }
         public string TutorName { get; set; }
         public string TutorPhoneNumber { get; set; }
+        public string TutorImageUrl { get; set; }
         public string ChildName { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public StudentProfileStatus Status { get; set; }

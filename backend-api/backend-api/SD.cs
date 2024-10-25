@@ -23,7 +23,7 @@
         public const string URL_FE_FULL = "http://localhost:5173/autismedu";
         public const string URL_FE_TUTOR_LOGIN = "http://localhost:5173/autismtutor/tutor-login";
         public const string URL_IMAGE_DEFAULT_BLOB = "https://sep490g50v1.blob.core.windows.net/logos-public/default-avatar.png";
-        public const string URL_FE_STUDENT_PROFILE_DETAIL = "#";
+        public const string URL_FE_STUDENT_PROFILE_DETAIL = "http://localhost:5173/autismedu/approve-student-profile/";
         public const string URL_FE_PARENT_LOGIN = "";
 
         // Const folder mail save
@@ -118,6 +118,7 @@
         public const string DUPLICATED_EMAIL_MESSAGE = "Đã tồn tại tài khoản với email này";
         public const string CHILD_NOT_FOUND = "Không tìm thấy dữ liệu trẻ";
         public const string MISSING_PARENT_CHILD_INFORMATION = "Không nhập đủ dữ liệu phụ huynh và trẻ";
+        public const string STUDENT_PROFILE_EXPIRED = "Quá hạn xét duyệt hồ sơ học sinh";
 
         // const exercise type
         public const string DEFAULT_EXERCISE_TYPE_1 = "Tập phát âm thuở ban đầu - nhưng âm thanh của trẻ nhỏ";
