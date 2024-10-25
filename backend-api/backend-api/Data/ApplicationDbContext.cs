@@ -345,123 +345,213 @@ namespace backend_api.Data
 
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_1
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_1,
+                        AgeFrom = 0,
+                        AgeTo = 1,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_2
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_2,
+                        AgeFrom = 0,
+                        AgeTo = 1,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_3
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_3,
+                        AgeFrom = 0,
+                        AgeTo = 1,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_4
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_4,
+                        AgeFrom = 0,
+                        AgeTo = 1,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_5
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_5,
+                        AgeFrom = 0,
+                        AgeTo = 1,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_6
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_6,
+                        AgeFrom = 0,
+                        AgeTo = 1,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_7
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_7,
+                        AgeFrom = 0,
+                        AgeTo = 1,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_8
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_8,
+                        AgeFrom = 0,
+                        AgeTo = 1,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_9
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_9,
+                        AgeFrom = 0,
+                        AgeTo = 1,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_10
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_10,
+                        AgeFrom = 1,
+                        AgeTo = 2,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_11
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_11,
+                        AgeFrom = 1,
+                        AgeTo = 2,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_12
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_12,
+                        AgeFrom = 1,
+                        AgeTo = 2,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_13
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_13,
+                        AgeFrom = 1,
+                        AgeTo = 2,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_14
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_14,
+                        AgeFrom = 1,
+                        AgeTo = 2,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_15
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_15,
+                        AgeFrom = 1,
+                        AgeTo = 2,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_16
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_16,
+                        AgeFrom = 2,
+                        AgeTo = 3,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_17
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_17,
+                        AgeFrom = 2,
+                        AgeTo = 3,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_18
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_18,
+                        AgeFrom = 2,
+                        AgeTo = 3,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_19
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_19,
+                        AgeFrom = 2,
+                        AgeTo = 3,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_20
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_20,
+                        AgeFrom = 2,
+                        AgeTo = 3,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_21
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_21,
+                        AgeFrom = 2,
+                        AgeTo = 3,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_22
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_22,
+                        AgeFrom = 2,
+                        AgeTo = 3,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_23
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_23,
+                        AgeFrom = 3,
+                        AgeTo = 4,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_24
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_24,
+                        AgeFrom = 3,
+                        AgeTo = 4,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_25
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_25,
+                        AgeFrom = 3,
+                        AgeTo = 4,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_26
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_26,
+                        AgeFrom = 3,
+                        AgeTo = 4,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_27
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_27,
+                        AgeFrom = 3,
+                        AgeTo = 4,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_28
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_28,
+                        AgeFrom = 3,
+                        AgeTo = 4,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_29
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_29,
+                        AgeFrom = 3,
+                        AgeTo = 4,
+                        RequestStatus = SD.Status.APPROVE
                     },
                     new ExerciseType
                     {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_30
+                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_30,
+                        AgeFrom = 3,
+                        AgeTo = 4,
+                        RequestStatus = SD.Status.APPROVE
                     }                    
                 );
 

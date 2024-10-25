@@ -179,7 +179,8 @@ namespace backend_api.Mapper
                 .ReverseMap();
             CreateMap<Exercise, ExerciseDTO>().ReverseMap();
             CreateMap<ExerciseType, ExerciseTypeDTO>().ReverseMap();
-            CreateMap<ExerciseCreateDTO, Exercise>();
+            CreateMap<ExerciseCreateDTO, Exercise>().ReverseMap();
+            CreateMap<ExerciseTypeCreateDTO, ExerciseType>().ReverseMap();
 
             CreateMap<StudentProfile, StudentProfileDetailDTO>()
                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))

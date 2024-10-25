@@ -528,11 +528,25 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int>("AgeFrom")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AgeTo")
+                        .HasColumnType("int");
+
                     b.Property<string>("ExerciseTypeName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("RequestStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TutorId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TutorId");
 
                     b.ToTable("ExerciseType");
                 });
@@ -1553,6 +1567,15 @@ namespace backend_api.Migrations
                         .IsRequired();
 
                     b.Navigation("ExerciseType");
+
+                    b.Navigation("Tutor");
+                });
+
+            modelBuilder.Entity("backend_api.Models.ExerciseType", b =>
+                {
+                    b.HasOne("backend_api.Models.Tutor", "Tutor")
+                        .WithMany()
+                        .HasForeignKey("TutorId");
 
                     b.Navigation("Tutor");
                 });
