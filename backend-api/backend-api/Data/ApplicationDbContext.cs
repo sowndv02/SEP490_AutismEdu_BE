@@ -51,6 +51,7 @@ namespace backend_api.Data
 		public DbSet<EmailLogger> EmailLoggers { get; set; }
         public DbSet<ExerciseType> ExerciseTypes { get; set; }
         public DbSet<Exercise> Exercisese { get; set; }
+        public DbSet<Syllabus> Syllabuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -70,6 +71,12 @@ namespace backend_api.Data
 
             builder.Entity<Tutor>()
                 .HasMany(t => t.Reviews)
+                .WithOne(r => r.Tutor)
+                .HasForeignKey(r => r.TutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Tutor>()
+                .HasMany(t => t.Exercises)
                 .WithOne(r => r.Tutor)
                 .HasForeignKey(r => r.TutorId)
                 .OnDelete(DeleteBehavior.Restrict);

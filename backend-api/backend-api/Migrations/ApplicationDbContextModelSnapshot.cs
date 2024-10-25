@@ -489,16 +489,16 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Exercise", b =>
                 {
-                    b.Property<int>("ExerciseId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExerciseId"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ExerciseContent")
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -509,8 +509,14 @@ namespace backend_api.Migrations
                     b.Property<int>("ExerciseTypeId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<int?>("OriginalId")
+                        .HasColumnType("int");
 
                     b.Property<string>("TutorId")
                         .IsRequired()
@@ -519,13 +525,18 @@ namespace backend_api.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("ExerciseId");
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("ExerciseTypeId");
 
+                    b.HasIndex("OriginalId");
+
                     b.HasIndex("TutorId");
 
-                    b.ToTable("Exercise");
+                    b.ToTable("Exercisese");
                 });
 
             modelBuilder.Entity("backend_api.Models.ExerciseType", b =>
@@ -536,30 +547,44 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("AgeFrom")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AgeTo")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("ExerciseTypeName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("RequestStatus")
+                    b.Property<int?>("OriginalId")
                         .HasColumnType("int");
 
-                    b.Property<string>("TutorId")
+                    b.Property<string>("SubmitterId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("SyllabusId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TutorId");
+                    b.HasIndex("OriginalId");
 
-                    b.ToTable("ExerciseType");
+                    b.HasIndex("SubmitterId");
+
+                    b.HasIndex("SyllabusId");
+
+                    b.ToTable("ExerciseTypes");
                 });
 
             modelBuilder.Entity("backend_api.Models.InitialAssessmentResult", b =>
@@ -901,6 +926,51 @@ namespace backend_api.Migrations
                     b.HasIndex("TutorId");
 
                     b.ToTable("StudentProfiles");
+                });
+
+            modelBuilder.Entity("backend_api.Models.Syllabus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("AgeEnd")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AgeFrom")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("OriginalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TutorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OriginalId");
+
+                    b.HasIndex("TutorId");
+
+                    b.ToTable("Syllabuses");
                 });
 
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
@@ -1574,29 +1644,47 @@ namespace backend_api.Migrations
             modelBuilder.Entity("backend_api.Models.Exercise", b =>
                 {
                     b.HasOne("backend_api.Models.ExerciseType", "ExerciseType")
-                        .WithMany()
+                        .WithMany("Exercises")
                         .HasForeignKey("ExerciseTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend_api.Models.Tutor", "Tutor")
+                    b.HasOne("backend_api.Models.Exercise", "Original")
                         .WithMany()
+                        .HasForeignKey("OriginalId");
+
+                    b.HasOne("backend_api.Models.Tutor", "Tutor")
+                        .WithMany("Exercises")
                         .HasForeignKey("TutorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ExerciseType");
+
+                    b.Navigation("Original");
 
                     b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("backend_api.Models.ExerciseType", b =>
                 {
-                    b.HasOne("backend_api.Models.Tutor", "Tutor")
+                    b.HasOne("backend_api.Models.ExerciseType", "Original")
                         .WithMany()
-                        .HasForeignKey("TutorId");
+                        .HasForeignKey("OriginalId");
 
-                    b.Navigation("Tutor");
+                    b.HasOne("backend_api.Models.ApplicationUser", "Submitter")
+                        .WithMany()
+                        .HasForeignKey("SubmitterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.Syllabus", null)
+                        .WithMany("ExerciseTypes")
+                        .HasForeignKey("SyllabusId");
+
+                    b.Navigation("Original");
+
+                    b.Navigation("Submitter");
                 });
 
             modelBuilder.Entity("backend_api.Models.InitialAssessmentResult", b =>
@@ -1754,6 +1842,23 @@ namespace backend_api.Migrations
                     b.Navigation("Tutor");
                 });
 
+            modelBuilder.Entity("backend_api.Models.Syllabus", b =>
+                {
+                    b.HasOne("backend_api.Models.Syllabus", "Original")
+                        .WithMany()
+                        .HasForeignKey("OriginalId");
+
+                    b.HasOne("backend_api.Models.Tutor", "Tutor")
+                        .WithMany()
+                        .HasForeignKey("TutorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Original");
+
+                    b.Navigation("Tutor");
+                });
+
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
                 {
                     b.HasOne("backend_api.Models.ApplicationUser", "User")
@@ -1906,6 +2011,11 @@ namespace backend_api.Migrations
                     b.Navigation("CertificateMedias");
                 });
 
+            modelBuilder.Entity("backend_api.Models.ExerciseType", b =>
+                {
+                    b.Navigation("Exercises");
+                });
+
             modelBuilder.Entity("backend_api.Models.ProgressReport", b =>
                 {
                     b.Navigation("AssessmentResults");
@@ -1918,6 +2028,11 @@ namespace backend_api.Migrations
                     b.Navigation("ScheduleTimeSlots");
                 });
 
+            modelBuilder.Entity("backend_api.Models.Syllabus", b =>
+                {
+                    b.Navigation("ExerciseTypes");
+                });
+
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
                 {
                     b.Navigation("AvailableTimeSlots");
@@ -1925,6 +2040,8 @@ namespace backend_api.Migrations
                     b.Navigation("Certificates");
 
                     b.Navigation("Curriculums");
+
+                    b.Navigation("Exercises");
 
                     b.Navigation("Requests");
 

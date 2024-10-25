@@ -13,11 +13,11 @@ namespace backend_api.Models
         public int VersionNumber { get; set; } = 1;
         public int? OriginalId { get; set; }
         [ForeignKey(nameof(OriginalId))]
-        public Exercise? Original { get; set; }
+        public ExerciseType? Original { get; set; }
         public bool IsDeleted { get; set; } = false;
         public bool IsActive { get; set; } = false;
         public string SubmitterId { get; set; }
-
+        public List<Exercise> Exercises { get; set; }
         [ForeignKey(nameof(SubmitterId))]
         public ApplicationUser Submitter { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
