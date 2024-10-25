@@ -567,9 +567,6 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("SyllabusId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
@@ -581,8 +578,6 @@ namespace backend_api.Migrations
                     b.HasIndex("OriginalId");
 
                     b.HasIndex("SubmitterId");
-
-                    b.HasIndex("SyllabusId");
 
                     b.ToTable("ExerciseTypes");
                 });
@@ -945,14 +940,8 @@ namespace backend_api.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
-
-                    b.Property<int?>("OriginalId")
-                        .HasColumnType("int");
 
                     b.Property<string>("TutorId")
                         .IsRequired()
@@ -961,16 +950,34 @@ namespace backend_api.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("VersionNumber")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("OriginalId");
 
                     b.HasIndex("TutorId");
 
                     b.ToTable("Syllabuses");
+                });
+
+            modelBuilder.Entity("backend_api.Models.SyllabusExercise", b =>
+                {
+                    b.Property<int>("SyllabusId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExerciseTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExerciseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SyllabusId", "ExerciseTypeId", "ExerciseId");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.HasIndex("ExerciseTypeId");
+
+                    b.ToTable("SyllabusExercises");
                 });
 
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
@@ -1643,7 +1650,7 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Exercise", b =>
                 {
-                    b.HasOne("backend_api.Models.ExerciseType", "ExerciseType")
+                    b.HasOne("backend_api.Models.ExerciseType", "ExerciseTypes")
                         .WithMany("Exercises")
                         .HasForeignKey("ExerciseTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1659,7 +1666,7 @@ namespace backend_api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ExerciseType");
+                    b.Navigation("ExerciseTypes");
 
                     b.Navigation("Original");
 
@@ -1677,10 +1684,6 @@ namespace backend_api.Migrations
                         .HasForeignKey("SubmitterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("backend_api.Models.Syllabus", null)
-                        .WithMany("ExerciseTypes")
-                        .HasForeignKey("SyllabusId");
 
                     b.Navigation("Original");
 
@@ -1844,19 +1847,40 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Syllabus", b =>
                 {
-                    b.HasOne("backend_api.Models.Syllabus", "Original")
-                        .WithMany()
-                        .HasForeignKey("OriginalId");
-
                     b.HasOne("backend_api.Models.Tutor", "Tutor")
                         .WithMany()
                         .HasForeignKey("TutorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Original");
-
                     b.Navigation("Tutor");
+                });
+
+            modelBuilder.Entity("backend_api.Models.SyllabusExercise", b =>
+                {
+                    b.HasOne("backend_api.Models.Exercise", "Exercise")
+                        .WithMany("SyllabusExercises")
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.ExerciseType", "ExerciseType")
+                        .WithMany("SyllabusExercises")
+                        .HasForeignKey("ExerciseTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.Syllabus", "Syllabus")
+                        .WithMany("SyllabusExercises")
+                        .HasForeignKey("SyllabusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Exercise");
+
+                    b.Navigation("ExerciseType");
+
+                    b.Navigation("Syllabus");
                 });
 
             modelBuilder.Entity("backend_api.Models.Tutor", b =>
@@ -2011,9 +2035,16 @@ namespace backend_api.Migrations
                     b.Navigation("CertificateMedias");
                 });
 
+            modelBuilder.Entity("backend_api.Models.Exercise", b =>
+                {
+                    b.Navigation("SyllabusExercises");
+                });
+
             modelBuilder.Entity("backend_api.Models.ExerciseType", b =>
                 {
                     b.Navigation("Exercises");
+
+                    b.Navigation("SyllabusExercises");
                 });
 
             modelBuilder.Entity("backend_api.Models.ProgressReport", b =>
@@ -2030,7 +2061,7 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Syllabus", b =>
                 {
-                    b.Navigation("ExerciseTypes");
+                    b.Navigation("SyllabusExercises");
                 });
 
             modelBuilder.Entity("backend_api.Models.Tutor", b =>

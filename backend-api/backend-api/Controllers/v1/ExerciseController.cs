@@ -36,9 +36,46 @@ namespace backend_api.Controllers.v1
         }
 
         // Get by Id
+        [HttpGet("{id}")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> GetById(int id)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+                if (id <= 0)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+
+                var exercise = await _exerciseRepository.GetAsync(x => x.Id == id && x.TutorId == userId, false, "ExerciseType", null);
+                if (exercise == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
+                    return NotFound(_response);
+                }
+
+                _response.Result = _mapper.Map<ExerciseDTO>(exercise);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> CreateExerciseAsync(ExerciseCreateDTO exerciseCreateDTO)
         {
             try

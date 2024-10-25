@@ -8,5 +8,8 @@ namespace backend_api.Models.DTOs
     {
         public int Id { get; set; }
         public string ExerciseTypeName { get; set; }
+        public List<ExerciseDTO> Exercises { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime UpdatedDate { get; set; }
     }
 }

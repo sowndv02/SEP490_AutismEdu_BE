@@ -180,6 +180,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ReverseMap();
+            CreateMap<Exercise, ExerciseListDTO>().ReverseMap();
             CreateMap<Exercise, ExerciseDTO>().ReverseMap();
             CreateMap<ExerciseType, ExerciseTypeDTO>().ReverseMap();
             CreateMap<ExerciseCreateDTO, Exercise>().ReverseMap();
@@ -225,6 +226,17 @@ namespace backend_api.Mapper
                .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                .ReverseMap();
+
+            CreateMap<Syllabus, SyllabusCreateDTO>().ReverseMap();
+            CreateMap<Syllabus, SyllabusDTO>().ReverseMap();
+            CreateMap<SyllabusExercise, SyllabusExerciseDTO>().ReverseMap();
+
+            CreateMap<SyllabusExercise, ExerciseTypeDTO>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ExerciseType.Id))
+            .ForMember(dest => dest.ExerciseTypeName, opt => opt.MapFrom(src => src.ExerciseType.ExerciseTypeName))
+            .ForMember(dest => dest.Exercises, opt => opt.MapFrom(src => src.ExerciseType.Exercises))
+            .ReverseMap();
+
         }
     }
 }
