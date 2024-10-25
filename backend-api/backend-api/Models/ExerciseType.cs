@@ -13,6 +13,7 @@ namespace backend_api.Models
         public int AgeFrom { get; set; }
         public int AgeTo { get; set; }
         public Status RequestStatus { get; set; } = Status.PENDING;
+        public bool IsDeleted { get; set; } = false;
         public string? TutorId { get; set; }
 
         [ForeignKey(nameof(TutorId))]
