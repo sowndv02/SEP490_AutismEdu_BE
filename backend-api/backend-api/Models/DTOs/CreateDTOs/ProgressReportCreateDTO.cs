@@ -5,7 +5,7 @@ namespace backend_api.Models.DTOs.CreateDTOs
     public class ProgressReportCreateDTO
     {
         [Required]
-        public int ChildId { get; set; }
+        public int StudentProfileId { get; set; }
         [Required]
         public DateTime From { get; set; }
         [Required]

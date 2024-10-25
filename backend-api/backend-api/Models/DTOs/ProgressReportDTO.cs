@@ -9,6 +9,6 @@
         public string? Failed { get; set; }
         public string? NoteFromTutor { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
-        List<AssessmentResultDTO> AssessmentResults { get; set; }
+        public List<AssessmentResultDTO> AssessmentResults { get; set; }
     }
 }
