@@ -16,7 +16,7 @@ namespace backend_api.Controllers.v1
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
-    public class ExerciseController : ControllerBase
+    public class ExerciseTypeController : ControllerBase
     {
         private readonly IExerciseRepository _exerciseRepository;
         private readonly IExerciseTypeRepository _exerciseTypeRepository;
@@ -24,7 +24,7 @@ namespace backend_api.Controllers.v1
         protected APIResponse _response;
         protected int pageSize = 0;
 
-        public ExerciseController(IExerciseRepository exerciseRepository, IExerciseTypeRepository exerciseTypeRepository, IConfiguration configuration, IMapper mapper)
+        public ExerciseTypeController(IExerciseRepository exerciseRepository, IExerciseTypeRepository exerciseTypeRepository, IConfiguration configuration, IMapper mapper)
         {
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
@@ -285,7 +285,6 @@ namespace backend_api.Controllers.v1
             try
             {
                 ExerciseType exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
-
                 if (exerciseType == null || exerciseType.RequestStatus != Status.PENDING)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -297,6 +296,7 @@ namespace backend_api.Controllers.v1
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
                 {
                     exerciseType.RequestStatus = Status.APPROVE;
+
                     await _exerciseTypeRepository.UpdateAsync(exerciseType);
 
                     _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
