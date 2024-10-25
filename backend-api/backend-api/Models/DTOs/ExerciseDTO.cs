@@ -7,9 +7,7 @@ namespace backend_api.Models.DTOs
     {
         public int Id { get; set; }
         public string ExerciseName { get; set; }
-        public string ExerciseContent { get; set; }
-        public string TutorId { get; set; }
-        public int ExerciseTypeId { get; set; }
-        //public string ExerciseTypeName { get; set; }
+        public string Description { get; set; }
+        public ExerciseTypeDTO ExerciseType { get; set; }
     }
 }

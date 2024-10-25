@@ -5,6 +5,7 @@ namespace backend_api.Repository.IRepository
     public interface IExerciseTypeRepository : IRepository<ExerciseType>
     {
         Task<ExerciseType> UpdateAsync(ExerciseType model);
-        Task<ExerciseType> GetExerciseNameByID(int exerciseTypeId);
+        Task<int> GetNextVersionNumberAsync(int? originalCurriculumId);
+        Task DeactivatePreviousVersionsAsync(int? originalCurriculumId);
     }
 }

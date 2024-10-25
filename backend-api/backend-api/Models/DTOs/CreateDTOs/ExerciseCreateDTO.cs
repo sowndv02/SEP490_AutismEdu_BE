@@ -3,10 +3,8 @@
     public class ExerciseCreateDTO
     {
         public string ExerciseName { get; set; }
-        public string ExerciseContent { get; set; }
+        public string Description { get; set; }
         public int ExerciseTypeId { get; set; }
-        public string TutorId { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public DateTime? UpdatedDate { get; set; }
+        public int? OriginalId { get; set; }
     }
 }
