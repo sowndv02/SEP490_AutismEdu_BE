@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Thông báo Yêu cầu Dạy học</title>
+</head>
+<body>
+    <h2>Kính gửi @Model.TutorFullName,</h2>
+
+    <p>Chúng tôi muốn thông báo rằng có một yêu cầu dạy học mới từ phụ huynh.</p>
+
+    <h3>Thông tin yêu cầu:</h3>
+    <p><strong>Tên phụ huynh:</strong> @Model.ParentFullName</p>
+    <p><strong>Email phụ huynh:</strong> @Model.ParentEmail</p>
+    <p><strong>Số điện thoại phụ huynh:</strong> @Model.ParentPhoneNumber</p>
+    <p><strong>Nội dung yêu cầu:</strong></p>
+    <p>@Model.RequestDescription</p>
+
+    <p>Xin vui lòng liên hệ với phụ huynh để thảo luận thêm về yêu cầu này.</p>
+
+    <p>Trân trọng,</p>
+    <p>Đội ngũ Hỗ trợ Gia sư</p>
+    <p>
+        <strong>Công ty ABC</strong><br />
+        <a href="https://www.domain.com">Website</a>
+    </p>
+</body>
+</html>
