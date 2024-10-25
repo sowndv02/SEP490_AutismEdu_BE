@@ -65,7 +65,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, int pageNumber = 1, int pageSize = 10)
+        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, int pageNumber = 1, int pageSize = 9)
         {
             try
             {
@@ -114,7 +114,7 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpGet("by-tutor")]
+        [HttpGet("GetAllExerciseTypesByTutor")]
         public async Task<ActionResult<APIResponse>> GetAllExerciseTypesByTutorAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, int pageNumber = 1, int pageSize = 10)
         {
             try
@@ -175,21 +175,39 @@ namespace backend_api.Controllers.v1
         }
 
 
-        [HttpGet("{exerciseTypeId}")]
-        public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync(int exerciseTypeId, [FromQuery] string? search, int pageNumber = 1, int pageSize = 10)
+        [HttpGet("{GetExercisesByType}")]
+        public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync(int exerciseTypeId, [FromQuery] string? search, int pageNumber = 1, int pageSize = 10, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
             {
                 int totalCount = 0;
                 List<Exercise> list = new();
                 Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == exerciseTypeId;
+                Expression<Func<Exercise, object>> orderByQuery = u => true;
+
 
                 if (!string.IsNullOrEmpty(search))
                 {
                     filter = filter.AndAlso(e => e.ExerciseName.Contains(search));
                 }
 
-                var (count, result) = await _exerciseRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber);
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+
+                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: pageSize, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
+
                 list = result;
                 totalCount = count;
 
@@ -344,6 +362,46 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
+        [HttpPut("{exerciseId}")]
+        public async Task<IActionResult> UpdateExercise(int exerciseId, ExerciseUpdateDTO exerciseUpdateDTO)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //var userId = "78123797-c58d-4d92-8671-8d4b1f6bd4a9";
+
+                var existingExercise = await _exerciseRepository.GetAsync(e => e.ExerciseId == exerciseId);
+
+                if (existingExercise == null || existingExercise.TutorId != userId)
+                {
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { "Unauthorized to update this exercise." };
+                    return Forbid();
+                }
+
+                existingExercise.ExerciseName = exerciseUpdateDTO.ExerciseName;
+                existingExercise.ExerciseContent = exerciseUpdateDTO.ExerciseContent;
+                existingExercise.UpdatedDate = DateTime.UtcNow;
+
+                await _exerciseRepository.UpdateAsync(existingExercise);
+
+                _response.Result = _mapper.Map<ExerciseDTO>(existingExercise);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
 
         [HttpDelete("{exerciseId}")]
         public async Task<ActionResult<APIResponse>> DeleteExerciseByIdAsync(int exerciseId)
