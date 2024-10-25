@@ -225,44 +225,6 @@ namespace backend_api.Controllers.v1
             return Ok(_response);
         }
 
-
-        private async Task<bool> UpdateExerciseTypes(List<int> idNews, List<int> idsOlds, int syllabusId)
-        {
-            try
-            {
-
-                var itemsToAdd = idNews.Except(idsOlds).ToList();
-                var itemsToRemove = idsOlds.Except(idNews).ToList();
-
-                foreach (var item in itemsToAdd)
-                {
-                    var response = await _syllabusExerciseRepository.CreateAsync(new Sy { ProjectId = projectId, UserId = userId });
-                    if (response == null && response.IsSuccess && response.ErrorMessages.Count == 0)
-                    {
-                        TempData["error"] = response.ErrorMessages.FirstOrDefault();
-                        return false;
-                    }
-
-                }
-                foreach (var userId in usersToRemove)
-                {
-                    var response = await _projectUserService.DeleteByProjectAndUserAsync<APIResponse>(projectId, userId);
-                    if (response == null && response.IsSuccess && response.ErrorMessages.Count == 0)
-                    {
-                        TempData["error"] = response.ErrorMessages.FirstOrDefault();
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = $"Internal Server Error! {ex.Message}";
-                return false;
-            }
-        }
-
         [HttpPost]
         //[Authorize]
         public async Task<IActionResult> CreateAsync(SyllabusCreateDTO createDTO)
