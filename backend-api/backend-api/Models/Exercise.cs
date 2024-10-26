@@ -19,7 +19,7 @@ namespace backend_api.Models
         [ForeignKey(nameof(OriginalId))]
         public Exercise? Original { get; set; }
         [ForeignKey(nameof(ExerciseTypeId))]
-        public ExerciseType ExerciseTypes { get; set; }
+        public ExerciseType ExerciseType { get; set; }
         public List<SyllabusExercise> SyllabusExercises { get; set; }
 
         [ForeignKey(nameof(TutorId))]

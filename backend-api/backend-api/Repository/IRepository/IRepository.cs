@@ -8,7 +8,7 @@ namespace backend_api.Repository.IRepository
             int pageSize = 10, int pageNumber = 1, Expression<Func<T, object>>? orderBy = null, bool isDesc = true);
         Task<(int TotalCount, List<T> list)> GetAllWithIncludeAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null,
             int pageSize = 10, int pageNumber = 1, Expression<Func<T, object>>? orderBy = null, bool isDesc = true);
-        Task<(int TotalCount, List<T> list)> GetAllNotPagingAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null);
+        Task<(int TotalCount, List<T> list)> GetAllNotPagingAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null, Expression<Func<T, object>>? orderBy = null, bool isDesc = true);
         Task<T> GetAsync(Expression<Func<T, bool>> filter = null, bool tracked = true, string? includeProperties = null, string? excludeProperties = null);
         Task<T> CreateAsync(T entity);
         Task RemoveAsync(T entity);

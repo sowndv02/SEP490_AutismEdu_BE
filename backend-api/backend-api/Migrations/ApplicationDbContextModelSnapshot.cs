@@ -1650,7 +1650,7 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Exercise", b =>
                 {
-                    b.HasOne("backend_api.Models.ExerciseType", "ExerciseTypes")
+                    b.HasOne("backend_api.Models.ExerciseType", "ExerciseType")
                         .WithMany("Exercises")
                         .HasForeignKey("ExerciseTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1666,7 +1666,7 @@ namespace backend_api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ExerciseTypes");
+                    b.Navigation("ExerciseType");
 
                     b.Navigation("Original");
 

@@ -66,7 +66,7 @@ namespace backend_api.Controllers.v1
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, int pageNumber = 1, int pageSize = 9)
+        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, int pageNumber = 1)
         {
             try
             {
@@ -84,11 +84,11 @@ namespace backend_api.Controllers.v1
                 {
                     filter = filter.AndAlso(e => e.ExerciseTypeName.Contains(search));
                 }
-                var (count, result) = await _exerciseTypeRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber);
+                var (count, result) = await _exerciseTypeRepository.GetAllAsync(filter, pageSize: 9, pageNumber: pageNumber);
                 list = result;
                 totalCount = count;
 
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 9, Total = totalCount };
 
                 _response.Result = _mapper.Map<List<ExerciseTypeDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -107,7 +107,7 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet("exercise/{id}")]
-        public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute]int id, [FromQuery] string? search, int pageNumber = 1, int pageSize = 10, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
+        public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute]int id, [FromQuery] string? search, int pageNumber = 1, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
             {
