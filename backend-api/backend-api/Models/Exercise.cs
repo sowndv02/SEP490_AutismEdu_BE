@@ -12,7 +12,7 @@ namespace backend_api.Models
         public int ExerciseTypeId { get; set; }
         public string Description { get; set; }
         public bool IsDeleted { get; set; } = false;
-        public bool IsActive { get; set; } = false;
+        public bool IsActive { get; set; } = true;
         public string TutorId { get; set; }
         public int VersionNumber { get; set; } = 1;
         public int? OriginalId { get; set; }
