@@ -17,7 +17,7 @@ namespace backend_api.Models
         [ForeignKey(nameof(OriginalId))]
         public ExerciseType? Original { get; set; }
         public bool IsDeleted { get; set; } = false;
-        public bool IsActive { get; set; } = false;
+        public bool IsActive { get; set; } = true;
         public string SubmitterId { get; set; }
         [ForeignKey(nameof(SubmitterId))]
         public ApplicationUser Submitter { get; set; }
