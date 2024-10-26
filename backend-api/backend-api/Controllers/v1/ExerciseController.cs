@@ -35,34 +35,51 @@ namespace backend_api.Controllers.v1
             _exerciseTypeRepository = exerciseTypeRepository;
         }
 
-        // Get by Id
         [HttpGet("{id}")]
-        [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<ActionResult<APIResponse>> GetById(int id)
+        public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute] int id, [FromQuery] string? search, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                if (id <= 0)
+                int totalCount = 0;
+                List<Exercise> list = new();
+                Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == id;
+                Expression<Func<Exercise, object>> orderByQuery = u => true;
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = new List<string>() { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive && e.TutorId == userId);
+                }
+                if (!string.IsNullOrEmpty(search))
+                {
+                    filter = filter.AndAlso(e => e.ExerciseName.Contains(search));
                 }
 
-                var exercise = await _exerciseRepository.GetAsync(x => x.Id == id && x.TutorId == userId, false, "ExerciseType", null);
-                if (exercise == null)
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+
+                if (orderBy != null)
                 {
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
-                    return NotFound(_response);
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
                 }
 
-                _response.Result = _mapper.Map<ExerciseDTO>(exercise);
+                var (count, result) = await _exerciseRepository.GetAllNotPagingAsync(filter: filter, includeProperties: null, orderBy: orderByQuery, isDesc: isDesc);
+
+                list = result;
+                totalCount = count;
+
+
+                _response.Result = _mapper.Map<List<ExerciseDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = null;
+                _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)

@@ -51,7 +51,7 @@ namespace backend_api.Repository
             return await query.FirstOrDefaultAsync(filter);
         }
 
-        public async Task<(int TotalCount, List<T> list)> GetAllNotPagingAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null)
+        public async Task<(int TotalCount, List<T> list)> GetAllNotPagingAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null, string? excludeProperties = null, Expression<Func<T, object>>? orderBy = null, bool isDesc = true)
         {
             IQueryable<T> query = dbset;
             if (filter != null)
@@ -70,6 +70,13 @@ namespace backend_api.Repository
                 {
                     query = query.Include(includeProp);
                 }
+            }
+            if (orderBy != null)
+            {
+                if (isDesc)
+                    query = query.OrderByDescending(orderBy);
+                else
+                    query = query.OrderBy(orderBy);
             }
 
             return (query.ToListAsync().GetAwaiter().GetResult().Count, await query.ToListAsync());
