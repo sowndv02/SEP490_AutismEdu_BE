@@ -64,6 +64,58 @@ namespace backend_api.Controllers.v1
             }
         }
 
+        [HttpGet("getAllNoPaging")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
+        {
+            try
+            {
+                int totalCount = 0;
+                List<ExerciseType> list = new();
+                Expression<Func<ExerciseType, bool>> filter = e => true;
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                Expression<Func<ExerciseType, object>> orderByQuery = u => true;
+                if (userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive);
+                }
+                if (!string.IsNullOrEmpty(search))
+                {
+                    filter = filter.AndAlso(e => e.ExerciseTypeName.Contains(search));
+                }
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+                var (count, result) = await _exerciseTypeRepository.GetAllNotPagingAsync(filter, includeProperties: null, orderBy: orderByQuery, isDesc: isDesc);
+                list = result;
+                totalCount = count;
+                _response.Result = _mapper.Map<List<ExerciseTypeDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = null;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
         [HttpGet]
         [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, int pageNumber = 1)
