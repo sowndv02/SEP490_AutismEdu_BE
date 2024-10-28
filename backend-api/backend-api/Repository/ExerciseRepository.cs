@@ -18,7 +18,7 @@ namespace backend_api.Repository
         {
             if (originalId == 0 || originalId == null) return;
             var previousVersions = await _context.Exercisese
-                .Where(c => c.OriginalId == originalId && c.IsActive)
+                .Where(c => (c.OriginalId == originalId || c.Id == originalId) && c.IsActive)
                 .ToListAsync();
 
             if (previousVersions == null || !previousVersions.Any())
