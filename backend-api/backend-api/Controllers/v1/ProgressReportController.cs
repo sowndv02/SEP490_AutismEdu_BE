@@ -108,9 +108,10 @@ namespace backend_api.Controllers.v1
                                 "StudentProfile,AssessmentResults", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                 list = result;
                 totalCount = count;
-                List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
+                
                 foreach (var item in list)
                 {
+                    List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
                     foreach (var assessmentResult in item.AssessmentResults)
                     {
                         assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
