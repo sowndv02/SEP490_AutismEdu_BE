@@ -17,7 +17,7 @@ namespace backend_api.Repository
         {
             if (originalId == 0 || originalId == null) return;
             var previousVersions = await _context.Curriculums
-                .Where(c => (c.OriginalId == originalId || c.Id == originalId) && c.IsActive)
+                .Where(c => (c.OriginalCurriculumId == originalId || c.Id == originalId) && c.IsActive)
                 .ToListAsync();
 
             if (previousVersions == null || !previousVersions.Any())
