@@ -144,6 +144,7 @@ namespace backend_api.Controllers.v1
                         {
                             Id = g.Exercise.Id,
                             ExerciseName = g.Exercise.ExerciseName,
+                            Description = g.Exercise.Description
                         }).ToList()
                     }).ToList();
                 }
