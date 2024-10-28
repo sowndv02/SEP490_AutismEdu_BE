@@ -13,11 +13,11 @@ namespace backend_api.Repository
             _context = context;
         }
 
-        public async Task DeactivatePreviousVersionsAsync(int? originalCurriculumId)
+        public async Task DeactivatePreviousVersionsAsync(int? originalId)
         {
             if (originalId == 0 || originalId == null) return;
             var previousVersions = await _context.Curriculums
-                .Where(c => c.OriginalCurriculumId == originalCurriculumId && c.IsActive)
+                .Where(c => c.OriginalCurriculumId == originalId && c.IsActive)
                 .ToListAsync();
 
             if (previousVersions == null || !previousVersions.Any())
@@ -33,10 +33,10 @@ namespace backend_api.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task<int> GetNextVersionNumberAsync(int? originalCurriculumId)
+        public async Task<int> GetNextVersionNumberAsync(int? originalId)
         {
             var previousVersions = await _context.Curriculums
-                .Where(c => c.OriginalCurriculumId == originalCurriculumId)
+                .Where(c => c.OriginalCurriculumId == originalId)
                 .ToListAsync();
 
             if (previousVersions == null || !previousVersions.Any())
