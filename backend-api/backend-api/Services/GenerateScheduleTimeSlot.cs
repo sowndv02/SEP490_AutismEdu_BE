@@ -79,6 +79,7 @@ namespace backend_api.Services
                         TutorId = item.StudentProfile?.TutorId,
                         AttendanceStatus = SD.AttendanceStatus.NOT_YET,
                         ScheduleDate = nextDate,
+                        StudentProfileId = item.StudentProfileId,
                         CreatedDate = DateTime.Now,
                         PassingStatus = SD.PassingStatus.NOT_YET,
                         UpdatedDate = null,
