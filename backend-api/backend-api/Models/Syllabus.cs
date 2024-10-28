@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using backend_api.Models.DTOs;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_api.Models
@@ -16,5 +17,7 @@ namespace backend_api.Models
         public Tutor Tutor { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime UpdatedDate { get; set; }
+        [NotMapped]
+        public List<ExerciseTypeDTO> ExerciseTypes { get; set; }
     }
 }

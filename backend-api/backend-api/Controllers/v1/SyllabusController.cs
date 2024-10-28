@@ -134,7 +134,20 @@ namespace backend_api.Controllers.v1
                 {
                     var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == item.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
                     item.SyllabusExercises = syllabusExercises;
+                    item.ExerciseTypes = syllabusExercises
+                    .GroupBy(se => se.ExerciseTypeId)
+                    .Select(group => new ExerciseTypeDTO
+                    {
+                        Id = group.First().ExerciseType.Id,
+                        ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
+                        Exercises = group.Select(g => new ExerciseDTO
+                        {
+                            Id = g.Exercise.Id,
+                            ExerciseName = g.Exercise.ExerciseName,
+                        }).ToList()
+                    }).ToList();
                 }
+
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 var reutnResult = _mapper.Map<List<SyllabusDTO>>(list);
                 _response.Result = reutnResult;
