@@ -10,6 +10,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Linq.Expressions;
 using backend_api.Utils;
+using MailKit.Search;
 
 namespace backend_api.Controllers.v1
 {
@@ -53,7 +54,7 @@ namespace backend_api.Controllers.v1
                 model.TutorId = tutorId;
                 model.CreatedDate = DateTime.Now;
                 await _progressReportRepository.CreateAsync(model);
-                
+
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -102,7 +103,7 @@ namespace backend_api.Controllers.v1
                     filter = filter.AndAlso(u => u.CreatedDate.Date <= endDate.Value.Date);
                 }
 
-                
+
                 var (count, result) = await _progressReportRepository.GetAllAsync(filter,
                                 "StudentProfile,AssessmentResults", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                 list = result;
@@ -110,17 +111,53 @@ namespace backend_api.Controllers.v1
                 List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
                 foreach (var item in list)
                 {
-                    foreach(var assessmentResult in item.AssessmentResults)
+                    foreach (var assessmentResult in item.AssessmentResults)
                     {
-                        assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id,true,"Question,Option"));
+                        assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
                     }
                     item.AssessmentResults = assessmentResults;
                 }
-                
+
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<ProgressReportDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet("{Id}")]
+        public async Task<ActionResult<APIResponse>> GetProgressReportById(int Id)
+        {
+            try
+            {
+                var progressReport = await _progressReportRepository.GetAsync(x => x.Id == Id,true, "AssessmentResults");
+
+                if (progressReport == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
+                    return BadRequest(_response);
+                }
+
+                List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
+
+                foreach (var assessmentResult in progressReport.AssessmentResults)
+                {
+                    assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
+                }
+                progressReport.AssessmentResults = assessmentResults;
+
+                _response.Result = _mapper.Map<ProgressReportDTO>(progressReport);
+                _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
