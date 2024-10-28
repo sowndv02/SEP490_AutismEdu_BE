@@ -56,7 +56,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet("GetTutorReviewStats/{tutorId}")]
-        public async Task<ActionResult<APIResponse>> GetTutorReviewStats(string tutorId)
+        public async Task<ActionResult<APIResponse>> GetTutorReviewInformation(string tutorId)
         {
             try
             {
@@ -118,11 +118,22 @@ namespace backend_api.Controllers.v1
                 .OrderByDescending(sr => sr.ScoreRange)
                 .ToList();
 
+                var reviewsDTO = reviews.list.Select(review => new ReviewDTO
+                {
+                    Id = review.Id,
+                    RateScore = review.RateScore,
+                    Description = review.Description,
+                    TutorId = review.TutorId,
+                    ParentId = review.ParentId,
+                    CreatedDate = review.CreatedDate
+                }).ToList();
+
                 _response.Result = new
                 {
                     TotalReviews = totalReviews,
                     AverageScore = averageScore,
-                    ScoreGroups = scoreGroups
+                    ScoreGroups = scoreGroups,
+                    Reviews = reviewsDTO
                 };
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -138,7 +149,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllReviewsAsync(int pageNumber = 1, int pageSize = 5)
+        public async Task<ActionResult<APIResponse>> GetAllReviewsAsync(int pageNumber = 1, int pageSize = 10)
         {
             try
             {
