@@ -132,7 +132,7 @@ namespace backend_api.Controllers.v1
                 totalCount = count;
                 foreach (var item in list)
                 {
-                    var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == item.Id, includeProperties: "Exercise, ExerciseType", excludeProperties: null);
+                    var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == item.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
                     item.SyllabusExercises = syllabusExercises;
                 }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
@@ -164,7 +164,7 @@ namespace backend_api.Controllers.v1
                 _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                 return BadRequest(_response);
             }
-            var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise, ExerciseType", excludeProperties: null);
+            var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
             model.SyllabusExercises = syllabusExercises;
             _response.StatusCode = HttpStatusCode.Created;
             _response.Result = _mapper.Map<SyllabusDTO>(model);

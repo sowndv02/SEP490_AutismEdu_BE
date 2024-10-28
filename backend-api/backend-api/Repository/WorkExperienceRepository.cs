@@ -14,6 +14,7 @@ namespace backend_api.Repository
         }
         public async Task DeactivatePreviousVersionsAsync(int? originalId)
         {
+            if (originalId == 0 || originalId == null) return;
             var previousVersions = await _context.WorkExperiences
                 .Where(c => c.OriginalId == originalId && c.IsActive)
                 .ToListAsync();
