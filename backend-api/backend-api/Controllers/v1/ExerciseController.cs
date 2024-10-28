@@ -114,7 +114,7 @@ namespace backend_api.Controllers.v1
                     exerciseModel.OriginalId = null;
                 }
                 exerciseModel.VersionNumber = await _exerciseRepository.GetNextVersionNumberAsync(exerciseCreateDTO.OriginalId);
-                await _exerciseRepository.DeactivatePreviousVersionsAsync(exerciseModel.OriginalId);
+                await _exerciseRepository.DeactivatePreviousVersionsAsync(exerciseCreateDTO.OriginalId);
                 exerciseModel.TutorId = userId;
                 var createdExercise = await _exerciseRepository.CreateAsync(exerciseModel);
 
