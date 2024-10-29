@@ -5,6 +5,6 @@
         public int Id { get; set; }
         public string? Question { get; set; }
         public string? SelectedOptionText { get; set; }
-        public int Point { get; set; }
+        public double Point { get; set; }
     }
 }

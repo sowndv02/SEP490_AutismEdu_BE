@@ -24,15 +24,18 @@ namespace backend_api.Controllers.v1
         protected int pageSize = 0;
         private readonly IProgressReportRepository _progressReportRepository;
         private readonly IAssessmentResultRepository _assessmentResultRepository;
+        private readonly IInitialAssessmentResultRepository _initialAssessmentResultRepository;
 
         public ProgressReportController(IMapper mapper, IConfiguration configuration,
-            IProgressReportRepository progressReportRepository, IAssessmentResultRepository assessmentResultRepository)
+            IProgressReportRepository progressReportRepository, IAssessmentResultRepository assessmentResultRepository,
+            IInitialAssessmentResultRepository initialAssessmentResultRepository)
         {
             _response = new APIResponse();
             _mapper = mapper;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _progressReportRepository = progressReportRepository;
             _assessmentResultRepository = assessmentResultRepository;
+            _initialAssessmentResultRepository = initialAssessmentResultRepository;
         }
 
         [HttpPost]
@@ -42,7 +45,7 @@ namespace backend_api.Controllers.v1
             {
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (createDTO == null || string.IsNullOrEmpty(tutorId))
+                if (createDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -61,8 +64,17 @@ namespace backend_api.Controllers.v1
                 var model = _mapper.Map<ProgressReport>(createDTO);
                 model.TutorId = tutorId;
                 model.CreatedDate = DateTime.Now;
-                await _progressReportRepository.CreateAsync(model);
 
+                var progressReport = await _progressReportRepository.CreateAsync(model);
+                List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
+
+                foreach (var assessmentResult in progressReport.AssessmentResults)
+                {
+                    assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
+                }
+                progressReport.AssessmentResults = assessmentResults;
+
+                _response.Result = _mapper.Map<ProgressReportDTO>(progressReport);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -77,7 +89,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1, bool getInitialResult = false)
         {
             try
             {
@@ -128,6 +140,21 @@ namespace backend_api.Controllers.v1
                 }
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+
+                if (getInitialResult)
+                {
+                    ProgressReportGraphDTO graph = new ProgressReportGraphDTO();
+                    graph.ProgressReports = _mapper.Map<List<ProgressReportDTO>>(list);
+
+                    var initialAssessmentResult = await _initialAssessmentResultRepository.GetAsync(x => x.StudentProfileId == studentProfileId, true, "Question,Option");
+                    graph.InitialAssessmentResultDTO = _mapper.Map<InitialAssessmentResultDTO>(initialAssessmentResult);
+
+                    _response.Result = graph;
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.Pagination = pagination;
+                    return Ok(_response);
+                }
+
                 _response.Result = _mapper.Map<List<ProgressReportDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
