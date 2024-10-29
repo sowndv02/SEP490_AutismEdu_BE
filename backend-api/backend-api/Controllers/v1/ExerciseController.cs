@@ -182,7 +182,7 @@ namespace backend_api.Controllers.v1
         //    }
         //}
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> DeleteExerciseAsync(int id)
         {
