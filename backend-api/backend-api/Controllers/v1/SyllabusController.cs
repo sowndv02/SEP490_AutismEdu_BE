@@ -208,18 +208,18 @@ namespace backend_api.Controllers.v1
             {
                 int exerciseTypeId = exerciseTypeUpdate.ExerciseTypeId;
                 List<int> exerciseIds = exerciseTypeUpdate.ExerciseIds;
-                var existingSyllabusExercises = await _syllabusExerciseRepository.GetAllAsync(se => se.SyllabusId == id && se.ExerciseTypeId == exerciseTypeId);
+                var existingSyllabusExercises = await _syllabusExerciseRepository.GetAllNotPagingAsync(se => se.SyllabusId == updateDTO.Id && se.ExerciseTypeId == exerciseTypeId, null, null, x => x.CreatedDate, true);
                 var exercisesToDelete = existingSyllabusExercises.list
                     .Where(se => !exerciseIds.Contains(se.ExerciseId))
                     .ToList();
                 var existingExerciseIds = existingSyllabusExercises.list.Select(se => se.ExerciseId).ToList();
                 var exercisesToAdd = exerciseIds
-                    .Where(id => !existingExerciseIds.Contains(id))
-                    .Select(id => new SyllabusExercise
+                    .Where(e => !existingExerciseIds.Contains(e))
+                    .Select(e => new SyllabusExercise
                     {
-                        SyllabusId = id,
+                        SyllabusId = updateDTO.Id,
                         ExerciseTypeId = exerciseTypeId,
-                        ExerciseId = id,
+                        ExerciseId = e,
                         CreatedDate = DateTime.Now
                     })
                     .ToList();
@@ -233,6 +233,24 @@ namespace backend_api.Controllers.v1
                 }
             }
 
+			
+            var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
+            model.SyllabusExercises = syllabusExercises;
+            model.ExerciseTypes = syllabusExercises
+            .GroupBy(se => se.ExerciseTypeId)
+            .Select(group => new ExerciseTypeDTO
+            {
+                Id = group.First().ExerciseType.Id,
+                ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
+                Exercises = group.Select(g => new ExerciseDTO
+                {
+                    Id = g.Exercise.Id,
+                    ExerciseName = g.Exercise.ExerciseName,
+                    Description = g.Exercise.Description
+                }).ToList()
+            }).ToList();
+			
+
             _response.StatusCode = HttpStatusCode.Created;
             _response.Result = _mapper.Map<SyllabusDTO>(model);
             _response.IsSuccess = true;
@@ -240,7 +258,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> CreateAsync(SyllabusCreateDTO createDTO)
         {
             if (!ModelState.IsValid)
@@ -267,6 +285,23 @@ namespace backend_api.Controllers.v1
                     });
                 }
             }
+
+            
+            var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
+            model.SyllabusExercises = syllabusExercises;
+            model.ExerciseTypes = syllabusExercises
+            .GroupBy(se => se.ExerciseTypeId)
+            .Select(group => new ExerciseTypeDTO
+            {
+                Id = group.First().ExerciseType.Id,
+                ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
+                Exercises = group.Select(g => new ExerciseDTO
+                {
+                    Id = g.Exercise.Id,
+                    ExerciseName = g.Exercise.ExerciseName,
+                    Description = g.Exercise.Description
+                }).ToList()
+            }).ToList();
 
             _response.StatusCode = HttpStatusCode.Created;
             _response.Result = _mapper.Map<SyllabusDTO>(model);
