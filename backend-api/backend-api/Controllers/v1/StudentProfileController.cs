@@ -67,12 +67,20 @@ namespace backend_api.Controllers.v1
             {
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (createDTO == null || string.IsNullOrEmpty(tutorId))
+                if (createDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
+                }
+
+                if (string.IsNullOrEmpty(tutorId))
+                {
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return Unauthorized(_response);
                 }
 
                 List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTO.ScheduleTimeSlots);
@@ -271,7 +279,7 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
+                    return Unauthorized(_response);
                 }
 
                 filter = filter.AndAlso(x => x.TutorId.Equals(tutorId));
@@ -347,7 +355,7 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
+                    return Unauthorized(_response);
                 }
 
                 var scheduleTimeSlots = await _studentProfileRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId)
@@ -380,7 +388,7 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
+                    return Unauthorized(_response);
                 }
 
                 var childs = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId));
@@ -527,7 +535,7 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
+                    return Unauthorized(_response);
                 }
 
                 var role = await _userRepository.GetRoleByUserId(userId);

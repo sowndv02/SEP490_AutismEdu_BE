@@ -50,6 +50,14 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
+                if (string.IsNullOrEmpty(tutorId))
+                {
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return Unauthorized(_response);
+                }
+
                 var model = _mapper.Map<ProgressReport>(createDTO);
                 model.TutorId = tutorId;
                 model.CreatedDate = DateTime.Now;

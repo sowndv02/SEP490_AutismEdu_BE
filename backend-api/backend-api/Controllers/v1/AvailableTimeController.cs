@@ -42,6 +42,14 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
                     return BadRequest(_response);
                 }
+
+                if(string.IsNullOrEmpty(tutorId))
+                {
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return Unauthorized(_response);
+                }
                 if (TimeSpan.Parse(availableTimeSlotCreateDTO.From) > TimeSpan.Parse(availableTimeSlotCreateDTO.To))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -89,10 +97,10 @@ namespace backend_api.Controllers.v1
 
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
+                    return Unauthorized(_response);
                 }
                 
                 var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.Weekday == weekday && x.TutorId.Equals(tutorId), null, null);
