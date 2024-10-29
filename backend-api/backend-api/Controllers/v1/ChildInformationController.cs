@@ -47,6 +47,14 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return Unauthorized(_response);
+                }
+
                 var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(childInformationCreateDTO.Name) && x.ParentId.Equals(userId));
                 if (isChildExist != null)
                 {
