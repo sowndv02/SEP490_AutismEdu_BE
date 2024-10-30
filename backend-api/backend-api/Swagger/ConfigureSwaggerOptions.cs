@@ -50,12 +50,12 @@ namespace backend_api.Swagger
                 options.SwaggerDoc(desc.GroupName, new OpenApiInfo
                 {
                     Version = desc.ApiVersion.ToString(),
-                    Title = $"SEP490 API Version {desc.ApiVersion}",
-                    Description = "API to SEP490",
+                    Title = $"Autism Edu Connect System API Version {desc.ApiVersion}",
+                    Description = "API to Autism Edu Connect System",
                     TermsOfService = new Uri("https://example.com/terms"),
                     Contact = new OpenApiContact
                     {
-                        Name = "sep490",
+                        Name = "AECS",
                         Url = new Uri("https://github.com/sowndv02")
                     },
                     License = new OpenApiLicense

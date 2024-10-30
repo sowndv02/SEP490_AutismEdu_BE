@@ -23,6 +23,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.28" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.28" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.28" />
+    <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.28" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.1.0" />
@@ -37,6 +38,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="6.0.28" />
     <PackageReference Include="MimeKit" Version="4.7.1" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
@@ -52,9 +54,27 @@
    </ItemGroup>
 
    <ItemGroup>
+     <Compile Update="Resources\Messages.Designer.cs">
+       <DesignTime>True</DesignTime>
+       <AutoGen>True</AutoGen>
+       <DependentUpon>Messages.resx</DependentUpon>
+     </Compile>
+   </ItemGroup>
+
+   <ItemGroup>
      <Content Update="appsettings.json">
        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
      </Content>
+   </ItemGroup>
+
+   <ItemGroup>
+     <EmbeddedResource Update="Resources\Messages.resx">
+       <Generator>PublicResXFileCodeGenerator</Generator>
+       <LastGenOutput>Messages.Designer.cs</LastGenOutput>
+     </EmbeddedResource>
+     <EmbeddedResource Update="Resources\Messages.vi-VN.resx">
+       <Generator>PublicResXFileCodeGenerator</Generator>
+     </EmbeddedResource>
    </ItemGroup>
 
 </Project>

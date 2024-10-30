@@ -1,5 +1,4 @@
 ﻿using static backend_api.SD;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_api.Models.DTOs
 {
@@ -11,6 +10,7 @@ namespace backend_api.Models.DTOs
         public TutorDTO? Tutor { get; set; }
         public string? Description { get; set; }
         public Status RequestStatus { get; set; }
+        public RejectType RejectType { get; set; }
         public string? RejectionReason { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }

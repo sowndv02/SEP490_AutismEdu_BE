@@ -1,14 +1,13 @@
-﻿using Xunit;
-using Moq;
-using Microsoft.AspNetCore.Http;
-using backend_api.Utils;
-using Microsoft.EntityFrameworkCore;
-using backend_api.Data;
+﻿using backend_api.Data;
 using backend_api.Models;
-using Microsoft.AspNetCore.Identity;
+using backend_api.Utils;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Moq;
 using System.Linq.Expressions;
-using System.Security.Claims;
+using Xunit;
 
 namespace backend_api.Repository.Tests
 {
@@ -24,7 +23,7 @@ namespace backend_api.Repository.Tests
         public ClaimRepositoryTests()
         {
             _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
-            var databaseName = $"SEP490_{Guid.NewGuid()}";
+            var databaseName = $"AECS_{Guid.NewGuid()}";
             _options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName) // Use a unique name for each test
                 .Options;
@@ -312,7 +311,7 @@ namespace backend_api.Repository.Tests
             int pageNumber = 5;
             // Act
             var (totalCount, claims) = await _repository.GetAllAsync(pageSize: pageSize, pageNumber: pageNumber);
-            int totalReturn = pageSize * (pageNumber-1) - total < 0 ? pageSize : 0;
+            int totalReturn = pageSize * (pageNumber - 1) - total < 0 ? pageSize : 0;
             // Assert
             totalCount.Should().Be(total);
             claims.Count.Should().Be(totalReturn); // First page should have 2 claims
@@ -334,7 +333,7 @@ namespace backend_api.Repository.Tests
             result.TotalCount.Should().Be(total - userClaims.Count);
             result.list.Should().HaveCount(defaultPageSize);
         }
-        
+
         [Fact]
         public async Task GetAllAsync_WithPaginationAndUserClaims_ReturnsPagedFilteredClaims()
         {
