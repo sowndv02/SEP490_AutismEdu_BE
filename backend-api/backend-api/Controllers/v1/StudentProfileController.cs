@@ -32,6 +32,7 @@ namespace backend_api.Controllers.v1
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
+        private readonly IScheduleRepository _scheduleRepository;
 
         protected APIResponse _response;
         private readonly IMapper _mapper;
@@ -41,7 +42,8 @@ namespace backend_api.Controllers.v1
             IScheduleTimeSlotRepository scheduleTimeSlotRepository, IInitialAssessmentResultRepository initialAssessmentResultRepository
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository,
             IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IRabbitMQMessageSender messageBus,
-            IUserRepository userRepository, IRoleRepository roleRepository, IBlobStorageRepository blobStorageRepository)
+            IUserRepository userRepository, IRoleRepository roleRepository, IBlobStorageRepository blobStorageRepository
+            , IScheduleRepository scheduleRepository)
         {
             _studentProfileRepository = studentProfileRepository;
             _assessmentQuestionRepository = assessmentQuestionRepository;
@@ -58,6 +60,7 @@ namespace backend_api.Controllers.v1
             _userRepository = userRepository;
             _roleRepository = roleRepository;
             _blobStorageRepository = blobStorageRepository;
+            _scheduleRepository = scheduleRepository;
         }
 
         [HttpPost]
@@ -86,7 +89,7 @@ namespace backend_api.Controllers.v1
                 List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTO.ScheduleTimeSlots);
                 foreach (var slot in scheduleTimeSlot)
                 {
-                    var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot && x.Weekday == slot.Weekday && 
+                    var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot && x.Weekday == slot.Weekday &&
                                                             !(slot.To <= x.From || slot.From >= x.To)).FirstOrDefault();
                     if (isTimeSlotDuplicate == null)
                     {
@@ -206,7 +209,7 @@ namespace backend_api.Controllers.v1
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.CHILD_ALREADY_STUDING_THIS_TUTOR };
                     return BadRequest(_response);
-                }              
+                }
 
                 var child = await _childInfoRepository.GetAsync(x => x.Id == model.ChildId, true, "Parent");
                 model.Child = child;
@@ -225,7 +228,7 @@ namespace backend_api.Controllers.v1
                 }
                 model.StudentCode += model.ChildId;
                 model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(tutorId), true, "User");
-                await _studentProfileRepository.CreateAsync(model);
+                model = await _studentProfileRepository.CreateAsync(model);
 
                 //TODO: send email
                 if (createDTO.ChildId > 0)
@@ -247,6 +250,67 @@ namespace backend_api.Controllers.v1
                         Subject = subject,
                         Message = htmlMessage
                     }, queueName);
+                }
+
+                //Generate current week schedule
+                foreach (var timeslot in model.ScheduleTimeSlots)
+                {
+                    DateTime today = DateTime.Now;
+                    
+
+                    if ((int) today.DayOfWeek >= timeslot.Weekday)
+                    {
+                        continue;
+                    }
+
+                    DayOfWeek targetDay = DayOfWeek.Monday;
+                    switch (timeslot.Weekday)
+                    {
+                        // CN
+                        case (int)DayOfWeek.Sunday:
+                            targetDay = DayOfWeek.Sunday;
+                            break;
+                        // T2
+                        case (int)DayOfWeek.Monday:
+                            targetDay = DayOfWeek.Monday;
+                            break;
+                        case (int)DayOfWeek.Tuesday:
+                            targetDay = DayOfWeek.Tuesday;
+                            break;
+                        case (int)DayOfWeek.Wednesday:
+                            targetDay = DayOfWeek.Wednesday;
+                            break;
+                        case (int)DayOfWeek.Thursday:
+                            targetDay = DayOfWeek.Thursday;
+                            break;
+                        case (int)DayOfWeek.Friday:
+                            targetDay = DayOfWeek.Friday;
+                            break;
+                        case (int)DayOfWeek.Saturday:
+                            targetDay = DayOfWeek.Saturday;
+                            break;
+                    }
+
+                    // Calculate the difference between the target day and today's day
+                    int daysUntilTargetDay = ((int)targetDay - (int)today.DayOfWeek) % 7;
+
+                    // Calculate the target date
+                    DateTime targetDate = today.AddDays(daysUntilTargetDay);
+
+                    var schedule = new Schedule()
+                    {
+                        TutorId = tutorId,
+                        AttendanceStatus = SD.AttendanceStatus.NOT_YET,
+                        ScheduleDate = targetDate,
+                        StudentProfileId = model.Id,
+                        CreatedDate = DateTime.Now,
+                        PassingStatus = SD.PassingStatus.NOT_YET,
+                        UpdatedDate = null,
+                        Start = timeslot.From,
+                        End = timeslot.To,
+                        ScheduleTimeSlotId = timeslot.Id
+                    };
+                    await _scheduleRepository.CreateAsync(schedule);
                 }
 
                 _response.StatusCode = HttpStatusCode.Created;
@@ -472,9 +536,9 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                if(changeStatusDTO.StatusChange == (int) StudentProfileStatus.Teaching)
+                if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Teaching)
                 {
-                    if(studentProfile.CreatedDate.AddHours(24) <= DateTime.Now)
+                    if (studentProfile.CreatedDate.AddHours(24) <= DateTime.Now)
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
