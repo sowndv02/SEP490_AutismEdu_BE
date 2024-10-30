@@ -231,8 +231,9 @@ namespace backend_api.Mapper
             CreateMap<Syllabus, SyllabusCreateDTO>().ReverseMap().ForMember(dest => dest.SyllabusExercises, opt => opt.Ignore()); ;
             CreateMap<Syllabus, SyllabusDTO>().ReverseMap();
             CreateMap<SyllabusExercise, SyllabusExerciseDTO>().ReverseMap();
-
             CreateMap<SyllabusExercise, SyllabusExerciseCreateDTO>().ReverseMap();
+
+            CreateMap<Schedule, ScheduleDTO>().ReverseMap();
 
         }
     }
