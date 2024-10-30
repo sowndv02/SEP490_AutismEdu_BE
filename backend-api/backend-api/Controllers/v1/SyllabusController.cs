@@ -1,20 +1,14 @@
 ﻿using AutoMapper;
+using backend_api.Models;
+using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Models.DTOs;
-using backend_api.Models;
-using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
-using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using static backend_api.SD;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using backend_api.Repository;
-using Microsoft.EntityFrameworkCore;
 
 namespace backend_api.Controllers.v1
 {
@@ -31,12 +25,12 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
-        public SyllabusController(ISyllabusRepository syllabusRepository, ILogger<SyllabusController> logger, IMapper mapper, 
+        public SyllabusController(ISyllabusRepository syllabusRepository, ILogger<SyllabusController> logger, IMapper mapper,
             IConfiguration configuration, IExerciseRepository exerciseRepository, IExerciseTypeRepository exerciseTypeRepository,
             ISyllabusExerciseRepository syllabusExerciseRepository)
         {
             _syllabusExerciseRepository = syllabusExerciseRepository;
-            _exerciseTypeRepository = exerciseTypeRepository;   
+            _exerciseTypeRepository = exerciseTypeRepository;
             _exerciseRepository = exerciseRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
@@ -91,7 +85,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery]string? orderBy = SD.AGE_FROM, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? orderBy = SD.AGE_FROM, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -189,7 +183,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdateAsync(int id,[FromBody]SyllabusUpdateDTO updateDTO)
+        public async Task<IActionResult> UpdateAsync(int id, [FromBody] SyllabusUpdateDTO updateDTO)
         {
             if (!ModelState.IsValid || id != updateDTO.Id)
             {
@@ -200,11 +194,22 @@ namespace backend_api.Controllers.v1
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var model = await _syllabusRepository.GetAsync(x => x.Id == id && x.TutorId == userId, false, null, null);  
+            var model = await _syllabusRepository.GetAsync(x => x.Id == id && x.TutorId == userId, false, null, null);
+            var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= updateDTO.AgeFrom && x.AgeEnd >= updateDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted && x.Id != updateDTO.Id);
+            foreach (var item in list)
+            {
+                if (item.AgeFrom >= updateDTO.AgeFrom || item.AgeEnd >= updateDTO.AgeEnd)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { SD.AGE_FROM_AGE_END_EXISTED };
+                    return BadRequest(_response);
+                }
+            }
             model.AgeEnd = updateDTO.AgeEnd;
             model.AgeFrom = updateDTO.AgeFrom;
             model.UpdatedDate = DateTime.Now;
-            foreach(var exerciseTypeUpdate in updateDTO.SyllabusExercises)
+            foreach (var exerciseTypeUpdate in updateDTO.SyllabusExercises)
             {
                 int exerciseTypeId = exerciseTypeUpdate.ExerciseTypeId;
                 List<int> exerciseIds = exerciseTypeUpdate.ExerciseIds;
@@ -223,17 +228,17 @@ namespace backend_api.Controllers.v1
                         CreatedDate = DateTime.Now
                     })
                     .ToList();
-                foreach (var deleteExercise in exercisesToDelete) 
+                foreach (var deleteExercise in exercisesToDelete)
                 {
                     await _syllabusExerciseRepository.RemoveAsync(deleteExercise);
                 }
-                foreach(var addExercise in exercisesToAdd)
+                foreach (var addExercise in exercisesToAdd)
                 {
                     await _syllabusExerciseRepository.CreateAsync(addExercise);
                 }
             }
 
-			
+
             var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
             model.SyllabusExercises = syllabusExercises;
             model.ExerciseTypes = syllabusExercises
@@ -249,7 +254,7 @@ namespace backend_api.Controllers.v1
                     Description = g.Exercise.Description
                 }).ToList()
             }).ToList();
-			
+
 
             _response.StatusCode = HttpStatusCode.Created;
             _response.Result = _mapper.Map<SyllabusDTO>(model);
@@ -270,12 +275,23 @@ namespace backend_api.Controllers.v1
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= createDTO.AgeFrom && x.AgeEnd >= createDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted);
+            foreach (var item in list)
+            {
+                if (item.AgeFrom >= createDTO.AgeFrom || item.AgeEnd >= createDTO.AgeEnd)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { SD.AGE_FROM_AGE_END_EXISTED };
+                    return BadRequest(_response);
+                }
+            }
             var syllabus = _mapper.Map<Syllabus>(createDTO);
             syllabus.TutorId = userId;
             var model = await _syllabusRepository.CreateAsync(syllabus);
             foreach (var item in createDTO.SyllabusExercises)
             {
-                foreach (var exercise in item.ExerciseIds) 
+                foreach (var exercise in item.ExerciseIds)
                 {
                     await _syllabusExerciseRepository.CreateAsync(new SyllabusExercise()
                     {
@@ -286,7 +302,7 @@ namespace backend_api.Controllers.v1
                 }
             }
 
-            
+
             var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
             model.SyllabusExercises = syllabusExercises;
             model.ExerciseTypes = syllabusExercises

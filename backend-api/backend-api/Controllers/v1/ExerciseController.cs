@@ -2,8 +2,6 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
-using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
 {
@@ -98,7 +95,6 @@ namespace backend_api.Controllers.v1
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //var userId = "78123797-c58d-4d92-8671-8d4b1f6bd4a9";
 
                 if (exerciseCreateDTO == null || string.IsNullOrEmpty(userId))
                 {

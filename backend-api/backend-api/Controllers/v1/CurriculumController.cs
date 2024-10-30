@@ -246,7 +246,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> CreateAsync(CurriculumCreateDTO curriculumDto)
         {
             if (!ModelState.IsValid)
@@ -257,8 +257,7 @@ namespace backend_api.Controllers.v1
                 return BadRequest(_response);
             }
 
-            //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var userId = "a09752778505389093199";
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmiterId == userId && !x.IsDeleted && x.IsActive);
             foreach (var item in list)
             {
