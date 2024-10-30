@@ -19,15 +19,18 @@ namespace backend_api.Controllers.v1
     public class ScheduleController : ControllerBase
     {
         private readonly IScheduleRepository _scheduleRepository;
+        private readonly IStudentProfileRepository _studentProfileRepository;
 
         protected APIResponse _response;
         private readonly IMapper _mapper;
 
-        public ScheduleController(IScheduleRepository scheduleRepository, IMapper mapper)
+        public ScheduleController(IScheduleRepository scheduleRepository, IMapper mapper
+            , IStudentProfileRepository studentProfileRepository)
         {
             _scheduleRepository = scheduleRepository;
             _response = new APIResponse();
             _mapper = mapper;
+            _studentProfileRepository = studentProfileRepository;
         }
 
 
@@ -57,13 +60,19 @@ namespace backend_api.Controllers.v1
 
 
                 var (count, result) = await _scheduleRepository.GetAllNotPagingAsync(filter,
-                                null, null, null, true);
+                                "StudentProfile", null, null, true);
+                
+                foreach (Schedule schedule in result)
+                {
+                    schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId,true,"Child");
+                }
+
                 list = result
                     .OrderBy(x => x.ScheduleDate.Date)
                     .ThenBy(x => x.Start)
                     .ToList();
 
-                _response.Result = list;
+                _response.Result = _mapper.Map<List<ScheduleDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
