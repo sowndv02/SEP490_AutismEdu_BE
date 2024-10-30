@@ -68,7 +68,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var reviews = await _reviewRepository.GetAllNotPagingAsync(x => x.TutorId == tutorId);
+                var reviews = await _reviewRepository.GetAllNotPagingAsync(x => x.TutorId == tutorId, "Parent");
 
                 int totalReviews = reviews.list.Count;
                 decimal averageScore = 0;
@@ -118,14 +118,19 @@ namespace backend_api.Controllers.v1
                 .OrderByDescending(sr => sr.ScoreRange)
                 .ToList();
 
-                var reviewsDTO = reviews.list.Select(review => new ReviewDTO
+                var reviewsDTO = reviews.list.Select(r => new
                 {
-                    Id = review.Id,
-                    RateScore = review.RateScore,
-                    Description = review.Description,
-                    TutorId = review.TutorId,
-                    ParentId = review.ParentId,
-                    CreatedDate = review.CreatedDate
+                    r.Id,
+                    r.RateScore,
+                    r.Description,
+                    r.TutorId,
+                    Parent = new
+                    {
+                        r.Parent.Id,
+                        r.Parent.FullName,
+                        r.Parent.ImageUrl
+                    },
+                    r.CreatedDate
                 }).ToList();
 
                 _response.Result = new
@@ -196,7 +201,8 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = "07a34464-3bac-4f90-a512-5c42f91050bf";
 
                 if (reviewCreateDTO == null || string.IsNullOrEmpty(userId))
                 {
@@ -222,12 +228,15 @@ namespace backend_api.Controllers.v1
 
                 var createdReview = await _reviewRepository.CreateAsync(reviewModel);
 
+                var parent = await _userRepository.GetAsync(x => x.Id == userId);
+                createdReview.Parent = parent;
+
                 var reviewDTO = new ReviewDTO
                 {
                     Id = createdReview.Id,
                     RateScore = createdReview.RateScore,
                     Description = createdReview.Description,
-                    ParentId = createdReview.ParentId,
+                    Parent = createdReview.Parent,
                     TutorId = createdReview.TutorId,
                     CreatedDate = createdReview.CreatedDate,
                     UpdatedDate = createdReview.UpdatedDate
