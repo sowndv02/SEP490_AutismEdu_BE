@@ -26,7 +26,7 @@ namespace backend_api.Controllers.v1
         private readonly IResourceService _resourceService;
 
         public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper,
-            IStudentProfileRepository studentProfileRepository, IBlobStorageRepository blobStorageRepository, , IResourceService resourceService)
+            IStudentProfileRepository studentProfileRepository, IBlobStorageRepository blobStorageRepository, IResourceService resourceService)
         {
             _childInfoRepository = childInfoRepository;
             _response = new APIResponse();
@@ -37,26 +37,20 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
+        [Authorize(Roles = SD.PARENT_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] ChildInformationCreateDTO childInformationCreateDTO)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (childInformationCreateDTO == null || string.IsNullOrEmpty(userId))
+                if (childInformationCreateDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CHILD_INFO) };
                     return BadRequest(_response);
                 }
 
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return Unauthorized(_response);
-                }
 
                 var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(childInformationCreateDTO.Name) && x.ParentId.Equals(userId));
                 if (isChildExist != null)

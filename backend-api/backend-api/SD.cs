@@ -108,7 +108,7 @@
         public const string CURRICULUM = "Khung chương trình";
         public const string ID = "Id";
         public const string AGE = "Độ tuổi";
-        public const string CHILD_INFO = "Độ tuổi";
+        public const string CHILD_INFO = "Thông tin trẻ";
 
 
 
