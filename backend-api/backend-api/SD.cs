@@ -98,23 +98,38 @@
         public const string CITIZEN_ID_LICENSE = "Căn cước công dân";
         public const string OTHER_LICENSE = "Khác";
 
+        // Const parameter 
+        public const string AVAILABLE_TIME = "Thời gian rảnh";
+        public const string AVAILABLE_TIME_SLOT = "Khung giờ";
+        public const string ASSESSMENT_QUESTION = "Câu hỏi đánh giá";
+        public const string BLOG = "Blog";
+        public const string CERTIFICATE = "Chứng chỉ";
+        public const string CLAIM = "Claim";
+        public const string CURRICULUM = "Khung chương trình";
+        public const string ID = "Id";
+        public const string AGE = "Độ tuổi";
+        public const string CHILD_INFO = "Độ tuổi";
+
+
+
+
+
         // Const message 
         public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "You are already a tutor or have a previous registration requirement";
         public const string TUTOR_UPDATE_STATUS_IS_PENDING = "Không thể cập nhật trạng thái thành đang xử lý!";
-        public const string BAD_REQUEST_MESSAGE = "Dữ liệu không hợp lệ";
+        public const string BAD_REQUEST_MESSAGE = "BAD_REQUEST_MESSAGE";
         public const string WEEKDAY_REQUIRED = "Chưa nhập ngày trong tuần";
         public const string TIMESLOT_REQUIRED = "Chưa nhập khung giờ";
-        public const string TIMESLOT_INVALID = "Khung giờ không hợp lệ";
-        public const string TIMESLOT_DUPLICATED = "Khung giờ mới bị trùng với khung giờ đã tồn tại";
-        public const string NOT_FOUND_MESSAGE = "Không tìm thấy dữ liệu";
-        public const string DUPLICATED_MESSAGE = "Dữ liệu đã tồn tại";
-        public const string INTERNAL_SERVER_ERROR_MESSAGE = "Hệ thống đang xảy ra lỗi! Vui lòng thử lại sau!";
+        public const string DATA_DUPLICATED_MESSAGE = "DATA_DUPLICATED_MESSAGE";
+        public const string NOT_FOUND_MESSAGE = "NOT_FOUND_MESSAGE";
+        public const string TIMESLOT_DUPLICATED_MESSAGE = "TIMESLOT_DUPLICATED_MESSAGE";
+        public const string INTERNAL_SERVER_ERROR_MESSAGE = "INTERNAL_SERVER_ERROR_MESSAGE";
         public const string CHILD_NAME_DUPLICATE = "Đã tồn tại trẻ với tên này";
         public const string CHILD_ALREADY_STUDING_THIS_TUTOR = "Đã tồn tại hồ sơ học sinh của trẻ này";
         public const string NO_REVIEWS_FOUND = "Không có đánh giá";
         public const string REVIEW_ALREADY_EXISTS = "Đã đánh giá gia sư này";
         public const string BAD_ACTION_REVIEW = "Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này";
-        public const string AGE_FROM_AGE_END_EXISTED = "Độ tuổi đã tồn tại";
+        //public const string AGE_FROM_AGE_END_EXISTED = "Độ tuổi đã tồn tại";
         public const string DUPLICATED_EMAIL_MESSAGE = "Đã tồn tại tài khoản với email này";
         public const string CHILD_NOT_FOUND = "Không tìm thấy dữ liệu trẻ";
         public const string MISSING_PARENT_CHILD_INFORMATION = "Không nhập đủ dữ liệu phụ huynh và trẻ";

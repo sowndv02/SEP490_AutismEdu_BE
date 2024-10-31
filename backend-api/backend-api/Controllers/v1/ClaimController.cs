@@ -3,6 +3,7 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
@@ -23,8 +24,10 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         protected int pageSize = 0;
         protected int takeValue = 0;
+        private readonly IResourceService _resourceService;
+
         public ClaimController(IClaimRepository claimRepository, IMapper mapper, IConfiguration configuration,
-            IUserRepository userRepository, FormatString formatString)
+            IUserRepository userRepository, FormatString formatString, IResourceService resourceService)
         {
             _userRepository = userRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -33,6 +36,7 @@ namespace backend_api.Controllers.v1
             _response = new();
             takeValue = int.Parse(configuration["APIConfig:TakeValue"]);
             _formatString = formatString;
+            _resourceService = resourceService;
         }
 
         [HttpPut("reset/{id}")]
@@ -45,7 +49,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CLAIM) };
                     return BadRequest(_response);
                 }
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claim);
@@ -62,7 +66,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -137,7 +141,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -158,7 +162,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -172,7 +176,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CLAIM) };
                     return BadRequest(_response);
                 }
 
@@ -183,7 +187,7 @@ namespace backend_api.Controllers.v1
                     //throw new NotFoundException(nameof(GetClaimByIdAsync), id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CLAIM) };
                     return NotFound(_response);
                 }
                 var result = _mapper.Map<ClaimDTO>(model);
@@ -200,7 +204,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -219,7 +223,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { SD.DUPLICATED_MESSAGE };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CLAIM) };
                     return BadRequest(_response);
                 }
                 model.ClaimValue = _formatString.FormatStringUpperCaseFirstChar(model.ClaimValue);
@@ -236,7 +240,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -251,7 +255,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CLAIM) };
                     return BadRequest(_response);
                 }
                 var claimExist = await _claimRepository.GetAsync(x => x.ClaimType == claimDTO.ClaimType && x.ClaimValue == claimDTO.ClaimValue, false);
@@ -259,7 +263,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { SD.DUPLICATED_MESSAGE };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CLAIM) };
                     return BadRequest(_response);
                 }
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claimDTO);
@@ -276,7 +280,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -300,7 +304,7 @@ namespace backend_api.Controllers.v1
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

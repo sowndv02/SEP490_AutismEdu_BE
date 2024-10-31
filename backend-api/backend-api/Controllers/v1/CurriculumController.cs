@@ -5,6 +5,7 @@ using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 
@@ -23,66 +24,42 @@ namespace backend_api.Controllers.v1
     {
         private readonly IUserRepository _userRepository;
         private readonly ITutorRepository _tutorRepository;
-        private readonly ITutorRegistrationRequestRepository _tutorRegistrationRequestRepository;
         private readonly ICurriculumRepository _curriculumRepository;
-        private readonly IWorkExperienceRepository _workExperienceRepository;
-        private readonly ICertificateMediaRepository _certificateMediaRepository;
-        private readonly ICertificateRepository _certificateRepository;
-        private readonly IRoleRepository _roleRepository;
-        private readonly IBlobStorageRepository _blobStorageRepository;
-        private readonly ILogger<TutorController> _logger;
         private readonly IMapper _mapper;
         private string queueName = string.Empty;
         private readonly IRabbitMQMessageSender _messageBus;
-        private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
+        private readonly IResourceService _resourceService;
 
         public CurriculumController(IUserRepository userRepository, ITutorRepository tutorRepository,
-            ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
-            FormatString formatString, IWorkExperienceRepository workExperienceRepository,
-            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
-            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository,
-            IRabbitMQMessageSender messageBus)
+            IMapper mapper, IConfiguration configuration,
+            ICurriculumRepository curriculumRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService)
         {
             _messageBus = messageBus;
             _curriculumRepository = curriculumRepository;
-            _formatString = formatString;
-            _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _response = new APIResponse();
             _mapper = mapper;
-            _blobStorageRepository = blobStorageRepository;
-            _logger = logger;
             _userRepository = userRepository;
             _tutorRepository = tutorRepository;
-            _workExperienceRepository = workExperienceRepository;
-            _certificateRepository = certificateRepository;
-            _certificateMediaRepository = certificateMediaRepository;
-            _tutorRegistrationRequestRepository = tutorRegistrationRequestRepository;
+            _resourceService = resourceService;
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
-                }
+
                 if (id == 0)
                 {
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
                 var model = await _curriculumRepository.GetAsync(x => x.Id == id && x.SubmiterId == userId, false, null);
@@ -91,7 +68,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CURRICULUM) };
                     return BadRequest(_response);
                 }
                 model.IsActive = false;
@@ -105,7 +82,7 @@ namespace backend_api.Controllers.v1
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
             }
             return _response;
         }
@@ -166,7 +143,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -240,7 +217,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -253,7 +230,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
                 return BadRequest(_response);
             }
 
@@ -265,7 +242,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { SD.AGE_FROM_AGE_END_EXISTED };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
                     return BadRequest(_response);
                 }
             }
@@ -307,7 +284,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
                     return BadRequest(_response);
                 }
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
@@ -377,7 +354,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
