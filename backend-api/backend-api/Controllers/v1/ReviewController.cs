@@ -56,7 +56,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet("GetTutorReviewStats/{tutorId}")]
-        public async Task<ActionResult<APIResponse>> GetTutorReviewInformation(string tutorId)
+        public async Task<ActionResult<APIResponse>> GetTutorReviewInformation(string tutorId, int pageNumber = 1, int pageSize = 10)
         {
             try
             {
@@ -68,14 +68,16 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var reviews = await _reviewRepository.GetAllNotPagingAsync(x => x.TutorId == tutorId, "Parent");
+                var (totalReviews, reviews) = await _reviewRepository.GetAllAsync(
+                    filter: x => x.TutorId == tutorId,
+                    includeProperties: "Parent",
+                    pageSize: pageSize,
+                    pageNumber: pageNumber,
+                    orderBy: x => x.CreatedDate,
+                    isDesc: true
+                    );
 
-                int totalReviews = reviews.list.Count;
-                decimal averageScore = 0;
-                if (totalReviews > 0)
-                {
-                    averageScore = reviews.list.Average(x => x.RateScore);
-                }
+                decimal averageScore = totalReviews > 0 ? reviews.Average(x => x.RateScore) : 0;
 
                 var scoreRanges = new Dictionary<string, int>
                 {
@@ -86,28 +88,20 @@ namespace backend_api.Controllers.v1
                     { "1", 0 }
                 };
 
-                var groupedReviews = reviews.list.GroupBy(review =>
+                foreach (var review in reviews)
                 {
-                    if (review.RateScore >= 0 && review.RateScore < 2)
-                        return "1";
-                    else if (review.RateScore >= 2 && review.RateScore < 3)
-                        return "2";
-                    else if (review.RateScore >= 3 && review.RateScore < 4)
-                        return "3";
-                    else if (review.RateScore >= 4 && review.RateScore < 5)
-                        return "4";
-                    else if (review.RateScore == 5)
-                        return "5";
-                    else
-                        return "Unknown Score"; 
-                });
-
-                foreach (var group in groupedReviews)
-                {
-                    if (scoreRanges.ContainsKey(group.Key))
+                    var score = review.RateScore switch
                     {
-                        scoreRanges[group.Key] = group.Count();
-                    }
+                        >= 0 and < 2 => "1",
+                        >= 2 and < 3 => "2",
+                        >= 3 and < 4 => "3",
+                        >= 4 and < 5 => "4",
+                        5 => "5",
+                        _ => "Unknown Score"
+                    };
+
+                    if (scoreRanges.ContainsKey(score))
+                        scoreRanges[score]++;
                 }
 
                 var scoreGroups = scoreRanges.Select(sr => new
@@ -118,7 +112,7 @@ namespace backend_api.Controllers.v1
                 .OrderByDescending(sr => sr.ScoreRange)
                 .ToList();
 
-                var reviewsDTO = reviews.list.Select(r => new
+                var reviewsDTO = reviews.Select(r => new
                 {
                     r.Id,
                     r.RateScore,
@@ -201,8 +195,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var userId = "07a34464-3bac-4f90-a512-5c42f91050bf";
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 if (reviewCreateDTO == null || string.IsNullOrEmpty(userId))
                 {
@@ -332,7 +325,8 @@ namespace backend_api.Controllers.v1
 
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
-                return NoContent();
+                _response.Result = SD.REVIEW_DELETE_SUCCESS;
+                return Ok(_response);
             }
             catch (Exception ex)
             {

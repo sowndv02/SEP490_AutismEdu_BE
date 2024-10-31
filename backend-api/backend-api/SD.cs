@@ -128,6 +128,7 @@
         public const string CHILD_ALREADY_STUDING_THIS_TUTOR = "Đã tồn tại hồ sơ học sinh của trẻ này";
         public const string NO_REVIEWS_FOUND = "Không có đánh giá";
         public const string REVIEW_ALREADY_EXISTS = "Đã đánh giá gia sư này";
+        public const string REVIEW_DELETE_SUCCESS = "Xoá đánh giá thành công!";
         public const string BAD_ACTION_REVIEW = "Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này";
         //public const string AGE_FROM_AGE_END_EXISTED = "Độ tuổi đã tồn tại";
         public const string DUPLICATED_EMAIL_MESSAGE = "Đã tồn tại tài khoản với email này";
