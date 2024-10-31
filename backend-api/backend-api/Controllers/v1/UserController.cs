@@ -260,7 +260,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = new List<string>() { SD.DUPLICATED_MESSAGE };
+                    _response.ErrorMessages = new List<string>() { SD.DATA_DUPLICATED_MESSAGE };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 ApplicationUser model = _mapper.Map<ApplicationUser>(createDTO);
