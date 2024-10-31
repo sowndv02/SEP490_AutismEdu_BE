@@ -3,7 +3,10 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Resources;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Net;
 
 namespace backend_api.Controllers.v1
@@ -14,29 +17,30 @@ namespace backend_api.Controllers.v1
     public class AssessmentController : ControllerBase
     {
         private readonly IAssessmentQuestionRepository _assessmentQuestionRepository;
-        private readonly IAssessmentOptionRepository _assessmentOptionRepository;
-        private readonly IAssessmentResultRepository _assessmentResultRepository;
         protected APIResponse _response;
+        protected ILogger<AssessmentController> _logger;
         private readonly IMapper _mapper;
+        private readonly IStringLocalizer<Messages> _localizer;
 
-        public AssessmentController(IAssessmentQuestionRepository assessmentQuestionRepository, 
-            IAssessmentOptionRepository assessmentOptionRepository, IAssessmentResultRepository assessmentResultRepository, 
-            IMapper mapper, IConfiguration configuration)
+        public AssessmentController(IAssessmentQuestionRepository assessmentQuestionRepository,
+            IMapper mapper, IStringLocalizer<Messages> localizer,
+            ILogger<AssessmentController> logger)
         {
             _assessmentQuestionRepository = assessmentQuestionRepository;
-            _assessmentOptionRepository = assessmentOptionRepository;
-            _assessmentResultRepository = assessmentResultRepository;
             _response = new APIResponse();
             _mapper = mapper;
+            _localizer = localizer;
+            _logger = logger;
         }
 
+
         [HttpPost]
-        //[Authorize]
-        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody]AssessmentQuestionCreateDTO assessmentQuestionCreateDTO)
+        //[Authorize(Roles = SD.STAFF_ROLE)]
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] AssessmentQuestionCreateDTO assessmentQuestionCreateDTO)
         {
             try
             {
-                if(assessmentQuestionCreateDTO == null)
+                if (assessmentQuestionCreateDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -45,15 +49,18 @@ namespace backend_api.Controllers.v1
                 }
 
                 var assessmentExist = await _assessmentQuestionRepository.GetAsync(x => x.Question.Equals(assessmentQuestionCreateDTO.Question));
-                if(assessmentExist != null)
+                if (assessmentExist != null)
                 {
+                    _logger.LogWarning($"Duplicate question attempted: {assessmentQuestionCreateDTO.Question}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.DUPLICATED_MESSAGE };
+                    var message = string.Format(Resources.Messages.ResourceManager.GetString("DUPLICATED_MESSAGE"), assessmentQuestionCreateDTO.Question);
+                    _response.ErrorMessages = new List<string> { message };
                     return BadRequest(_response);
                 }
 
                 AssessmentQuestion model = _mapper.Map<AssessmentQuestion>(assessmentQuestionCreateDTO);
+                // TODO: Add submitter 
                 model.IsAssessment = true;
                 model.IsHidden = false;
                 model.CreatedDate = DateTime.Now;
@@ -66,19 +73,19 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
+                _response.ErrorMessages = new List<string>() { _localizer["INTERAL_ERROR_MESSAGE"] };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllAsync()
         {
             try
             {
                 var result = await _assessmentQuestionRepository.GetAllNotPagingAsync(null, "AssessmentOptions", null);
-
                 _response.Result = _mapper.Map<List<AssessmentQuestionDTO>>(result.list.OrderBy(x => x.Id).ToList());
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
@@ -87,7 +94,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _localizer["INTERAL_ERROR_MESSAGE"] };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
