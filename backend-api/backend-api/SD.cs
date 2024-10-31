@@ -130,7 +130,7 @@
         public const string REVIEW_ALREADY_EXISTS = "Đã đánh giá gia sư này";
         public const string REVIEW_DELETE_SUCCESS = "Xoá đánh giá thành công!";
         public const string BAD_ACTION_REVIEW = "Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này";
-        //public const string AGE_FROM_AGE_END_EXISTED = "Độ tuổi đã tồn tại";
+        public const string AGE_FROM_AGE_END_EXISTED = "Độ tuổi đã tồn tại";
         public const string DUPLICATED_EMAIL_MESSAGE = "Đã tồn tại tài khoản với email này";
         public const string CHILD_NOT_FOUND = "Không tìm thấy dữ liệu trẻ";
         public const string MISSING_PARENT_CHILD_INFORMATION = "Không nhập đủ dữ liệu phụ huynh và trẻ";

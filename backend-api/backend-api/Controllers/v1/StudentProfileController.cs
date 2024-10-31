@@ -98,7 +98,7 @@ namespace backend_api.Controllers.v1
                         {
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
-                            _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED} {isTimeSlotDuplicate.From.ToString(@"hh\:mm")}-{isTimeSlotDuplicate.To.ToString(@"hh\:mm")}" };
+                            _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED_MESSAGE} {isTimeSlotDuplicate.From.ToString(@"hh\:mm")}-{isTimeSlotDuplicate.To.ToString(@"hh\:mm")}" };
                             return BadRequest(_response);
                         }
                     }
@@ -106,7 +106,7 @@ namespace backend_api.Controllers.v1
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED} {isTimeSlotDuplicate.From.ToString(@"hh\:mm")}-{isTimeSlotDuplicate.To.ToString(@"hh\:mm")}" };
+                        _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED_MESSAGE} {isTimeSlotDuplicate.From.ToString(@"hh\:mm")}-{isTimeSlotDuplicate.To.ToString(@"hh\:mm")}" };
                         return BadRequest(_response);
                     }
                 }
