@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cập nhật trạng thái yêu cầu</title>
+</head>
+<body>
+    <h2>Kính gửi @Model.FullName,</h2>
+
+    <p>Chúng tôi xin thông báo rằng yêu cầu của bạn về <strong>@Model.IssueName</strong> đã được cập nhật trạng thái.</p>
+
+    <p><strong>Trạng thái:</strong> @Model.IsApproved</p>
+
+    @if (@Model.IsApproved == false)
+    {
+        <p><strong>Lý do từ chối:</strong> @Model.RejectionReason</p>
+    }
+
+    <p>Nếu có bất kỳ câu hỏi nào, xin vui lòng liên hệ với đội ngũ hỗ trợ của chúng tôi.</p>
+
+    <p>Trân trọng,</p>
+    <p>
+        Đội ngũ Hỗ trợ<br />
+        <strong>Công ty ABC</strong>
+    </p>
+</body>
+</html>
