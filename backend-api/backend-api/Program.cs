@@ -16,7 +16,6 @@ using backend_api.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -103,6 +102,7 @@ builder.Services.AddSingleton<FormatString>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
 builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
 builder.Services.AddHostedService<AutoRejectStudentProfile>();
+builder.Services.AddScoped<IResourceService, ResourceService>();
 
 // Config Message Queue
 var rabbitMQSettings = builder.Configuration.GetSection("RabbitMQSettings");
@@ -207,7 +207,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "SEP490");
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Autism Edu Connect System");
     //options.RoutePrefix = string.Empty;
 });
 app.UseCors("AllowSpecificOrigin");
