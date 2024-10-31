@@ -3,6 +3,8 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Services;
+using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,16 +21,21 @@ namespace backend_api.Controllers.v1
         private readonly IAvailableTimeSlotRepository _availableTimeSlotRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
+        protected ILogger<AvailableTimeController> _logger;
+        private readonly IResourceService _resourceService;
 
-        public AvailableTimeController(IAvailableTimeSlotRepository availableTimeSlotRepository, IMapper mapper)
+        public AvailableTimeController(IAvailableTimeSlotRepository availableTimeSlotRepository, IMapper mapper, 
+            IResourceService resourceService, ILogger<AvailableTimeController> logger)
         {
+            _resourceService = resourceService;
+            _logger = logger;
             _availableTimeSlotRepository = availableTimeSlotRepository;
             _response = new APIResponse();
             _mapper = mapper;
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] AvailableTimeSlotCreateDTO availableTimeSlotCreateDTO)
         {
             try
@@ -37,24 +44,18 @@ namespace backend_api.Controllers.v1
 
                 if (availableTimeSlotCreateDTO == null || string.IsNullOrEmpty(tutorId))
                 {
+
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.AVAILABLE_TIME) };
                     return BadRequest(_response);
                 }
 
-                if(string.IsNullOrEmpty(tutorId))
-                {
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return Unauthorized(_response);
-                }
                 if (TimeSpan.Parse(availableTimeSlotCreateDTO.From) > TimeSpan.Parse(availableTimeSlotCreateDTO.To))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.TIMESLOT_INVALID };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.AVAILABLE_TIME_SLOT) };
                     return BadRequest(_response);
                 }
 
@@ -67,7 +68,7 @@ namespace backend_api.Controllers.v1
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { $"{SD.TIMESLOT_DUPLICATED} {slot.From.ToString(@"hh\:mm")}-{slot.To.ToString(@"hh\:mm")}" };
+                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.AVAILABLE_TIME_SLOT, slot.From.ToString(@"hh\:mm"), slot.To.ToString(@"hh\:mm"))};
                         return BadRequest(_response);
                     }
                 }
@@ -75,7 +76,6 @@ namespace backend_api.Controllers.v1
                 availableTimeSlot.TutorId = tutorId;
                 availableTimeSlot.CreatedDate = DateTime.Now;
                 await _availableTimeSlotRepository.CreateAsync(availableTimeSlot);
-
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
@@ -83,35 +83,19 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> GetAllTimeSlotFromWeekday([FromQuery] string tutorId,int weekday)
         {
             try
             {
 
-                if (string.IsNullOrEmpty(tutorId))
-                {
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return Unauthorized(_response);
-                }
-                
                 var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.Weekday == weekday && x.TutorId.Equals(tutorId), null, null);
-                
-                //if (existingTimeSlots.list == null)
-                //{
-                //    _response.Result = null;
-                //    _response.StatusCode = HttpStatusCode.OK;
-                //    return Ok(_response);
-                //}
-
                 _response.Result = _mapper.Map<List<AvailableTimeSlotDTO>>(existingTimeSlots.list.OrderBy(x => x.From));
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
@@ -120,23 +104,24 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
         [HttpDelete("{timeslotId}")]
-        //[Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> RemoveTimeSlotFromWeekday(int timeSlotId)
         {
             try
             {
-                var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == timeSlotId, true, null);
+                var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == timeSlotId && x.TutorId == tutorId, true, null);
                 if(timeslot == null)
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.AVAILABLE_TIME) };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 AvailableTimeSlot model = _mapper.Map<AvailableTimeSlot>(timeslot);
@@ -149,7 +134,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

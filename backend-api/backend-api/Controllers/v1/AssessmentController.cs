@@ -4,6 +4,7 @@ using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
 using backend_api.Resources;
+using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
@@ -18,19 +19,19 @@ namespace backend_api.Controllers.v1
     {
         private readonly IAssessmentQuestionRepository _assessmentQuestionRepository;
         protected APIResponse _response;
-        protected ILogger<AssessmentController> _logger;
         private readonly IMapper _mapper;
-        private readonly IStringLocalizer<Messages> _localizer;
+        protected ILogger<AssessmentController> _logger;
+        private readonly IResourceService _resourceService;
 
         public AssessmentController(IAssessmentQuestionRepository assessmentQuestionRepository,
-            IMapper mapper, IStringLocalizer<Messages> localizer,
-            ILogger<AssessmentController> logger)
+            IMapper mapper, ILogger<AssessmentController> logger, 
+            IResourceService resourceService)
         {
+            _resourceService = resourceService;
+            _logger = logger;
             _assessmentQuestionRepository = assessmentQuestionRepository;
             _response = new APIResponse();
             _mapper = mapper;
-            _localizer = localizer;
-            _logger = logger;
         }
 
 
@@ -44,7 +45,8 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _logger.LogWarning("Attempted to create an assessment question with a null request payload.");
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_QUESTION) };
                     return BadRequest(_response);
                 }
 
@@ -54,11 +56,9 @@ namespace backend_api.Controllers.v1
                     _logger.LogWarning($"Duplicate question attempted: {assessmentQuestionCreateDTO.Question}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    var message = string.Format(Resources.Messages.ResourceManager.GetString("DUPLICATED_MESSAGE"), assessmentQuestionCreateDTO.Question);
-                    _response.ErrorMessages = new List<string> { message };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, assessmentQuestionCreateDTO.Question) };
                     return BadRequest(_response);
                 }
-
                 AssessmentQuestion model = _mapper.Map<AssessmentQuestion>(assessmentQuestionCreateDTO);
                 // TODO: Add submitter 
                 model.IsAssessment = true;
@@ -74,7 +74,7 @@ namespace backend_api.Controllers.v1
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
-                _response.ErrorMessages = new List<string>() { _localizer["INTERAL_ERROR_MESSAGE"] };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -93,8 +93,9 @@ namespace backend_api.Controllers.v1
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
+                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _localizer["INTERAL_ERROR_MESSAGE"] };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

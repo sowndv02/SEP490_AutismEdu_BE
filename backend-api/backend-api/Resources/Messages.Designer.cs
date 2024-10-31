@@ -72,18 +72,36 @@ namespace backend_api.Resources {
         /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; đã tồn tại.
         /// </summary>
-        public static string DUPLICATED_MESSAGE {
+        public static string DATA_DUPLICATED_MESSAGE {
             get {
-                return ResourceManager.GetString("DUPLICATED_MESSAGE", resourceCulture);
+                return ResourceManager.GetString("DATA_DUPLICATED_MESSAGE", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Lỗi hệ thống.
+        ///   Looks up a localized string similar to Lỗi hệ thống. Vui lòng thử lại sau!.
         /// </summary>
         public static string INTERAL_ERROR_MESSAGE {
             get {
                 return ResourceManager.GetString("INTERAL_ERROR_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} không tìm thấy..
+        /// </summary>
+        public static string NOT_FOUND_MESSAGE {
+            get {
+                return ResourceManager.GetString("NOT_FOUND_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} bị trùng với khung giờ đã tồn tại {1}-{2}.
+        /// </summary>
+        public static string TIMESLOT_DUPLICATED_MESSAGE {
+            get {
+                return ResourceManager.GetString("TIMESLOT_DUPLICATED_MESSAGE", resourceCulture);
             }
         }
     }

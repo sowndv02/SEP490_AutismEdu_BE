@@ -262,6 +262,7 @@ void ApplyMigration()
 
             // Seed the database if it’s empty
             _db.SeedDataIfEmptyAsync().GetAwaiter().GetResult();
+            Console.WriteLine("Build successfully.");
         }
     }
     catch (Exception ex)

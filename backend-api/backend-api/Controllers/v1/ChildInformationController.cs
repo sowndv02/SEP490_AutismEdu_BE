@@ -4,6 +4,7 @@ using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -22,15 +23,17 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         private readonly IStudentProfileRepository _studentProfileRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
+        private readonly IResourceService _resourceService;
 
         public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper,
-            IStudentProfileRepository studentProfileRepository, IBlobStorageRepository blobStorageRepository)
+            IStudentProfileRepository studentProfileRepository, IBlobStorageRepository blobStorageRepository, , IResourceService resourceService)
         {
             _childInfoRepository = childInfoRepository;
             _response = new APIResponse();
             _mapper = mapper;
             _studentProfileRepository = studentProfileRepository;
             _blobStorageRepository = blobStorageRepository;
+            _resourceService = resourceService;
         }
 
         [HttpPost]
