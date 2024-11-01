@@ -1,15 +1,15 @@
 ﻿using AutoMapper;
 using backend_api.Models;
-using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs;
-using backend_api.Repository;
+using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
-using Microsoft.AspNetCore.Http;
+using backend_api.Services.IServices;
+using backend_api.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using System.Linq.Expressions;
-using backend_api.Utils;
 
 namespace backend_api.Controllers.v1
 {
@@ -20,31 +20,144 @@ namespace backend_api.Controllers.v1
     {
         private readonly IScheduleRepository _scheduleRepository;
         private readonly IStudentProfileRepository _studentProfileRepository;
-
+        private readonly IResourceService _resourceService;
         protected APIResponse _response;
         private readonly IMapper _mapper;
 
         public ScheduleController(IScheduleRepository scheduleRepository, IMapper mapper
-            , IStudentProfileRepository studentProfileRepository)
+            , IStudentProfileRepository studentProfileRepository, IResourceService resourceService)
         {
+            _resourceService = resourceService;
             _scheduleRepository = scheduleRepository;
             _response = new APIResponse();
             _mapper = mapper;
             _studentProfileRepository = studentProfileRepository;
         }
 
+        [HttpPut("AssignExercises/{id}")]
+        public async Task<ActionResult<APIResponse>> UpdateAsync(int id, [FromBody] AssignExerciseScheduleDTO updateDTO)
+        {
+            try
+            {
+                if (updateDTO == null || updateDTO.Id != id)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
+                    return BadRequest(_response);
+                }
+                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, null);
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
+                    return BadRequest(_response);
+                }
+                model.ExerciseId = updateDTO.ExerciseId;
+                model.ExerciseTypeId = updateDTO.ExerciseTypeId;
+                model.UpdatedDate = DateTime.Now;
+                var result = await _scheduleRepository.UpdateAsync(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                _response.Result = _mapper.Map<ScheduleDTO>(result);
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
+        [HttpGet("NotPassed")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetAllAsync()
+        {
+            try
+            {
+                List<Schedule> list = new();
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                Expression<Func<Schedule, bool>> filter = u => u.TutorId == userId && u.AttendanceStatus == SD.AttendanceStatus.ATTENDED && u.PassingStatus == SD.PassingStatus.NOT_PASSED;
+
+                var (count, result) = await _scheduleRepository.GetAllNotPagingAsync(filter,
+                                "StudentProfile", null, null, true);
+
+                foreach (Schedule schedule in result)
+                {
+                    schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId, true, "Child");
+                }
+
+                list = result
+                    .OrderBy(x => x.ScheduleDate.Date)
+                    .ThenBy(x => x.Start)
+                    .ToList();
+
+                _response.Result = _mapper.Map<List<ScheduleDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPut("changeStatus/{id}")]
+        public async Task<ActionResult<APIResponse>> UpdateAsync(int id, [FromBody] ScheduleUpdateDTO updateDTO)
+        {
+            try
+            {
+                if (updateDTO == null || updateDTO.Id != id)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
+                    return BadRequest(_response);
+                }
+                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, null);
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
+                    return BadRequest(_response);
+                }
+                model.AttendanceStatus = updateDTO.AttendanceStatus;
+                model.Note = updateDTO.Note;
+                model.PassingStatus = updateDTO.PassingStatus;
+                model.UpdatedDate = DateTime.Now;
+                var result = await _scheduleRepository.UpdateAsync(model);
+                var nextSchedule = await _scheduleRepository.GetAsync(x => x.PassingStatus == SD.PassingStatus.NOT_YET && x.AttendanceStatus == SD.AttendanceStatus.NOT_YET && x.ScheduleDate > result.ScheduleDate, false, null);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                _response.ErrorMessages = new List<string>() { "Hiện tại buổi học tiếp theo đang được gán bài tập giống buổi học này. Bạn hãy cân nhắc gán lại bài tập khác." };
+                _response.Result = _mapper.Map<ScheduleDTO>(result);
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
         [HttpGet]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null)
         {
             try
             {
-                int totalCount = 0;
                 List<Schedule> list = new();
                 Expression<Func<Schedule, bool>> filter = u => true;
 
-                if(studentProfileId != 0)
+                if (studentProfileId != 0)
                 {
                     filter = u => u.StudentProfileId == studentProfileId;
                 }
@@ -61,10 +174,10 @@ namespace backend_api.Controllers.v1
 
                 var (count, result) = await _scheduleRepository.GetAllNotPagingAsync(filter,
                                 "StudentProfile", null, null, true);
-                
+
                 foreach (Schedule schedule in result)
                 {
-                    schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId,true,"Child");
+                    schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId, true, "Child");
                 }
 
                 list = result
@@ -80,7 +193,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

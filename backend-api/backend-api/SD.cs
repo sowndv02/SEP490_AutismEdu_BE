@@ -109,6 +109,7 @@
         public const string ID = "Id";
         public const string AGE = "Độ tuổi";
         public const string CHILD_INFO = "Thông tin trẻ";
+        public const string SCHEDULE = "Lịch học";
 
 
 
@@ -152,7 +153,7 @@
         public const string DEFAULT_EXERCISE_TYPE_13 = "Bắt chước";
         public const string DEFAULT_EXERCISE_TYPE_14 = "Chơi với truyện tranh";
         public const string DEFAULT_EXERCISE_TYPE_15 = "Đáp lại ngôn ngữ";
-        public const string DEFAULT_EXERCISE_TYPE_16= "Những tiếng nói đầu tiên - động từ, tính từ và cụm có hai từ";
+        public const string DEFAULT_EXERCISE_TYPE_16 = "Những tiếng nói đầu tiên - động từ, tính từ và cụm có hai từ";
         public const string DEFAULT_EXERCISE_TYPE_17 = "Những tiếng nói đầu tiên - câu hỏi";
         public const string DEFAULT_EXERCISE_TYPE_18 = "Những tiếng nói đầu tiên - cấu trúc câu";
         public const string DEFAULT_EXERCISE_TYPE_19 = "Lắng nghe - Chú ý";

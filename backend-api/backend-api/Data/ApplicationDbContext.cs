@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -48,7 +47,7 @@ namespace backend_api.Data
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<ScheduleTimeSlot> ScheduleTimeSlots { get; set; }
         public DbSet<StudentProfile> StudentProfiles { get; set; }
-		public DbSet<EmailLogger> EmailLoggers { get; set; }
+        public DbSet<EmailLogger> EmailLoggers { get; set; }
         public DbSet<ExerciseType> ExerciseTypes { get; set; }
         public DbSet<Exercise> Exercisese { get; set; }
         public DbSet<Syllabus> Syllabuses { get; set; }
@@ -57,6 +56,18 @@ namespace backend_api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<Schedule>()
+                .HasOne(se => se.ExerciseType)
+                .WithMany()
+                .HasForeignKey(se => se.ExerciseTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Schedule>()
+                .HasOne(se => se.Exercise)
+                .WithMany()
+                .HasForeignKey(se => se.ExerciseId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<TutorRequest>()
                 .HasOne(tr => tr.Tutor)
@@ -587,7 +598,7 @@ namespace backend_api.Data
                         SubmitterId = adminUser.Id,
                         IsActive = true,
                         IsDeleted = false
-                    }                    
+                    }
                 );
 
                 await SaveChangesAsync();

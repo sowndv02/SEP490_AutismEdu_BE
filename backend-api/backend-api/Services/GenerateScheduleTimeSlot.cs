@@ -7,9 +7,9 @@ namespace backend_api.Services
     public class GenerateScheduleTimeSlot : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<RefreshTokenCleanupService> _logger;
+        private readonly ILogger<GenerateScheduleTimeSlot> _logger;
 
-        public GenerateScheduleTimeSlot(IServiceProvider serviceProvider, ILogger<RefreshTokenCleanupService> logger)
+        public GenerateScheduleTimeSlot(IServiceProvider serviceProvider, ILogger<GenerateScheduleTimeSlot> logger)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
@@ -20,7 +20,7 @@ namespace backend_api.Services
             while (!stoppingToken.IsCancellationRequested)
             {
                 DateTime now = DateTime.Now;
-                DateTime nextRunTime = GetNextSundayAt5AM(now);
+                DateTime nextRunTime = GetNextRunTimeAt1AM(now);
 
                 TimeSpan delay = nextRunTime - now;
 
@@ -28,55 +28,63 @@ namespace backend_api.Services
                 {
                     await Task.Delay(delay, stoppingToken);
                 }
-                //await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+
                 await GenerateScheduleTimeSlotForTutor();
-                await Task.Delay(TimeSpan.FromDays(7), stoppingToken);
+                await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
             }
         }
-        private DateTime GetNextSundayAt5AM(DateTime currentTime)
+
+        private DateTime GetNextRunTimeAt1AM(DateTime currentTime)
         {
-            int daysUntilSunday = ((int)DayOfWeek.Sunday - (int)currentTime.DayOfWeek + 7) % 7;
-            DateTime nextSunday = currentTime.Date.AddDays(daysUntilSunday);
-            return nextSunday.AddHours(5);
+            DateTime nextRunDate = currentTime.Date.AddDays(1);
+            return nextRunDate.AddHours(1); // 1 AM
         }
+
         private async Task GenerateScheduleTimeSlotForTutor()
         {
             using (var scope = _serviceProvider.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var scheduleTimeSlots = context.ScheduleTimeSlots.Include(x => x.StudentProfile).Where(x => x.StudentProfile != null && x.StudentProfile.Status == SD.StudentProfileStatus.Teaching).ToList();
+
+                // Calculate the start date (tomorrow) and the date two weeks from now
+                DateTime startDate = DateTime.Today.AddDays(1);
+                DateTime twoWeeksFromNow = DateTime.Today.AddDays(14);
+
+                var scheduleTimeSlots = context.ScheduleTimeSlots
+                    .Include(x => x.StudentProfile)
+                    .Where(x => x.StudentProfile != null && x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
+                    .ToList();
+
+                int totalGenerated = 0;
+
                 foreach (var item in scheduleTimeSlots)
                 {
-                    var nextDate = DateTime.Now;
-                    switch (item.Weekday)
+                    var nextDate = GetNextDayOfWeek((DayOfWeek)item.Weekday);
+
+                    // Skip slots if they have already occurred today and move to next week for this weekday
+                    if (nextDate < startDate)
                     {
-                        // CN
-                        case (int)DayOfWeek.Sunday:
-                            nextDate = GetNextDayOfWeek(DayOfWeek.Sunday);
-                            break;
-                        // T2
-                        case (int)DayOfWeek.Monday:
-                            nextDate = GetNextDayOfWeek(DayOfWeek.Monday);
-                            break;
-                        case (int)DayOfWeek.Tuesday:
-                            nextDate = GetNextDayOfWeek(DayOfWeek.Tuesday);
-                            break;
-                        case (int)DayOfWeek.Wednesday:
-                            nextDate = GetNextDayOfWeek(DayOfWeek.Wednesday);
-                            break;
-                        case (int)DayOfWeek.Thursday:
-                            nextDate = GetNextDayOfWeek(DayOfWeek.Thursday);
-                            break;
-                        case (int)DayOfWeek.Friday:
-                            nextDate = GetNextDayOfWeek(DayOfWeek.Friday);
-                            break;
-                        case (int)DayOfWeek.Saturday:
-                            nextDate = GetNextDayOfWeek(DayOfWeek.Saturday);
-                            break;
+                        nextDate = nextDate.AddDays(7); // Move to next week's date for the same weekday
                     }
+
+                    // Check if a schedule already exists for this TutorId, slot, and future date within two weeks
+                    bool scheduleExists = await context.Schedules.AnyAsync(s =>
+                        s.TutorId == item.StudentProfile.TutorId &&
+                        s.ScheduleTimeSlotId == item.Id &&
+                        s.ScheduleDate >= startDate &&
+                        s.ScheduleDate <= twoWeeksFromNow
+                    );
+
+                    if (scheduleExists)
+                    {
+                        _logger.LogInformation($"Schedule already exists for TutorId {item.StudentProfile.TutorId} on {nextDate}. Skipping generation.");
+                        continue;
+                    }
+
+                    // Create a new schedule if none exists for the upcoming two weeks
                     var schedule = new Schedule()
                     {
-                        TutorId = item.StudentProfile?.TutorId,
+                        TutorId = item.StudentProfile.TutorId,
                         AttendanceStatus = SD.AttendanceStatus.NOT_YET,
                         ScheduleDate = nextDate,
                         StudentProfileId = item.StudentProfileId,
@@ -87,13 +95,17 @@ namespace backend_api.Services
                         End = item.To,
                         ScheduleTimeSlotId = item.Id
                     };
+
                     await context.Schedules.AddAsync(schedule);
+                    totalGenerated++;
                 }
 
-                int total = await context.SaveChangesAsync();
-                _logger.LogWarning($"Background service generate schedule for tutor. Total {total} records");
+                await context.SaveChangesAsync();
+                _logger.LogWarning($"Background service generated {totalGenerated} new schedule(s) for tutors.");
             }
         }
+
+
 
         public DateTime GetNextDayOfWeek(DayOfWeek targetDay)
         {
@@ -105,6 +117,5 @@ namespace backend_api.Services
             }
             return today.AddDays(daysUntilNextTargetDay);
         }
-
     }
 }
