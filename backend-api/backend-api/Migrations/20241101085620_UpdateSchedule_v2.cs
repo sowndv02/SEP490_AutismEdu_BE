@@ -12,15 +12,13 @@ namespace backend_api.Migrations
                 name: "ExerciseId",
                 table: "Schedules",
                 type: "int",
-                nullable: false,
-                defaultValue: 0);
+                nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "ExerciseTypeId",
                 table: "Schedules",
                 type: "int",
-                nullable: false,
-                defaultValue: 0);
+                nullable: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Schedules_ExerciseId",
