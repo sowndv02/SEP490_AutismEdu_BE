@@ -89,7 +89,6 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> GetAllTimeSlotFromWeekday([FromQuery] string tutorId,int weekday)
         {
             try
