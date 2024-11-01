@@ -22,7 +22,7 @@ namespace backend_api.Models
         public string TutorId { get; set; }
         [ForeignKey(nameof(TutorId))]
         public Tutor Tutor { get; set; }
-        public bool HasStudentProfile { get; set; } = false;
+        //public bool HasStudentProfile { get; set; } = false;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
 
