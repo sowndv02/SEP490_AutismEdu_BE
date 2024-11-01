@@ -5,6 +5,7 @@ using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 
@@ -27,26 +28,25 @@ namespace backend_api.Controllers.v1
         private readonly ICertificateMediaRepository _certificateMediaRepository;
         private readonly ICurriculumRepository _curriculumRepository;
         private readonly IWorkExperienceRepository _workExperienceRepository;
-        private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<CertificateController> _logger;
         private readonly IMapper _mapper;
         private readonly IRabbitMQMessageSender _messageBus;
         private string queueName = string.Empty;
-        private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
+        private readonly IResourceService _resourceService;
+
+
         public CertificateController(IUserRepository userRepository, ICertificateRepository certificateRepository,
             ILogger<CertificateController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString,
+            IMapper mapper, IConfiguration configuration, 
             ICertificateMediaRepository certificateMediaRepository, ICurriculumRepository curriculumRepository,
-            IWorkExperienceRepository workExperienceRepository, IRabbitMQMessageSender messageBus)
+            IWorkExperienceRepository workExperienceRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService)
         {
             _workExperienceRepository = workExperienceRepository;
             _curriculumRepository = curriculumRepository;
             _certificateMediaRepository = certificateMediaRepository;
-            _formatString = formatString;
-            _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _response = new APIResponse();
@@ -77,10 +77,9 @@ namespace backend_api.Controllers.v1
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE) };
                 return BadRequest(_response);
             }
-
             _response.StatusCode = HttpStatusCode.Created;
             _response.Result = _mapper.Map<CertificateDTO>(result);
             _response.IsSuccess = true;
@@ -88,58 +87,59 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize(SD.TUTOR_ROLE)]
         public async Task<IActionResult> CreateAsync([FromForm] CertificateCreateDTO createDTO)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                _response.StatusCode = HttpStatusCode.BadRequest;
+                if (!ModelState.IsValid)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
+                    return BadRequest(_response);
+                }
+
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var newModel = _mapper.Map<Certificate>(createDTO);
+
+                newModel.SubmiterId = userId;
+                var certificate = await _certificateRepository.CreateAsync(newModel);
+                foreach (var media in createDTO.Medias)
+                {
+                    using var stream = media.OpenReadStream();
+                    var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
+                    var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
+                    await _certificateMediaRepository.CreateAsync(objMedia);
+                }
+                _response.StatusCode = HttpStatusCode.Created;
+                _response.Result = _mapper.Map<CertificateDTO>(newModel);
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch(Exception ex)
+            {
                 _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                return BadRequest(_response);
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var newModel = _mapper.Map<Certificate>(createDTO);
-
-            newModel.SubmiterId = userId;
-            var certificate = await _certificateRepository.CreateAsync(newModel);
-            foreach (var media in createDTO.Medias)
-            {
-                using var stream = media.OpenReadStream();
-                var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
-                var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
-                await _certificateMediaRepository.CreateAsync(objMedia);
-            }
-            _response.StatusCode = HttpStatusCode.Created;
-            _response.Result = _mapper.Map<CertificateDTO>(newModel);
-            _response.IsSuccess = true;
-            return Ok(_response);
         }
 
         [HttpPut("changeStatus/{id}")]
-        //[Authorize(Policy = "UpdateTutorPolicy")]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<IActionResult> ApproveOrRejectRequest(ChangeStatusDTO changeStatusDTO)
         {
             try
             {
-                var userId = _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id;
-                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //if (string.IsNullOrEmpty(userId))
-                //{
-                //    _response.StatusCode = HttpStatusCode.BadRequest;
-                //    _response.IsSuccess = false;
-                //    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                //    return BadRequest(_response);
-                //}
-
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmiterId);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
                     return BadRequest(_response);
                 }
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
@@ -208,7 +208,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -295,7 +295,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -308,13 +308,6 @@ namespace backend_api.Controllers.v1
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
-                }
                 if (id == 0) return BadRequest();
                 var model = await _certificateRepository.GetAsync(x => x.Id == id && x.SubmiterId == userId, false, null);
 
@@ -322,7 +315,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
                     return BadRequest(_response);
                 }
                 model.IsDeleted = true;
@@ -335,9 +328,10 @@ namespace backend_api.Controllers.v1
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
-            return _response;
         }
 
     }

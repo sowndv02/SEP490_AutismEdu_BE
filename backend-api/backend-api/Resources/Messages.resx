@@ -120,11 +120,16 @@
   <data name="BAD_REQUEST_MESSAGE" xml:space="preserve">
     <value>'{0}' không hợp lệ</value>
   </data>
-  <data name="DUPLICATED_MESSAGE" xml:space="preserve">
+  <data name="DATA_DUPLICATED_MESSAGE" xml:space="preserve">
     <value>'{0}' đã tồn tại</value>
-    <comment>data đã tồn tại</comment>
   </data>
   <data name="INTERAL_ERROR_MESSAGE" xml:space="preserve">
-    <value>Lỗi hệ thống</value>
+    <value>Lỗi hệ thống. Vui lòng thử lại sau!</value>
+  </data>
+  <data name="TIMESLOT_DUPLICATED_MESSAGE" xml:space="preserve">
+    <value>{0} bị trùng với khung giờ đã tồn tại {1}-{2}</value>
+  </data>
+  <data name="NOT_FOUND_MESSAGE" xml:space="preserve">
+    <value>{0} không tìm thấy.</value>
   </data>
 </root>
