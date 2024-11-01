@@ -1,13 +1,15 @@
 ﻿using AutoMapper;
 using backend_api.Models;
-using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
+using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using backend_api.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
-using backend_api.Models.DTOs.CreateDTOs;
 
 namespace backend_api.Controllers.v1
 {
@@ -18,41 +20,22 @@ namespace backend_api.Controllers.v1
     {
         private readonly IReviewRepository _reviewRepository;
         private readonly IUserRepository _userRepository;
-        private readonly ITutorRepository _tutorRepository;
-        private readonly ITutorRegistrationRequestRepository _tutorRegistrationRequestRepository;
-        private readonly ICurriculumRepository _curriculumRepository;
-        private readonly IWorkExperienceRepository _workExperienceRepository;
-        private readonly ICertificateMediaRepository _certificateMediaRepository;
-        private readonly ICertificateRepository _certificateRepository;
-        private readonly IRoleRepository _roleRepository;
-        private readonly IBlobStorageRepository _blobStorageRepository;
-        private readonly ILogger<TutorController> _logger;
         private readonly IMapper _mapper;
-        private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
+        private readonly IResourceService _resourceService;
 
-        public ReviewController(IUserRepository userRepository, ITutorRepository tutorRepository,
-            ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
-            FormatString formatString, IWorkExperienceRepository workExperienceRepository,
-            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
-            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, IReviewRepository reviewRepository)
+        public ReviewController(IMapper mapper, IConfiguration configuration,
+            IReviewRepository reviewRepository, IUserRepository userRepository
+            , IResourceService resourceService
+)
         {
-            _formatString = formatString;
-            _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
             _mapper = mapper;
-            _blobStorageRepository = blobStorageRepository;
-            _logger = logger;
-            _userRepository = userRepository;
-            _tutorRepository = tutorRepository;
-            _workExperienceRepository = workExperienceRepository;
-            _certificateRepository = certificateRepository;
-            _certificateMediaRepository = certificateMediaRepository;
-            _tutorRegistrationRequestRepository = tutorRegistrationRequestRepository;
             _reviewRepository = reviewRepository;
+            _userRepository = userRepository;
+            _resourceService = resourceService;
         }
 
         [HttpGet("GetTutorReviewStats/{tutorId}")]
@@ -64,7 +47,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
 
@@ -142,7 +125,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -162,7 +145,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NO_REVIEWS_FOUND };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.REVIEW) };
                     return NotFound(_response);
                 }
 
@@ -184,24 +167,25 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
 
         [HttpPost]
+        [Authorize(Roles = SD.PARENT_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (reviewCreateDTO == null || string.IsNullOrEmpty(userId))
+                if (reviewCreateDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
                     return BadRequest(_response);
                 }
 
@@ -210,7 +194,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.REVIEW_ALREADY_EXISTS };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.REVIEW) };
                     return BadRequest(_response);
                 }
 
@@ -244,24 +228,25 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
 
         [HttpPut("{reviewId}")]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> EditReview(int reviewId, ReviewUpdateDTO reviewUpdateDTO)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (reviewUpdateDTO == null || reviewId == 0 || string.IsNullOrEmpty(userId))
+                if (reviewUpdateDTO == null || reviewId == 0)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
                     return BadRequest(_response);
                 }
 
@@ -271,7 +256,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_ACTION_REVIEW };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_ACTION_REVIEW) };
                     return NotFound(_response);
                 }
 
@@ -290,26 +275,19 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
 
         [HttpDelete("{reviewId}")]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> DeleteReview(int reviewId)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
-                }
 
                 var review = await _reviewRepository.GetAsync(x => x.Id == reviewId && x.ParentId == userId);
 
@@ -317,7 +295,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_ACTION_REVIEW };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
                     return NotFound(_response);
                 }
 
@@ -332,7 +310,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

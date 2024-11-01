@@ -55,7 +55,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.AVAILABLE_TIME_SLOT) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TIME_SLOT) };
                     return BadRequest(_response);
                 }
 
@@ -68,7 +68,7 @@ namespace backend_api.Controllers.v1
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.AVAILABLE_TIME_SLOT, slot.From.ToString(@"hh\:mm"), slot.To.ToString(@"hh\:mm"))};
+                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, slot.From.ToString(@"hh\:mm"), slot.To.ToString(@"hh\:mm"))};
                         return BadRequest(_response);
                     }
                 }

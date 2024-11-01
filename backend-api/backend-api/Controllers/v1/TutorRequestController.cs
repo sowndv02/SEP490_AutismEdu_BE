@@ -5,6 +5,7 @@ using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 
@@ -23,31 +24,25 @@ namespace backend_api.Controllers.v1
     {
         private readonly IUserRepository _userRepository;
         private readonly ITutorRequestRepository _tutorRequestRepository;
-        private readonly IRoleRepository _roleRepository;
-        private readonly IBlobStorageRepository _blobStorageRepository;
-        private readonly ILogger<WorkExperienceController> _logger;
         private readonly IMapper _mapper;
         private string queueName = string.Empty;
         private readonly IRabbitMQMessageSender _messageBus;
-        private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
+        private readonly IResourceService _resourceService;
+
         public TutorRequestController(IUserRepository userRepository, ITutorRequestRepository tutorRequestRepository,
-            ILogger<WorkExperienceController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository, FormatString formatString,
-            IRabbitMQMessageSender messageBus)
+            IMapper mapper, IConfiguration configuration,
+            IRabbitMQMessageSender messageBus, IResourceService resourceService)
         {
             _messageBus = messageBus;
-            _formatString = formatString;
-            _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
             _response = new APIResponse();
             _mapper = mapper;
-            _blobStorageRepository = blobStorageRepository;
-            _logger = logger;
             _userRepository = userRepository;
             _tutorRequestRepository = tutorRequestRepository;
+            _resourceService = resourceService;
         }
 
 
@@ -111,7 +106,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -176,7 +171,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -188,11 +183,11 @@ namespace backend_api.Controllers.v1
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (tutorRequestCreateDTO == null || string.IsNullOrEmpty(userId))
+                if (tutorRequestCreateDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST) };
                     return BadRequest(_response);
                 }
                 TutorRequest model = _mapper.Map<TutorRequest>(tutorRequestCreateDTO);
@@ -240,7 +235,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -347,7 +342,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

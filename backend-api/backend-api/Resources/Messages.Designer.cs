@@ -61,11 +61,29 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này.
+        /// </summary>
+        public static string BAD_ACTION_REVIEW {
+            get {
+                return ResourceManager.GetString("BAD_ACTION_REVIEW", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; không hợp lệ.
         /// </summary>
         public static string BAD_REQUEST_MESSAGE {
             get {
                 return ResourceManager.GetString("BAD_REQUEST_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Không thể thêm {0} cho người dùng với vai trò {1}..
+        /// </summary>
+        public static string CANNOT_ADD_ROLE {
+            get {
+                return ResourceManager.GetString("CANNOT_ADD_ROLE", resourceCulture);
             }
         }
         
@@ -88,11 +106,38 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} không tìm thấy..
+        ///   Looks up a localized string similar to Không nhập đủ dữ liệu {0} và {1}.
+        /// </summary>
+        public static string MISSING_2_INFORMATIONS {
+            get {
+                return ResourceManager.GetString("MISSING_2_INFORMATIONS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Không nhập đủ dữ liệu {0}.
+        /// </summary>
+        public static string MISSING_INFORMATION {
+            get {
+                return ResourceManager.GetString("MISSING_INFORMATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Không tìm thấy &apos;{0}&apos;..
         /// </summary>
         public static string NOT_FOUND_MESSAGE {
             get {
                 return ResourceManager.GetString("NOT_FOUND_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quá hạn xét duyệt hồ sơ học sinh.
+        /// </summary>
+        public static string STUDENT_PROFILE_EXPIRED {
+            get {
+                return ResourceManager.GetString("STUDENT_PROFILE_EXPIRED", resourceCulture);
             }
         }
         
@@ -102,6 +147,33 @@ namespace backend_api.Resources {
         public static string TIMESLOT_DUPLICATED_MESSAGE {
             get {
                 return ResourceManager.GetString("TIMESLOT_DUPLICATED_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Đã là gia sư hoặc đơn đăng ký làm gia sư đang chờ xử lý.
+        /// </summary>
+        public static string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR {
+            get {
+                return ResourceManager.GetString("TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Không thể cập nhật trạng thái thành đang xử lý!.
+        /// </summary>
+        public static string TUTOR_UPDATE_STATUS_IS_PENDING {
+            get {
+                return ResourceManager.GetString("TUTOR_UPDATE_STATUS_IS_PENDING", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} không có vai trò nào!.
+        /// </summary>
+        public static string USER_HAVE_NO_ROLE {
+            get {
+                return ResourceManager.GetString("USER_HAVE_NO_ROLE", resourceCulture);
             }
         }
     }
