@@ -3,6 +3,7 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,43 +23,27 @@ namespace backend_api.Controllers.v1
         private readonly IUserRepository _userRepository;
         private readonly ITutorRepository _tutorRepository;
         private readonly ITutorRequestRepository _tutorRequestRepository;
-        private readonly ITutorRegistrationRequestRepository _tutorRegistrationRequestRepository;
         private readonly ITutorProfileUpdateRequestRepository _tutorProfileUpdateRequestRepository;
-        private readonly ICurriculumRepository _curriculumRepository;
-        private readonly IWorkExperienceRepository _workExperienceRepository;
-        private readonly ICertificateMediaRepository _certificateMediaRepository;
-        private readonly ICertificateRepository _certificateRepository;
-        private readonly IRoleRepository _roleRepository;
-        private readonly IBlobStorageRepository _blobStorageRepository;
-        private readonly ILogger<TutorController> _logger;
         private readonly IMapper _mapper;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
+        private readonly IResourceService _resourceService;
+
         public TutorController(IUserRepository userRepository, ITutorRepository tutorRepository,
-            ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
-            FormatString formatString, IWorkExperienceRepository workExperienceRepository,
-            ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
-            ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository,
-            ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository, ITutorRequestRepository tutorRequestRepository)
+            IMapper mapper, IConfiguration configuration,
+            FormatString formatString, ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository, 
+            ITutorRequestRepository tutorRequestRepository, IResourceService resourceService)
         {
             _tutorProfileUpdateRequestRepository = tutorProfileUpdateRequestRepository;
-            _curriculumRepository = curriculumRepository;
             _formatString = formatString;
-            _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
             _mapper = mapper;
-            _blobStorageRepository = blobStorageRepository;
-            _logger = logger;
             _userRepository = userRepository;
             _tutorRepository = tutorRepository;
-            _workExperienceRepository = workExperienceRepository;
-            _certificateRepository = certificateRepository;
-            _certificateMediaRepository = certificateMediaRepository;
-            _tutorRegistrationRequestRepository = tutorRegistrationRequestRepository;
             _tutorRequestRepository = tutorRequestRepository;
+            _resourceService = resourceService;
         }
 
         [HttpGet("updateRequest")]
@@ -116,7 +101,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -157,7 +142,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -184,7 +169,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
 
@@ -195,7 +180,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR) };
                     return NotFound(_response);
                 }
                 var result = _mapper.Map<TutorDTO>(model);
@@ -209,7 +194,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -217,18 +202,12 @@ namespace backend_api.Controllers.v1
 
         [HttpPut("{id}")]
         //[Authorize(Policy = "UpdateTutorPolicy")]
+        [Authorize]
         public async Task<IActionResult> UpdateAsync(TutorProfileUpdateRequestCreateDTO updateDTO)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return BadRequest(_response);
-                }
 
                 TutorProfileUpdateRequest model = _mapper.Map<TutorProfileUpdateRequest>(updateDTO);
                 model.TutorId = userId;
@@ -242,7 +221,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -294,7 +273,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

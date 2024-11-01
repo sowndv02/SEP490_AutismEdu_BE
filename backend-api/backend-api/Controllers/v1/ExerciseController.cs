@@ -3,6 +3,7 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,18 +19,20 @@ namespace backend_api.Controllers.v1
     public class ExerciseController : ControllerBase
     {
         private readonly IExerciseRepository _exerciseRepository;
-        private readonly IExerciseTypeRepository _exerciseTypeRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
+        private readonly IResourceService _resourceService;
 
-        public ExerciseController(IExerciseRepository exerciseRepository, IExerciseTypeRepository exerciseTypeRepository, IConfiguration configuration, IMapper mapper)
+
+        public ExerciseController(IExerciseRepository exerciseRepository, IConfiguration configuration, IMapper mapper
+            , IResourceService resourceService)
         {
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
             _mapper = mapper;
             _exerciseRepository = exerciseRepository;
-            _exerciseTypeRepository = exerciseTypeRepository;
+            _resourceService = resourceService;
         }
 
         [HttpGet("{id}")]
@@ -83,7 +86,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -96,11 +99,11 @@ namespace backend_api.Controllers.v1
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (exerciseCreateDTO == null || string.IsNullOrEmpty(userId))
+                if (exerciseCreateDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE) };
                     return BadRequest(_response);
                 }
 
@@ -123,7 +126,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -173,7 +176,7 @@ namespace backend_api.Controllers.v1
         //    {
         //        _response.IsSuccess = false;
         //        _response.StatusCode = HttpStatusCode.InternalServerError;
-        //        _response.ErrorMessages = new List<string> { ex.Message };
+        //        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
         //        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
         //    }
         //}
@@ -190,7 +193,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.EXERCISE) };
                     return NotFound(_response);
                 }
 
@@ -205,7 +208,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

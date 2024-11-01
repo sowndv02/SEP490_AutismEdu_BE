@@ -130,6 +130,30 @@
     <value>{0} bị trùng với khung giờ đã tồn tại {1}-{2}</value>
   </data>
   <data name="NOT_FOUND_MESSAGE" xml:space="preserve">
-    <value>{0} không tìm thấy.</value>
+    <value>Không tìm thấy '{0}'.</value>
+  </data>
+  <data name="BAD_ACTION_REVIEW" xml:space="preserve">
+    <value>Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này</value>
+  </data>
+  <data name="MISSING_2_INFORMATIONS" xml:space="preserve">
+    <value>Không nhập đủ dữ liệu {0} và {1}</value>
+  </data>
+  <data name="MISSING_INFORMATION" xml:space="preserve">
+    <value>Không nhập đủ dữ liệu {0}</value>
+  </data>
+  <data name="STUDENT_PROFILE_EXPIRED" xml:space="preserve">
+    <value>Quá hạn xét duyệt hồ sơ học sinh</value>
+  </data>
+  <data name="CANNOT_ADD_ROLE" xml:space="preserve">
+    <value>Không thể thêm {0} cho người dùng với vai trò {1}.</value>
+  </data>
+  <data name="TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR" xml:space="preserve">
+    <value>Đã là gia sư hoặc đơn đăng ký làm gia sư đang chờ xử lý</value>
+  </data>
+  <data name="TUTOR_UPDATE_STATUS_IS_PENDING" xml:space="preserve">
+    <value>Không thể cập nhật trạng thái thành đang xử lý!</value>
+  </data>
+  <data name="USER_HAVE_NO_ROLE" xml:space="preserve">
+    <value>{0} không có vai trò nào!</value>
   </data>
 </root>

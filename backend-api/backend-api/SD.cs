@@ -100,7 +100,7 @@
 
         // Const parameter 
         public const string AVAILABLE_TIME = "Thời gian rảnh";
-        public const string AVAILABLE_TIME_SLOT = "Khung giờ";
+        public const string TIME_SLOT = "Khung giờ";
         public const string ASSESSMENT_QUESTION = "Câu hỏi đánh giá";
         public const string BLOG = "Blog";
         public const string CERTIFICATE = "Chứng chỉ";
@@ -109,15 +109,31 @@
         public const string ID = "Id";
         public const string AGE = "Độ tuổi";
         public const string CHILD_INFO = "Thông tin trẻ";
-        public const string SCHEDULE = "Lịch học";
-
+        public const string CHILD_NAME = "Tên trẻ";
+        public const string EXERCISE = "Bài tập";
+        public const string EXERCISE_TYPE = "Loại bài tập";
+        public const string PROGRESS_REPORT = "Sổ liên lạc";
+        public const string REVIEW = "Review";
+        public const string STUDENT_PROFILE = "Hồ sơ học sinh";
+        public const string EMAIL = "Email";
+        public const string PARENT = "Phụ huynh";
+        public const string CHILD = "Trẻ";
+        public const string STATUS_CHANGE = "Thay đổi trạng thái";
+        public const string SYLLABUS = "Giáo trình";
+        public const string TUTOR = "Gia sư";
+        public const string TUTOR_REGISTRATION_REQUEST = "Đơn đăng ký làm gia sư";
+        public const string TUTOR_REQUEST = "Đơn đăng ký học gia sư";
+        public const string USER = "Người dùng";
+        public const string WORK_EXPERIENCE = "Kinh nghiệm làm việc";
+		public const string SCHEDULE = "Lịch học";
 
 
 
 
         // Const message 
-        public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "You are already a tutor or have a previous registration requirement";
-        public const string TUTOR_UPDATE_STATUS_IS_PENDING = "Không thể cập nhật trạng thái thành đang xử lý!";
+        //public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "You are already a tutor or have a previous registration requirement";
+        public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR";
+        public const string TUTOR_UPDATE_STATUS_IS_PENDING = "TUTOR_UPDATE_STATUS_IS_PENDING";
         public const string BAD_REQUEST_MESSAGE = "BAD_REQUEST_MESSAGE";
         public const string WEEKDAY_REQUIRED = "Chưa nhập ngày trong tuần";
         public const string TIMESLOT_REQUIRED = "Chưa nhập khung giờ";
@@ -125,17 +141,20 @@
         public const string NOT_FOUND_MESSAGE = "NOT_FOUND_MESSAGE";
         public const string TIMESLOT_DUPLICATED_MESSAGE = "TIMESLOT_DUPLICATED_MESSAGE";
         public const string INTERNAL_SERVER_ERROR_MESSAGE = "INTERNAL_SERVER_ERROR_MESSAGE";
-        public const string CHILD_NAME_DUPLICATE = "Đã tồn tại trẻ với tên này";
-        public const string CHILD_ALREADY_STUDING_THIS_TUTOR = "Đã tồn tại hồ sơ học sinh của trẻ này";
-        public const string NO_REVIEWS_FOUND = "Không có đánh giá";
+        //public const string CHILD_NAME_DUPLICATE = "Đã tồn tại trẻ với tên này";
+        //public const string CHILD_ALREADY_STUDING_THIS_TUTOR = "Đã tồn tại hồ sơ học sinh của trẻ này";
+        //public const string NO_REVIEWS_FOUND = "Không có đánh giá";
         public const string REVIEW_ALREADY_EXISTS = "Đã đánh giá gia sư này";
         public const string REVIEW_DELETE_SUCCESS = "Xoá đánh giá thành công!";
-        public const string BAD_ACTION_REVIEW = "Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này";
-        public const string AGE_FROM_AGE_END_EXISTED = "Độ tuổi đã tồn tại";
-        public const string DUPLICATED_EMAIL_MESSAGE = "Đã tồn tại tài khoản với email này";
-        public const string CHILD_NOT_FOUND = "Không tìm thấy dữ liệu trẻ";
-        public const string MISSING_PARENT_CHILD_INFORMATION = "Không nhập đủ dữ liệu phụ huynh và trẻ";
-        public const string STUDENT_PROFILE_EXPIRED = "Quá hạn xét duyệt hồ sơ học sinh";
+        public const string BAD_ACTION_REVIEW = "BAD_ACTION_REVIEW";
+        //public const string AGE_FROM_AGE_END_EXISTED = "Độ tuổi đã tồn tại";
+        //public const string DUPLICATED_EMAIL_MESSAGE = "Đã tồn tại tài khoản với email này";
+        //public const string CHILD_NOT_FOUND = "Không tìm thấy dữ liệu trẻ";
+        public const string MISSING_INFORMATION = "MISSING_INFORMATION";
+        public const string MISSING_2_INFORMATIONS = "MISSING_2_INFORMATIONS";
+        public const string STUDENT_PROFILE_EXPIRED = "STUDENT_PROFILE_EXPIRED";
+        public const string CANNOT_ADD_ROLE = "CANNOT_ADD_ROLE";
+        public const string USER_HAVE_NO_ROLE = "USER_HAVE_NO_ROLE";
 
         // const exercise type
         public const string DEFAULT_EXERCISE_TYPE_1 = "Tập phát âm thuở ban đầu - nhưng âm thanh của trẻ nhỏ";
