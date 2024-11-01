@@ -1,5 +1,4 @@
 ﻿using static backend_api.SD;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_api.Models.DTOs
 {
@@ -11,6 +10,7 @@ namespace backend_api.Models.DTOs
         public TimeSpan End { get; set; }
         public AttendanceStatus AttendanceStatus { get; set; }
         public PassingStatus PassingStatus { get; set; }
+        public string Note { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         public StudentProfileDTO StudentProfile { get; set; }

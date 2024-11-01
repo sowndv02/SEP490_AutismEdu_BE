@@ -3,11 +3,9 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
-using backend_api.Resources;
 using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using System.Net;
 
 namespace backend_api.Controllers.v1
@@ -24,7 +22,7 @@ namespace backend_api.Controllers.v1
         private readonly IResourceService _resourceService;
 
         public AssessmentController(IAssessmentQuestionRepository assessmentQuestionRepository,
-            IMapper mapper, ILogger<AssessmentController> logger, 
+            IMapper mapper, ILogger<AssessmentController> logger,
             IResourceService resourceService)
         {
             _resourceService = resourceService;
@@ -36,7 +34,7 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPost]
-        //[Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] AssessmentQuestionCreateDTO assessmentQuestionCreateDTO)
         {
             try
