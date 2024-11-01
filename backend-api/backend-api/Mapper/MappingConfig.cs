@@ -207,7 +207,9 @@ namespace backend_api.Mapper
             CreateMap<AssessmentResult, AssessmentResultCreateDTO>().ReverseMap();
             CreateMap<AssessmentResult, AssessmentResultDTO>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.QuestionId, opt => opt.MapFrom(src => src.QuestionId))
                 .ForMember(dest => dest.Question, opt => opt.MapFrom(src => src.Question.Question))
+                .ForMember(dest => dest.OptionId, opt => opt.MapFrom(src => src.OptionId))
                 .ForMember(dest => dest.SelectedOptionText, opt => opt.MapFrom(src => src.Option.OptionText))
                 .ForMember(dest => dest.Point, opt => opt.MapFrom(src => src.Option.Point))
                 .ReverseMap();

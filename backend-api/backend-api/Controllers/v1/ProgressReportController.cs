@@ -11,6 +11,8 @@ using System.Security.Claims;
 using System.Linq.Expressions;
 using backend_api.Utils;
 using MailKit.Search;
+using backend_api.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend_api.Controllers.v1
 {
@@ -25,10 +27,11 @@ namespace backend_api.Controllers.v1
         private readonly IProgressReportRepository _progressReportRepository;
         private readonly IAssessmentResultRepository _assessmentResultRepository;
         private readonly IInitialAssessmentResultRepository _initialAssessmentResultRepository;
+        private readonly IResourceService _resourceService;
 
         public ProgressReportController(IMapper mapper, IConfiguration configuration,
             IProgressReportRepository progressReportRepository, IAssessmentResultRepository assessmentResultRepository,
-            IInitialAssessmentResultRepository initialAssessmentResultRepository)
+            IInitialAssessmentResultRepository initialAssessmentResultRepository, IResourceService resourceService)
         {
             _response = new APIResponse();
             _mapper = mapper;
@@ -36,9 +39,11 @@ namespace backend_api.Controllers.v1
             _progressReportRepository = progressReportRepository;
             _assessmentResultRepository = assessmentResultRepository;
             _initialAssessmentResultRepository = initialAssessmentResultRepository;
+            _resourceService = resourceService;
         }
 
         [HttpPost]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateAsync(ProgressReportCreateDTO createDTO)
         {
             try
@@ -49,16 +54,8 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PROGRESS_REPORT) };
                     return BadRequest(_response);
-                }
-
-                if (string.IsNullOrEmpty(tutorId))
-                {
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                    return Unauthorized(_response);
                 }
 
                 var model = _mapper.Map<ProgressReport>(createDTO);
@@ -83,12 +80,13 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1, bool getInitialResult = false)
         {
             try
@@ -164,12 +162,13 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
         [HttpGet("{Id}")]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> GetProgressReportById(int Id)
         {
             try
@@ -180,7 +179,7 @@ namespace backend_api.Controllers.v1
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.PROGRESS_REPORT) };
                     return BadRequest(_response);
                 }
 
@@ -200,7 +199,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
