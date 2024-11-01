@@ -18,8 +18,8 @@ namespace backend_api.Models
         public AttendanceStatus AttendanceStatus { get; set; }
         public PassingStatus PassingStatus { get; set; }
         public string Note { get; set; }
-        public int ExerciseTypeId { get; set; }
-        public int ExerciseId { get; set; }
+        public int? ExerciseTypeId { get; set; }
+        public int? ExerciseId { get; set; }
         [ForeignKey(nameof(ExerciseId))]
         public Exercise Exercise { get; set; }
         [ForeignKey(nameof(ExerciseTypeId))]

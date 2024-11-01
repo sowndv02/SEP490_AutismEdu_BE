@@ -12,7 +12,7 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241101020016_UpdateSchedule_v2")]
+    [Migration("20241101085620_UpdateSchedule_v2")]
     partial class UpdateSchedule_v2
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -820,10 +820,10 @@ namespace backend_api.Migrations
                     b.Property<TimeSpan>("End")
                         .HasColumnType("time");
 
-                    b.Property<int>("ExerciseId")
+                    b.Property<int?>("ExerciseId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ExerciseTypeId")
+                    b.Property<int?>("ExerciseTypeId")
                         .HasColumnType("int");
 
                     b.Property<string>("Note")
@@ -1812,14 +1812,12 @@ namespace backend_api.Migrations
                     b.HasOne("backend_api.Models.Exercise", "Exercise")
                         .WithMany()
                         .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("backend_api.Models.ExerciseType", "ExerciseType")
                         .WithMany()
                         .HasForeignKey("ExerciseTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("backend_api.Models.ScheduleTimeSlot", "ScheduleTimeSlot")
                         .WithMany()

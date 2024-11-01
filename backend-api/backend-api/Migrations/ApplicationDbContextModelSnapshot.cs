@@ -818,10 +818,10 @@ namespace backend_api.Migrations
                     b.Property<TimeSpan>("End")
                         .HasColumnType("time");
 
-                    b.Property<int>("ExerciseId")
+                    b.Property<int?>("ExerciseId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ExerciseTypeId")
+                    b.Property<int?>("ExerciseTypeId")
                         .HasColumnType("int");
 
                     b.Property<string>("Note")
@@ -1810,14 +1810,12 @@ namespace backend_api.Migrations
                     b.HasOne("backend_api.Models.Exercise", "Exercise")
                         .WithMany()
                         .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("backend_api.Models.ExerciseType", "ExerciseType")
                         .WithMany()
                         .HasForeignKey("ExerciseTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("backend_api.Models.ScheduleTimeSlot", "ScheduleTimeSlot")
                         .WithMany()
