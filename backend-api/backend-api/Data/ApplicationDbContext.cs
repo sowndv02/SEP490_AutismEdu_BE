@@ -61,13 +61,15 @@ namespace backend_api.Data
                 .HasOne(se => se.ExerciseType)
                 .WithMany()
                 .HasForeignKey(se => se.ExerciseTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
 
             builder.Entity<Schedule>()
                 .HasOne(se => se.Exercise)
                 .WithMany()
                 .HasForeignKey(se => se.ExerciseId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
 
             builder.Entity<TutorRequest>()
                 .HasOne(tr => tr.Tutor)
