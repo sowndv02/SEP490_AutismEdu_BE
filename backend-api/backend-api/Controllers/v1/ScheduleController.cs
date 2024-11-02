@@ -76,7 +76,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
-                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, null);
+                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, "StudentProfile,ExerciseType,Exercise", null);
                 if (model == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -116,7 +116,7 @@ namespace backend_api.Controllers.v1
                                                 u.TutorId == userId && u.StudentProfileId == studentProfileId &&
                                                 u.AttendanceStatus == SD.AttendanceStatus.ATTENDED &&
                                                 u.PassingStatus == SD.PassingStatus.NOT_PASSED,
-                                                null, null,  x => x.ScheduleDate.Date, true);
+                                                null, null, x => x.ScheduleDate.Date, true);
 
                 var (countPassed, listPassed) = await _scheduleRepository.GetAllNotPagingAsync(u =>
                                                 u.TutorId == userId && u.StudentProfileId == studentProfileId &&
