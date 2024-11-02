@@ -213,7 +213,7 @@ namespace backend_api.Controllers.v1
                     Id = createdReview.Id,
                     RateScore = createdReview.RateScore,
                     Description = createdReview.Description,
-                    Parent = createdReview.Parent,
+                    Parent = _mapper.Map<ApplicationUserDTO>(createdReview.Parent),
                     TutorId = createdReview.TutorId,
                     CreatedDate = createdReview.CreatedDate,
                     UpdatedDate = createdReview.UpdatedDate
