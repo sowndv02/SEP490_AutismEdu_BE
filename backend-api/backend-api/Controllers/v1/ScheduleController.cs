@@ -48,6 +48,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
+                model.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId, true, "Child");
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 _response.Result = _mapper.Map<ScheduleDTO>(model);
@@ -76,7 +77,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
-                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, "StudentProfile,ExerciseType,Exercise", null);
+                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, "Exercise,ExerciseType");
                 if (model == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -84,6 +85,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
+                model.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId, true, "Child");
                 model.ExerciseId = updateDTO.ExerciseId;
                 model.ExerciseTypeId = updateDTO.ExerciseTypeId;
                 model.SyllabusId = updateDTO.SyllabusId;
@@ -154,7 +156,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
-                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, null);
+                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, "Exercise,ExerciseType");
                 if (model == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -162,6 +164,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
+                model.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId, true, "Child");
                 model.AttendanceStatus = updateDTO.AttendanceStatus;
                 model.Note = updateDTO.Note;
                 model.PassingStatus = updateDTO.PassingStatus;
