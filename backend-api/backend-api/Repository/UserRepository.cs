@@ -2,6 +2,7 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -22,9 +23,10 @@ namespace backend_api.Repository
         private readonly IConfiguration _configuration;
         private readonly IClaimRepository _claimRepository;
         private string secretKey = string.Empty;
+        private readonly IResourceService _resourceService;
 
         public UserRepository(ApplicationDbContext context, IConfiguration configuration, UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager, IClaimRepository claimRepository)
+            RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager, IClaimRepository claimRepository, IResourceService resourceService)
         {
             _claimRepository = claimRepository;
             _signInManager = signInManager;
@@ -33,6 +35,7 @@ namespace backend_api.Repository
             _context = context;
             _configuration = configuration;
             secretKey = configuration.GetValue<string>("ApiSettings:JWT:Secret");
+            _resourceService = resourceService;
         }
 
         public async Task RevokeRefreshTokenGoogleAsync(string userId)
@@ -178,7 +181,7 @@ namespace backend_api.Repository
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
-                    throw new ArgumentException("User not found");
+                    throw new ArgumentException(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
                 }
 
                 List<ApplicationClaim> claims = _context.ApplicationClaims.Where(c => claimIds.Contains(c.Id)).ToList();
@@ -222,7 +225,7 @@ namespace backend_api.Repository
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
-                    throw new ArgumentException("User not found");
+                    throw new ArgumentException(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
                 }
                 var userClaims = _context.ApplicationClaims.Where(c => userClaimIds.Contains(c.Id)).ToList();
                 var result = await _userManager.RemoveClaimsAsync(user, userClaims.Select(x => new Claim(x.ClaimType, x.ClaimValue)));
@@ -271,13 +274,13 @@ namespace backend_api.Repository
             // Check if the user's email is confirmed
             if (!user.EmailConfirmed)
             {
-                throw new MissingMemberException("Email is not confirmed.");
+                throw new MissingMemberException(_resourceService.GetString(SD.EMAIL_NOT_CONFIRM));
             }
 
             // Check if the user is locked out
             if (user.LockoutEnd != null && user.LockoutEnd.Value > DateTime.Now)
             {
-                throw new Exception("User account is locked out.");
+                throw new Exception(_resourceService.GetString(SD.USER_IS_LOCKED_OUT));
             }
 
             bool isValid = false;
@@ -301,7 +304,7 @@ namespace backend_api.Repository
                     bool isValidRole = listRoles.Contains(loginRequestDTO.AuthenticationRole);
                     if (!isValidRole)
                     {
-                        throw new Exception($"Phải đăng nhập ở phía {loginRequestDTO.AuthenticationRole}");
+                        throw new Exception(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, loginRequestDTO.AuthenticationRole));
                     }
                 }
                 else
@@ -309,7 +312,7 @@ namespace backend_api.Repository
                     bool isValidRole = listRoles.Contains(SD.PARENT_ROLE);
                     if (!isValidRole)
                     {
-                        throw new Exception($"Phải đăng nhập ở phía {SD.PARENT_ROLE}");
+                        throw new Exception(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, SD.PARENT_ROLE));
                     }
                 }
             }
@@ -651,24 +654,24 @@ namespace backend_api.Repository
 
             if (user == null)
             {
-                throw new Exception("User not found.");
+                throw new Exception(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
             }
-            if(user.UserType == SD.GOOGLE_USER)
+            if (user.UserType == SD.GOOGLE_USER)
             {
-                throw new Exception("Người dùng Google không thể đối mật khẩu");
+                throw new Exception(_resourceService.GetString(SD.GG_CANNOT_CHANGE_PASSWORD));
             }
             bool isValid = await _userManager.CheckPasswordAsync(user, updatePasswordRequestDTO.OldPassword);
 
             if (!isValid)
             {
-                throw new Exception("Invalid current password.");
+                throw new Exception(_resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PASSWORD));
             }
 
             var result = await _userManager.ChangePasswordAsync(user, updatePasswordRequestDTO.OldPassword, updatePasswordRequestDTO.NewPassword);
 
             if (!result.Succeeded)
             {
-                throw new Exception("Password change failed.");
+                throw new Exception(_resourceService.GetString(SD.CHANGE_PASS_FAIL));
             }
             var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
 
@@ -734,7 +737,7 @@ namespace backend_api.Repository
                 }
                 if (resultAddRole.Succeeded)
                 {
-                    Console.WriteLine("Add user to role user");
+                    Console.WriteLine(_resourceService.GetString(SD.ADD_ROLE_USER_TO_USER));
                 }
                 if (roleIds != null && roleIds.Count != 0)
                 {
@@ -922,7 +925,7 @@ namespace backend_api.Repository
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
-                    throw new ArgumentException("User not found");
+                    throw new ArgumentException(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
                 }
                 var roles = new List<IdentityRole>();
                 var userRoles = _context.UserRoles.Where(c => userRoleIds.Contains(c.RoleId)).ToList();
@@ -947,7 +950,7 @@ namespace backend_api.Repository
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
-                    throw new ArgumentException("User not found");
+                    throw new ArgumentException(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
                 }
 
                 List<IdentityRole> roles = _roleManager.Roles.Where(c => roleIds.Contains(c.Id)).ToList();
@@ -986,7 +989,7 @@ namespace backend_api.Repository
                 {
                     List<IdentityRole> roles = new List<IdentityRole>();
                     var user = await _userManager.FindByIdAsync(userId);
-                    if (user == null) throw new Exception("user not found");
+                    if (user == null) throw new Exception(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
                     var roleNames = await _userManager.GetRolesAsync(user);
                     foreach (var name in roleNames)
                     {
@@ -1011,7 +1014,7 @@ namespace backend_api.Repository
                 {
                     List<IdentityRole> roles = new List<IdentityRole>();
                     var user = await _userManager.FindByIdAsync(userId);
-                    if (user == null) throw new Exception("user not found");
+                    if (user == null) throw new Exception(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
                     var roleNames = await _userManager.GetRolesAsync(user);
                     return roles.FirstOrDefault(x => x.Name == roleName) != null;
                 }
