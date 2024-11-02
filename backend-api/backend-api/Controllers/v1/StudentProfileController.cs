@@ -260,9 +260,9 @@ namespace backend_api.Controllers.v1
                 foreach (var timeslot in model.ScheduleTimeSlots)
                 {
                     DateTime today = DateTime.Now;
-                    
 
-                    if ((int) today.DayOfWeek >= timeslot.Weekday)
+
+                    if ((int)today.DayOfWeek > timeslot.Weekday && timeslot.Weekday != 0)
                     {
                         continue;
                     }
@@ -312,7 +312,8 @@ namespace backend_api.Controllers.v1
                         UpdatedDate = null,
                         Start = timeslot.From,
                         End = timeslot.To,
-                        ScheduleTimeSlotId = timeslot.Id
+                        ScheduleTimeSlotId = timeslot.Id,
+                        Note = ""
                     };
                     await _scheduleRepository.CreateAsync(schedule);
                 }
