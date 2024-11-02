@@ -83,7 +83,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? orderBy = SD.AGE_FROM, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? orderBy = SD.AGE_FROM, string? sort = SD.ORDER_DESC)
         {
             try
             {
@@ -119,7 +119,7 @@ namespace backend_api.Controllers.v1
                             break;
                     }
                 }
-                var (count, result) = await _syllabusRepository.GetAllAsync(filter, "SyllabusExercises", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                var (count, result) = await _syllabusRepository.GetAllNotPagingAsync(filter, includeProperties: "SyllabusExercises", excludeProperties: null, orderByQuery, isDesc);
                 list = result;
                 totalCount = count;
                 foreach (var item in list)
@@ -141,11 +141,10 @@ namespace backend_api.Controllers.v1
                     }).ToList();
                 }
 
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 var reutnResult = _mapper.Map<List<SyllabusDTO>>(list);
                 _response.Result = reutnResult;
                 _response.StatusCode = HttpStatusCode.OK;
-                _response.Pagination = pagination;
+                _response.Pagination = null;
                 return Ok(_response);
             }
             catch (Exception ex)

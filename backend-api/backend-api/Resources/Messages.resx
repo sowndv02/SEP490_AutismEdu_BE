@@ -156,4 +156,7 @@
   <data name="USER_HAVE_NO_ROLE" xml:space="preserve">
     <value>{0} không có vai trò nào!</value>
   </data>
+  <data name="DUPPLICATED_ASSIGN_EXERCISE" xml:space="preserve">
+    <value>Hiện tại buổi học tiếp theo đang được gán bài tập giống buổi học này. Bạn hãy cân nhắc gán lại bài tập khác.</value>
+  </data>
 </root>
