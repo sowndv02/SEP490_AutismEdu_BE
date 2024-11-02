@@ -17,6 +17,7 @@ namespace backend_api.Controllers.v1
     public class AssessmentController : ControllerBase
     {
         private readonly IAssessmentQuestionRepository _assessmentQuestionRepository;
+        private readonly IAssessmentScoreRangeRepository _assessmentScoreRangeRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
         protected ILogger<AssessmentController> _logger;
@@ -24,13 +25,14 @@ namespace backend_api.Controllers.v1
 
         public AssessmentController(IAssessmentQuestionRepository assessmentQuestionRepository,
             IMapper mapper, ILogger<AssessmentController> logger,
-            IResourceService resourceService)
+            IResourceService resourceService, IAssessmentScoreRangeRepository assessmentScoreRangeRepository)
         {
             _resourceService = resourceService;
             _logger = logger;
             _assessmentQuestionRepository = assessmentQuestionRepository;
             _response = new APIResponse();
             _mapper = mapper;
+            _assessmentScoreRangeRepository = assessmentScoreRangeRepository;
         }
 
 
@@ -81,13 +83,18 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        [Authorize]
+        //[Authorize]
         public async Task<ActionResult<APIResponse>> GetAllAsync()
         {
             try
             {
-                var result = await _assessmentQuestionRepository.GetAllNotPagingAsync(null, "AssessmentOptions", null);
-                _response.Result = _mapper.Map<List<AssessmentQuestionDTO>>(result.list.OrderBy(x => x.Id).ToList());
+                var question = await _assessmentQuestionRepository.GetAllNotPagingAsync(null, "AssessmentOptions", null);
+                var scoreRange = await _assessmentScoreRangeRepository.GetAllNotPagingAsync();
+                AllAssessmentDTO model = new AllAssessmentDTO();
+                model.Questions = _mapper.Map<List<AssessmentQuestionDTO>>(question.list);
+                model.ScoreRanges = _mapper.Map<List<AssessmentScoreRangeDTO>>(scoreRange.list);
+
+                _response.Result = model;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }

@@ -126,6 +126,8 @@
         public const string USER = "Người dùng";
         public const string WORK_EXPERIENCE = "Kinh nghiệm làm việc";
 		public const string SCHEDULE = "Lịch học";
+		public const string ASSESSMENT_SCORE_RANGE = "Khoảng điểm đánh giá";
+		public const string SCORE_RANGE = "Khoảng điểm";
 
 
 
@@ -149,6 +151,7 @@
         public const string CANNOT_ADD_ROLE = "CANNOT_ADD_ROLE";
         public const string USER_HAVE_NO_ROLE = "USER_HAVE_NO_ROLE";
         public const string DUPPLICATED_ASSIGN_EXERCISE = "DUPPLICATED_ASSIGN_EXERCISE";
+        public const string ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE = "ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE";
 
         // const exercise type
         public const string DEFAULT_EXERCISE_TYPE_1 = "Tập phát âm thuở ban đầu - nhưng âm thanh của trẻ nhỏ";

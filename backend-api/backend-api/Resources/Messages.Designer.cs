@@ -61,6 +61,15 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Đã tồn tại khoảng điểm đánh giá từ {0} - {1}.
+        /// </summary>
+        public static string ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE {
+            get {
+                return ResourceManager.GetString("ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này.
         /// </summary>
         public static string BAD_ACTION_REVIEW {
