@@ -317,7 +317,9 @@ namespace backend_api.Controllers.v1
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.Parent.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
-                        .Replace("@Model.IsApproved", Status.APPROVE.ToString());
+                        .Replace("@Model.IsApproved", true.ToString())
+                        .Replace("@Model.IsApprovedString", "Chấp nhận")
+                        ;
                     _messageBus.SendMessage(new EmailLogger()
                     {
                         Email = model.Parent.Email,
@@ -357,14 +359,15 @@ namespace backend_api.Controllers.v1
                             break;
                     }
 
-                    var subject = "Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối";
+                    var subject = $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.Parent.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
-                        .Replace("@Model.IsApproved", Status.REJECT.ToString()
-                        .Replace("@Model.RejectionReason", reason));
+                        .Replace("@Model.IsApproved", false.ToString())
+                        .Replace("@Model.IsApprovedString", "Từ chối")
+                        .Replace("@Model.RejectionReason", reason);
                     _messageBus.SendMessage(new EmailLogger()
                     {
                         Email = model.Parent.Email,
