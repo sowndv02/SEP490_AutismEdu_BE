@@ -170,10 +170,13 @@ namespace backend_api.Controllers.v1
                 model.PassingStatus = updateDTO.PassingStatus;
                 model.UpdatedDate = DateTime.Now;
                 var result = await _scheduleRepository.UpdateAsync(model);
-                var nextSchedule = await _scheduleRepository.GetAsync(x => x.PassingStatus == SD.PassingStatus.NOT_YET && x.AttendanceStatus == SD.AttendanceStatus.NOT_YET && x.ScheduleDate.Date > result.ScheduleDate.Date && x.ExerciseId == result.ExerciseId && x.ExerciseTypeId == x.ExerciseTypeId, false, null);
+                var nextSchedule = await _scheduleRepository.GetAsync(x => x.PassingStatus == SD.PassingStatus.NOT_YET && x.AttendanceStatus == SD.AttendanceStatus.NOT_YET && x.ScheduleDate.Date > result.ScheduleDate.Date && x.ExerciseId == result.ExerciseId && x.ExerciseTypeId == result.ExerciseTypeId, false, null);
+                if (nextSchedule != null)
+                {
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DUPPLICATED_ASSIGN_EXERCISE) };
+                }
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DUPPLICATED_ASSIGN_EXERCISE) };
                 _response.Result = _mapper.Map<ScheduleDTO>(result);
                 return Ok(_response);
             }
