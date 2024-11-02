@@ -85,13 +85,13 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
-                model.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId, true, "Child");
                 model.ExerciseId = updateDTO.ExerciseId;
                 model.ExerciseTypeId = updateDTO.ExerciseTypeId;
                 model.SyllabusId = updateDTO.SyllabusId;
                 model.UpdatedDate = DateTime.Now;
                 await _scheduleRepository.UpdateAsync(model);
                 var result = await _scheduleRepository.GetAsync(x => x.Id == id, false, "ExerciseType,Exercise");
+                result.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId, true, "Child");
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 _response.Result = _mapper.Map<ScheduleDTO>(result);
