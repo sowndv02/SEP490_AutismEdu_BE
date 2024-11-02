@@ -118,7 +118,7 @@ namespace backend_api.Controllers.v1
                                                 u.TutorId == userId && u.StudentProfileId == studentProfileId &&
                                                 u.AttendanceStatus == SD.AttendanceStatus.ATTENDED &&
                                                 u.PassingStatus == SD.PassingStatus.NOT_PASSED,
-                                                null, null,  x => x.ScheduleDate.Date, true);
+                                                null, null, x => x.ScheduleDate.Date, true);
 
                 var (countPassed, listPassed) = await _scheduleRepository.GetAllNotPagingAsync(u =>
                                                 u.TutorId == userId && u.StudentProfileId == studentProfileId &&
@@ -210,7 +210,7 @@ namespace backend_api.Controllers.v1
 
 
                 var (count, result) = await _scheduleRepository.GetAllNotPagingAsync(filter,
-                                "StudentProfile", null, null, true);
+                                "StudentProfile,Exercise,ExerciseType", null, null, true);
 
                 foreach (Schedule schedule in result)
                 {

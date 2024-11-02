@@ -1,22 +1,20 @@
-﻿using Xunit;
-using AutoMapper;
+﻿using AutoMapper;
+using backend_api.Mapper;
+using backend_api.Models;
+using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
+using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Logging;
 using Moq;
-using backend_api.Services.IServices;
-using backend_api.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using FluentAssertions;
-using backend_api.Models.DTOs.CreateDTOs;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 using System.Linq.Expressions;
-using backend_api.Mapper;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Newtonsoft.Json;
-using System.Text;
-using backend_api.Models.DTOs;
+using System.Net;
+using System.Security.Claims;
+using Xunit;
 
 namespace backend_api.Controllers.v1.Tests
 {
@@ -25,6 +23,7 @@ namespace backend_api.Controllers.v1.Tests
         private readonly WebApplicationFactory<Program> _factory;
         private readonly AssessmentController _controller;
         private readonly Mock<IAssessmentQuestionRepository> _assessmentQuestionRepositoryMock;
+        private readonly Mock<IAssessmentScoreRangeRepository> _assessmentScoreRangeRepositoryMock;
         private readonly IMapper _mapper;
         private readonly Mock<ILogger<AssessmentController>> _loggerMock;
         private readonly Mock<IResourceService> _resourceServiceMock;
@@ -33,6 +32,7 @@ namespace backend_api.Controllers.v1.Tests
         {
             _factory = factory;
             _assessmentQuestionRepositoryMock = new Mock<IAssessmentQuestionRepository>();
+            _assessmentScoreRangeRepositoryMock = new Mock<IAssessmentScoreRangeRepository>();
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile(new MappingConfig());
@@ -45,7 +45,8 @@ namespace backend_api.Controllers.v1.Tests
                 _assessmentQuestionRepositoryMock.Object,
                 _mapper,
                 _loggerMock.Object,
-                _resourceServiceMock.Object);
+                _resourceServiceMock.Object,
+                _assessmentScoreRangeRepositoryMock.Object);
 
             var claims = new List<Claim>
             {
@@ -227,7 +228,7 @@ namespace backend_api.Controllers.v1.Tests
             // Mock the repository to return a list of assessment questions
             _assessmentQuestionRepositoryMock
                 .Setup(r => r.GetAllNotPagingAsync(It.IsAny<Expression<Func<AssessmentQuestion, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<AssessmentQuestion, object>>>(), It.IsAny<bool>()))
-                .ReturnsAsync((2,assessmentQuestions));
+                .ReturnsAsync((2, assessmentQuestions));
 
             // Act
             var result = await _controller.GetAllAsync();

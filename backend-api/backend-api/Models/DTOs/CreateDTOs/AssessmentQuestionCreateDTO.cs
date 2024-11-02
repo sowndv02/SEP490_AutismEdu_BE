@@ -4,9 +4,9 @@ namespace backend_api.Models.DTOs.CreateDTOs
 {
     public class AssessmentQuestionCreateDTO
     {
-        [Required]
+        [Required(ErrorMessage = SD.QUESTION_REQUIRED)]
         public string Question { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.OPTION_TEXT_REQUIRED)]
         public List<AssessmentOptionCreateDTO> AssessmentOptions { get; set; }
     }
 }

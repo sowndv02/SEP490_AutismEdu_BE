@@ -239,6 +239,8 @@ namespace backend_api.Mapper
             CreateMap<ExerciseTypeInfoDTO, ExerciseType>().ReverseMap();
             CreateMap<ExerciseInfoDTO, Exercise>().ReverseMap();
 
+            CreateMap<AssessmentScoreRange, AssessmentScoreRangeDTO>().ReverseMap();
+            CreateMap<AssessmentScoreRange, AssessmentScoreRangeCreateDTO>().ReverseMap();
         }
     }
 }

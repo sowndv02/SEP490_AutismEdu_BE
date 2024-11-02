@@ -53,6 +53,7 @@ namespace backend_api.Data
         public DbSet<Exercise> Exercisese { get; set; }
         public DbSet<Syllabus> Syllabuses { get; set; }
         public DbSet<SyllabusExercise> SyllabusExercises { get; set; }
+        public DbSet<AssessmentScoreRange> AssessmentScoreRanges { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
