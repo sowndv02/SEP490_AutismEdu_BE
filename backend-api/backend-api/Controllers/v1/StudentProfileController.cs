@@ -205,7 +205,7 @@ namespace backend_api.Controllers.v1
                 }
 
                 var childTutorExist = await _studentProfileRepository.GetAsync(x => x.ChildId == createDTO.ChildId
-                                                && x.TutorId.Equals(tutorId) && x.Status == SD.StudentProfileStatus.Teaching);
+                                                && x.TutorId.Equals(tutorId) && (x.Status == SD.StudentProfileStatus.Teaching || x.Status == SD.StudentProfileStatus.Pending));
 
                 if (childTutorExist != null)
                 {
