@@ -159,6 +159,11 @@
   <data name="DUPPLICATED_ASSIGN_EXERCISE" xml:space="preserve">
     <value>Hiện tại buổi học tiếp theo đang được gán bài tập giống buổi học này. Bạn hãy cân nhắc gán lại bài tập khác.</value>
   </data>
+	
+
+  <data name="ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE" xml:space="preserve">
+    <value>Đã tồn tại khoảng điểm đánh giá từ {0} - {1}</value>
+  </data>
   <data name="ADD_ROLE_USER_TO_USER" xml:space="preserve">
     <value>Thêm role user cho người dùng</value>
   </data>
