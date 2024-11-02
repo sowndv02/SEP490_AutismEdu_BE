@@ -9,9 +9,9 @@
 
     <p>Chúng tôi xin thông báo rằng yêu cầu của bạn về <strong>@Model.IssueName</strong> đã được cập nhật trạng thái.</p>
 
-    <p><strong>Trạng thái:</strong> @Model.IsApproved</p>
+    <p><strong>Trạng thái:</strong> @Model.IsApprovedString</p>
 
-    @if (@Model.IsApproved == false)
+    @if (!Model.IsApproved)
     {
         <p><strong>Lý do từ chối:</strong> @Model.RejectionReason</p>
     }
