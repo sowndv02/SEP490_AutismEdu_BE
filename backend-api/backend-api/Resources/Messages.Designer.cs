@@ -97,6 +97,15 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hiện tại buổi học tiếp theo đang được gán bài tập giống buổi học này. Bạn hãy cân nhắc gán lại bài tập khác..
+        /// </summary>
+        public static string DUPPLICATED_ASSIGN_EXERCISE {
+            get {
+                return ResourceManager.GetString("DUPPLICATED_ASSIGN_EXERCISE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lỗi hệ thống. Vui lòng thử lại sau!.
         /// </summary>
         public static string INTERAL_ERROR_MESSAGE {

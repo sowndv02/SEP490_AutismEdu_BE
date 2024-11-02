@@ -131,7 +131,6 @@
 
 
         // Const message 
-        //public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "You are already a tutor or have a previous registration requirement";
         public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR";
         public const string TUTOR_UPDATE_STATUS_IS_PENDING = "TUTOR_UPDATE_STATUS_IS_PENDING";
         public const string BAD_REQUEST_MESSAGE = "BAD_REQUEST_MESSAGE";
@@ -141,20 +140,15 @@
         public const string NOT_FOUND_MESSAGE = "NOT_FOUND_MESSAGE";
         public const string TIMESLOT_DUPLICATED_MESSAGE = "TIMESLOT_DUPLICATED_MESSAGE";
         public const string INTERNAL_SERVER_ERROR_MESSAGE = "INTERNAL_SERVER_ERROR_MESSAGE";
-        //public const string CHILD_NAME_DUPLICATE = "Đã tồn tại trẻ với tên này";
-        //public const string CHILD_ALREADY_STUDING_THIS_TUTOR = "Đã tồn tại hồ sơ học sinh của trẻ này";
-        //public const string NO_REVIEWS_FOUND = "Không có đánh giá";
         public const string REVIEW_ALREADY_EXISTS = "Đã đánh giá gia sư này";
         public const string REVIEW_DELETE_SUCCESS = "Xoá đánh giá thành công!";
         public const string BAD_ACTION_REVIEW = "BAD_ACTION_REVIEW";
-        //public const string AGE_FROM_AGE_END_EXISTED = "Độ tuổi đã tồn tại";
-        //public const string DUPLICATED_EMAIL_MESSAGE = "Đã tồn tại tài khoản với email này";
-        //public const string CHILD_NOT_FOUND = "Không tìm thấy dữ liệu trẻ";
         public const string MISSING_INFORMATION = "MISSING_INFORMATION";
         public const string MISSING_2_INFORMATIONS = "MISSING_2_INFORMATIONS";
         public const string STUDENT_PROFILE_EXPIRED = "STUDENT_PROFILE_EXPIRED";
         public const string CANNOT_ADD_ROLE = "CANNOT_ADD_ROLE";
         public const string USER_HAVE_NO_ROLE = "USER_HAVE_NO_ROLE";
+        public const string DUPPLICATED_ASSIGN_EXERCISE = "DUPPLICATED_ASSIGN_EXERCISE";
 
         // const exercise type
         public const string DEFAULT_EXERCISE_TYPE_1 = "Tập phát âm thuở ban đầu - nhưng âm thanh của trẻ nhỏ";

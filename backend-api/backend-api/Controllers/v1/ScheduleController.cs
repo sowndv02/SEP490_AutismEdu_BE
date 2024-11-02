@@ -74,7 +74,7 @@ namespace backend_api.Controllers.v1
 
         [HttpGet("NotPassed")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync()
+        public async Task<ActionResult<APIResponse>> GetAllNotPassedExerciseAsync()
         {
             try
             {
@@ -82,18 +82,11 @@ namespace backend_api.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 Expression<Func<Schedule, bool>> filter = u => u.TutorId == userId && u.AttendanceStatus == SD.AttendanceStatus.ATTENDED && u.PassingStatus == SD.PassingStatus.NOT_PASSED;
 
+
                 var (count, result) = await _scheduleRepository.GetAllNotPagingAsync(filter,
-                                "StudentProfile", null, null, true);
+                               null, null,  x => x.ScheduleDate.Date, true);
 
-                foreach (Schedule schedule in result)
-                {
-                    schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId, true, "Child");
-                }
-
-                list = result
-                    .OrderBy(x => x.ScheduleDate.Date)
-                    .ThenBy(x => x.Start)
-                    .ToList();
+                list = result.OrderBy(x => x.Start).ToList();
 
                 _response.Result = _mapper.Map<List<ScheduleDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -136,7 +129,7 @@ namespace backend_api.Controllers.v1
                 var nextSchedule = await _scheduleRepository.GetAsync(x => x.PassingStatus == SD.PassingStatus.NOT_YET && x.AttendanceStatus == SD.AttendanceStatus.NOT_YET && x.ScheduleDate > result.ScheduleDate, false, null);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
-                _response.ErrorMessages = new List<string>() { "Hiện tại buổi học tiếp theo đang được gán bài tập giống buổi học này. Bạn hãy cân nhắc gán lại bài tập khác." };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DUPPLICATED_ASSIGN_EXERCISE) };
                 _response.Result = _mapper.Map<ScheduleDTO>(result);
                 return Ok(_response);
             }
