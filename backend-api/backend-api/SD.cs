@@ -136,14 +136,11 @@
         // Const message 
         public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR";
         public const string TUTOR_UPDATE_STATUS_IS_PENDING = "TUTOR_UPDATE_STATUS_IS_PENDING";
-        public const string BAD_REQUEST_MESSAGE = "BAD_REQUEST_MESSAGE";
-        public const string WEEKDAY_REQUIRED = "Chưa nhập ngày trong tuần";
-        public const string TIMESLOT_REQUIRED = "Chưa nhập khung giờ";
+        public const string BAD_REQUEST_MESSAGE = "BAD_REQUEST_MESSAGE";       
         public const string DATA_DUPLICATED_MESSAGE = "DATA_DUPLICATED_MESSAGE";
         public const string NOT_FOUND_MESSAGE = "NOT_FOUND_MESSAGE";
         public const string TIMESLOT_DUPLICATED_MESSAGE = "TIMESLOT_DUPLICATED_MESSAGE";
         public const string INTERNAL_SERVER_ERROR_MESSAGE = "INTERNAL_SERVER_ERROR_MESSAGE";
-        public const string REVIEW_ALREADY_EXISTS = "Đã đánh giá gia sư này";
         public const string REVIEW_DELETE_SUCCESS = "Xoá đánh giá thành công!";
         public const string BAD_ACTION_REVIEW = "BAD_ACTION_REVIEW";
         public const string MISSING_INFORMATION = "MISSING_INFORMATION";
@@ -159,6 +156,31 @@
         public const string CHANGE_PASS_FAIL = "CHANGE_PASS_FAIL";
         public const string ADD_ROLE_USER_TO_USER = "ADD_ROLE_USER_TO_USER";
         public const string USER_IS_LOCKED_OUT = "USER_IS_LOCKED_OUT";
+
+        // DTO require message
+        public const string WEEKDAY_REQUIRED = "Chưa nhập ngày trong tuần";
+        public const string TIMESLOT_REQUIRED = "Chưa nhập khung giờ";
+        public const string OPTION_TEXT_REQUIRED = "Chưa nhập đáp án";
+        public const string POINT_REQUIRED = "Chưa nhập điểm";
+        public const string QUESTION_REQUIRED = "Chưa nhập câu hỏi";
+        public const string DESCRIPTION_REQUIRED = "Chưa nhập mô tả";
+        public const string TITLE_REQUIRED = "Chưa nhập tiêu đề";
+        public const string CONTENT_REQUIRED = "Chưa nhập nội dung";
+        public const string CERTIFICATE_NAME_REQUIRED = "Chưa nhập tên chứng chỉ";
+        public const string NAME_REQUIRED = "Chưa nhập tên";
+        public const string GENDER_REQUIRED = "Chưa nhập giới tính";
+        public const string BIRTH_DATE_REQUIRED = "Chưa nhập ngày sinh";
+        public const string CLAIM_TYPE_REQUIRED = "Chưa nhập claim type";
+        public const string CLAIM_VALUE_REQUIRED = "Chưa nhập claim value";
+        public const string AGE_REQUIRED = "Chưa nhập tuổi";
+        public const string DATE_REQUIRED = "Chưa nhập ngày";
+        public const string ID_REQUIRED = "Chưa nhập Id";
+        public const string PRICE_REQUIRED = "Chưa nhập giá";
+        public const string PHONE_NUMBER_REQUIRED = "Chưa nhập số điện thoại";
+        public const string ADDRESS_REQUIRED = "Chưa nhập địa chỉ";
+        public const string EMAIL_REQUIRED = "Chưa nhập email";
+        public const string SESSION_HOUR_REQUIRED = "Chưa nhập thời gian một tiết học";
+        public const string POSITION_REQUIRED = "Chưa nhập vị trí";
 
         // const exercise type
         public const string DEFAULT_EXERCISE_TYPE_1 = "Tập phát âm thuở ban đầu - nhưng âm thanh của trẻ nhỏ";

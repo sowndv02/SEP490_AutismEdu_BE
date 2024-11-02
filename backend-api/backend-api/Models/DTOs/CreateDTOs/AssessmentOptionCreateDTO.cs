@@ -4,9 +4,9 @@ namespace backend_api.Models.DTOs.CreateDTOs
 {
     public class AssessmentOptionCreateDTO
     {
-        [Required]
+        [Required(ErrorMessage = SD.OPTION_TEXT_REQUIRED)]
         public string OptionText { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.POINT_REQUIRED)]
         public double Point { get; set; }
     }
 }

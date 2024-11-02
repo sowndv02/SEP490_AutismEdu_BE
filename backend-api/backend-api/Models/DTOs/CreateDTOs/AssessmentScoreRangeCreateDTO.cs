@@ -4,11 +4,11 @@ namespace backend_api.Models.DTOs.CreateDTOs
 {
     public class AssessmentScoreRangeCreateDTO
     {
-        [Required]
+        [Required(ErrorMessage = SD.QUESTION_REQUIRED)]
         public string Description { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.POINT_REQUIRED)]
         public float MinScore { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.POINT_REQUIRED)]
         public float MaxScore { get; set; }
     }
 }

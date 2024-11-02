@@ -4,11 +4,11 @@ namespace backend_api.Models.DTOs.CreateDTOs
 {
     public class ProgressReportCreateDTO
     {
-        [Required]
+        [Required(ErrorMessage = SD.ID_REQUIRED)]
         public int StudentProfileId { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.DATE_REQUIRED)]
         public DateTime From { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.DATE_REQUIRED)]
         public DateTime To { get; set; }
         public string? Achieved { get; set; }
         public string? Failed { get; set; }
