@@ -145,7 +145,7 @@ namespace backend_api.Controllers.v1
                     graph.ProgressReports = _mapper.Map<List<ProgressReportDTO>>(list);
 
                     var initialAssessmentResult = await _initialAssessmentResultRepository.GetAllAsync(x => x.StudentProfileId == studentProfileId, "Question,Option");
-                    graph.InitialAssessmentResultDTO = _mapper.Map<InitialAssessmentResultDTO>(initialAssessmentResult.list);
+                    graph.InitialAssessmentResultDTO = _mapper.Map<List<InitialAssessmentResultDTO>>(initialAssessmentResult.list);
 
                     _response.Result = graph;
                     _response.StatusCode = HttpStatusCode.OK;
