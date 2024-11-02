@@ -4,11 +4,11 @@ namespace backend_api.Models.DTOs.CreateDTOs
 {
     public class ChildInformationCreateDTO
     {
-        [Required]
+        [Required(ErrorMessage = SD.NAME_REQUIRED)]
         public string? Name { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.GENDER_REQUIRED)]
         public bool? isMale { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.BIRTH_DATE_REQUIRED)]
         public DateTime? BirthDate { get; set; }
         public IFormFile? Media { get; set; }
     }

@@ -6,11 +6,11 @@ namespace backend_api.Models.DTOs.CreateDTOs
 {
     public class CurriculumCreateDTO
     {
-        [Required]
+        [Required(ErrorMessage = SD.AGE_REQUIRED)]
         public int AgeFrom { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.AGE_REQUIRED)]
         public int AgeEnd { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.DESCRIPTION_REQUIRED)]
         public string Description { get; set; }
         public int? OriginalCurriculumId { get; set; }
     }

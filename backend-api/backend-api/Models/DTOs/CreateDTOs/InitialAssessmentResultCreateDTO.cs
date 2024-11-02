@@ -4,9 +4,9 @@ namespace backend_api.Models.DTOs.CreateDTOs
 {
     public class InitialAssessmentResultCreateDTO
     {
-        [Required]
+        [Required(ErrorMessage = SD.ID)]
         public int OptionId { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.ID)]
         public int QuestionId { get; set; }
     }
 }

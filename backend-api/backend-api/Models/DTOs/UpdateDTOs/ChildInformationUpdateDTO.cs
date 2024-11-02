@@ -4,7 +4,7 @@ namespace backend_api.Models.DTOs.UpdateDTOs
 {
     public class ChildInformationUpdateDTO
     {
-        [Required]
+        [Required(ErrorMessage = SD.ID_REQUIRED)]
         public int ChildId { get; set; }
         public string? Name { get; set; }
         public bool isMale { get; set; }

@@ -4,7 +4,7 @@ namespace backend_api.Models.DTOs.CreateDTOs
 {
     public class CertificateCreateDTO
     {
-        [Required]
+        [Required(ErrorMessage = SD.CERTIFICATE_NAME_REQUIRED)]
         public string CertificateName { get; set; }
         public string? IssuingInstitution { get; set; }
         public string? IdentityCardNumber { get; set; }
