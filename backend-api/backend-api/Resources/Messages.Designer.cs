@@ -59,13 +59,25 @@ namespace backend_api.Resources {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Thêm role user cho người dùng.
+
+		/// <summary>        
+
+		///   Looks up a localized string similar to Thêm role user cho người dùng.
         /// </summary>
         public static string ADD_ROLE_USER_TO_USER {
             get {
                 return ResourceManager.GetString("ADD_ROLE_USER_TO_USER", resourceCulture);
+            }
+        }
+        
+
+        /// <summary>
+		
+        ///   Looks up a localized string similar to Đã tồn tại khoảng điểm đánh giá từ {0} - {1}.
+        /// </summary>
+        public static string ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE {
+            get {
+                return ResourceManager.GetString("ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE", resourceCulture);
             }
         }
         

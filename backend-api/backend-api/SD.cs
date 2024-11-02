@@ -127,6 +127,8 @@
         public const string WORK_EXPERIENCE = "Kinh nghiệm làm việc";
 		public const string SCHEDULE = "Lịch học";
 		public const string PASSWORD = "Mật khẩu";
+		public const string ASSESSMENT_SCORE_RANGE = "Khoảng điểm đánh giá";
+		public const string SCORE_RANGE = "Khoảng điểm";
 
 
 
@@ -150,6 +152,7 @@
         public const string CANNOT_ADD_ROLE = "CANNOT_ADD_ROLE";
         public const string USER_HAVE_NO_ROLE = "USER_HAVE_NO_ROLE";
         public const string DUPPLICATED_ASSIGN_EXERCISE = "DUPPLICATED_ASSIGN_EXERCISE";
+		public const string ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE = "ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE";
         public const string EMAIL_NOT_CONFIRM = "EMAIL_NOT_CONFIRM";
         public const string LOGIN_WRONG_SIDE = "LOGIN_WRONG_SIDE";
         public const string GG_CANNOT_CHANGE_PASSWORD = "GG_CANNOT_CHANGE_PASSWORD";
