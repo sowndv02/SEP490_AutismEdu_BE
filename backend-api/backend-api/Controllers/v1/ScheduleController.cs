@@ -34,6 +34,36 @@ namespace backend_api.Controllers.v1
             _studentProfileRepository = studentProfileRepository;
         }
 
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetByIdAsync(int id)
+        {
+            try
+            {
+                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, "Exercise,ExerciseType");
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
+                    return BadRequest(_response);
+                }
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = _mapper.Map<ScheduleDTO>(model);
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
+
         [HttpPut("AssignExercises/{id}")]
         public async Task<ActionResult<APIResponse>> UpdateAsync(int id, [FromBody] AssignExerciseScheduleDTO updateDTO)
         {
@@ -56,6 +86,7 @@ namespace backend_api.Controllers.v1
                 }
                 model.ExerciseId = updateDTO.ExerciseId;
                 model.ExerciseTypeId = updateDTO.ExerciseTypeId;
+                model.SyllabusId = updateDTO.SyllabusId;
                 model.UpdatedDate = DateTime.Now;
                 var result = await _scheduleRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
@@ -72,23 +103,33 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpGet("NotPassed")]
+        [HttpGet("NotPassed/{studentProfileId}")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllNotPassedExerciseAsync()
+        public async Task<ActionResult<APIResponse>> GetAllNotPassedExerciseAsync(int studentProfileId)
         {
             try
             {
                 List<Schedule> list = new();
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                Expression<Func<Schedule, bool>> filter = u => u.TutorId == userId && u.AttendanceStatus == SD.AttendanceStatus.ATTENDED && u.PassingStatus == SD.PassingStatus.NOT_PASSED;
 
+                var (countFailed, resultFailed) = await _scheduleRepository.GetAllNotPagingAsync(u =>
+                                                u.TutorId == userId && u.StudentProfileId == studentProfileId &&
+                                                u.AttendanceStatus == SD.AttendanceStatus.ATTENDED &&
+                                                u.PassingStatus == SD.PassingStatus.NOT_PASSED,
+                                                null, null,  x => x.ScheduleDate.Date, true);
 
-                var (count, result) = await _scheduleRepository.GetAllNotPagingAsync(filter,
-                               null, null,  x => x.ScheduleDate.Date, true);
+                var (countPassed, listPassed) = await _scheduleRepository.GetAllNotPagingAsync(u =>
+                                                u.TutorId == userId && u.StudentProfileId == studentProfileId &&
+                                                u.AttendanceStatus == SD.AttendanceStatus.ATTENDED &&
+                                                u.PassingStatus == SD.PassingStatus.PASSED,
+                                                null, null, x => x.ScheduleDate.Date, true);
 
-                list = result.OrderBy(x => x.Start).ToList();
+                var passedExerciseIds = listPassed.Select(p => p.ExerciseId).Distinct();
+                var filteredFailedExercises = resultFailed
+                    .Where(f => f.ExerciseId == null || !passedExerciseIds.Contains(f.ExerciseId))
+                    .ToList().Select(x => x.ExerciseId);
 
-                _response.Result = _mapper.Map<List<ScheduleDTO>>(list);
+                _response.Result = filteredFailedExercises;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
