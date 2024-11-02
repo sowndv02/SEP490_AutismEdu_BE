@@ -77,7 +77,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
-                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, "Exercise,ExerciseType");
+                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, null);
                 if (model == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -90,7 +90,8 @@ namespace backend_api.Controllers.v1
                 model.ExerciseTypeId = updateDTO.ExerciseTypeId;
                 model.SyllabusId = updateDTO.SyllabusId;
                 model.UpdatedDate = DateTime.Now;
-                var result = await _scheduleRepository.UpdateAsync(model);
+                await _scheduleRepository.UpdateAsync(model);
+                var result = await _scheduleRepository.GetAsync(x => x.Id == id, false, "ExerciseType,Exercise");
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 _response.Result = _mapper.Map<ScheduleDTO>(result);
