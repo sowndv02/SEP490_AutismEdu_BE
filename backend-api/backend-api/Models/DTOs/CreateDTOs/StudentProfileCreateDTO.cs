@@ -17,13 +17,13 @@ namespace backend_api.Models.DTOs.CreateDTOs
         public DateTime? BirthDate { get; set; }
         public IFormFile? Media { get; set; }
         //TutorRequest <= 0 if none
-        [Required]
+        [Required(ErrorMessage = SD.ID)]
         public int TutorRequestId { get; set; }
 
         //Student profile ChildId 0 if create acc
-        [Required]
+        [Required(ErrorMessage = SD.ID)]
         public int ChildId { get; set; }
-        [Required]
+        [Required(ErrorMessage = SD.DESCRIPTION_REQUIRED)]
         public string InitialCondition { get; set; }
         public List<InitialAssessmentResultCreateDTO> InitialAssessmentResults { get; set; }
         public List<ScheduleTimeSlotCreateDTO> ScheduleTimeSlots { get; set; }
