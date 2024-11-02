@@ -9,11 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
 
-namespace backend_api.Controllers.v1
+namespace backend_api.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    [ApiVersion("1.0")]
+    [ApiVersionNeutral]
     public class BlogController : ControllerBase
     {
         private readonly IBlogRepository _blogRepository;

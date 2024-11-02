@@ -7,6 +7,7 @@ using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Security.Claims;
 
 namespace backend_api.Controllers.v1
 {
@@ -39,6 +40,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (assessmentQuestionCreateDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -58,12 +60,13 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
                 AssessmentQuestion model = _mapper.Map<AssessmentQuestion>(assessmentQuestionCreateDTO);
-                // TODO: Add submitter 
+                model.SubmitterId = userId;
                 model.IsAssessment = true;
                 model.IsHidden = false;
                 model.CreatedDate = DateTime.Now;
+                // TODO: Add log create assessment
                 var assessmentQuestion = await _assessmentQuestionRepository.CreateAsync(model);
-
+                _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }

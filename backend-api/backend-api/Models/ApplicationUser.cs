@@ -19,7 +19,6 @@ namespace backend_api.Models
         [NotMapped]
         public bool IsLockedOut { get; set; }
         public string UserType { get; set; } = SD.APPLICATION_USER;
-
         public List<TutorRequest> TutorRequests { get; set; }
         public string? Address { get; set; }
         public Tutor? TutorProfile { get; set; }

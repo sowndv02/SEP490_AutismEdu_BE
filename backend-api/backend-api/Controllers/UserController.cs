@@ -12,11 +12,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
 
-namespace backend_api.Controllers.v1
+namespace backend_api.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    [ApiVersion("1.0")]
+    [ApiVersionNeutral]
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
@@ -391,7 +391,7 @@ namespace backend_api.Controllers.v1
                         case "all":
                             if (!string.IsNullOrEmpty(searchValue))
                             {
-                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(u => (u.Email.ToLower().Contains(searchValue.ToLower())) || (!string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower())), pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
+                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(u => u.Email.ToLower().Contains(searchValue.ToLower()) || !string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower()), pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
                                 totalCount = totalResult;
                                 list = resultObject;
                             }
@@ -499,7 +499,7 @@ namespace backend_api.Controllers.v1
                     _response.StatusCode = HttpStatusCode.OK;
                     return Ok(_response);
                 }
-                
+
             }
             catch (Exception ex)
             {

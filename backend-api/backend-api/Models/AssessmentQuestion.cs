@@ -9,10 +9,13 @@ namespace backend_api.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string? Question { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public DateTime? UpdatedDate { get; set; }
+        public string SubmitterId { get; set; }
+        [ForeignKey(nameof(SubmitterId))]
+        public ApplicationUser Submitter { get; set; }
         public bool IsHidden { get; set; }
         public bool IsAssessment { get; set; }
         public List<AssessmentOption> AssessmentOptions { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime? UpdatedDate { get; set; }
     }
 }
