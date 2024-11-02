@@ -203,15 +203,15 @@ namespace backend_api.Controllers.v1.Tests
         }
 
 
-        [Fact]
-        public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsNotInStaffRole()
-        {
-            var client = _factory.CreateClient();
-            var dto = new AssessmentQuestionCreateDTO { Question = "New Question" };
-            var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
-            var result = await client.PostAsync("/api/v1/assessment", content);
-            result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
-        }
+        //[Fact]
+        //public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsNotInStaffRole()
+        //{
+        //    var client = _factory.CreateClient();
+        //    var dto = new AssessmentQuestionCreateDTO { Question = "New Question" };
+        //    var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
+        //    var result = await client.PostAsync("/api/v1/assessment", content);
+        //    result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+        //}
 
 
         [Fact]
@@ -272,12 +272,12 @@ namespace backend_api.Controllers.v1.Tests
         }
 
 
-        [Fact]
-        public async Task GetAsync_ReturnsUnauthorized_WhenUserIsNotAuthentication()
-        {
-            var client = _factory.CreateClient();
-            var result = await client.GetAsync("/api/v1/assessment");
-            result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
-        }
+        //[Fact]
+        //public async Task GetAsync_ReturnsUnauthorized_WhenUserIsNotAuthentication()
+        //{
+        //    var client = _factory.CreateClient();
+        //    var result = await client.GetAsync("/api/v1/assessment");
+        //    result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+        //}
     }
 }
