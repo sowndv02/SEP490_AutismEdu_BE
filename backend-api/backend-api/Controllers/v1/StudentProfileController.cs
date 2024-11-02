@@ -120,6 +120,14 @@ namespace backend_api.Controllers.v1
                     !string.IsNullOrEmpty(createDTO.BirthDate.ToString()) &&
                     createDTO.Media != null)
                 {
+                    if(createDTO.TutorRequestId > 0)
+                    {
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.STUDENT_PROFILE) };
+                        return BadRequest(_response);
+                    }
+
                     model.Status = SD.StudentProfileStatus.Teaching;
                     // Tao account parent
                     var parentEmailExist = await _userRepository.GetAsync(x => x.Email.Equals(createDTO.Email));
@@ -307,6 +315,13 @@ namespace backend_api.Controllers.v1
                         ScheduleTimeSlotId = timeslot.Id
                     };
                     await _scheduleRepository.CreateAsync(schedule);
+                }
+
+                if (createDTO.TutorRequestId > 0)
+                {
+                    var tutorRequest = await _tutorRequestRepository.GetAsync(x => x.Id == createDTO.TutorRequestId);
+                    tutorRequest.HasStudentProfile = true;
+                    await _tutorRequestRepository.UpdateAsync(tutorRequest);
                 }
 
                 _response.StatusCode = HttpStatusCode.Created;

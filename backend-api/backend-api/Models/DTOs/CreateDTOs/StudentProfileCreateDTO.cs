@@ -16,8 +16,11 @@ namespace backend_api.Models.DTOs.CreateDTOs
         public bool? isMale { get; set; }
         public DateTime? BirthDate { get; set; }
         public IFormFile? Media { get; set; }
+        //TutorRequest <= 0 if none
+        [Required]
+        public int TutorRequestId { get; set; }
 
-        //Student profile
+        //Student profile ChildId 0 if create acc
         [Required]
         public int ChildId { get; set; }
         [Required]
