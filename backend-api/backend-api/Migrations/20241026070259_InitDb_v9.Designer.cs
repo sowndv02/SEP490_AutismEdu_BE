@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend_api.Data;
 
@@ -11,9 +12,10 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241026070259_InitDb_v9")]
+    partial class InitDb_v9
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -818,16 +820,6 @@ namespace backend_api.Migrations
                     b.Property<TimeSpan>("End")
                         .HasColumnType("time");
 
-                    b.Property<int?>("ExerciseId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ExerciseTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Note")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("PassingStatus")
                         .HasColumnType("int");
 
@@ -843,9 +835,6 @@ namespace backend_api.Migrations
                     b.Property<int>("StudentProfileId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("SyllabusId")
-                        .HasColumnType("int");
-
                     b.Property<string>("TutorId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -855,15 +844,9 @@ namespace backend_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExerciseId");
-
-                    b.HasIndex("ExerciseTypeId");
-
                     b.HasIndex("ScheduleTimeSlotId");
 
                     b.HasIndex("StudentProfileId");
-
-                    b.HasIndex("SyllabusId");
 
                     b.HasIndex("TutorId");
 
@@ -1187,9 +1170,6 @@ namespace backend_api.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("HasStudentProfile")
-                        .HasColumnType("bit");
 
                     b.Property<string>("ParentId")
                         .IsRequired()
@@ -1812,16 +1792,6 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Schedule", b =>
                 {
-                    b.HasOne("backend_api.Models.Exercise", "Exercise")
-                        .WithMany()
-                        .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("backend_api.Models.ExerciseType", "ExerciseType")
-                        .WithMany()
-                        .HasForeignKey("ExerciseTypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("backend_api.Models.ScheduleTimeSlot", "ScheduleTimeSlot")
                         .WithMany()
                         .HasForeignKey("ScheduleTimeSlotId")
@@ -1834,26 +1804,15 @@ namespace backend_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend_api.Models.Syllabus", "Syllabus")
-                        .WithMany()
-                        .HasForeignKey("SyllabusId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("backend_api.Models.Tutor", "Tutor")
                         .WithMany()
                         .HasForeignKey("TutorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Exercise");
-
-                    b.Navigation("ExerciseType");
-
                     b.Navigation("ScheduleTimeSlot");
 
                     b.Navigation("StudentProfile");
-
-                    b.Navigation("Syllabus");
 
                     b.Navigation("Tutor");
                 });

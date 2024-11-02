@@ -58,6 +58,13 @@ namespace backend_api.Data
             base.OnModelCreating(builder);
 
             builder.Entity<Schedule>()
+                .HasOne(se => se.Syllabus)
+                .WithMany()
+                .HasForeignKey(se => se.SyllabusId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            builder.Entity<Schedule>()
                 .HasOne(se => se.ExerciseType)
                 .WithMany()
                 .HasForeignKey(se => se.ExerciseTypeId)
