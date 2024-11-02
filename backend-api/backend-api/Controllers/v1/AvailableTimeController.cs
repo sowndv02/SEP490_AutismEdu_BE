@@ -42,11 +42,11 @@ namespace backend_api.Controllers.v1
             {
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (availableTimeSlotCreateDTO == null || string.IsNullOrEmpty(tutorId))
+                if (availableTimeSlotCreateDTO == null)
                 {
-
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
+                    _logger.LogError("Bad request: AvailableTimeSlotCreateDTO is null or Tutor ID is missing.");
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.AVAILABLE_TIME) };
                     return BadRequest(_response);
                 }
@@ -54,6 +54,7 @@ namespace backend_api.Controllers.v1
                 if (TimeSpan.Parse(availableTimeSlotCreateDTO.From) > TimeSpan.Parse(availableTimeSlotCreateDTO.To))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
+                    _logger.LogError("Bad request: 'From' time ({FromTime}) is later than 'To' time ({ToTime}).", availableTimeSlotCreateDTO.From, availableTimeSlotCreateDTO.To);
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TIME_SLOT) };
                     return BadRequest(_response);
@@ -75,6 +76,7 @@ namespace backend_api.Controllers.v1
 
                 availableTimeSlot.TutorId = tutorId;
                 availableTimeSlot.CreatedDate = DateTime.Now;
+                // TODO: Add log create availableTimeSlot
                 await _availableTimeSlotRepository.CreateAsync(availableTimeSlot);
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);

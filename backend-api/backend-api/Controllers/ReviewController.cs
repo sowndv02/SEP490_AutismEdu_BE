@@ -15,7 +15,7 @@ namespace backend_api.Controllers.v1
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    [ApiVersion("1.0")]
+    [ApiVersionNeutral]
     public class ReviewController : ControllerBase
     {
         private readonly IReviewRepository _reviewRepository;

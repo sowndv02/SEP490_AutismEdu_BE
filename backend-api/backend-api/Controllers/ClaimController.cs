@@ -10,11 +10,11 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 
-namespace backend_api.Controllers.v1
+namespace backend_api.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    [ApiVersion("1.0")]
+    [ApiVersionNeutral]
     public class ClaimController : ControllerBase
     {
         private readonly IClaimRepository _claimRepository;

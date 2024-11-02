@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -56,6 +57,12 @@ namespace backend_api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<AssessmentQuestion>()
+                .HasOne(a => a.Submitter)
+                .WithMany()
+                .HasForeignKey(a => a.SubmitterId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Schedule>()
                 .HasOne(se => se.Syllabus)
