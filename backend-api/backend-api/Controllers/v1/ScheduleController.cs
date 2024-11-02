@@ -207,7 +207,7 @@ namespace backend_api.Controllers.v1
 
 
                 var (count, result) = await _scheduleRepository.GetAllNotPagingAsync(filter,
-                                "StudentProfile", null, null, true);
+                                "StudentProfile,Exercise,ExerciseType", null, null, true);
 
                 foreach (Schedule schedule in result)
                 {
