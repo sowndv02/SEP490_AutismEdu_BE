@@ -46,6 +46,51 @@ namespace backend_api.Controllers.v1
         }
 
 
+        [HttpGet("NoStudentProfile")]
+        public async Task<ActionResult<APIResponse>> GetAllRequestNoStudentProfileAsync(string? status = SD.STATUS_APPROVE, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                int totalCount = 0;
+                List<TutorRequest> list = new();
+                Expression<Func<TutorRequest, bool>> filter = u => u.TutorId == userId && u.RequestStatus == SD.Status.APPROVE && !u.HasStudentProfile;
+                Expression<Func<TutorRequest, object>> orderByQuery = u => true;
+
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+
+                var (count, result) = await _tutorRequestRepository.GetAllNotPagingAsync(filter,
+                               includeProperties: "Parent,ChildInformation", excludeProperties: null, orderBy: orderByQuery, isDesc);
+                list = result;
+                totalCount = count;
+
+                _response.Result = _mapper.Map<List<TutorRequestDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = null;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
         [HttpGet("history")]
         [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllHistoryRequestAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
