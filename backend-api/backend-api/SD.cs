@@ -126,6 +126,7 @@
         public const string USER = "Người dùng";
         public const string WORK_EXPERIENCE = "Kinh nghiệm làm việc";
 		public const string SCHEDULE = "Lịch học";
+		public const string PASSWORD = "Mật khẩu";
 
 
 
@@ -149,6 +150,12 @@
         public const string CANNOT_ADD_ROLE = "CANNOT_ADD_ROLE";
         public const string USER_HAVE_NO_ROLE = "USER_HAVE_NO_ROLE";
         public const string DUPPLICATED_ASSIGN_EXERCISE = "DUPPLICATED_ASSIGN_EXERCISE";
+        public const string EMAIL_NOT_CONFIRM = "EMAIL_NOT_CONFIRM";
+        public const string LOGIN_WRONG_SIDE = "LOGIN_WRONG_SIDE";
+        public const string GG_CANNOT_CHANGE_PASSWORD = "GG_CANNOT_CHANGE_PASSWORD";
+        public const string CHANGE_PASS_FAIL = "CHANGE_PASS_FAIL";
+        public const string ADD_ROLE_USER_TO_USER = "ADD_ROLE_USER_TO_USER";
+        public const string USER_IS_LOCKED_OUT = "USER_IS_LOCKED_OUT";
 
         // const exercise type
         public const string DEFAULT_EXERCISE_TYPE_1 = "Tập phát âm thuở ban đầu - nhưng âm thanh của trẻ nhỏ";

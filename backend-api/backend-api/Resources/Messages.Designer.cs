@@ -61,6 +61,15 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Thêm role user cho người dùng.
+        /// </summary>
+        public static string ADD_ROLE_USER_TO_USER {
+            get {
+                return ResourceManager.GetString("ADD_ROLE_USER_TO_USER", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này.
         /// </summary>
         public static string BAD_ACTION_REVIEW {
@@ -88,6 +97,15 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Đổi mật khẩu thất bại.
+        /// </summary>
+        public static string CHANGE_PASS_FAIL {
+            get {
+                return ResourceManager.GetString("CHANGE_PASS_FAIL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; đã tồn tại.
         /// </summary>
         public static string DATA_DUPLICATED_MESSAGE {
@@ -106,11 +124,38 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chưa xác thực email.
+        /// </summary>
+        public static string EMAIL_NOT_CONFIRM {
+            get {
+                return ResourceManager.GetString("EMAIL_NOT_CONFIRM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Người dùng Google không thể đối mật khẩu.
+        /// </summary>
+        public static string GG_CANNOT_CHANGE_PASSWORD {
+            get {
+                return ResourceManager.GetString("GG_CANNOT_CHANGE_PASSWORD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lỗi hệ thống. Vui lòng thử lại sau!.
         /// </summary>
         public static string INTERAL_ERROR_MESSAGE {
             get {
                 return ResourceManager.GetString("INTERAL_ERROR_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Phải đăng nhập ở phía {0}.
+        /// </summary>
+        public static string LOGIN_WRONG_SIDE {
+            get {
+                return ResourceManager.GetString("LOGIN_WRONG_SIDE", resourceCulture);
             }
         }
         
@@ -183,6 +228,15 @@ namespace backend_api.Resources {
         public static string USER_HAVE_NO_ROLE {
             get {
                 return ResourceManager.GetString("USER_HAVE_NO_ROLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tài khoản đang bị khóa.
+        /// </summary>
+        public static string USER_IS_LOCKED_OUT {
+            get {
+                return ResourceManager.GetString("USER_IS_LOCKED_OUT", resourceCulture);
             }
         }
     }
