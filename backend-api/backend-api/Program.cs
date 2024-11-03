@@ -1,3 +1,4 @@
+using AutoMapper;
 using backend_api;
 using backend_api.Authorize;
 using backend_api.Authorize.Requirements;
@@ -114,7 +115,14 @@ builder.Services.AddScoped<IRabbitMQMessageSender, RabbitMQMessageSender>();
 
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingConfig));
+var mapperConfig = new MapperConfiguration(mc =>
+{
+    mc.AddProfile(new MappingConfig());
+});
+
+IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
+
 builder.Services.AddApiVersioning(options =>
 {
     options.AssumeDefaultVersionWhenUnspecified = true;
