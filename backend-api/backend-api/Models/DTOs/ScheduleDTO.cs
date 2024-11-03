@@ -11,6 +11,8 @@ namespace backend_api.Models.DTOs
         public AttendanceStatus AttendanceStatus { get; set; }
         public PassingStatus PassingStatus { get; set; }
         public int? SyllabusId { get; set; }
+        public int AgeFrom { get; set; }
+        public int AgeEnd { get; set; }
         public ExerciseDTO? Exercise { get; set; }
         public ExerciseTypeInfoDTO? ExerciseType { get; set; }
         public string Note { get; set; }
