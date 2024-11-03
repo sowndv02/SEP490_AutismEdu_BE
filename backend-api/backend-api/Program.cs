@@ -100,7 +100,7 @@ builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddSingleton<DateTimeEncryption>();
 builder.Services.AddSingleton<TokenEcryption>();
 builder.Services.AddSingleton<FormatString>();
-builder.Services.AddHostedService<RefreshTokenCleanupService>();
+builder.Services.AddHostedService<DailyService>();
 builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
 builder.Services.AddHostedService<AutoRejectStudentProfile>();
 builder.Services.AddScoped<IResourceService, ResourceService>();

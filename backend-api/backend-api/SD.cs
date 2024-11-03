@@ -1,4 +1,6 @@
-﻿namespace backend_api
+﻿using System.Threading;
+
+namespace backend_api
 {
     public static class SD
     {
@@ -258,6 +260,7 @@
 
         public const string IncompatibilityWithCurriculumMsg = "Không tương thích với chương trình giảng dạy";
         public const string SchedulingConflictsMsg = "Xung đột lịch trình";
+        public const string REQUEST_TIMEOUT_EXPIRED = "Thời gian yêu cầu hết hạn";
         public const string OtherMsg = "Khác";
 
 
