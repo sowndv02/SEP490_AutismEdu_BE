@@ -9,9 +9,9 @@ namespace backend_api.Services
     public class AutoRejectStudentProfile : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<RefreshTokenCleanupService> _logger;
+        private readonly ILogger<DailyService> _logger;
         private string queueName = string.Empty;
-        public AutoRejectStudentProfile(IServiceProvider serviceProvider, ILogger<RefreshTokenCleanupService> logger,
+        public AutoRejectStudentProfile(IServiceProvider serviceProvider, ILogger<DailyService> logger,
             IConfiguration configuration)
         {
             _serviceProvider = serviceProvider;
@@ -69,12 +69,13 @@ namespace backend_api.Services
                         Subject = subject,
                         Message = htmlMessage
                     }, queueName);
-
+                    await Task.Delay(2000);
                     _logger.LogWarning($"Profile {profile.Id} has been rejected automatically after 24 hours.");
                 }
 
                 int total = await context.SaveChangesAsync();
                 _logger.LogInformation($"Total {total} profiles automatically rejected.");
+
             }
         }
 

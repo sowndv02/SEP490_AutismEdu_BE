@@ -28,18 +28,20 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         private string queueName = string.Empty;
         private readonly IRabbitMQMessageSender _messageBus;
+        private readonly ILogger<CurriculumController> _logger;
         protected APIResponse _response;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
 
         public CurriculumController(IUserRepository userRepository, ITutorRepository tutorRepository,
-            IMapper mapper, IConfiguration configuration,
+            IMapper mapper, IConfiguration configuration, ILogger<CurriculumController> logger,
             ICurriculumRepository curriculumRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService)
         {
+            _logger = logger;   
             _messageBus = messageBus;
             _curriculumRepository = curriculumRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
-            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
+            queueName = configuration["RabbitMQSettings:QueueName"];
             _response = new APIResponse();
             _mapper = mapper;
             _userRepository = userRepository;
@@ -57,6 +59,7 @@ namespace backend_api.Controllers.v1
 
                 if (id == 0)
                 {
+                    _logger.LogWarning("Invalid curriculum ID: {CurriculumId}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -66,6 +69,7 @@ namespace backend_api.Controllers.v1
 
                 if (model == null)
                 {
+                    _logger.LogWarning("Curriculum not found for ID: {CurriculumId} and User ID: {UserId}. Returning BadRequest.", id, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CURRICULUM) };
@@ -81,10 +85,13 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while deleting curriculum ID: {CurriculumId}", id);
+                _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return _response;
             }
-            return _response;
+            
         }
 
 
