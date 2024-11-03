@@ -44,11 +44,12 @@ namespace backend_api.Controllers.v1
             ICertificateMediaRepository certificateMediaRepository, ICurriculumRepository curriculumRepository,
             IWorkExperienceRepository workExperienceRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService)
         {
+            _resourceService = resourceService;
             _workExperienceRepository = workExperienceRepository;
             _curriculumRepository = curriculumRepository;
             _certificateMediaRepository = certificateMediaRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
-            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
+            queueName = configuration["RabbitMQSettings:QueueName"];
             _response = new APIResponse();
             _mapper = mapper;
             _blobStorageRepository = blobStorageRepository;
@@ -62,45 +63,59 @@ namespace backend_api.Controllers.v1
         [HttpGet("{id}")]
         public async Task<IActionResult> GetActive(int id)
         {
-            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-            var result = new Certificate();
-            if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+            try
             {
-                result = await _certificateRepository.GetAsync(x => x.Id == id && !x.IsDeleted, false, "CertificateMedias", null);
-            }
-            else
-            {
-                result = await _certificateRepository.GetAsync(x => x.Id == id, false, "CertificateMedias", null);
-            }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
-            if (result == null)
-            {
-                _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE) };
-                return BadRequest(_response);
+                var result = new Certificate();
+                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    result = await _certificateRepository.GetAsync(x => x.Id == id && !x.IsDeleted, false, "CertificateMedias", null);
+                }
+                else
+                {
+                    result = await _certificateRepository.GetAsync(x => x.Id == id, false, "CertificateMedias", null);
+                }
+
+                if (result == null)
+                {
+                    _logger.LogError("Certificate with ID {Id} not found or is deleted.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE) };
+                    return BadRequest(_response);
+                }
+                _response.StatusCode = HttpStatusCode.Created;
+                _response.Result = _mapper.Map<CertificateDTO>(result);
+                _response.IsSuccess = true;
+                return Ok(_response);
             }
-            _response.StatusCode = HttpStatusCode.Created;
-            _response.Result = _mapper.Map<CertificateDTO>(result);
-            _response.IsSuccess = true;
-            return Ok(_response);
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "An error occurred while get a certificate {Id}", id);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            } 
         }
 
         [HttpPost]
         [Authorize(SD.TUTOR_ROLE)]
         public async Task<IActionResult> CreateAsync([FromForm] CertificateCreateDTO createDTO)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Model state is invalid for user {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
                     return BadRequest(_response);
                 }
 
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var newModel = _mapper.Map<Certificate>(createDTO);
 
                 newModel.SubmiterId = userId;
@@ -112,6 +127,7 @@ namespace backend_api.Controllers.v1
                     var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
                     await _certificateMediaRepository.CreateAsync(objMedia);
                 }
+                // TODO: Add log
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<CertificateDTO>(newModel);
                 _response.IsSuccess = true;
@@ -119,6 +135,7 @@ namespace backend_api.Controllers.v1
             }
             catch(Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while creating a certificate for user {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -130,13 +147,14 @@ namespace backend_api.Controllers.v1
         [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<IActionResult> ApproveOrRejectRequest(ChangeStatusDTO changeStatusDTO)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmiterId);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
+                    _logger.LogWarning("Invalid request status or certificate not found for certificate ID {CertificateId} by user {UserId}", changeStatusDTO.Id, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
@@ -200,12 +218,14 @@ namespace backend_api.Controllers.v1
                     _response.IsSuccess = true;
                     return Ok(_response);
                 }
+                // TODO: Add log
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while changing the status of certificate ID {CertificateId} by user {UserId}", changeStatusDTO.Id, userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -293,6 +313,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred in GetAllAsync Certifcate");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -305,14 +326,15 @@ namespace backend_api.Controllers.v1
         [Authorize]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (id == 0) return BadRequest();
                 var model = await _certificateRepository.GetAsync(x => x.Id == id && x.SubmiterId == userId, false, null);
 
                 if (model == null)
                 {
+                    _logger.LogWarning("Certificate not found for ID: {CertificateId} and User ID: {UserId}. Returning BadRequest.", id, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
@@ -320,6 +342,7 @@ namespace backend_api.Controllers.v1
                 }
                 model.IsDeleted = true;
                 await _certificateRepository.UpdateAsync(model);
+                // TODO: Add log
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -327,6 +350,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while deleting certificate ID: {CertificateId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

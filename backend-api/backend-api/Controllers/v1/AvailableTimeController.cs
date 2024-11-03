@@ -63,14 +63,17 @@ namespace backend_api.Controllers.v1
                 AvailableTimeSlot availableTimeSlot = _mapper.Map<AvailableTimeSlot>(availableTimeSlotCreateDTO);
                 
                 var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.Weekday == availableTimeSlot.Id, null, null);
-                foreach (var slot in existingTimeSlots.list)
+                if (existingTimeSlots.list != null && existingTimeSlots.list.Count > 0) 
                 {
-                    if (!(availableTimeSlot.To <= slot.From || availableTimeSlot.From >= slot.To))
+                    foreach (var slot in existingTimeSlots.list)
                     {
-                        _response.StatusCode = HttpStatusCode.BadRequest;
-                        _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, slot.From.ToString(@"hh\:mm"), slot.To.ToString(@"hh\:mm"))};
-                        return BadRequest(_response);
+                        if (!(availableTimeSlot.To <= slot.From || availableTimeSlot.From >= slot.To))
+                        {
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            _response.IsSuccess = false;
+                            _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, slot.From.ToString(@"hh\:mm"), slot.To.ToString(@"hh\:mm")) };
+                            return BadRequest(_response);
+                        }
                     }
                 }
 
@@ -84,6 +87,7 @@ namespace backend_api.Controllers.v1
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
+                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
@@ -105,6 +109,7 @@ namespace backend_api.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
+                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
@@ -127,6 +132,7 @@ namespace backend_api.Controllers.v1
                 }
                 AvailableTimeSlot model = _mapper.Map<AvailableTimeSlot>(timeslot);
                 await _availableTimeSlotRepository.RemoveAsync(model);
+                // TODO: Add log
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -134,6 +140,7 @@ namespace backend_api.Controllers.v1
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
+                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
