@@ -91,6 +91,15 @@ namespace backend_api.Repository
                 query = query.Where(filter);
             }
             int totalCount = await query.CountAsync();
+
+            if (orderBy != null)
+            {
+                if (isDesc)
+                    query = query.OrderByDescending(orderBy);
+                else
+                    query = query.OrderBy(orderBy);
+            }
+
             if (pageSize > 0)
             {
                 query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
@@ -103,13 +112,7 @@ namespace backend_api.Repository
                     query = query.Include(includeProp);
                 }
             }
-            if (orderBy != null)
-            {
-                if (isDesc)
-                    query = query.OrderByDescending(orderBy);
-                else
-                    query = query.OrderBy(orderBy);
-            }
+            
             return (totalCount, await query.ToListAsync());
         }
 
@@ -129,18 +132,17 @@ namespace backend_api.Repository
             {
                 query = query.Where(filter);
             }
-            int totalCount = await query.CountAsync();
-            if (pageSize > 0)
-            {
-                query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
-            }
-
             if (orderBy != null)
             {
                 if (isDesc)
                     query = query.OrderByDescending(orderBy);
                 else
                     query = query.OrderBy(orderBy);
+            }
+            int totalCount = await query.CountAsync();
+            if (pageSize > 0)
+            {
+                query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
             }
             return (totalCount, await query.ToListAsync());
         }
