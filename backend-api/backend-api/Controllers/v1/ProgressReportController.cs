@@ -106,6 +106,12 @@ namespace backend_api.Controllers.v1
                         case SD.CREADTED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
+                        case SD.DATE_FROM:
+                            orderByQuery = x => x.From;
+                            break;
+                        case SD.DATE_TO:
+                            orderByQuery = x => x.To;
+                            break;
                         default:
                             orderByQuery = x => x.CreatedDate;
                             break;

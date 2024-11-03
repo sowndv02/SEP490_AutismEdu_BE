@@ -586,8 +586,7 @@ namespace backend_api.Controllers.v1
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                var role = await _userRepository.GetRoleByUserId(userId);
-                var r = role.FirstOrDefault(x => x.Name.Equals("Parent"));
+                var roles = User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList();
 
                 var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == id, true, "InitialAssessmentResults,ScheduleTimeSlots");
 
@@ -610,13 +609,13 @@ namespace backend_api.Controllers.v1
                 studentProfile.InitialAssessmentResults = initialAssessmentResults;
                 studentProfile.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(studentProfile.TutorId), true, "User");
 
-                if (r == null)
+                if (roles.Contains(SD.PARENT_ROLE))
+                {
+                    _response.Result = _mapper.Map<StudentProfileDetailDTO>(studentProfile);               
+                }
+                else if (roles.Contains(SD.TUTOR_ROLE))
                 {
                     _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
-                }
-                else
-                {
-                    _response.Result = _mapper.Map<StudentProfileDetailDTO>(studentProfile);
                 }
 
                 _response.StatusCode = HttpStatusCode.NoContent;
