@@ -23,15 +23,17 @@ namespace backend_api.Controllers.v1
         private readonly IResourceService _resourceService;
         protected APIResponse _response;
         private readonly IMapper _mapper;
+        private readonly IChildInformationRepository _childInfoRepository;
 
         public ScheduleController(IScheduleRepository scheduleRepository, IMapper mapper
-            , IStudentProfileRepository studentProfileRepository, IResourceService resourceService)
+            , IStudentProfileRepository studentProfileRepository, IResourceService resourceService, IChildInformationRepository childInfoRepository)
         {
             _resourceService = resourceService;
             _scheduleRepository = scheduleRepository;
             _response = new APIResponse();
             _mapper = mapper;
             _studentProfileRepository = studentProfileRepository;
+            _childInfoRepository = childInfoRepository;
         }
 
         [HttpGet("{id}")]
@@ -218,7 +220,8 @@ namespace backend_api.Controllers.v1
 
                 foreach (Schedule schedule in result)
                 {
-                    schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId, true, "Child");
+                    schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId);
+                    schedule.StudentProfile.Child = await _childInfoRepository.GetAsync(x => x.Id == schedule.StudentProfile.ChildId, true, "Parent");
                 }
 
                 list = result

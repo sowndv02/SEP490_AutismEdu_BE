@@ -275,5 +275,7 @@
         // Order by
         public const string CREADTED_DATE = "createdDate";
         public const string AGE_FROM = "ageFrom";
+        public const string DATE_FROM = "dateFrom";
+        public const string DATE_TO = "dateTo";
     }
 }
