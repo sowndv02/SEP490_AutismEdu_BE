@@ -18,6 +18,7 @@ using backend_api.Mapper;
 using backend_api.Models;
 using FluentAssertions;
 using System.Net;
+using Microsoft.Extensions.Logging;
 
 namespace backend_api.Controllers.v1.Tests
 {
@@ -30,6 +31,7 @@ namespace backend_api.Controllers.v1.Tests
         private readonly Mock<ICurriculumRepository> _curriculumRepositoryMock = new Mock<ICurriculumRepository>();
         private readonly Mock<IRabbitMQMessageSender> _messageBusMock = new Mock<IRabbitMQMessageSender>();
         private readonly Mock<IResourceService> _resourceServiceMock = new Mock<IResourceService>();
+        private readonly Mock<ILogger<CurriculumController>> _loggerMock = new Mock<ILogger<CurriculumController>>();
         private readonly IMapper _mapper;
         private readonly Mock<IConfiguration> _configurationMock = new Mock<IConfiguration>();
         private readonly CurriculumController _controller;
@@ -47,6 +49,7 @@ namespace backend_api.Controllers.v1.Tests
                 _tutorRepositoryMock.Object,
                 _mapper,
                 _configurationMock.Object,
+                _loggerMock.Object,               // Make sure the logger mock is also provided
                 _curriculumRepositoryMock.Object,
                 _messageBusMock.Object,
                 _resourceServiceMock.Object);
