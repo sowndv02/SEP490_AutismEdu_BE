@@ -24,9 +24,11 @@ namespace backend_api.Controllers.v1
         protected APIResponse _response;
         private readonly IMapper _mapper;
         private readonly IChildInformationRepository _childInfoRepository;
+        private readonly ISyllabusRepository _syllabusRepository;
 
         public ScheduleController(IScheduleRepository scheduleRepository, IMapper mapper
-            , IStudentProfileRepository studentProfileRepository, IResourceService resourceService, IChildInformationRepository childInfoRepository)
+            , IStudentProfileRepository studentProfileRepository, IResourceService resourceService,
+            IChildInformationRepository childInfoRepository, ISyllabusRepository syllabusRepository)
         {
             _resourceService = resourceService;
             _scheduleRepository = scheduleRepository;
@@ -34,6 +36,7 @@ namespace backend_api.Controllers.v1
             _mapper = mapper;
             _studentProfileRepository = studentProfileRepository;
             _childInfoRepository = childInfoRepository;
+            _syllabusRepository = syllabusRepository;
         }
 
         [HttpGet("{id}")]
@@ -222,6 +225,7 @@ namespace backend_api.Controllers.v1
                 {
                     schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId);
                     schedule.StudentProfile.Child = await _childInfoRepository.GetAsync(x => x.Id == schedule.StudentProfile.ChildId, true, "Parent");
+                    schedule.Syllabus = await _syllabusRepository.GetAsync(x => x.Id == schedule.SyllabusId);
                 }
 
                 list = result
