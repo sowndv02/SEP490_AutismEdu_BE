@@ -39,7 +39,7 @@ namespace backend_api.Services
                 var profilesToReject = context.StudentProfiles
                     .Where(x => x.Status == SD.StudentProfileStatus.Pending &&
                                 x.CreatedDate.AddHours(24) <= DateTime.Now)
-                    .Include(x => x.InitialAssessmentResults)
+                    .Include(x => x.InitialAndFinalAssessmentResults)
                     .Include(x => x.ScheduleTimeSlots)
                     .Include(x => x.Child)
                     .ThenInclude(x => x.Parent)
