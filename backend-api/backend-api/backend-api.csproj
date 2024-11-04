@@ -53,7 +53,7 @@
        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
      </None>
    </ItemGroup>
-
+    
    <ItemGroup>
      <Compile Update="Resources\Messages.Designer.cs">
        <DesignTime>True</DesignTime>
