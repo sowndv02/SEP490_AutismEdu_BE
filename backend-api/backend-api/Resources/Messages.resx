@@ -159,8 +159,6 @@
   <data name="DUPPLICATED_ASSIGN_EXERCISE" xml:space="preserve">
     <value>Hiện tại buổi học tiếp theo đang được gán bài tập giống buổi học này. Bạn hãy cân nhắc gán lại bài tập khác.</value>
   </data>
-	
-
   <data name="ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE" xml:space="preserve">
     <value>Đã tồn tại khoảng điểm đánh giá từ {0} - {1}</value>
   </data>
@@ -181,5 +179,8 @@
   </data>
   <data name="USER_IS_LOCKED_OUT" xml:space="preserve">
     <value>Tài khoản đang bị khóa</value>
+  </data>
+  <data name="PROGRESS_REPORT_MODIFICATION_EXPIRED" xml:space="preserve">
+    <value>Đã quá thời hạn thay đổi sổ liên lạc</value>
   </data>
 </root>
