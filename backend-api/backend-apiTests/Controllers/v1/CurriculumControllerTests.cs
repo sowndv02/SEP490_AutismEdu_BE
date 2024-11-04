@@ -19,6 +19,7 @@ using backend_api.Models;
 using FluentAssertions;
 using System.Net;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace backend_api.Controllers.v1.Tests
 {
@@ -84,6 +85,69 @@ namespace backend_api.Controllers.v1.Tests
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.ErrorMessages.FirstOrDefault().Should().Be("Invalid ID.");
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ReturnsBadRequest_WhenCurriculumNotFound()
+        {
+            // Arrange
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+                .ReturnsAsync((Curriculum)null);
+            _resourceServiceMock.Setup(r => r.GetString(SD.NOT_FOUND_MESSAGE, SD.CURRICULUM)).Returns("Curriculum not found.");
+
+            // Act
+            var result = await _controller.DeleteAsync(1);
+            var statusCodeResult = result.Result as BadRequestObjectResult;
+
+            // Assert
+            statusCodeResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+            var apiResponse = statusCodeResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.FirstOrDefault().Should().Be("Curriculum not found.");
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ReturnsNoContent_WhenSuccessfulDeletion()
+        {
+            // Arrange
+            var curriculum = new Curriculum { Id = 1, SubmiterId = "testUserId", IsActive = true, IsDeleted = false };
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+                .ReturnsAsync(curriculum);
+            var newCurriculum = new Curriculum { Id = 1, SubmiterId = "testUserId", IsActive = true, IsDeleted = true };
+            _curriculumRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Curriculum>())).ReturnsAsync(newCurriculum);
+
+            // Act
+            var result = await _controller.DeleteAsync(1);
+            var okResult = result.Result as OkObjectResult;
+
+            // Assert
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+            var apiResponse = okResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ReturnsInternalServerError_OnException()
+        {
+            // Arrange
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+                .ThrowsAsync(new Exception());
+            _resourceServiceMock.Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE)).Returns("An error occurred.");
+
+            // Act
+            var result = await _controller.DeleteAsync(1);
+            var apiResponse = result.Value as APIResponse;
+
+            // Assert
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.FirstOrDefault().Should().Be("An error occurred.");
         }
 
 

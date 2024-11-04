@@ -170,18 +170,21 @@ namespace backend_api.Controllers.v1
                     // Send mail
                     var subject = "Yêu cập nhật chứng chỉ của bạn đã được chấp nhận!";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
+                    if (System.IO.File.Exists(templatePath))
+                    {
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
                         .Replace("@Model.FullName", tutor.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật chứng chỉ {model.CertificateName} của bạn")
                         .Replace("@Model.IsApproved", Status.APPROVE.ToString());
 
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        Email = tutor.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            Email = tutor.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
 
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -200,25 +203,27 @@ namespace backend_api.Controllers.v1
                     //Send mail
                     var subject = "Yêu cập nhật chứng chỉ của bạn đã bị từ chối!";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", tutor.FullName)
-                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật chứng chỉ {model.CertificateName} của bạn")
-                        .Replace("@Model.IsApproved", Status.REJECT.ToString())
-                        .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
-                    _messageBus.SendMessage(new EmailLogger()
+                    if (System.IO.File.Exists(templatePath))
                     {
-                        Email = tutor.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", tutor.FullName)
+                            .Replace("@Model.IssueName", $"Yêu cầu cập nhật chứng chỉ {model.CertificateName} của bạn")
+                            .Replace("@Model.IsApproved", Status.REJECT.ToString())
+                            .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            Email = tutor.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
 
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
                 }
-                // TODO: Add log
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -268,6 +273,11 @@ namespace backend_api.Controllers.v1
                             break;
                     }
                 }
+                else
+                {
+                    orderByQuery = x => x.CreatedDate;
+                }
+
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
                     switch (status.ToLower())
@@ -329,7 +339,14 @@ namespace backend_api.Controllers.v1
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try
             {
-                if (id == 0) return BadRequest();
+                if (id == 0)
+                {
+                    _logger.LogWarning("Invalid curriculum ID: {CurriculumId}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 var model = await _certificateRepository.GetAsync(x => x.Id == id && x.SubmiterId == userId, false, null);
 
                 if (model == null)
@@ -342,7 +359,6 @@ namespace backend_api.Controllers.v1
                 }
                 model.IsDeleted = true;
                 await _certificateRepository.UpdateAsync(model);
-                // TODO: Add log
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
