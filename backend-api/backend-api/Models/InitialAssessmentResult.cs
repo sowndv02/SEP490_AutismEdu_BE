@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_api.Models
 {
+    [Table(name: "InitialAndFinalAssessmentResult")]
     public class InitialAssessmentResult
     {
         [Key]
@@ -11,6 +12,7 @@ namespace backend_api.Models
         public int QuestionId { get; set; }
         public int OptionId { get; set; }      
         public int StudentProfileId { get; set; }
+        public bool isInitialAssessment { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         [ForeignKey(nameof(QuestionId))]
