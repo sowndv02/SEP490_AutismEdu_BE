@@ -13,6 +13,7 @@ namespace backend_api.Models
         public int ChildId { get; set; }
         public string? StudentCode { get; set; }
         public string? InitialCondition { get; set; }
+        public string? FinalCondition { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         public StudentProfileStatus Status { get; set; }
@@ -20,7 +21,7 @@ namespace backend_api.Models
         public Tutor Tutor { get; set; }
         [ForeignKey(nameof(ChildId))]
         public ChildInformation Child { get; set; }
-        public List<InitialAssessmentResult> InitialAssessmentResults { get; set; }
+        public List<InitialAssessmentResult> InitialAndFinalAssessmentResults { get; set; }
         public List<ScheduleTimeSlot> ScheduleTimeSlots { get; set; }
     }
 }

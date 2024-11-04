@@ -142,6 +142,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Question, opt => opt.MapFrom(src => src.Option.Question.Question))
                 .ForMember(dest => dest.OptionText, opt => opt.MapFrom(src => src.Option.OptionText))
                 .ForMember(dest => dest.Point, opt => opt.MapFrom(src => src.Option.Point))
+                .ForMember(dest => dest.isInitialAssessment, opt => opt.MapFrom(src => src.isInitialAssessment))
                 .ReverseMap();
             CreateMap<StudentProfile, StudentProfileDTO>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
@@ -154,7 +155,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Child.Parent.Address))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.Child.Parent.PhoneNumber))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.Child.Parent.CreatedDate))
-                .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
+                .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults))
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ReverseMap();
@@ -167,7 +168,9 @@ namespace backend_api.Mapper
 
             CreateMap<StudentProfile, ChildStudentProfileDTO>()
                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+               .ForMember(dest => dest.ChildId, opt => opt.MapFrom(src => src.ChildId))
                .ForMember(dest => dest.ChildName, opt => opt.MapFrom(src => src.Child.Name))
+               .ForMember(dest => dest.TutorId, opt => opt.MapFrom(src => src.TutorId))
                .ForMember(dest => dest.TutorName, opt => opt.MapFrom(src => src.Tutor.User.FullName))
                .ForMember(dest => dest.TutorPhoneNumber, opt => opt.MapFrom(src => src.Tutor.User.PhoneNumber))
                .ForMember(dest => dest.TutorImageUrl, opt => opt.MapFrom(src => src.Tutor.User.ImageUrl))
@@ -178,7 +181,7 @@ namespace backend_api.Mapper
             CreateMap<StudentProfile, StudentProfileCreateDTO>()
                 .ForMember(dest => dest.ChildId, opt => opt.MapFrom(src => src.ChildId))
                 .ForMember(dest => dest.InitialCondition, opt => opt.MapFrom(src => src.InitialCondition))
-                .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
+                .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults))
                 .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                 .ReverseMap();
             CreateMap<Exercise, ExerciseListDTO>().ReverseMap();
@@ -198,7 +201,7 @@ namespace backend_api.Mapper
                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                .ForMember(dest => dest.Tutor, opt => opt.MapFrom(src => src.Tutor))
-               .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
+               .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults))
                .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                .ReverseMap();
 
@@ -225,7 +228,7 @@ namespace backend_api.Mapper
                .ForMember(dest => dest.InitialCondition, opt => opt.MapFrom(src => src.InitialCondition))
                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                .ForMember(dest => dest.Tutor, opt => opt.MapFrom(src => src.Tutor))
-               .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAssessmentResults))
+               .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults))
                .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                .ReverseMap();

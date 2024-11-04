@@ -111,6 +111,11 @@ namespace backend_api.Controllers.v1
                 model.CreatedDate = DateTime.Now;
                 model.TutorId = tutorId;
 
+                foreach(var assessment in model.InitialAndFinalAssessmentResults)
+                {
+                    assessment.isInitialAssessment = true;
+                }
+
                 if (!string.IsNullOrEmpty(createDTO.Email) &&
                     !string.IsNullOrEmpty(createDTO.ParentFullName) &&
                     !string.IsNullOrEmpty(createDTO.Address) &&
@@ -372,7 +377,7 @@ namespace backend_api.Controllers.v1
                     }
                 }
                 var (count, result) = await _studentProfileRepository.GetAllWithIncludeAsync(filter,
-                                "Child,InitialAssessmentResults,ScheduleTimeSlots", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                                "Child,InitialAndFinalAssessmentResults,ScheduleTimeSlots", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
 
                 var studentProfiles = _mapper.Map<List<StudentProfileDTO>>(result);
                 foreach (var profile in studentProfiles)
@@ -516,7 +521,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == changeStatusDTO.Id, true, "InitialAssessmentResults,ScheduleTimeSlots");
+                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == changeStatusDTO.Id, true, "InitialAndFinalAssessmentResults,ScheduleTimeSlots");
 
                 if (studentProfile == null)
                 {
@@ -558,11 +563,11 @@ namespace backend_api.Controllers.v1
                 }
 
                 List<InitialAssessmentResult> initialAssessmentResults = new List<InitialAssessmentResult>();
-                foreach (var assessment in studentProfile.InitialAssessmentResults)
+                foreach (var assessment in studentProfile.InitialAndFinalAssessmentResults)
                 {
-                    initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id, true, "Question,Option"));
+                    initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id && x.isInitialAssessment == true, true, "Question,Option"));
                 }
-                studentProfile.InitialAssessmentResults = initialAssessmentResults;
+                studentProfile.InitialAndFinalAssessmentResults = initialAssessmentResults;
                 await _studentProfileRepository.UpdateAsync(studentProfile);
                 _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
                 _response.StatusCode = HttpStatusCode.NoContent;
@@ -588,7 +593,7 @@ namespace backend_api.Controllers.v1
 
                 var roles = User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList();
 
-                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == id, true, "InitialAssessmentResults,ScheduleTimeSlots");
+                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == id, true, "InitialAndFinalAssessmentResults,ScheduleTimeSlots");
 
                 if (studentProfile == null)
                 {
@@ -602,11 +607,11 @@ namespace backend_api.Controllers.v1
                 studentProfile.Child = childInfo;
 
                 List<InitialAssessmentResult> initialAssessmentResults = new List<InitialAssessmentResult>();
-                foreach (var assessment in studentProfile.InitialAssessmentResults)
+                foreach (var assessment in studentProfile.InitialAndFinalAssessmentResults)
                 {
                     initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id, true, "Question,Option"));
                 }
-                studentProfile.InitialAssessmentResults = initialAssessmentResults;
+                studentProfile.InitialAndFinalAssessmentResults = initialAssessmentResults;
                 studentProfile.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(studentProfile.TutorId), true, "User");
 
                 if (roles.Contains(SD.PARENT_ROLE))
