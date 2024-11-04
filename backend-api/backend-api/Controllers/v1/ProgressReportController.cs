@@ -227,7 +227,7 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var model = await _progressReportRepository.GetAsync(x => x.Id == updateDTO.Id,true, "AssessmentResults");
+                var model = await _progressReportRepository.GetAsync(x => x.Id == updateDTO.Id);
 
                 if (model == null)
                 {
@@ -249,19 +249,21 @@ namespace backend_api.Controllers.v1
                 model.Failed = updateDTO.Failed;
                 model.NoteFromTutor = updateDTO.NoteFromTutor;
 
-                var progressReport = await _progressReportRepository.CreateAsync(model);
+                await _progressReportRepository.UpdateAsync(model);
+
                 List<AssessmentResult> updatedAssessmentResults = new List<AssessmentResult>();
 
                 foreach (var updatedAssessmentResult in updateDTO.AssessmentResults)
                 {
-                    var assessmentResult = await _assessmentResultRepository.GetAsync(x => x.Id == updatedAssessmentResult.Id, true, "Question,Option");
-                    assessmentResult.QuestionId = assessmentResult.QuestionId;
-                    assessmentResult.OptionId = assessmentResult.OptionId;
+                    var assessmentResult = await _assessmentResultRepository.GetAsync(x => x.Id == updatedAssessmentResult.Id);
+                    assessmentResult.QuestionId = updatedAssessmentResult.QuestionId;
+                    assessmentResult.OptionId = updatedAssessmentResult.OptionId;
+                    await _assessmentResultRepository.UpdateAsync(assessmentResult);
 
+                    assessmentResult = await _assessmentResultRepository.GetAsync(x => x.Id == updatedAssessmentResult.Id, true, "Question,Option");
                     updatedAssessmentResults.Add(assessmentResult);
                 }
                 model.AssessmentResults = updatedAssessmentResults;
-                model = await _progressReportRepository.UpdateAsync(model);
 
                 _response.Result = _mapper.Map<ProgressReportDTO>(model);
                 _response.StatusCode = HttpStatusCode.Created;
