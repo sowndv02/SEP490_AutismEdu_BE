@@ -13,6 +13,7 @@ using backend_api.Utils;
 using MailKit.Search;
 using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
+using backend_api.Models.DTOs.UpdateDTOs;
 
 namespace backend_api.Controllers.v1
 {
@@ -120,11 +121,11 @@ namespace backend_api.Controllers.v1
 
                 if (startDate != null)
                 {
-                    filter = filter.AndAlso(u => u.CreatedDate.Date >= startDate.Value.Date);
+                    filter = filter.AndAlso(u => u.From.Date >= startDate.Value.Date);
                 }
                 if (endDate != null)
                 {
-                    filter = filter.AndAlso(u => u.CreatedDate.Date <= endDate.Value.Date);
+                    filter = filter.AndAlso(u => u.To.Date <= endDate.Value.Date);
                 }
 
 
@@ -199,6 +200,72 @@ namespace backend_api.Controllers.v1
 
                 _response.Result = _mapper.Map<ProgressReportDTO>(progressReport);
                 _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPut]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> UpdateAsync(ProgressReportUpdateDTO updateDTO)
+        {
+            try
+            {
+                var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (updateDTO == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PROGRESS_REPORT) };
+                    return BadRequest(_response);
+                }
+
+                var model = await _progressReportRepository.GetAsync(x => x.Id == updateDTO.Id,true, "AssessmentResults");
+
+                if (model == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.PROGRESS_REPORT) };
+                    return BadRequest(_response);
+                }
+
+                if(model.CreatedDate.AddHours(48) <= DateTime.Now)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.PROGRESS_REPORT_MODIFICATION_EXPIRED) };
+                    return BadRequest(_response);
+                }
+
+                model.Achieved = updateDTO.Achieved;
+                model.Failed = updateDTO.Failed;
+                model.NoteFromTutor = updateDTO.NoteFromTutor;
+
+                var progressReport = await _progressReportRepository.CreateAsync(model);
+                List<AssessmentResult> updatedAssessmentResults = new List<AssessmentResult>();
+
+                foreach (var updatedAssessmentResult in updateDTO.AssessmentResults)
+                {
+                    var assessmentResult = await _assessmentResultRepository.GetAsync(x => x.Id == updatedAssessmentResult.Id, true, "Question,Option");
+                    assessmentResult.QuestionId = assessmentResult.QuestionId;
+                    assessmentResult.OptionId = assessmentResult.OptionId;
+
+                    updatedAssessmentResults.Add(assessmentResult);
+                }
+                model.AssessmentResults = updatedAssessmentResults;
+                model = await _progressReportRepository.UpdateAsync(model);
+
+                _response.Result = _mapper.Map<ProgressReportDTO>(model);
+                _response.StatusCode = HttpStatusCode.Created;
+                _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)

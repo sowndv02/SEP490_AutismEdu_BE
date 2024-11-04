@@ -59,10 +59,9 @@ namespace backend_api.Resources {
                 resourceCulture = value;
             }
         }
-
-		/// <summary>        
-
-		///   Looks up a localized string similar to Thêm role user cho người dùng.
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thêm role user cho người dùng.
         /// </summary>
         public static string ADD_ROLE_USER_TO_USER {
             get {
@@ -70,9 +69,7 @@ namespace backend_api.Resources {
             }
         }
         
-
         /// <summary>
-		
         ///   Looks up a localized string similar to Đã tồn tại khoảng điểm đánh giá từ {0} - {1}.
         /// </summary>
         public static string ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE {
@@ -195,6 +192,15 @@ namespace backend_api.Resources {
         public static string NOT_FOUND_MESSAGE {
             get {
                 return ResourceManager.GetString("NOT_FOUND_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Đã quá thời hạn thay đổi sổ liên lạc.
+        /// </summary>
+        public static string PROGRESS_REPORT_MODIFICATION_EXPIRED {
+            get {
+                return ResourceManager.GetString("PROGRESS_REPORT_MODIFICATION_EXPIRED", resourceCulture);
             }
         }
         

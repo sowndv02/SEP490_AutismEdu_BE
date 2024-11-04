@@ -158,6 +158,7 @@ namespace backend_api
         public const string CHANGE_PASS_FAIL = "CHANGE_PASS_FAIL";
         public const string ADD_ROLE_USER_TO_USER = "ADD_ROLE_USER_TO_USER";
         public const string USER_IS_LOCKED_OUT = "USER_IS_LOCKED_OUT";
+        public const string PROGRESS_REPORT_MODIFICATION_EXPIRED = "PROGRESS_REPORT_MODIFICATION_EXPIRED";
 
         // DTO require message
         public const string WEEKDAY_REQUIRED = "Chưa nhập ngày trong tuần";
