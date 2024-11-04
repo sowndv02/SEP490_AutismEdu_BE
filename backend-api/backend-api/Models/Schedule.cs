@@ -17,7 +17,7 @@ namespace backend_api.Models
         public TimeSpan End { get; set; }
         public AttendanceStatus AttendanceStatus { get; set; }
         public PassingStatus PassingStatus { get; set; }
-        public string Note { get; set; }
+        public string? Note { get; set; }
         public int? SyllabusId { get; set; }
         [ForeignKey(nameof(SyllabusId))]
         public Syllabus Syllabus { get; set; }

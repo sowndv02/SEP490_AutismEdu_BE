@@ -19,18 +19,22 @@ namespace backend_api.Services
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                DateTime now = DateTime.Now;
-                DateTime nextRunTime = GetNextRunTimeAt1AM(now);
+                //DateTime now = DateTime.Now;
+                //DateTime nextRunTime = GetNextRunTimeAt1AM(now);
 
-                TimeSpan delay = nextRunTime - now;
+                //TimeSpan delay = nextRunTime - now;
 
-                if (delay.TotalMilliseconds > 0)
-                {
-                    await Task.Delay(delay, stoppingToken);
-                }
+                //if (delay.TotalMilliseconds > 0)
+                //{
+                //    await Task.Delay(delay, stoppingToken);
+                //}
 
-                await GenerateScheduleTimeSlotForTutor();
-                await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
+                //await GenerateScheduleTimeSlotForTutor();
+                //await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
+
+                 await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken); 
+                 await GenerateScheduleTimeSlotForTutor();
+
             }
         }
 
@@ -42,66 +46,79 @@ namespace backend_api.Services
 
         private async Task GenerateScheduleTimeSlotForTutor()
         {
-            using (var scope = _serviceProvider.CreateScope())
+            try
             {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-                // Calculate the start date (tomorrow) and the date two weeks from now
-                DateTime startDate = DateTime.Today.AddDays(1);
-                DateTime twoWeeksFromNow = DateTime.Today.AddDays(14);
-
-                var scheduleTimeSlots = context.ScheduleTimeSlots
-                    .Include(x => x.StudentProfile)
-                    .Where(x => x.StudentProfile != null && x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
-                    .ToList();
-
-                int totalGenerated = 0;
-
-                foreach (var item in scheduleTimeSlots)
+                using (var scope = _serviceProvider.CreateScope())
                 {
-                    var nextDate = GetNextDayOfWeek((DayOfWeek)item.Weekday);
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                    // Skip slots if they have already occurred today and move to next week for this weekday
-                    if (nextDate < startDate)
+                    // Calculate the start date (tomorrow) and the date three weeks from now
+                    DateTime startDate = DateTime.Today.AddDays(1);
+                    DateTime threeWeeksFromNow = DateTime.Today.AddDays(21);
+
+                    var scheduleTimeSlots = context.ScheduleTimeSlots
+                        .Include(x => x.StudentProfile)
+                        .Where(x => x.StudentProfile != null && x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
+                        .ToList();
+
+                    int totalGenerated = 0;
+
+                    foreach (var item in scheduleTimeSlots)
                     {
-                        nextDate = nextDate.AddDays(7); // Move to next week's date for the same weekday
+                        // Loop to generate schedules up to the three-week mark
+                        DateTime nextDate = GetNextDayOfWeek((DayOfWeek)item.Weekday);
+
+                        // Adjust the initial nextDate if it's before startDate
+                        if (nextDate.Date < startDate.Date)
+                        {
+                            nextDate = nextDate.AddDays(7);
+                        }
+
+                        while (nextDate <= threeWeeksFromNow)
+                        {
+                            // Check if a schedule already exists for this TutorId, slot, and specific date
+                            bool scheduleExists = await context.Schedules.AnyAsync(s =>
+                                s.TutorId == item.StudentProfile.TutorId &&
+                                s.ScheduleTimeSlotId == item.Id &&
+                                s.ScheduleDate.Date == nextDate.Date
+                            );
+
+                            if (scheduleExists)
+                            {
+                                _logger.LogInformation($"Schedule already exists for TutorId {item.StudentProfile.TutorId} on {nextDate}. Skipping generation.");
+                            }
+                            else
+                            {
+                                // Create a new schedule for the specified date
+                                var schedule = new Schedule()
+                                {
+                                    TutorId = item.StudentProfile.TutorId,
+                                    AttendanceStatus = SD.AttendanceStatus.NOT_YET,
+                                    ScheduleDate = nextDate,
+                                    StudentProfileId = item.StudentProfileId,
+                                    CreatedDate = DateTime.Now,
+                                    PassingStatus = SD.PassingStatus.NOT_YET,
+                                    UpdatedDate = DateTime.Now,
+                                    Start = item.From,
+                                    End = item.To,
+                                    ScheduleTimeSlotId = item.Id
+                                };
+
+                                await context.Schedules.AddAsync(schedule);
+                                totalGenerated++;
+                            }
+
+                            // Move to the next week's date for the same weekday
+                            nextDate = nextDate.AddDays(7);
+                        }
                     }
 
-                    // Check if a schedule already exists for this TutorId, slot, and future date within two weeks
-                    bool scheduleExists = await context.Schedules.AnyAsync(s =>
-                        s.TutorId == item.StudentProfile.TutorId &&
-                        s.ScheduleTimeSlotId == item.Id &&
-                        s.ScheduleDate >= startDate &&
-                        s.ScheduleDate <= twoWeeksFromNow
-                    );
-
-                    if (scheduleExists)
-                    {
-                        _logger.LogInformation($"Schedule already exists for TutorId {item.StudentProfile.TutorId} on {nextDate}. Skipping generation.");
-                        continue;
-                    }
-
-                    // Create a new schedule if none exists for the upcoming two weeks
-                    var schedule = new Schedule()
-                    {
-                        TutorId = item.StudentProfile.TutorId,
-                        AttendanceStatus = SD.AttendanceStatus.NOT_YET,
-                        ScheduleDate = nextDate,
-                        StudentProfileId = item.StudentProfileId,
-                        CreatedDate = DateTime.Now,
-                        PassingStatus = SD.PassingStatus.NOT_YET,
-                        UpdatedDate = null,
-                        Start = item.From,
-                        End = item.To,
-                        ScheduleTimeSlotId = item.Id
-                    };
-
-                    await context.Schedules.AddAsync(schedule);
-                    totalGenerated++;
+                    await context.SaveChangesAsync();
+                    _logger.LogWarning($"Background service generated {totalGenerated} new schedule(s) for tutors over the next 3 weeks.");
                 }
-
-                await context.SaveChangesAsync();
-                _logger.LogWarning($"Background service generated {totalGenerated} new schedule(s) for tutors.");
+            }catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
