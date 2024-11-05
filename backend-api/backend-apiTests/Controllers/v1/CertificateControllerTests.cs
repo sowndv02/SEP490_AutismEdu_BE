@@ -1,30 +1,23 @@
-﻿using Xunit;
-using backend_api.Controllers.v1;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
-using backend_api.Models;
-using backend_api.RabbitMQSender;
-using backend_api.Repository.IRepository;
-using Microsoft.Extensions.Logging;
-using Moq;
+﻿using AutoMapper;
 using backend_api.Mapper;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
-using backend_api.Services.IServices;
-using Microsoft.Extensions.Configuration;
+using backend_api.Models;
 using backend_api.Models.DTOs;
-using FluentAssertions;
-using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
-using System.Net;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.RabbitMQSender;
+using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
+using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Moq;
+using System.Linq.Expressions;
+using System.Net;
+using System.Security.Claims;
+using Xunit;
 using static backend_api.SD;
-using Microsoft.Extensions.Azure;
 
 namespace backend_api.Controllers.v1.Tests
 {
@@ -550,6 +543,72 @@ namespace backend_api.Controllers.v1.Tests
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.ErrorMessages.FirstOrDefault().Should().Be("Invalid ID.");
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderAndStatus()
+        {
+            // Arrange
+            var certificates = new List<Certificate>
+        {
+            new Certificate
+            {
+                Id = 1,
+                SubmiterId = "testUserId",
+                CertificateName = "Sample Certificate",
+                IsDeleted = false,
+                RequestStatus = Status.PENDING,
+                CreatedDate = DateTime.Now,
+            }
+        };
+
+            var pagedResult = (1, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submiter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
+                .ReturnsAsync(new ApplicationUser());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Sample", SD.STATUS_PENDING, SD.CREADTED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Pending"
+                ),
+                "Submiter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once);
         }
 
     }
