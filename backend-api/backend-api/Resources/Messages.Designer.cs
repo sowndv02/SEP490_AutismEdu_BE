@@ -133,6 +133,15 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Email đã tồn tại trên hệ thống.
+        /// </summary>
+        public static string EMAIL_EXISTING_MESSAGE {
+            get {
+                return ResourceManager.GetString("EMAIL_EXISTING_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chưa xác thực email.
         /// </summary>
         public static string EMAIL_NOT_CONFIRM {
