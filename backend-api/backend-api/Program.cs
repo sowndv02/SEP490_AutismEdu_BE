@@ -25,6 +25,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
 using Serilog.Sinks.Elasticsearch;
 using System.Reflection;
+using backend_api.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -107,7 +108,7 @@ builder.Services.AddHostedService<DailyService>();
 builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
 builder.Services.AddHostedService<AutoRejectStudentProfile>();
 builder.Services.AddScoped<IResourceService, ResourceService>();
-
+builder.Services.AddSignalR();
 // Config Message Queue
 var rabbitMQSettings = builder.Configuration.GetSection("RabbitMQSettings");
 builder.Services.AddHostedService<RabbitMQConsumer>();
@@ -249,7 +250,7 @@ app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseResponseCaching();
-
+app.MapHub<NotificationHub>("/hub/notifications");
 // Add cache for response
 //app.Use(async (context, next) =>
 //{
