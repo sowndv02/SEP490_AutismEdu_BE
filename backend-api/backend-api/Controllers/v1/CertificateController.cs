@@ -127,7 +127,6 @@ namespace backend_api.Controllers.v1
                     var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
                     await _certificateMediaRepository.CreateAsync(objMedia);
                 }
-                // TODO: Add log
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<CertificateDTO>(newModel);
                 _response.IsSuccess = true;

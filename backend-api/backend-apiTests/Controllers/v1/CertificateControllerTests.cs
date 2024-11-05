@@ -10,12 +10,15 @@ using backend_api.Services.IServices;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Newtonsoft.Json;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
+using System.Text;
 using Xunit;
 using static backend_api.SD;
 
@@ -36,10 +39,11 @@ namespace backend_api.Controllers.v1.Tests
         private readonly Mock<IResourceService> _resourceServiceMock;
         private readonly Mock<IConfiguration> _configurationMock;
         private CertificateController _controller;
+        private readonly WebApplicationFactory<Program> _factory;
 
-        public CertificateControllerTests()
+        public CertificateControllerTests(WebApplicationFactory<Program> factory)
         {
-
+            _factory = factory;
             _userRepositoryMock = new Mock<IUserRepository>();
             _certificateRepositoryMock = new Mock<ICertificateRepository>();
             _certificateMediaRepositoryMock = new Mock<ICertificateMediaRepository>();
@@ -168,6 +172,16 @@ namespace backend_api.Controllers.v1.Tests
             apiResponse.ErrorMessages.Should().Contain("Không tìm thấy 'Chứng chỉ'.");
         }
 
+        //[Fact]
+        //public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsNotInStaffRole()
+        //{
+        //    var client = _factory.CreateClient();
+        //    var dto = new CertificateCreateDTO { CertificateName = "FPT University", IssuingInstitution = "FPTU", IssuingDate = DateTime.Now, Medias = new List<IFormFile>() };
+        //    var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
+        //    var result = await client.PostAsync("/api/v1/certificate", content);
+        //    result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+        //}
+
         [Fact]
         public async Task CreateAsync_ReturnsCreated_WhenValidRequest()
         {
@@ -252,6 +266,8 @@ namespace backend_api.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Your expected error message here");
 
         }
+
+        
 
 
         [Fact]

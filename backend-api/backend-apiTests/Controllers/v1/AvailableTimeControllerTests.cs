@@ -8,11 +8,14 @@ using backend_api.Services.IServices;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Newtonsoft.Json;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
+using System.Text;
 using Xunit;
 
 namespace backend_api.Controllers.v1.Tests
@@ -20,7 +23,7 @@ namespace backend_api.Controllers.v1.Tests
     public class AvailableTimeControllerTests
     {
 
-        
+        private readonly WebApplicationFactory<Program> _factory;
         private readonly Mock<IAvailableTimeSlotRepository> _availableTimeSlotRepositoryMock;
         private readonly IMapper _mapper;
         private readonly Mock<IResourceService> _resourceServiceMock;
@@ -28,8 +31,9 @@ namespace backend_api.Controllers.v1.Tests
         private readonly AvailableTimeController _controller;
         private readonly APIResponse _response;
 
-        public AvailableTimeControllerTests()
+        public AvailableTimeControllerTests(WebApplicationFactory<Program> factory)
         {
+            _factory = factory;
             _availableTimeSlotRepositoryMock = new Mock<IAvailableTimeSlotRepository>();
 
             var config = new MapperConfiguration(cfg =>
@@ -57,6 +61,17 @@ namespace backend_api.Controllers.v1.Tests
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
 
         }
+
+
+        //[Fact]
+        //public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsNotInStaffRole()
+        //{
+        //    var client = _factory.CreateClient();
+        //    var dto = new AvailableTimeSlotCreateDTO { From = "1", To = "2", Weekday = 1 };
+        //    var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
+        //    var result = await client.PostAsync("/api/v1/assessment", content);
+        //    result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+        //}
 
         [Fact]
         public async Task CreateAsync_ReturnsBadRequest_WhenDtoIsNull()
