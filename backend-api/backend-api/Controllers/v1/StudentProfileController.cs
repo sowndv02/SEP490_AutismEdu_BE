@@ -9,6 +9,7 @@ using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -623,6 +624,60 @@ namespace backend_api.Controllers.v1
                     _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
                 }
 
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPut("CloseTutoring")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> CloseTutoring(CloseTutoringCreatDTO closeDTO)
+        {
+            try
+            {
+                var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (closeDTO == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.END_TUTORING) };
+                    return BadRequest(_response);
+                }
+
+                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == closeDTO.StudentProfileId, true, "InitialAndFinalAssessmentResults,ScheduleTimeSlots");
+
+                if (studentProfile == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
+                    return BadRequest(_response);
+                }
+
+                studentProfile.InitialAndFinalAssessmentResults.AddRange(_mapper.Map<List<InitialAssessmentResult>>(closeDTO.FinalAssessmentResults));
+                studentProfile.FinalCondition = closeDTO.FinalCondition;
+                studentProfile.Status = StudentProfileStatus.Stop;           
+                studentProfile.UpdatedDate = DateTime.Now;
+
+                await _studentProfileRepository.UpdateAsync(studentProfile);
+
+                List<InitialAssessmentResult> initialAssessmentResults = new List<InitialAssessmentResult>();
+                foreach (var assessment in studentProfile.InitialAndFinalAssessmentResults)
+                {
+                    initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id, true, "Question,Option"));
+                }
+                studentProfile.InitialAndFinalAssessmentResults = initialAssessmentResults;
+                studentProfile.Child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, true, "Parent");
+                _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
