@@ -46,10 +46,20 @@ namespace backend_api.Controllers
                 if (!string.IsNullOrEmpty(connectionId))
                 {
                     await _hubContext.Clients.Client(connectionId).SendAsync("Notification Test header", "Notification Test Message");
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
                 }
                 else
                 {
                     Console.WriteLine("No active connection found for the admin.");
+                    _response.ErrorMessages = new List<string>()
+                    {
+                        "No active connection found for the admin."
+                    };
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    return NotFound(_response);
                 }
             }
             catch (Exception ex)
