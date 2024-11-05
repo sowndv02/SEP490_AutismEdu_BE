@@ -42,10 +42,17 @@ namespace backend_api.Controllers
         {
             try
             {
+                string userId = "";
+
+                // TODO: Tạo 1 bảng lưu notification
+                // Trả về total record chưa đọc
+                // API: Đánh dấu đã đọc
+                // API Đánh dấu all
+
                 var connectionId = NotificationHub.GetConnectionIdByEmail(SD.ADMIN_EMAIL_DEFAULT);
                 if (!string.IsNullOrEmpty(connectionId))
                 {
-                    await _hubContext.Clients.Client(connectionId).SendAsync("Notification Test header", "Notification Test Message");
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{userId}", "Notification Test Message");
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
