@@ -138,6 +138,7 @@ namespace backend_api
 
         // Const message 
         public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR";
+        public const string EMAIL_EXISTING_MESSAGE = "EMAIL_EXISTING_MESSAGE";
         public const string TUTOR_UPDATE_STATUS_IS_PENDING = "TUTOR_UPDATE_STATUS_IS_PENDING";
         public const string BAD_REQUEST_MESSAGE = "BAD_REQUEST_MESSAGE";       
         public const string DATA_DUPLICATED_MESSAGE = "DATA_DUPLICATED_MESSAGE";

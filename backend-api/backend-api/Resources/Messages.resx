@@ -183,4 +183,7 @@
   <data name="PROGRESS_REPORT_MODIFICATION_EXPIRED" xml:space="preserve">
     <value>Đã quá thời hạn thay đổi sổ liên lạc</value>
   </data>
+  <data name="EMAIL_EXISTING_MESSAGE" xml:space="preserve">
+    <value>Email đã tồn tại trên hệ thống</value>
+  </data>
 </root>
