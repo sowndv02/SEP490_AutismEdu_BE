@@ -90,7 +90,10 @@ namespace backend_api.Controllers.v1
                                                             !(slot.To <= x.From || slot.From >= x.To)).FirstOrDefault();
                     if (isTimeSlotDuplicate == null)
                     {
-                        isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday && x.StudentProfile.TutorId.Equals(tutorId) && !(slot.To <= x.From || slot.From >= x.To));
+                        isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday && 
+                                    x.StudentProfile.TutorId.Equals(tutorId) && 
+                                    !(slot.To <= x.From || slot.From >= x.To) && 
+                                    (x.StudentProfile.Status == SD.StudentProfileStatus.Pending || x.StudentProfile.Status == SD.StudentProfileStatus.Teaching),true, "StudentProfile");
                         if (isTimeSlotDuplicate != null)
                         {
                             _response.StatusCode = HttpStatusCode.BadRequest;
@@ -378,29 +381,26 @@ namespace backend_api.Controllers.v1
                     }
                 }
                 var (count, result) = await _studentProfileRepository.GetAllWithIncludeAsync(filter,
-                                "Child,InitialAndFinalAssessmentResults,ScheduleTimeSlots", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
+                                "Child", pageSize: pageSize, pageNumber: pageNumber, x => x.CreatedDate, isDesc);
 
                 var studentProfiles = _mapper.Map<List<StudentProfileDTO>>(result);
                 foreach (var profile in studentProfiles)
                 {
-                    List<InitialAssessmentResult> initialAssessments = _mapper.Map<List<InitialAssessmentResult>>(profile.InitialAssessmentResults);
-                    List<InitialAssessmentResultDTO> assessmentResults = new List<InitialAssessmentResultDTO>();
-                    foreach (var item in initialAssessments)
-                    {
-                        assessmentResults.Add(_mapper.Map<InitialAssessmentResultDTO>(
-                            await _initialAssessmentResultRepository.GetAsync(x => x.Id == item.Id, true, "Question,Option")));
-                    }
-                    profile.InitialAssessmentResults = assessmentResults;
+                    //List<InitialAssessmentResult> initialAssessments = _mapper.Map<List<InitialAssessmentResult>>(profile.InitialAssessmentResults);
+                    //List<InitialAssessmentResultDTO> assessmentResults = new List<InitialAssessmentResultDTO>();
+                    //foreach (var item in initialAssessments)
+                    //{
+                    //    assessmentResults.Add(_mapper.Map<InitialAssessmentResultDTO>(
+                    //        await _initialAssessmentResultRepository.GetAsync(x => x.Id == item.Id, true, "Question,Option")));
+                    //}
+                    //profile.InitialAssessmentResults = assessmentResults;
 
                     var parent = await _childInfoRepository.GetAsync(x => x.Id == profile.ChildId, true, "Parent");
                     profile.Address = parent.Parent.Address;
                     profile.PhoneNumber = parent.Parent.PhoneNumber;
 
-                    profile.ScheduleTimeSlots = profile.ScheduleTimeSlots.OrderBy(x => x.Weekday).ThenBy(x => x.From).ToList();
+                    //profile.ScheduleTimeSlots = profile.ScheduleTimeSlots.OrderBy(x => x.Weekday).ThenBy(x => x.From).ToList();
                 }
-
-                //TODO: add child image
-
 
                 totalCount = count;
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
