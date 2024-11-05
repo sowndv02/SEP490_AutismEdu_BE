@@ -245,7 +245,7 @@ namespace backend_api.Controllers.v1
             var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmiterId == userId && !x.IsDeleted && x.IsActive);
             foreach (var item in list)
             {
-                if (item.AgeFrom >= curriculumDto.AgeFrom || item.AgeEnd >= curriculumDto.AgeEnd)
+                if (item.AgeFrom == curriculumDto.AgeFrom || item.AgeEnd == curriculumDto.AgeEnd)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
