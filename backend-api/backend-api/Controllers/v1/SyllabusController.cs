@@ -195,7 +195,7 @@ namespace backend_api.Controllers.v1
             var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= updateDTO.AgeFrom && x.AgeEnd >= updateDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted && x.Id != updateDTO.Id);
             foreach (var item in list)
             {
-                if (item.AgeFrom >= updateDTO.AgeFrom || item.AgeEnd >= updateDTO.AgeEnd)
+                if (item.AgeFrom == updateDTO.AgeFrom && item.AgeEnd == updateDTO.AgeEnd)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -206,6 +206,7 @@ namespace backend_api.Controllers.v1
             model.AgeEnd = updateDTO.AgeEnd;
             model.AgeFrom = updateDTO.AgeFrom;
             model.UpdatedDate = DateTime.Now;
+            await _syllabusRepository.UpdateAsync(model);
             foreach (var exerciseTypeUpdate in updateDTO.SyllabusExercises)
             {
                 int exerciseTypeId = exerciseTypeUpdate.ExerciseTypeId;
@@ -252,8 +253,7 @@ namespace backend_api.Controllers.v1
                 }).ToList()
             }).ToList();
 
-
-            _response.StatusCode = HttpStatusCode.Created;
+            _response.StatusCode = HttpStatusCode.NoContent;
             _response.Result = _mapper.Map<SyllabusDTO>(model);
             _response.IsSuccess = true;
             return Ok(_response);
@@ -275,7 +275,7 @@ namespace backend_api.Controllers.v1
             var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= createDTO.AgeFrom && x.AgeEnd >= createDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted);
             foreach (var item in list)
             {
-                if (item.AgeFrom >= createDTO.AgeFrom || item.AgeEnd >= createDTO.AgeEnd)
+                if (item.AgeFrom == createDTO.AgeFrom && item.AgeEnd == createDTO.AgeEnd)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
