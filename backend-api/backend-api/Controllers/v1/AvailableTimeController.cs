@@ -79,7 +79,6 @@ namespace backend_api.Controllers.v1
 
                 availableTimeSlot.TutorId = tutorId;
                 availableTimeSlot.CreatedDate = DateTime.Now;
-                // TODO: Add log create availableTimeSlot
                 await _availableTimeSlotRepository.CreateAsync(availableTimeSlot);
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);

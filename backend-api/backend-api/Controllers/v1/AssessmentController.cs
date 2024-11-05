@@ -66,7 +66,6 @@ namespace backend_api.Controllers.v1
                 model.IsAssessment = true;
                 model.IsHidden = false;
                 model.CreatedDate = DateTime.Now;
-                // TODO: Add log create assessment
                 var assessmentQuestion = await _assessmentQuestionRepository.CreateAsync(model);
                 _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.Created;
@@ -83,7 +82,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllAsync()
         {
             try
@@ -93,7 +92,6 @@ namespace backend_api.Controllers.v1
                 AllAssessmentDTO model = new AllAssessmentDTO();
                 model.Questions = _mapper.Map<List<AssessmentQuestionDTO>>(question.list);
                 model.ScoreRanges = _mapper.Map<List<AssessmentScoreRangeDTO>>(scoreRange.list);
-
                 _response.Result = model;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
