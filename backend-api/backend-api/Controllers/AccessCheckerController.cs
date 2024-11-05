@@ -1,7 +1,12 @@
 ﻿using backend_api.Models;
+using backend_api.Models.DTOs;
 using backend_api.RabbitMQSender;
+using backend_api.Repository;
+using backend_api.Repository.IRepository;
+using backend_api.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Net;
 
 namespace backend_api.Controllers
@@ -16,13 +21,43 @@ namespace backend_api.Controllers
         private readonly ILogger<AccessCheckerController> _logger;
         private IRabbitMQMessageSender _messageBus;
         private IConfiguration _configuration;
-
-        public AccessCheckerController(ILogger<AccessCheckerController> logger, IRabbitMQMessageSender messageBus, IConfiguration configuration)
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private IUserRepository _userRepository;
+        public AccessCheckerController(ILogger<AccessCheckerController> logger, IRabbitMQMessageSender messageBus, 
+            IConfiguration configuration, IHubContext<NotificationHub> hubContext, IUserRepository userRepository)
         {
             _messageBus = messageBus;
             _logger = logger;
             _response = new();
             _configuration = configuration;
+            _hubContext = hubContext;
+            _userRepository = userRepository;   
+        }
+
+
+
+        [HttpGet("SendNotification")]
+        [AllowAnonymous]
+        public async Task<object> SendNotificationAsync()
+        {
+            try
+            {
+                var connectionId = NotificationHub.GetConnectionIdByEmail(SD.ADMIN_EMAIL_DEFAULT);
+                if (!string.IsNullOrEmpty(connectionId))
+                {
+                    await _hubContext.Clients.Client(connectionId).SendAsync("Notification Test header", "Notification Test Message");
+                }
+                else
+                {
+                    Console.WriteLine("No active connection found for the admin.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.IsSuccess = false;
+            }
+            return _response;
         }
 
 
