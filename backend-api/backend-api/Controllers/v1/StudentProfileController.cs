@@ -86,14 +86,26 @@ namespace backend_api.Controllers.v1
                 List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTO.ScheduleTimeSlots);
                 foreach (var slot in scheduleTimeSlot)
                 {
-                    var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot && x.Weekday == slot.Weekday &&
-                                                            !(slot.To <= x.From || slot.From >= x.To)).FirstOrDefault();
+                    var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot 
+                                                                       && x.Weekday == slot.Weekday 
+                                                                       && !(slot.To <= x.From || slot.From >= x.To)).FirstOrDefault();
                     if (isTimeSlotDuplicate == null)
                     {
-                        isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday && 
-                                    x.StudentProfile.TutorId.Equals(tutorId) && 
-                                    !(slot.To <= x.From || slot.From >= x.To) && !x.IsDeleted &&
-                                    (x.StudentProfile.Status == SD.StudentProfileStatus.Pending || x.StudentProfile.Status == SD.StudentProfileStatus.Teaching),true, "StudentProfile");
+                        if(slot.From >= slot.To)
+                        {
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            _response.IsSuccess = false;
+                            _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TIME_SLOT) };
+                            return BadRequest(_response);
+                        }
+
+                        isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday 
+                                                                                           && x.StudentProfile.TutorId.Equals(tutorId) 
+                                                                                           && !(slot.To <= x.From || slot.From >= x.To) 
+                                                                                           && !x.IsDeleted 
+                                                                                           && (x.StudentProfile.Status == SD.StudentProfileStatus.Pending 
+                                                                                           || x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
+                                                                                           ,true, "StudentProfile");
                         if (isTimeSlotDuplicate != null)
                         {
                             _response.StatusCode = HttpStatusCode.BadRequest;
