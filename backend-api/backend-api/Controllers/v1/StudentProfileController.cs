@@ -92,7 +92,7 @@ namespace backend_api.Controllers.v1
                     {
                         isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday && 
                                     x.StudentProfile.TutorId.Equals(tutorId) && 
-                                    !(slot.To <= x.From || slot.From >= x.To) && 
+                                    !(slot.To <= x.From || slot.From >= x.To) && !x.IsDeleted &&
                                     (x.StudentProfile.Status == SD.StudentProfileStatus.Pending || x.StudentProfile.Status == SD.StudentProfileStatus.Teaching),true, "StudentProfile");
                         if (isTimeSlotDuplicate != null)
                         {
@@ -685,7 +685,7 @@ namespace backend_api.Controllers.v1
                     await _scheduleRepository.RemoveAsync(schedule);
                 }
 
-                _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
+                _response.Result = _mapper.Map<StudentProfileDetailTutorDTO>(studentProfile);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
