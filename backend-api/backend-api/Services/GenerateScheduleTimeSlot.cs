@@ -58,7 +58,10 @@ namespace backend_api.Services
 
                     var scheduleTimeSlots = context.ScheduleTimeSlots
                         .Include(x => x.StudentProfile)
-                        .Where(x => x.StudentProfile != null && x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
+                        .Where(x => x.StudentProfile != null 
+                            && x.StudentProfile.Status == SD.StudentProfileStatus.Teaching
+                            && !x.IsDeleted
+                            && x.AppliedDate.Value.Date <= DateTime.Today)
                         .ToList();
 
                     int totalGenerated = 0;

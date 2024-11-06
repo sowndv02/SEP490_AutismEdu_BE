@@ -13,6 +13,7 @@ namespace backend_api.Models
         public TimeSpan From { get; set; }
         public TimeSpan To { get; set; }
         public bool IsDeleted { get; set; }
+        public DateTime? AppliedDate { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         [ForeignKey(nameof(StudentProfileId))]
