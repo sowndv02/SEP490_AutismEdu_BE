@@ -53,14 +53,15 @@ namespace backend_api.Controllers.v1
                 //model.IsDeleted = true;
                 await _scheduleTimeSlotRepository.UpdateAsync(model);
 
-                //var lastDayOfWeek = 
+                var dayTillSunday = ((int)DayOfWeek.Sunday - (int)DateTime.Now.DayOfWeek + 7) % 7;
+
                 var scheduleToRemove = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == studentProfileId 
                                                                                         && x.ScheduleTimeSlotId == timeSlotId 
                                                                                         && x.ScheduleDate > DateTime.Now);
-                foreach (var schedule in scheduleToRemove.list)
-                {
-                    await _scheduleRepository.RemoveAsync(schedule);
-                }
+                //foreach (var schedule in scheduleToRemove.list)
+                //{
+                //    await _scheduleRepository.RemoveAsync(schedule);
+                //}
 
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
