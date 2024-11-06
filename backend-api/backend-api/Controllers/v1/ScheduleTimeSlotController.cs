@@ -33,9 +33,9 @@ namespace backend_api.Controllers.v1
             _response = new APIResponse();
         }
 
-        [HttpDelete("{timeSlotId}")]
+        [HttpDelete]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<ActionResult<APIResponse>> RemoveTimeSlot(int timeSlotId)
+        public async Task<ActionResult<APIResponse>> RemoveTimeSlot([FromQuery] int timeSlotId, int studentProfileId)
         {
             try
             {
@@ -50,7 +50,18 @@ namespace backend_api.Controllers.v1
                 }
                 //model.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId, true, "Child");
                 model.UpdatedDate = DateTime.Now;
+                //model.IsDeleted = true;
                 await _scheduleTimeSlotRepository.UpdateAsync(model);
+
+                //var lastDayOfWeek = 
+                var scheduleToRemove = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == studentProfileId 
+                                                                                        && x.ScheduleTimeSlotId == timeSlotId 
+                                                                                        && x.ScheduleDate > DateTime.Now);
+                foreach (var schedule in scheduleToRemove.list)
+                {
+                    await _scheduleRepository.RemoveAsync(schedule);
+                }
+
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
