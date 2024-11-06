@@ -133,7 +133,7 @@ namespace backend_api.Mapper
             CreateMap<AssessmentQuestion, AssessmentQuestionDTO>().ReverseMap();
             CreateMap<AssessmentOption, AssessmentOptionDTO>().ReverseMap();
             CreateMap<ChildInformation, ChildInformationUpdateDTO>().ReverseMap();
-            
+
             CreateMap<ScheduleTimeSlot, ScheduleTimeSlotCreateDTO>().ReverseMap();
             CreateMap<InitialAssessmentResult, InitialAssessmentResultCreateDTO>().ReverseMap();
 
@@ -190,18 +190,21 @@ namespace backend_api.Mapper
             CreateMap<ExerciseCreateDTO, Exercise>().ReverseMap();
             CreateMap<ExerciseTypeCreateDTO, ExerciseType>().ReverseMap();
 
-            CreateMap<StudentProfile, StudentProfileDetailDTO>()
+            CreateMap<StudentProfile, StudentProfileDetailParentDTO>()
                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                .ForMember(dest => dest.ChildId, opt => opt.MapFrom(src => src.ChildId))
                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Child.Name))
                .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))
                .ForMember(dest => dest.isMale, opt => opt.MapFrom(src => src.Child.isMale))
                .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.Child.BirthDate))
-               .ForMember(dest => dest.InitialCondition, opt => opt.MapFrom(src => src.InitialCondition))
                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
+               .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
                .ForMember(dest => dest.Tutor, opt => opt.MapFrom(src => src.Tutor))
-               .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults))
+               .ForPath(dest => dest.InitialAssessmentResults.Condition, opt => opt.MapFrom(src => src.InitialCondition))
+               .ForPath(dest => dest.InitialAssessmentResults.AssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults.Where(x => x.Id == src.Id && x.isInitialAssessment)))
+               .ForPath(dest => dest.FinalAssessmentResults.Condition, opt => opt.MapFrom(src => src.FinalCondition))
+               .ForPath(dest => dest.FinalAssessmentResults.AssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults.Where(x => x.Id == src.Id && !x.isInitialAssessment)))
                .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                .ReverseMap();
 
@@ -217,20 +220,25 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Point, opt => opt.MapFrom(src => src.Option.Point))
                 .ReverseMap();
 
-            CreateMap<StudentProfile, StudentProfileDetailDTO>()
+            CreateMap<StudentProfile, StudentProfileDetailTutorDTO>()
                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+               .ForMember(dest => dest.TutorId, opt => opt.MapFrom(src => src.TutorId))
                .ForMember(dest => dest.ChildId, opt => opt.MapFrom(src => src.ChildId))
                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Child.Name))
                .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))
                .ForMember(dest => dest.isMale, opt => opt.MapFrom(src => src.Child.isMale))
                .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.Child.BirthDate))
                .ForMember(dest => dest.ImageUrlPath, opt => opt.MapFrom(src => src.Child.ImageUrlPath))
-               .ForMember(dest => dest.InitialCondition, opt => opt.MapFrom(src => src.InitialCondition))
+               .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Child.Parent.Address))
+               .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.Child.Parent.PhoneNumber))
                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
-               .ForMember(dest => dest.Tutor, opt => opt.MapFrom(src => src.Tutor))
-               .ForMember(dest => dest.InitialAssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults))
+               .ForPath(dest => dest.InitialAssessmentResults.Condition, opt => opt.MapFrom(src => src.InitialCondition))
+               .ForPath(dest => dest.InitialAssessmentResults.AssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults.Where(x => x.StudentProfileId == src.Id && x.isInitialAssessment)))
+               .ForPath(dest => dest.FinalAssessmentResults.Condition, opt => opt.MapFrom(src => src.FinalCondition))
+               .ForPath(dest => dest.FinalAssessmentResults.AssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults.Where(x => x.StudentProfileId == src.Id && !x.isInitialAssessment)))
                .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
+               .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
                .ReverseMap();
 
             CreateMap<Syllabus, SyllabusCreateDTO>().ReverseMap().ForMember(dest => dest.SyllabusExercises, opt => opt.Ignore()); ;

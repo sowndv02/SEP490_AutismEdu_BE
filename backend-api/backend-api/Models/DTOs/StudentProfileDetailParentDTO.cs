@@ -1,6 +1,6 @@
 ﻿namespace backend_api.Models.DTOs
 {
-    public class StudentProfileDetailDTO
+    public class StudentProfileDetailParentDTO
     {
         public int Id { get; set; }
         public int ChildId { get; set; }
@@ -9,11 +9,12 @@
         public bool isMale { get; set; }
         public DateTime? BirthDate { get; set; }
         public string? ImageUrlPath { get; set; }
-        public string? InitialCondition { get; set; }
         public SD.StudentProfileStatus Status { get; set; }
         public TutorDTO Tutor { get; set; }
-        public List<InitialAssessmentResultDTO> InitialAssessmentResults { get; set; }
+        public AssessmentDTO InitialAssessmentResults { get; set; }
+        public AssessmentDTO FinalAssessmentResults { get; set; }
         public List<ScheduleTimeSlotDTO> ScheduleTimeSlots { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime? UpdatedDate { get; set; }
     }
 }
