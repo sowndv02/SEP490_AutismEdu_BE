@@ -205,7 +205,7 @@ namespace backend_api.Controllers.v1
 
                 if (studentProfileId != 0)
                 {
-                    filter = u => u.StudentProfileId == studentProfileId;
+                    filter = u => u.StudentProfileId == studentProfileId && !u.IsHidden;
                 }
 
                 if (startDate != null)
