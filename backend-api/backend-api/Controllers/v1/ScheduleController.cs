@@ -245,5 +245,56 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
+        [HttpPut("ChangeScheduleDateTime")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> ChangeScheduleDateTime(ScheduleDateTimeUpdateDTO updateDTO)
+        {
+            try
+            {
+                if (updateDTO == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
+                    return BadRequest(_response);
+                }
+
+                var originalSchedule = await _scheduleRepository.GetAsync(x => x.Id == updateDTO.Id);
+                originalSchedule.IsHidden = true;
+                originalSchedule.UpdatedDate = DateTime.Now;
+                await _scheduleRepository.UpdateAsync(originalSchedule);
+
+                Schedule newSchedule = new()
+                {
+                    TutorId = originalSchedule.TutorId,
+                    StudentProfileId = originalSchedule.StudentProfileId,
+                    ScheduleTimeSlotId = originalSchedule.ScheduleTimeSlotId,
+                    AttendanceStatus = originalSchedule.AttendanceStatus,
+                    PassingStatus = originalSchedule.PassingStatus,
+                    Note = originalSchedule.Note,
+                    SyllabusId = originalSchedule.SyllabusId,
+                    ExerciseTypeId = originalSchedule.ExerciseTypeId,
+                    ExerciseId = originalSchedule.ExerciseId,
+                    IsHidden = false,
+                    ScheduleDate = updateDTO.ScheduleDate,
+                    Start = updateDTO.Start,
+                    End = updateDTO.End,
+                    CreatedDate = DateTime.Now, 
+                };
+                newSchedule = await _scheduleRepository.CreateAsync(newSchedule);
+
+                _response.Result = _mapper.Map<ScheduleDTO>(newSchedule);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
     }
 }
