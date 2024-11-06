@@ -301,7 +301,7 @@ namespace backend_api.Repository
             {
                 if (checkPassword)
                 {
-                    bool isValidRole = listRoles.Contains(loginRequestDTO.AuthenticationRole);
+                    bool isValidRole = loginRequestDTO.AuthenticationRole != SD.ADMIN_ROLE && listRoles.Contains(loginRequestDTO.AuthenticationRole);
                     if (!isValidRole)
                     {
                         throw new Exception(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, loginRequestDTO.AuthenticationRole));
