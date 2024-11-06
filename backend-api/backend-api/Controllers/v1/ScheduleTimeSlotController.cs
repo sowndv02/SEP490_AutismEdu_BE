@@ -126,13 +126,15 @@ namespace backend_api.Controllers.v1
                         return BadRequest(_response);
                     }
 
+                    var daysTillNextWeek = ((int)DayOfWeek.Monday - (int)DateTime.Today.DayOfWeek + 7) % 7;
+                    DateTime timeTillApply = daysTillNextWeek == 0? DateTime.Today.AddDays(7) : DateTime.Today.AddDays(daysTillNextWeek);
+
                     slot.StudentProfileId = studentProfileId;
                     slot.IsDeleted = false;
                     slot.CreatedDate = DateTime.Now;
+                    slot.AppliedDate = timeTillApply.Date;
                     await _scheduleTimeSlotRepository.CreateAsync(slot);
                 }
-
-                // TODO: gen lich neu can
                 
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
