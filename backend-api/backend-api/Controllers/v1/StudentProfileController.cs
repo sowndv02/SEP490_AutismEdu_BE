@@ -667,7 +667,7 @@ namespace backend_api.Controllers.v1
                 studentProfile.Status = StudentProfileStatus.Stop;           
                 studentProfile.UpdatedDate = DateTime.Now;
 
-                await _studentProfileRepository.UpdateAsync(studentProfile);
+                studentProfile = await _studentProfileRepository.UpdateAsync(studentProfile);
 
                 List<InitialAssessmentResult> initialAssessmentResults = new List<InitialAssessmentResult>();
                 foreach (var assessment in studentProfile.InitialAndFinalAssessmentResults)
