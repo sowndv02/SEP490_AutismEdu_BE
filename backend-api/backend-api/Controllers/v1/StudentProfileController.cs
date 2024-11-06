@@ -86,6 +86,14 @@ namespace backend_api.Controllers.v1
                 List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTO.ScheduleTimeSlots);
                 foreach (var slot in scheduleTimeSlot)
                 {
+                    if(createDTO.ChildId <= 0)
+                    {
+                        slot.AppliedDate = DateTime.Today;
+                    }
+                    else
+                    {
+                        slot.IsDeleted = true;
+                    }
                     var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot 
                                                                        && x.Weekday == slot.Weekday 
                                                                        && !(slot.To <= x.From || slot.From >= x.To)).FirstOrDefault();
@@ -126,8 +134,9 @@ namespace backend_api.Controllers.v1
                 StudentProfile model = _mapper.Map<StudentProfile>(createDTO);
                 model.CreatedDate = DateTime.Now;
                 model.TutorId = tutorId;
+                model.ScheduleTimeSlots = scheduleTimeSlot;
 
-                foreach(var assessment in model.InitialAndFinalAssessmentResults)
+                foreach (var assessment in model.InitialAndFinalAssessmentResults)
                 {
                     assessment.isInitialAssessment = true;
                 }
@@ -211,21 +220,20 @@ namespace backend_api.Controllers.v1
                     });
 
                     model.ChildId = childInformation.Id;
-                }
-                else
-                {
-                    model.Status = SD.StudentProfileStatus.Pending;
-                }
-
-                if (model.ChildId <= 0)
+                }              
+                else if (createDTO.ChildId <= 0)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.MISSING_2_INFORMATIONS, SD.PARENT, SD.CHILD };
                     return BadRequest(_response);
                 }
+                else
+                {
+                    model.Status = SD.StudentProfileStatus.Pending;
+                }
 
-                var childTutorExist = await _studentProfileRepository.GetAsync(x => x.ChildId == createDTO.ChildId
+                var childTutorExist = await _studentProfileRepository.GetAsync(x => x.ChildId == model.ChildId
                                                 && x.TutorId.Equals(tutorId) && (x.Status == SD.StudentProfileStatus.Teaching || x.Status == SD.StudentProfileStatus.Pending));
 
                 if (childTutorExist != null)
@@ -255,8 +263,40 @@ namespace backend_api.Controllers.v1
                 model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(tutorId), true, "User");
                 model = await _studentProfileRepository.CreateAsync(model);
 
+                if(createDTO.ChildId <= 0)
+                {
+                    //Generate current week schedule
+                    foreach (var timeslot in model.ScheduleTimeSlots)
+                    {
+                        DateTime today = DateTime.Now;
+                        if ((int)today.DayOfWeek > timeslot.Weekday && timeslot.Weekday != 0)
+                        {
+                            continue;
+                        }
+                        int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
+
+                        DateTime targetDate = today.AddDays(daysUntilTargetDay);
+
+                        var schedule = new Schedule()
+                        {
+                            TutorId = model.TutorId,
+                            AttendanceStatus = SD.AttendanceStatus.NOT_YET,
+                            ScheduleDate = targetDate,
+                            StudentProfileId = model.Id,
+                            CreatedDate = DateTime.Now,
+                            PassingStatus = SD.PassingStatus.NOT_YET,
+                            UpdatedDate = null,
+                            Start = timeslot.From,
+                            End = timeslot.To,
+                            ScheduleTimeSlotId = timeslot.Id,
+                            Note = ""
+                        };
+                        await _scheduleRepository.CreateAsync(schedule);
+                    }
+                }
+
                 //TODO: send email
-                if (createDTO.ChildId > 0)
+                if (model.ChildId > 0)
                 {
                     //var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
                     var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
@@ -336,20 +376,9 @@ namespace backend_api.Controllers.v1
                 var studentProfiles = _mapper.Map<List<StudentProfileDTO>>(result);
                 foreach (var profile in studentProfiles)
                 {
-                    //List<InitialAssessmentResult> initialAssessments = _mapper.Map<List<InitialAssessmentResult>>(profile.InitialAssessmentResults);
-                    //List<InitialAssessmentResultDTO> assessmentResults = new List<InitialAssessmentResultDTO>();
-                    //foreach (var item in initialAssessments)
-                    //{
-                    //    assessmentResults.Add(_mapper.Map<InitialAssessmentResultDTO>(
-                    //        await _initialAssessmentResultRepository.GetAsync(x => x.Id == item.Id, true, "Question,Option")));
-                    //}
-                    //profile.InitialAssessmentResults = assessmentResults;
-
                     var parent = await _childInfoRepository.GetAsync(x => x.Id == profile.ChildId, true, "Parent");
                     profile.Address = parent.Parent.Address;
                     profile.PhoneNumber = parent.Parent.PhoneNumber;
-
-                    //profile.ScheduleTimeSlots = profile.ScheduleTimeSlots.OrderBy(x => x.Weekday).ThenBy(x => x.From).ToList();
                 }
 
                 totalCount = count;
@@ -523,50 +552,20 @@ namespace backend_api.Controllers.v1
 
                 if(changeStatusDTO.StatusChange == (int)SD.StudentProfileStatus.Teaching)
                 {
-
                     //Generate current week schedule
                     foreach (var timeslot in studentProfile.ScheduleTimeSlots)
                     {
+                        timeslot.IsDeleted = false;
+                        timeslot.AppliedDate = DateTime.Today;
+                        timeslot.UpdatedDate = DateTime.Today;
+                        await _scheduleTimeSlotRepository.UpdateAsync(timeslot);
                         DateTime today = DateTime.Now;
-
-
                         if ((int)today.DayOfWeek > timeslot.Weekday && timeslot.Weekday != 0)
                         {
                             continue;
                         }
+                        int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
 
-                        DayOfWeek targetDay = DayOfWeek.Monday;
-                        switch (timeslot.Weekday)
-                        {
-                            // CN
-                            case (int)DayOfWeek.Sunday:
-                                targetDay = DayOfWeek.Sunday;
-                                break;
-                            // T2
-                            case (int)DayOfWeek.Monday:
-                                targetDay = DayOfWeek.Monday;
-                                break;
-                            case (int)DayOfWeek.Tuesday:
-                                targetDay = DayOfWeek.Tuesday;
-                                break;
-                            case (int)DayOfWeek.Wednesday:
-                                targetDay = DayOfWeek.Wednesday;
-                                break;
-                            case (int)DayOfWeek.Thursday:
-                                targetDay = DayOfWeek.Thursday;
-                                break;
-                            case (int)DayOfWeek.Friday:
-                                targetDay = DayOfWeek.Friday;
-                                break;
-                            case (int)DayOfWeek.Saturday:
-                                targetDay = DayOfWeek.Saturday;
-                                break;
-                        }
-
-                        // Calculate the difference between the target day and today's day
-                        int daysUntilTargetDay = ((int)targetDay - (int)today.DayOfWeek) % 7;
-
-                        // Calculate the target date
                         DateTime targetDate = today.AddDays(daysUntilTargetDay);
 
                         var schedule = new Schedule()
