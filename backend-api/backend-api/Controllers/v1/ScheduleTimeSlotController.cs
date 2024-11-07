@@ -107,7 +107,7 @@ namespace backend_api.Controllers.v1
                         isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday 
                                                                                            && x.StudentProfile.TutorId.Equals(tutorId) 
                                                                                            && !(slot.To <= x.From || slot.From >= x.To) 
-                                                                                           //&& !x.IsDeleted 
+                                                                                           && !x.IsDeleted 
                                                                                            && (x.StudentProfile.Status == SD.StudentProfileStatus.Pending 
                                                                                            || x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
                                                                                            , true, "StudentProfile");
@@ -136,6 +136,24 @@ namespace backend_api.Controllers.v1
                     slot.AppliedDate = timeTillApply.Date;
                     var newTimeSLot = await _scheduleTimeSlotRepository.CreateAsync(slot);
                     createdTimeSlots.Add(newTimeSLot);
+
+                    // Generate next week schedule
+                    DateTime nextWeekSchedule = slot.Weekday == 0 ? timeTillApply : timeTillApply.AddDays(slot.Weekday - 1);
+
+                    Schedule schedule = new Schedule()
+                    {
+                        TutorId = tutorId,
+                        AttendanceStatus = SD.AttendanceStatus.NOT_YET,
+                        ScheduleDate = nextWeekSchedule,
+                        StudentProfileId = studentProfileId,
+                        CreatedDate = DateTime.Now,
+                        PassingStatus = SD.PassingStatus.NOT_YET,
+                        UpdatedDate = DateTime.Now,
+                        Start = slot.From,
+                        End = slot.To,
+                        ScheduleTimeSlotId = newTimeSLot.Id
+                    };
+                    await _scheduleRepository.CreateAsync(schedule);
                 }
                 
                 _response.Result = _mapper.Map<List<ScheduleTimeSlotDTO>>(createdTimeSlots);
