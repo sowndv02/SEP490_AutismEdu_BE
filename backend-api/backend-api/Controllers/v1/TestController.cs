@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using backend_api.Models;
+using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
@@ -7,6 +8,7 @@ using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 
@@ -24,10 +26,11 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         protected ILogger<AssessmentScoreRange> _logger;
         private readonly IResourceService _resourceService;
+        protected int pageSize = 0;
 
         public TestController(ITestRepository testRepository, ITestResultRepository resultRepository, 
             ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<AssessmentScoreRange> logger, 
-            IResourceService resourceService)
+            IResourceService resourceService, IConfiguration configuration)
         {
             _testRepository = testRepository;
             _resultRepository = resultRepository;
@@ -36,6 +39,7 @@ namespace backend_api.Controllers.v1
             _logger = logger;
             _resourceService = resourceService;
             _response = new APIResponse();
+            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
         }
 
         [HttpPost]
@@ -45,7 +49,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 // TODO: remove fixed id
-                var userId = "";//User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = "90c999b0-8d79-429d-9c45-174efea1266e";//User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (createDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -72,6 +76,57 @@ namespace backend_api.Controllers.v1
                 _response.Result = test;
                 _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.Created;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search = "", string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        {
+            try
+            {
+                int totalCount = 0;
+                List<Test> list = new();
+                Expression<Func<Test, bool>> filter = u => true;
+                Expression<Func<Test, object>> orderByQuery = u => true;
+                bool isDesc = sort != null && sort == SD.ORDER_DESC;
+
+                filter = u => u.TestName.Contains(search);
+
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREADTED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+
+                var (count, result) = await _testRepository.GetAllAsync(filter, includeProperties: null , 
+                                                                                pageSize: pageSize, 
+                                                                                pageNumber: pageNumber, 
+                                                                                orderBy: orderByQuery, 
+                                                                                isDesc: isDesc);
+                list = result;
+                totalCount = count;
+
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+
+                _response.Result = list;//_mapper.Map<List<TestDTO>>(list);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;
                 return Ok(_response);
             }
             catch (Exception ex)
