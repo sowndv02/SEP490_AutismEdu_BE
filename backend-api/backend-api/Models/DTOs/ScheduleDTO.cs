@@ -6,6 +6,7 @@ namespace backend_api.Models.DTOs
     {
         public int Id { get; set; }
         public DateTime ScheduleDate { get; set; }
+        public int ScheduleTimeSlotId { get; set; }
         public TimeSpan Start { get; set; }
         public TimeSpan End { get; set; }
         public AttendanceStatus AttendanceStatus { get; set; }
