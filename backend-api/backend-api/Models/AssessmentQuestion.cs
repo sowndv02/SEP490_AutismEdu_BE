@@ -13,7 +13,7 @@ namespace backend_api.Models
         [ForeignKey(nameof(SubmitterId))]
         public ApplicationUser Submitter { get; set; }
         public bool IsHidden { get; set; }
-        public bool IsAssessment { get; set; }
+        public int? TestId { get; set; }
         public List<AssessmentOption> AssessmentOptions { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
