@@ -1,12 +1,16 @@
 ﻿using AutoMapper;
 using backend_api.Models;
+using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
+using System.Security.Claims;
 
 namespace backend_api.Controllers.v1
 {
@@ -24,8 +28,8 @@ namespace backend_api.Controllers.v1
         protected ILogger<AssessmentScoreRange> _logger;
         private readonly IResourceService _resourceService;
 
-        public TestQuestionController(ITestRepository testRepository, ITestResultRepository resultRepository, 
-            ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<AssessmentScoreRange> logger, 
+        public TestQuestionController(ITestRepository testRepository, ITestResultRepository resultRepository,
+            ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<AssessmentScoreRange> logger,
             IResourceService resourceService, IAssessmentQuestionRepository assessmentQuestionRepository)
         {
             _testRepository = testRepository;
@@ -45,7 +49,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 // TODO: remove fixed id
-                var userId = "";//User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = "90c999b0-8d79-429d-9c45-174efea1266e";//User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (createDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -71,7 +75,7 @@ namespace backend_api.Controllers.v1
 
                 var testQuestion = await _assessmentQuestionRepository.CreateAsync(model);
 
-                _response.Result = testQuestion;
+                _response.Result = _mapper.Map<AssessmentQuestionDTO>(testQuestion);
                 _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
@@ -84,5 +88,30 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
+
+
+        [HttpGet("{testId}")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetAllAsync(int testId)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var model = await _assessmentQuestionRepository.GetAllWithIncludeAsync(x => x.TestId == testId, "AssessmentOptions");
+
+                _response.Result = _mapper.Map<List<AssessmentQuestionDTO>>(model.list);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
     }
 }
