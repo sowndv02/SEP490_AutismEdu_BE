@@ -66,7 +66,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE, rangeOverLap.MinScore, rangeOverLap.MaxScore) };
                     return BadRequest(_response);
                 }
-
+                // TODO: remove fixed id
                 var model = _mapper.Map<AssessmentScoreRange>(createDTO);
                 model.CreateBy = "cddcd5ed-a26b-466f-8af6-d2ac4174cd6e";//userId;
                 model.CreateDate = DateTime.Now;

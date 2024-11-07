@@ -63,7 +63,7 @@ namespace backend_api.Controllers.v1
                 }
                 AssessmentQuestion model = _mapper.Map<AssessmentQuestion>(assessmentQuestionCreateDTO);
                 model.SubmitterId = userId;
-                model.IsAssessment = true;
+                //model.IsAssessment = true;
                 model.IsHidden = false;
                 model.CreatedDate = DateTime.Now;
                 var assessmentQuestion = await _assessmentQuestionRepository.CreateAsync(model);

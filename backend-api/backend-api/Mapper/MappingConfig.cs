@@ -247,6 +247,11 @@ namespace backend_api.Mapper
 
             CreateMap<AssessmentScoreRange, AssessmentScoreRangeDTO>().ReverseMap();
             CreateMap<AssessmentScoreRange, AssessmentScoreRangeCreateDTO>().ReverseMap();
+
+            CreateMap<Test, TestCreateDTO>().ReverseMap();
+            CreateMap<AssessmentQuestion, TestQuestionCreateDTO>()
+                .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.AssessmentOptions))
+                .ReverseMap();
         }
     }
 }
