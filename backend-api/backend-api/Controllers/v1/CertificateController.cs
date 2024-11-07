@@ -118,7 +118,7 @@ namespace backend_api.Controllers.v1
 
                 var newModel = _mapper.Map<Certificate>(createDTO);
 
-                newModel.SubmiterId = userId;
+                newModel.SubmitterId = userId;
                 var certificate = await _certificateRepository.CreateAsync(newModel);
                 foreach (var media in createDTO.Medias)
                 {
@@ -150,7 +150,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
-                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmiterId);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
                     _logger.LogWarning("Invalid request status or certificate not found for certificate ID {CertificateId} by user {UserId}", changeStatusDTO.Id, userId);
@@ -240,7 +240,7 @@ namespace backend_api.Controllers.v1
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -253,7 +253,7 @@ namespace backend_api.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    filter = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId && !u.IsDeleted;
+                    filter = u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted;
                 }
                 if (search != null && !string.IsNullOrEmpty(search))
                 {
@@ -264,7 +264,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -295,7 +295,7 @@ namespace backend_api.Controllers.v1
 
                 var (count, result) = await _certificateRepository.GetAllAsync(
                     filter,
-                    "Submiter,CertificateMedias",
+                    "Submitter,CertificateMedias",
                     pageSize: 5,
                     pageNumber: pageNumber,
                     orderByQuery,
@@ -306,11 +306,11 @@ namespace backend_api.Controllers.v1
                 totalCount = count;
                 foreach (var item in list)
                 {
-                    item.Submiter.User = await _userRepository.GetAsync(x => x.Id == item.Submiter.TutorId, false, null);
-                    var (total, curriculums) = await _curriculumRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.TutorId && x.IsActive, null, null);
-                    item.Submiter.Curriculums = curriculums;
-                    var (totalWorkExperience, workexperiences) = await _workExperienceRepository.GetAllNotPagingAsync(x => x.SubmiterId == item.Submiter.TutorId && x.IsActive, null, null);
-                    item.Submiter.WorkExperiences = workexperiences;
+                    item.Submitter.User = await _userRepository.GetAsync(x => x.Id == item.Submitter.TutorId, false, null);
+                    var (total, curriculums) = await _curriculumRepository.GetAllNotPagingAsync(x => x.SubmitterId == item.Submitter.TutorId && x.IsActive, null, null);
+                    item.Submitter.Curriculums = curriculums;
+                    var (totalWorkExperience, workexperiences) = await _workExperienceRepository.GetAllNotPagingAsync(x => x.SubmitterId == item.Submitter.TutorId && x.IsActive, null, null);
+                    item.Submitter.WorkExperiences = workexperiences;
                 }
                 // Setup pagination and response
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
@@ -346,7 +346,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var model = await _certificateRepository.GetAsync(x => x.Id == id && x.SubmiterId == userId, false, null);
+                var model = await _certificateRepository.GetAsync(x => x.Id == id && x.SubmitterId == userId, false, null);
 
                 if (model == null)
                 {

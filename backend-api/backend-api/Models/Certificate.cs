@@ -24,9 +24,9 @@ namespace backend_api.Models
         [ForeignKey(nameof(ApprovedId))]
         public ApplicationUser? ApprovedBy { get; set; }
         public Status RequestStatus { get; set; } = Status.PENDING;
-        public string? SubmiterId { get; set; }
-        [ForeignKey(nameof(SubmiterId))]
-        public Tutor? Submiter { get; set; }
+        public string? SubmitterId { get; set; }
+        [ForeignKey(nameof(SubmitterId))]
+        public Tutor? Submitter { get; set; }
         public List<CertificateMedia> CertificateMedias { get; set; }
     }
 }

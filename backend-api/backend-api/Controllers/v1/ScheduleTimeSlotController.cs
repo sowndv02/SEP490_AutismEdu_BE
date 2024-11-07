@@ -24,9 +24,10 @@ namespace backend_api.Controllers.v1
         private readonly IResourceService _resourceService;
         protected APIResponse _response;
         private readonly IMapper _mapper;
+        private readonly ILogger<ScheduleTimeSlotController> _logger;   
 
         public ScheduleTimeSlotController(IScheduleRepository scheduleRepository, IScheduleTimeSlotRepository scheduleTimeSlotRepository
-            , IStudentProfileRepository studentProfileRepository, IResourceService resourceService, IMapper mapper)
+            , IStudentProfileRepository studentProfileRepository, IResourceService resourceService, IMapper mapper, ILogger<ScheduleTimeSlotController> logger)
         {
             _scheduleRepository = scheduleRepository;
             _scheduleTimeSlotRepository = scheduleTimeSlotRepository;
@@ -34,6 +35,7 @@ namespace backend_api.Controllers.v1
             _resourceService = resourceService;
             _mapper = mapper;
             _response = new APIResponse();
+            _logger = logger;
         }
 
         [HttpDelete("{timeSlotId}")]
@@ -46,6 +48,7 @@ namespace backend_api.Controllers.v1
 
                 if (model == null)
                 {
+                    _logger.LogWarning("Schedule time slot with Id: {TimeSlotId} not found", timeSlotId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
@@ -72,6 +75,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while deleting schedule time slot with Id: {TimeSlotId}", timeSlotId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -80,7 +84,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost("{studentProfileId}")]
-        //[Authorize(Roles = SD.TUTOR_ROLE)]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] List<ScheduleTimeSlotCreateDTO> createDTOs, int studentProfileId)
         {
             try
@@ -98,6 +102,7 @@ namespace backend_api.Controllers.v1
                     {
                         if (slot.From >= slot.To)
                         {
+                            _logger.LogWarning("Invalid time range for Slot: From: {From}, To: {To}", slot.From.ToString(@"hh\:mm"), slot.To.ToString(@"hh\:mm"));
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
                             _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TIME_SLOT) };
@@ -113,6 +118,7 @@ namespace backend_api.Controllers.v1
                                                                                            , true, "StudentProfile");
                         if (isTimeSlotDuplicate != null)
                         {
+                            _logger.LogWarning("Duplicate time slot found: From: {From}, To: {To}", isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm"));
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
                             _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm")) };
@@ -121,6 +127,7 @@ namespace backend_api.Controllers.v1
                     }
                     else
                     {
+                        _logger.LogWarning("Duplicate time slot found in the list: From: {From}, To: {To}", isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm"));
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm")) };
@@ -163,6 +170,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating time slots for studentProfileId: {StudentProfileId}", studentProfileId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

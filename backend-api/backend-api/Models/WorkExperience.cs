@@ -11,9 +11,9 @@ namespace backend_api.Models
         public int Id { get; set; }
         public int? TutorRegistrationRequestId { get; set; }
         public TutorRegistrationRequest? TutorRegistrationRequest { get; set; }
-        public string? SubmiterId { get; set; }
-        [ForeignKey(nameof(SubmiterId))]
-        public Tutor? Submiter { get; set; }
+        public string? SubmitterId { get; set; }
+        [ForeignKey(nameof(SubmitterId))]
+        public Tutor? Submitter { get; set; }
         public string CompanyName { get; set; }
         public string Position { get; set; }
         public DateTime StartDate { get; set; }

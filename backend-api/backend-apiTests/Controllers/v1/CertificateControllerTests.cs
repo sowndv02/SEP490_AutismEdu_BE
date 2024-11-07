@@ -21,10 +21,11 @@ using System.Security.Claims;
 using System.Text;
 using Xunit;
 using static backend_api.SD;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace backend_api.Controllers.v1.Tests
 {
-    public class CertificateControllerTests
+    public class CertificateControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {
 
         private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -196,7 +197,7 @@ namespace backend_api.Controllers.v1.Tests
             var newCertificate = new Certificate
             {
                 Id = certificateId,
-                SubmiterId = userId
+                SubmitterId = userId
             };
 
             var certificateDTO = new CertificateDTO
@@ -267,7 +268,7 @@ namespace backend_api.Controllers.v1.Tests
 
         }
 
-        
+
 
 
         [Fact]
@@ -321,7 +322,7 @@ namespace backend_api.Controllers.v1.Tests
             // Arrange
             var certificateId = 1;
             var userId = "user123";
-            var certificate = new Certificate { Id = certificateId, SubmiterId = userId, RequestStatus = Status.PENDING, CertificateName = "Test Certificate" };
+            var certificate = new Certificate { Id = certificateId, SubmitterId = userId, RequestStatus = Status.PENDING, CertificateName = "Test Certificate" };
             var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
             var changeStatusDTO = new ChangeStatusDTO { Id = certificateId, StatusChange = (int)Status.APPROVE };
 
@@ -355,7 +356,7 @@ namespace backend_api.Controllers.v1.Tests
             // Arrange
             var certificateId = 1;
             var userId = "user123";
-            var certificate = new Certificate { Id = certificateId, SubmiterId = userId, RequestStatus = Status.PENDING, CertificateName = "Test Certificate" };
+            var certificate = new Certificate { Id = certificateId, SubmitterId = userId, RequestStatus = Status.PENDING, CertificateName = "Test Certificate" };
             var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
             var changeStatusDTO = new ChangeStatusDTO { Id = certificateId, StatusChange = (int)Status.REJECT, RejectionReason = "Invalid document" };
 
@@ -474,8 +475,8 @@ namespace backend_api.Controllers.v1.Tests
             string userId = "test-user-id";
             SetUpUser(userId);
 
-            var certificate = new Certificate { Id = certificateId, SubmiterId = userId, IsDeleted = false };
-            var newCertificate = new Certificate { Id = certificateId, SubmiterId = userId, IsDeleted = true };
+            var certificate = new Certificate { Id = certificateId, SubmitterId = userId, IsDeleted = false };
+            var newCertificate = new Certificate { Id = certificateId, SubmitterId = userId, IsDeleted = true };
             _certificateRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, null, null))
                 .ReturnsAsync(certificate);
             _certificateRepositoryMock.Setup(repo => repo.UpdateAsync(certificate)).ReturnsAsync(newCertificate);
@@ -562,28 +563,41 @@ namespace backend_api.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderAndStatus()
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderDESCAndStatusIsPending()
         {
             // Arrange
-            var certificates = new List<Certificate>
-        {
-            new Certificate
+
+            var userClaims = new List<Claim>
             {
-                Id = 1,
-                SubmiterId = "testUserId",
-                CertificateName = "Sample Certificate",
-                IsDeleted = false,
-                RequestStatus = Status.PENDING,
-                CreatedDate = DateTime.Now,
-            }
-        };
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Sample Certificate",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now,
+                    Submitter = new Tutor() {TutorId = "testUserId"},
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
 
             var pagedResult = (1, certificates);
 
             _certificateRepositoryMock
                 .Setup(repo => repo.GetAllAsync(
                     It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submiter,CertificateMedias",
+                    "Submitter,CertificateMedias",
                     5, // PageSize
                     1, // PageNumber
                     It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -591,8 +605,8 @@ namespace backend_api.Controllers.v1.Tests
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
-                .ReturnsAsync(new ApplicationUser());
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
                 .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
@@ -603,7 +617,7 @@ namespace backend_api.Controllers.v1.Tests
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Sample", SD.STATUS_PENDING, SD.CREADTED_DATE, SD.ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync("Sample", SD.STATUS_PENDING, SD.CREATED_DATE, SD.ORDER_DESC, 1);
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -620,12 +634,2859 @@ namespace backend_api.Controllers.v1.Tests
                 It.Is<Expression<Func<Certificate, bool>>>(filter =>
                     filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Pending"
                 ),
-                "Submiter,CertificateMedias",
+                "Submitter,CertificateMedias",
                 5, // PageSize
                 1, // PageNumber
                 It.IsAny<Expression<Func<Certificate, object>>>(),
                 true), Times.Once);
         }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderDESCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Sample Certificate Reject",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor() {TutorId = "testUserId"},
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (1, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Sample", SD.STATUS_REJECT, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Reject"
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once);
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Sample Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = new List<CertificateMedia>() // Initialize as empty list
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Sample Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = new List<CertificateMedia>() // Initialize as empty list
+                }
+            };
+
+            var pagedResult = (2, certificates); // Assuming 2 items for the test
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(
+                    It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(
+                    It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<Expression<Func<Curriculum, object>>>(),
+                    It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(
+                    It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                    It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Sample", SD.STATUS_ALL, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+            response.Pagination.Total.Should().Be(2);
+
+            // Verify that the repository was called with the correct parameters
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    // Since status is "All", we expect the filter to only include IsDeleted = false and match the search term
+                    filter.Compile().Invoke(certificates[0]) &&
+                    filter.Compile().Invoke(certificates[1])
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderDESCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 4,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (1, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Approved", SD.STATUS_APPROVE, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Approve"
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once);
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderASCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 5,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-5),
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (1, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Rejected", SD.STATUS_REJECT, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Reject"
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderASCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 6,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-7),
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (1, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Approved", SD.STATUS_APPROVE, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Approve"
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 7,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-5),
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (1, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Pending", SD.STATUS_PENDING, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Pending"
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "All Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-10),
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "All Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-5),
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (2, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("All", SD.STATUS_ALL, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) // Applies the filter to check it includes "testUserId" and no specific status
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithNoSearchOrderDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (2, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync(null, SD.STATUS_PENDING, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First())), // Filter should include only certificates with "testUserId" and status "Pending"
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedResults_WhenUserIsTutorWithNoSearchOrderDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 3,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync(null, SD.STATUS_ALL, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter => filter == null || filter.Compile().Invoke(certificates.First())), // Ensures no specific filtering is applied
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedResults_WhenUserIsTutorWithNoSearchOrderDESCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First())), // Filter for REJECT status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync(null, SD.STATUS_REJECT, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First())), // Filter checks for REJECT status only
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedSortedResults_WhenUserIsTutorWithNoSearchOrderDESCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First())), // Filter for APPROVE status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync(null, SD.STATUS_APPROVE, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First())), // Filter checks for APPROVE status only
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedResults_WhenUserIsTutorWithNoSearchOrderASCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(1), // Newer certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(2), // Older certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First())), // Filter for REJECT status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync(null, SD.STATUS_REJECT, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First())), // Filter checks for REJECT status only
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedResults_WhenUserIsTutorWithNoSearchOrderASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(1), // Newer certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(2), // Older certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First())), // Filter for PENDING status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync(null, SD.STATUS_PENDING, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First())), // Filter checks for PENDING status only
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedResults_WhenUserIsTutorWithNoSearchOrderASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(1), // Newer certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(2), // Older certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First())), // No specific status filter for "All"
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync(null, SD.STATUS_ALL, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First())), // No filter, for all statuses
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedSortedResults_WhenUserIsTutorWithNoSearchOrderASCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(1), // Newer approved certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(2), // Older approved certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First())), // Filter by APPROVE status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync(null, SD.STATUS_APPROVE, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are approved
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedResults_WhenUserIsStaffWithSearchOrderASCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(2), // Older rejected certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(1), // Newer rejected certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return the filtered and sorted data
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Filter by REJECT status
+                    ),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Rejected", SD.STATUS_REJECT, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are rejected
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedResults_WhenUserIsStaffWithSearchOrderASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(2), // Older pending certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(1), // Newer pending certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return the filtered and sorted data
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Filter by PENDING status
+                    ),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Pending", SD.STATUS_PENDING, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are pending
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedSortedResults_WhenUserIsStaffWithSearchOrderASCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(2), // Older approved certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(1), // Newer approved certificate
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return the filtered and sorted data
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Filter by APPROVE status
+                    ),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Approved", SD.STATUS_APPROVE, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are approved
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnSortedResults_WhenUserIsStaffWithSearchOrderASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for All status (no filter on status)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE, // Approved status
+                    CreatedDate = DateTime.Now.AddDays(2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING, // Pending status
+                    CreatedDate = DateTime.Now.AddDays(1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return the data for 'All' status (no filtering on status)
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(), // No status filter
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Certificate", SD.STATUS_ALL, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.IsAny<Expression<Func<Certificate, bool>>>(), // Ensure no status filter
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsStaffWithSearchOrderDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for PENDING status
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING, // Pending status
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Pending Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING, // Pending status
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return the data for 'PENDING' status
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First()) &&
+                        filter.Compile().Invoke(certificates.Last()) // Ensure filtering by PENDING status
+                    ),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Pending", SD.STATUS_PENDING, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) &&
+                    filter.Compile().Invoke(certificates.Last()) // Ensure filtering by PENDING status
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsStaffWithSearchOrderDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for ALL status (no filtering on status)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING, // Any status
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE, // Any status
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 3,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 3",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT, // Any status
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return the data for ALL status
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter on status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Certificate", SD.STATUS_ALL, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter on status (All)
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+        }
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsStaffWithSearchOrderDESCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for REJECT status
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Rejected Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return the data for REJECT status
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First()) // Ensures filter applies status REJECT
+                    ),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Rejected", SD.STATUS_REJECT, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with correct filter for REJECT status
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) // Ensure filter applies status REJECT
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsStaffWithSearchOrderDESCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for APPROVE status
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Approved Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return the data for APPROVE status
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                        filter.Compile().Invoke(certificates.First()) // Ensures filter applies status APPROVE
+                    ),
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending (CreatedDate)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("Approved", SD.STATUS_APPROVE, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with correct filter for APPROVE status
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) // Ensure filter applies status APPROVE
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllCertificatesSortedByCreatedDateASC_WhenUserIsStaffWithNoSearchAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for All status (No filtering on status)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return all certificates without filtering on status (All status)
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Certificate, bool>>>(), // No filtering on status (All status)
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending by CreatedDate (ASC)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("", SD.STATUS_ALL, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with no filter (All status) and sorted by CreatedDate ASC
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter applied for status
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedCertificatesSortedByCreatedDateASC_WhenUserIsStaffWithNoSearchAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for APPROVE status (filtering only certificates with status APPROVE)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return only APPROVE status certificates and sorted by CreatedDate in ascending order
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for APPROVE status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending by CreatedDate (ASC)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("", SD.STATUS_APPROVE, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with APPROVE status filter and sorted by CreatedDate ASC
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only APPROVE status certificates
+                    filter.Compile().Invoke(certificates.Last())
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedCertificatesSortedByCreatedDateASC_WhenUserIsStaffWithNoSearchAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for REJECT status (filtering only certificates with status REJECT)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return only REJECT status certificates and sorted by CreatedDate in ascending order
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for REJECT status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending by CreatedDate (ASC)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("", SD.STATUS_REJECT, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with REJECT status filter and sorted by CreatedDate ASC
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only REJECT status certificates
+                    filter.Compile().Invoke(certificates.Last())
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingCertificatesSortedByCreatedDateASC_WhenUserIsStaffWithNoSearchAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for PENDING status (filtering only certificates with status PENDING)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return only PENDING status certificates and sorted by CreatedDate in ascending order
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for PENDING status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    false)) // Sort ascending by CreatedDate (ASC)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("", SD.STATUS_PENDING, SD.CREATED_DATE, SD.ORDER_ASC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with PENDING status filter and sorted by CreatedDate ASC
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only PENDING status certificates
+                    filter.Compile().Invoke(certificates.Last())
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedCertificatesSortedByCreatedDateDESC_WhenUserIsStaffWithNoSearchAndStatusIsRejected()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for REJECTED status (filtering only certificates with status REJECT)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return only REJECT status certificates and sorted by CreatedDate in descending order
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for REJECT status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending by CreatedDate (DESC)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("", SD.STATUS_REJECT, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with REJECT status filter and sorted by CreatedDate DESC
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only REJECT status certificates
+                    filter.Compile().Invoke(certificates.Last())
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingCertificatesSortedByCreatedDateDESC_WhenUserIsStaffWithNoSearchAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for PENDING status (filtering only certificates with status PENDING)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return only PENDING status certificates and sorted by CreatedDate in descending order
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for PENDING status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending by CreatedDate (DESC)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("", SD.STATUS_PENDING, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with PENDING status filter and sorted by CreatedDate DESC
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only PENDING status certificates
+                    filter.Compile().Invoke(certificates.Last())
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllCertificatesSortedByCreatedDateDESC_WhenUserIsStaffWithNoSearchAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for ALL status (no filter applied)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId1",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING, // This status could vary as we are fetching "All"
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId1" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId2",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE, // This status could vary as we are fetching "All"
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId2" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return all certificates sorted by CreatedDate in descending order
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last())), // No specific filter as status is ALL
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending by CreatedDate (DESC)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("", SD.STATUS_ALL, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with no specific filter (All status) and sorted by CreatedDate DESC
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && // No specific status filter as status is All
+                    filter.Compile().Invoke(certificates.Last())
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedCertificatesSortedByCreatedDateDESC_WhenUserIsStaffWithNoSearchAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Sample data for APPROVE status (only fetching APPROVE status)
+            var certificates = new List<Certificate>
+            {
+                new Certificate
+                {
+                    Id = 1,
+                    SubmitterId = "testUserId1",
+                    CertificateName = "Certificate 1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    Submitter = new Tutor { TutorId = "testUserId1" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                },
+                new Certificate
+                {
+                    Id = 2,
+                    SubmitterId = "testUserId2",
+                    CertificateName = "Certificate 2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    Submitter = new Tutor { TutorId = "testUserId2" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                }
+            };
+
+            var pagedResult = (certificates.Count, certificates);
+
+            // Mock repository to return certificates with APPROVE status sorted by CreatedDate in descending order
+            _certificateRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last())), // Filter for APPROVE status
+                    "Submitter,CertificateMedias",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Certificate, object>>>(),
+                    true)) // Sort descending by CreatedDate (DESC)
+                .ReturnsAsync(pagedResult);
+
+            // Mock user repository to return a staff user
+            _userRepositoryMock
+                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<Curriculum>()));
+
+            _workExperienceRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .ReturnsAsync((1, new List<WorkExperience>()));
+
+            // Act
+            var result = await _controller.GetAllAsync("", SD.STATUS_APPROVE, SD.CREATED_DATE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify that the GetAllAsync method was called with APPROVE status and sorted by CreatedDate DESC
+            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
+                It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                    filter.Compile().Invoke(certificates.First()) && // Only APPROVE status certificates
+                    filter.Compile().Invoke(certificates.Last())
+                ),
+                "Submitter,CertificateMedias",
+                5, // PageSize
+                1, // PageNumber
+                It.IsAny<Expression<Func<Certificate, object>>>(),
+                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+        }
+
 
     }
 

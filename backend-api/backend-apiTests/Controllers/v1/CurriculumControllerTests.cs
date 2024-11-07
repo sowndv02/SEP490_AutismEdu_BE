@@ -20,10 +20,11 @@ using FluentAssertions;
 using System.Net;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace backend_api.Controllers.v1.Tests
 {
-    public class CurriculumControllerTests
+    public class CurriculumControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {
 
 
@@ -112,11 +113,11 @@ namespace backend_api.Controllers.v1.Tests
         public async Task DeleteAsync_ReturnsNoContent_WhenSuccessfulDeletion()
         {
             // Arrange
-            var curriculum = new Curriculum { Id = 1, SubmiterId = "testUserId", IsActive = true, IsDeleted = false };
+            var curriculum = new Curriculum { Id = 1, SubmitterId = "testUserId", IsActive = true, IsDeleted = false };
             _curriculumRepositoryMock
                 .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
                 .ReturnsAsync(curriculum);
-            var newCurriculum = new Curriculum { Id = 1, SubmiterId = "testUserId", IsActive = true, IsDeleted = true };
+            var newCurriculum = new Curriculum { Id = 1, SubmitterId = "testUserId", IsActive = true, IsDeleted = true };
             _curriculumRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Curriculum>())).ReturnsAsync(newCurriculum);
 
             // Act

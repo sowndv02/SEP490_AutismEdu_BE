@@ -21,13 +21,15 @@ namespace backend_api.Controllers.v1
         private readonly IChildInformationRepository _childInfoRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
+        private readonly ILogger<ChildInformationController> _logger;
         private readonly IStudentProfileRepository _studentProfileRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly IResourceService _resourceService;
 
-        public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper,
+        public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper, ILogger<ChildInformationController> logger,
             IStudentProfileRepository studentProfileRepository, IBlobStorageRepository blobStorageRepository, IResourceService resourceService)
         {
+            _logger = logger;
             _childInfoRepository = childInfoRepository;
             _response = new APIResponse();
             _mapper = mapper;
@@ -45,6 +47,7 @@ namespace backend_api.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (childInformationCreateDTO == null)
                 {
+                    _logger.LogWarning("Received null ChildInformationCreateDTO. UserId: {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CHILD_INFO) };
@@ -55,6 +58,7 @@ namespace backend_api.Controllers.v1
                 var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(childInformationCreateDTO.Name) && x.ParentId.Equals(userId));
                 if (isChildExist != null)
                 {
+                    _logger.LogWarning("Duplicate child information found for Name: {ChildName}, ParentId: {ParentId}", childInformationCreateDTO.Name, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME) };
@@ -82,6 +86,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating child information. UserId: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -96,13 +101,13 @@ namespace backend_api.Controllers.v1
             try
             {
                 var childInfos = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId), "Parent");
-
                 _response.Result = _mapper.Map<List<ChildInformationDTO>>(childInfos.list);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving child information for ParentId: {ParentId}", parentId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -111,13 +116,16 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut]
+        [Authorize(Roles = SD.PARENT_ROLE)]
         public async Task<IActionResult> UpdateAsync([FromForm] ChildInformationUpdateDTO updateDTO)
         {
             try
             {
-                var model = await _childInfoRepository.GetAsync(x => x.Id == updateDTO.ChildId);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var model = await _childInfoRepository.GetAsync(x => x.Id == updateDTO.ChildId && x.ParentId == userId);
                 if (model == null)
                 {
+                    _logger.LogWarning("Child information not found for ParentId: {ParentId}, ChildId: {ChildId}", userId, updateDTO.ChildId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO) };
@@ -127,6 +135,7 @@ namespace backend_api.Controllers.v1
                 var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(updateDTO.Name) && !x.Name.Equals(model.Name) && x.ParentId.Equals(model.ParentId));
                 if (isChildExist != null)
                 {
+                    _logger.LogWarning("Child name already exists for ParentId: {ParentId}, Name: {ChildName}", userId, updateDTO.Name);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME) };
@@ -177,6 +186,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating Child information for ParentId: {ParentId}, ChildId: {ChildId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value, updateDTO.ChildId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

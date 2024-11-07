@@ -29,10 +29,11 @@ namespace backend_api.Controllers.v1
         private readonly IAssessmentResultRepository _assessmentResultRepository;
         private readonly IInitialAssessmentResultRepository _initialAssessmentResultRepository;
         private readonly IResourceService _resourceService;
+        private readonly ILogger<ProgressReportController> _logger;
 
         public ProgressReportController(IMapper mapper, IConfiguration configuration,
             IProgressReportRepository progressReportRepository, IAssessmentResultRepository assessmentResultRepository,
-            IInitialAssessmentResultRepository initialAssessmentResultRepository, IResourceService resourceService)
+            IInitialAssessmentResultRepository initialAssessmentResultRepository, IResourceService resourceService, ILogger<ProgressReportController> logger)
         {
             _response = new APIResponse();
             _mapper = mapper;
@@ -41,6 +42,7 @@ namespace backend_api.Controllers.v1
             _assessmentResultRepository = assessmentResultRepository;
             _initialAssessmentResultRepository = initialAssessmentResultRepository;
             _resourceService = resourceService;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -53,6 +55,7 @@ namespace backend_api.Controllers.v1
 
                 if (createDTO == null)
                 {
+                    _logger.LogWarning("Received null ProgressReportCreateDTO. Bad request.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PROGRESS_REPORT) };
@@ -79,6 +82,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating progress report.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -88,7 +92,7 @@ namespace backend_api.Controllers.v1
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1, bool getInitialResult = false)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1, bool getInitialResult = false)
         {
             try
             {
@@ -104,7 +108,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         case SD.DATE_FROM:
@@ -167,6 +171,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while fetching progress reports for studentProfileId: {StudentProfileId}", studentProfileId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -184,6 +189,7 @@ namespace backend_api.Controllers.v1
 
                 if (progressReport == null)
                 {
+                    _logger.LogWarning("Progress report with Id: {ProgressReportId} not found.", Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.PROGRESS_REPORT) };
@@ -204,6 +210,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while fetching progress report with Id: {ProgressReportId}", Id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -221,16 +228,18 @@ namespace backend_api.Controllers.v1
 
                 if (updateDTO == null)
                 {
+                    _logger.LogWarning("Received null updateDTO for ProgressReport update.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PROGRESS_REPORT) };
                     return BadRequest(_response);
                 }
 
-                var model = await _progressReportRepository.GetAsync(x => x.Id == updateDTO.Id);
+                var model = await _progressReportRepository.GetAsync(x => x.Id == updateDTO.Id && x.TutorId == tutorId);
 
                 if (model == null)
                 {
+                    _logger.LogWarning("Progress report with Id: {ProgressReportId} not found.", updateDTO.Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.PROGRESS_REPORT) };
@@ -239,6 +248,7 @@ namespace backend_api.Controllers.v1
 
                 if(model.CreatedDate.AddHours(48) <= DateTime.Now)
                 {
+                    _logger.LogWarning("Attempt to modify ProgressReportId: {ProgressReportId} after 48 hours.", updateDTO.Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.PROGRESS_REPORT_MODIFICATION_EXPIRED) };
@@ -272,6 +282,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating ProgressReportId: {ProgressReportId}.", updateDTO?.Id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

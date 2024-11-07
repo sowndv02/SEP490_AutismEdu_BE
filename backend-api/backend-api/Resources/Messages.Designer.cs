@@ -115,11 +115,38 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chứng chỉ của bạn đã được {0}.
+        /// </summary>
+        public static string CHANGE_STATUS_CERTIFICATE_TUTOR_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("CHANGE_STATUS_CERTIFICATE_TUTOR_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Khung chương trình của bạn đã được {0}.
+        /// </summary>
+        public static string CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Phụ huynh {0} vừa {1} hồ sơ học sinh của bạn..
         /// </summary>
-        public static string CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION {
+        public static string CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION {
             get {
-                return ResourceManager.GetString("CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION", resourceCulture);
+                return ResourceManager.GetString("CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Yêu cầu của bạn đã được gia sư {0}.
+        /// </summary>
+        public static string CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION", resourceCulture);
             }
         }
         
@@ -223,6 +250,15 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bạn có đánh giá mới từ phụ huynh.
+        /// </summary>
+        public static string NEW_REVIEW_TUTOR_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("NEW_REVIEW_TUTOR_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Không tìm thấy &apos;{0}&apos;..
         /// </summary>
         public static string NOT_FOUND_MESSAGE {
@@ -264,6 +300,15 @@ namespace backend_api.Resources {
         public static string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR {
             get {
                 return ResourceManager.GetString("TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to “Bạn có yêu cầu mới từ phụ huynh {0}.
+        /// </summary>
+        public static string TUTOR_REQUEST_TUTOR_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("TUTOR_REQUEST_TUTOR_NOTIFICATION", resourceCulture);
             }
         }
         

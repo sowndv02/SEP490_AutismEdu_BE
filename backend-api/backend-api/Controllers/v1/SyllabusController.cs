@@ -44,7 +44,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
             try
@@ -53,6 +53,7 @@ namespace backend_api.Controllers.v1
 
                 if (id == 0)
                 {
+                    _logger.LogWarning($"Invalid syllabus ID: {id} provided by User: {userId}");
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -62,6 +63,7 @@ namespace backend_api.Controllers.v1
 
                 if (model == null)
                 {
+                    _logger.LogWarning($"Syllabus ID: {id} not found for Tutor: {userId}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SYLLABUS) };
@@ -76,6 +78,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, $"An error occurred while deleting Syllabus ID: {id} for Tutor: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value}");
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
             }
@@ -83,32 +86,23 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? orderBy = SD.AGE_FROM, string? sort = SD.ORDER_DESC)
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<Syllabus> list = new();
-                Expression<Func<Syllabus, bool>> filter = u => true;
+                Expression<Func<Syllabus, bool>> filter = u => !string.IsNullOrEmpty(u.TutorId) && u.TutorId == userId && !u.IsDeleted;
                 Expression<Func<Syllabus, object>> orderByQuery = u => true;
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles.Contains(SD.TUTOR_ROLE))
-                {
-                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    Expression<Func<Syllabus, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.TutorId) && u.TutorId == userId && !u.IsDeleted;
-
-                    var combinedFilter = Expression.Lambda<Func<Syllabus, bool>>(
-                        Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
-                        filter.Parameters
-                    );
-                    filter = combinedFilter;
-                }
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 if (orderBy != null)
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         case SD.AGE_FROM:
@@ -149,6 +143,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving syllabi for Tutor: {userId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -161,165 +156,209 @@ namespace backend_api.Controllers.v1
         [HttpGet("{id}")]
         public async Task<IActionResult> GetActive(int id)
         {
-            var model = await _syllabusRepository.GetAsync(x => x.Id == id && !x.IsDeleted);
-            if (model == null)
+            try
             {
-                _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                return BadRequest(_response);
+                var model = await _syllabusRepository.GetAsync(x => x.Id == id && !x.IsDeleted);
+                if (model == null)
+                {
+                    _logger.LogWarning("Syllabus not found for id: {id}", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    return BadRequest(_response);
+                }
+                var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
+                model.SyllabusExercises = syllabusExercises;
+                _response.StatusCode = HttpStatusCode.Created;
+                _response.Result = _mapper.Map<SyllabusDTO>(model);
+                _response.IsSuccess = true;
+                return Ok(_response);
             }
-            var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
-            model.SyllabusExercises = syllabusExercises;
-            _response.StatusCode = HttpStatusCode.Created;
-            _response.Result = _mapper.Map<SyllabusDTO>(model);
-            _response.IsSuccess = true;
-            return Ok(_response);
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "An error occurred while retrieving syllabus with id: {id}", id);
+
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
         }
 
 
         [HttpPut("{id}")]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<IActionResult> UpdateAsync(int id, [FromBody] SyllabusUpdateDTO updateDTO)
         {
-            if (!ModelState.IsValid || id != updateDTO.Id)
+            try
             {
-                _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SYLLABUS) };
-                return BadRequest(_response);
-            }
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var model = await _syllabusRepository.GetAsync(x => x.Id == id && x.TutorId == userId, false, null, null);
-            var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= updateDTO.AgeFrom && x.AgeEnd >= updateDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted && x.Id != updateDTO.Id);
-            foreach (var item in list)
-            {
-                if (item.AgeFrom == updateDTO.AgeFrom && item.AgeEnd == updateDTO.AgeEnd)
+                if (!ModelState.IsValid || id != updateDTO.Id)
                 {
+                    _logger.LogWarning("Invalid model state or mismatched id: {id}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SYLLABUS) };
                     return BadRequest(_response);
                 }
-            }
-            model.AgeEnd = updateDTO.AgeEnd;
-            model.AgeFrom = updateDTO.AgeFrom;
-            model.UpdatedDate = DateTime.Now;
-            await _syllabusRepository.UpdateAsync(model);
-            foreach (var exerciseTypeUpdate in updateDTO.SyllabusExercises)
-            {
-                int exerciseTypeId = exerciseTypeUpdate.ExerciseTypeId;
-                List<int> exerciseIds = exerciseTypeUpdate.ExerciseIds;
-                var existingSyllabusExercises = await _syllabusExerciseRepository.GetAllNotPagingAsync(se => se.SyllabusId == updateDTO.Id && se.ExerciseTypeId == exerciseTypeId, null, null, x => x.CreatedDate, true);
-                var exercisesToDelete = existingSyllabusExercises.list
-                    .Where(se => !exerciseIds.Contains(se.ExerciseId))
-                    .ToList();
-                var existingExerciseIds = existingSyllabusExercises.list.Select(se => se.ExerciseId).ToList();
-                var exercisesToAdd = exerciseIds
-                    .Where(e => !existingExerciseIds.Contains(e))
-                    .Select(e => new SyllabusExercise
+
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var model = await _syllabusRepository.GetAsync(x => x.Id == id && x.TutorId == userId, false, null, null);
+                if (model == null)
+                {
+                    _logger.LogWarning("Syllabus not found for id: {id} and tutor: {userId}", id, userId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SYLLABUS) };
+                    return BadRequest(_response);
+                }
+                var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= updateDTO.AgeFrom && x.AgeEnd >= updateDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted && x.Id != updateDTO.Id);
+                foreach (var item in list)
+                {
+                    if (item.AgeFrom == updateDTO.AgeFrom && item.AgeEnd == updateDTO.AgeEnd)
                     {
-                        SyllabusId = updateDTO.Id,
-                        ExerciseTypeId = exerciseTypeId,
-                        ExerciseId = e,
-                        CreatedDate = DateTime.Now
-                    })
-                    .ToList();
-                foreach (var deleteExercise in exercisesToDelete)
-                {
-                    await _syllabusExerciseRepository.RemoveAsync(deleteExercise);
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
+                        return BadRequest(_response);
+                    }
                 }
-                foreach (var addExercise in exercisesToAdd)
+                model.AgeEnd = updateDTO.AgeEnd;
+                model.AgeFrom = updateDTO.AgeFrom;
+                model.UpdatedDate = DateTime.Now;
+                await _syllabusRepository.UpdateAsync(model);
+                foreach (var exerciseTypeUpdate in updateDTO.SyllabusExercises)
                 {
-                    await _syllabusExerciseRepository.CreateAsync(addExercise);
+                    int exerciseTypeId = exerciseTypeUpdate.ExerciseTypeId;
+                    List<int> exerciseIds = exerciseTypeUpdate.ExerciseIds;
+                    var existingSyllabusExercises = await _syllabusExerciseRepository.GetAllNotPagingAsync(se => se.SyllabusId == updateDTO.Id && se.ExerciseTypeId == exerciseTypeId, null, null, x => x.CreatedDate, true);
+                    var exercisesToDelete = existingSyllabusExercises.list
+                        .Where(se => !exerciseIds.Contains(se.ExerciseId))
+                        .ToList();
+                    var existingExerciseIds = existingSyllabusExercises.list.Select(se => se.ExerciseId).ToList();
+                    var exercisesToAdd = exerciseIds
+                        .Where(e => !existingExerciseIds.Contains(e))
+                        .Select(e => new SyllabusExercise
+                        {
+                            SyllabusId = updateDTO.Id,
+                            ExerciseTypeId = exerciseTypeId,
+                            ExerciseId = e,
+                            CreatedDate = DateTime.Now
+                        })
+                        .ToList();
+                    foreach (var deleteExercise in exercisesToDelete)
+                    {
+                        await _syllabusExerciseRepository.RemoveAsync(deleteExercise);
+                    }
+                    foreach (var addExercise in exercisesToAdd)
+                    {
+                        await _syllabusExerciseRepository.CreateAsync(addExercise);
+                    }
                 }
+
+
+                var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
+                model.SyllabusExercises = syllabusExercises;
+                model.ExerciseTypes = syllabusExercises
+                .GroupBy(se => se.ExerciseTypeId)
+                .Select(group => new ExerciseTypeDTO
+                {
+                    Id = group.First().ExerciseType.Id,
+                    ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
+                    Exercises = group.Select(g => new ExerciseDTO
+                    {
+                        Id = g.Exercise.Id,
+                        ExerciseName = g.Exercise.ExerciseName,
+                        Description = g.Exercise.Description
+                    }).ToList()
+                }).ToList();
+
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.Result = _mapper.Map<SyllabusDTO>(model);
+                _response.IsSuccess = true;
+                return Ok(_response);
             }
-
-
-            var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
-            model.SyllabusExercises = syllabusExercises;
-            model.ExerciseTypes = syllabusExercises
-            .GroupBy(se => se.ExerciseTypeId)
-            .Select(group => new ExerciseTypeDTO
+            catch (Exception ex) 
             {
-                Id = group.First().ExerciseType.Id,
-                ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
-                Exercises = group.Select(g => new ExerciseDTO
-                {
-                    Id = g.Exercise.Id,
-                    ExerciseName = g.Exercise.ExerciseName,
-                    Description = g.Exercise.Description
-                }).ToList()
-            }).ToList();
-
-            _response.StatusCode = HttpStatusCode.NoContent;
-            _response.Result = _mapper.Map<SyllabusDTO>(model);
-            _response.IsSuccess = true;
-            return Ok(_response);
+                _logger.LogError(ex, "An error occurred while updating syllabus with id: {id}", id);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            } 
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<IActionResult> CreateAsync(SyllabusCreateDTO createDTO)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SYLLABUS) };
-                return BadRequest(_response);
-            }
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= createDTO.AgeFrom && x.AgeEnd >= createDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted);
-            foreach (var item in list)
-            {
-                if (item.AgeFrom == createDTO.AgeFrom && item.AgeEnd == createDTO.AgeEnd)
+                if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state for CreateAsync. ModelState errors: {Errors}", string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SYLLABUS) };
                     return BadRequest(_response);
                 }
-            }
-            var syllabus = _mapper.Map<Syllabus>(createDTO);
-            syllabus.TutorId = userId;
-            var model = await _syllabusRepository.CreateAsync(syllabus);
-            foreach (var item in createDTO.SyllabusExercises)
-            {
-                foreach (var exercise in item.ExerciseIds)
+
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= createDTO.AgeFrom && x.AgeEnd >= createDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted);
+                foreach (var item in list)
                 {
-                    await _syllabusExerciseRepository.CreateAsync(new SyllabusExercise()
+                    if (item.AgeFrom == createDTO.AgeFrom && item.AgeEnd == createDTO.AgeEnd)
                     {
-                        ExerciseId = exercise,
-                        ExerciseTypeId = item.ExerciseTypeId,
-                        SyllabusId = model.Id
-                    });
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
+                        return BadRequest(_response);
+                    }
                 }
-            }
-
-
-            var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
-            model.SyllabusExercises = syllabusExercises;
-            model.ExerciseTypes = syllabusExercises
-            .GroupBy(se => se.ExerciseTypeId)
-            .Select(group => new ExerciseTypeDTO
-            {
-                Id = group.First().ExerciseType.Id,
-                ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
-                Exercises = group.Select(g => new ExerciseDTO
+                var syllabus = _mapper.Map<Syllabus>(createDTO);
+                syllabus.TutorId = userId;
+                var model = await _syllabusRepository.CreateAsync(syllabus);
+                foreach (var item in createDTO.SyllabusExercises)
                 {
-                    Id = g.Exercise.Id,
-                    ExerciseName = g.Exercise.ExerciseName,
-                    Description = g.Exercise.Description
-                }).ToList()
-            }).ToList();
+                    foreach (var exercise in item.ExerciseIds)
+                    {
+                        await _syllabusExerciseRepository.CreateAsync(new SyllabusExercise()
+                        {
+                            ExerciseId = exercise,
+                            ExerciseTypeId = item.ExerciseTypeId,
+                            SyllabusId = model.Id
+                        });
+                    }
+                }
 
-            _response.StatusCode = HttpStatusCode.Created;
-            _response.Result = _mapper.Map<SyllabusDTO>(model);
-            _response.IsSuccess = true;
-            return Ok(_response);
+
+                var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
+                model.SyllabusExercises = syllabusExercises;
+                model.ExerciseTypes = syllabusExercises
+                .GroupBy(se => se.ExerciseTypeId)
+                .Select(group => new ExerciseTypeDTO
+                {
+                    Id = group.First().ExerciseType.Id,
+                    ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
+                    Exercises = group.Select(g => new ExerciseDTO
+                    {
+                        Id = g.Exercise.Id,
+                        ExerciseName = g.Exercise.ExerciseName,
+                        Description = g.Exercise.Description
+                    }).ToList()
+                }).ToList();
+
+                _response.StatusCode = HttpStatusCode.Created;
+                _response.Result = _mapper.Map<SyllabusDTO>(model);
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }catch(Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while creating the syllabus.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
         }
 
     }

@@ -25,11 +25,11 @@ namespace backend_api.Controllers.v1
         private readonly IAssessmentQuestionRepository _assessmentQuestionRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
-        protected ILogger<AssessmentScoreRange> _logger;
+        protected ILogger<TestQuestionController> _logger;
         private readonly IResourceService _resourceService;
 
         public TestQuestionController(ITestRepository testRepository, ITestResultRepository resultRepository,
-            ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<AssessmentScoreRange> logger,
+            ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<TestQuestionController> logger,
             IResourceService resourceService, IAssessmentQuestionRepository assessmentQuestionRepository)
         {
             _testRepository = testRepository;
@@ -43,15 +43,15 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        //[Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateAsync(TestQuestionCreateDTO createDTO)
         {
             try
             {
-                // TODO: remove fixed id
-                var userId = "90c999b0-8d79-429d-9c45-174efea1266e";//User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (createDTO == null)
                 {
+                    _logger.LogWarning("CreateAsync received null createDTO");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.QUESTION) };
@@ -61,6 +61,7 @@ namespace backend_api.Controllers.v1
                 var testExist = await _assessmentQuestionRepository.GetAsync(x => x.TestId == createDTO.TestId && x.Question.Equals(createDTO.Question));
                 if (testExist != null)
                 {
+                    _logger.LogWarning("Duplicate question detected for TestId={TestId}, Question={Question}", createDTO.TestId, createDTO.Question);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.QUESTION) };
@@ -82,6 +83,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while creating a test question.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

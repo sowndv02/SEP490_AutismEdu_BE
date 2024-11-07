@@ -25,10 +25,11 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         private readonly IChildInformationRepository _childInfoRepository;
         private readonly ISyllabusRepository _syllabusRepository;
+        private readonly ILogger<ScheduleController> _logger;
 
         public ScheduleController(IScheduleRepository scheduleRepository, IMapper mapper
             , IStudentProfileRepository studentProfileRepository, IResourceService resourceService,
-            IChildInformationRepository childInfoRepository, ISyllabusRepository syllabusRepository)
+            IChildInformationRepository childInfoRepository, ISyllabusRepository syllabusRepository, ILogger<ScheduleController> logger)
         {
             _resourceService = resourceService;
             _scheduleRepository = scheduleRepository;
@@ -37,6 +38,7 @@ namespace backend_api.Controllers.v1
             _studentProfileRepository = studentProfileRepository;
             _childInfoRepository = childInfoRepository;
             _syllabusRepository = syllabusRepository;
+            _logger = logger;
         }
 
         [HttpGet("{id}")]
@@ -48,6 +50,7 @@ namespace backend_api.Controllers.v1
                 var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, "Exercise,ExerciseType");
                 if (model == null)
                 {
+                    _logger.LogWarning("Schedule with ID: {ScheduleId} not found.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
@@ -61,6 +64,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving schedule with ID: {ScheduleId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -71,12 +75,14 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPut("AssignExercises/{id}")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> UpdateAsync(int id, [FromBody] AssignExerciseScheduleDTO updateDTO)
         {
             try
             {
                 if (updateDTO == null || updateDTO.Id != id)
                 {
+                    _logger.LogWarning("Invalid update data or ID mismatch for Schedule ID: {ScheduleId}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
@@ -85,6 +91,7 @@ namespace backend_api.Controllers.v1
                 var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, null);
                 if (model == null)
                 {
+                    _logger.LogWarning("Schedule with ID: {ScheduleId} not found for update.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
@@ -104,6 +111,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating schedule with ID: {ScheduleId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -143,6 +151,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving failed exercises for Tutor ID: {TutorId} and StudentProfile ID: {StudentProfileId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value, studentProfileId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -151,20 +160,25 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut("changeStatus/{id}")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> UpdateAsync(int id, [FromBody] ScheduleUpdateDTO updateDTO)
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
                 if (updateDTO == null || updateDTO.Id != id)
                 {
+                    _logger.LogWarning("Invalid update request: Schedule ID mismatch or empty request body for Schedule ID: {ScheduleId}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
-                var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, "Exercise,ExerciseType");
+                var model = await _scheduleRepository.GetAsync(x => x.Id == id && x.TutorId == userId, false, "Exercise,ExerciseType");
                 if (model == null)
                 {
+                    _logger.LogWarning("Schedule not found: {ScheduleId}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
@@ -188,6 +202,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating Schedule ID: {ScheduleId} by Tutor ID: {TutorId}", id, User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -251,6 +266,8 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while fetching schedules for Tutor ID: {TutorId} with StudentProfileId: {StudentProfileId}, StartDate: {StartDate}, EndDate: {EndDate}",
+                    User.FindFirst(ClaimTypes.NameIdentifier)?.Value, studentProfileId, startDate, endDate);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -264,15 +281,26 @@ namespace backend_api.Controllers.v1
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (updateDTO == null)
                 {
+                    _logger.LogWarning("Received null ScheduleDateTimeUpdateDTO");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
                 }
 
-                var originalSchedule = await _scheduleRepository.GetAsync(x => x.Id == updateDTO.Id);
+                var originalSchedule = await _scheduleRepository.GetAsync(x => x.Id == updateDTO.Id && x.TutorId == userId);
+                if (originalSchedule == null)
+                {
+                    _logger.LogWarning("Schedule with Id: {ScheduleId} not found", updateDTO.Id);
+
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
+                    return NotFound(_response);
+                }
                 originalSchedule.IsHidden = true;
                 originalSchedule.UpdatedDate = DateTime.Now;
                 await _scheduleRepository.UpdateAsync(originalSchedule);
@@ -302,6 +330,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while changing schedule date and time for ScheduleId: {ScheduleId}", updateDTO?.Id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
