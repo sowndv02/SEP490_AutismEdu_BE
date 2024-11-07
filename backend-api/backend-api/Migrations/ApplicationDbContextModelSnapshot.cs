@@ -866,7 +866,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("StudentProfileId");
 
-                    b.ToTable("InitialAssessmentResults");
+                    b.ToTable("InitialAndFinalAssessmentResult");
                 });
 
             modelBuilder.Entity("backend_api.Models.PacketPayment", b =>
