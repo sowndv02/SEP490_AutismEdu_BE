@@ -27,12 +27,13 @@ namespace backend_api.Controllers.v1
         private string queueName = string.Empty;
         private readonly IRabbitMQMessageSender _messageBus;
         protected APIResponse _response;
+        private readonly ILogger<WorkExperienceController> _logger;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
 
         public WorkExperienceController(IUserRepository userRepository, IWorkExperienceRepository workExperienceRepository,
             IMapper mapper, IConfiguration configuration,
-            IRabbitMQMessageSender messageBus, IResourceService resourceService)
+            IRabbitMQMessageSender messageBus, IResourceService resourceService, ILogger<WorkExperienceController> logger)
         {
             _messageBus = messageBus;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -42,27 +43,30 @@ namespace backend_api.Controllers.v1
             _userRepository = userRepository;
             _workExperienceRepository = workExperienceRepository;
             _resourceService = resourceService;
+            _logger = logger;
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [Authorize(SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 if (id == 0)
                 {
+                    _logger.LogWarning($"Invalid ID {id} provided for deletion.");
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var model = await _workExperienceRepository.GetAsync(x => x.Id == id && x.SubmiterId == userId, false, null);
+                var model = await _workExperienceRepository.GetAsync(x => x.Id == id && x.SubmitterId == userId, false, null);
 
                 if (model == null)
                 {
+                    _logger.LogWarning($"Work experience with ID {id} not found for user {userId}.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
@@ -78,22 +82,24 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Error occurred while deleting work experience with ID {id} for user {userId}: {ex.Message}");
                 _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
-            return _response;
         }
 
         [HttpGet("updateRequest")]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<WorkExperience> list = new();
-                Expression<Func<WorkExperience, bool>> filter = u => u.SubmiterId == userId && !u.IsDeleted;
+                Expression<Func<WorkExperience, bool>> filter = u => u.SubmitterId == userId && !u.IsDeleted;
                 Expression<Func<WorkExperience, object>> orderByQuery = u => true;
 
                 bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
@@ -102,7 +108,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -137,6 +143,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Error occurred while retrieving work experiences for user {userId}: {ex.Message}");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -145,7 +152,8 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -157,7 +165,7 @@ namespace backend_api.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    Expression<Func<WorkExperience, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId && !u.IsDeleted;
+                    Expression<Func<WorkExperience, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted;
 
                     var combinedFilter = Expression.Lambda<Func<WorkExperience, bool>>(
                         Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
@@ -170,7 +178,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -194,7 +202,7 @@ namespace backend_api.Controllers.v1
                     }
                 }
                 var (count, result) = await _workExperienceRepository.GetAllAsync(filter,
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                                "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                 list = result;
                 totalCount = count;
 
@@ -206,6 +214,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Error occurred while fetching work experiences: {ex.Message}");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -218,68 +227,103 @@ namespace backend_api.Controllers.v1
         [HttpGet("{id}")]
         public async Task<IActionResult> GetActive(int id)
         {
-            var model = await _workExperienceRepository.GetAsync(x => x.Id == id && x.IsActive);
-            if (model == null)
+            try
             {
-                _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
-                return BadRequest(_response);
-            }
+                var model = await _workExperienceRepository.GetAsync(x => x.Id == id && x.IsActive);
+                if (model == null)
+                {
+                    _logger.LogWarning($"Work experience with ID: {id} not found or is not active.");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
+                    return BadRequest(_response);
+                }
 
-            _response.StatusCode = HttpStatusCode.Created;
-            _response.Result = _mapper.Map<WorkExperienceDTO>(model);
-            _response.IsSuccess = true;
-            return Ok(_response);
+                _response.StatusCode = HttpStatusCode.Created;
+                _response.Result = _mapper.Map<WorkExperienceDTO>(model);
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError($"Error occurred while fetching active work experience for ID: {id}. Exception: {ex.Message}");
+
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<IActionResult> CreateAsync(WorkExperienceCreateDTO createDTO)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                _response.StatusCode = HttpStatusCode.BadRequest;
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
+                    return BadRequest(_response);
+                }
+
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var newModel = _mapper.Map<WorkExperience>(createDTO);
+
+                newModel.SubmitterId = userId;
+                newModel.IsActive = false;
+                newModel.VersionNumber = await _workExperienceRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
+                if (createDTO.OriginalId == 0)
+                {
+                    newModel.OriginalId = null;
+                }
+                await _workExperienceRepository.CreateAsync(newModel);
+                _response.StatusCode = HttpStatusCode.Created;
+                _response.Result = _mapper.Map<WorkExperienceDTO>(newModel);
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError($"An error occurred while creating work experience: {ex.Message}");
+                _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
-                return BadRequest(_response);
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var newModel = _mapper.Map<WorkExperience>(createDTO);
-
-            newModel.SubmiterId = userId;
-            newModel.IsActive = false;
-            newModel.VersionNumber = await _workExperienceRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
-            if (createDTO.OriginalId == 0)
-            {
-                newModel.OriginalId = null;
-            }
-            await _workExperienceRepository.CreateAsync(newModel);
-            _response.StatusCode = HttpStatusCode.Created;
-            _response.Result = _mapper.Map<WorkExperienceDTO>(newModel);
-            _response.IsSuccess = true;
-            return Ok(_response);
         }
 
         [HttpPut("changeStatus/{id}")]
-        //[Authorize(Policy = "UpdateTutorPolicy")]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<IActionResult> ApproveOrRejectRequest(ChangeStatusDTO changeStatusDTO)
         {
             try
             {
-                var userId = _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id;
-                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //if (string.IsNullOrEmpty(userId))
-                //{
-                //    _response.StatusCode = HttpStatusCode.BadRequest;
-                //    _response.IsSuccess = false;
-                //    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                //    return BadRequest(_response);
-                //}
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
+
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
+                    return BadRequest(_response);
+                }
 
                 WorkExperience model = await _workExperienceRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
-                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmiterId);
+                if (model == null || model.RequestStatus != Status.PENDING)
+                {
+                    _logger.LogWarning("Work experience with ID: {Id} is either not found or already processed. Returning BadRequest.", changeStatusDTO.Id);
+
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
+                    return BadRequest(_response);
+                }
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -353,6 +397,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError("An error occurred while processing the status change for work experience ID: {Id}. Error: {Error}", changeStatusDTO.Id, ex.Message);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

@@ -36,6 +36,7 @@ namespace backend_api.Controllers.v1
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly IScheduleRepository _scheduleRepository;
         private readonly IResourceService _resourceService;
+        private readonly ILogger<StudentProfileController> _logger;
 
         protected APIResponse _response;
         private readonly IMapper _mapper;
@@ -46,7 +47,7 @@ namespace backend_api.Controllers.v1
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository,
             IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IRabbitMQMessageSender messageBus,
             IUserRepository userRepository, IRoleRepository roleRepository, IBlobStorageRepository blobStorageRepository
-            , IScheduleRepository scheduleRepository, IResourceService resourceService)
+            , IScheduleRepository scheduleRepository, IResourceService resourceService, ILogger<StudentProfileController> logger)
         {
             _studentProfileRepository = studentProfileRepository;
             _assessmentQuestionRepository = assessmentQuestionRepository;
@@ -65,6 +66,7 @@ namespace backend_api.Controllers.v1
             _blobStorageRepository = blobStorageRepository;
             _scheduleRepository = scheduleRepository;
             _resourceService = resourceService;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -77,6 +79,7 @@ namespace backend_api.Controllers.v1
 
                 if (createDTO == null)
                 {
+                    _logger.LogWarning("Received empty createDTO from tutor {TutorId}", tutorId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.STUDENT_PROFILE) };
@@ -101,6 +104,10 @@ namespace backend_api.Controllers.v1
                     {
                         if(slot.From >= slot.To)
                         {
+                            _logger.LogWarning("Invalid time slot detected: From time ({From}) is greater than or equal to To time ({To}) for the time slot {Weekday}.",
+                                slot.From.ToString(@"hh\:mm"),
+                                slot.To.ToString(@"hh\:mm"),
+                                slot.Weekday);
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
                             _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TIME_SLOT) };
@@ -116,6 +123,10 @@ namespace backend_api.Controllers.v1
                                                                                            ,true, "StudentProfile");
                         if (isTimeSlotDuplicate != null)
                         {
+                            _logger.LogWarning("Duplicate time slot detected: From time ({From}) to To time ({To}) already exists for the time slot on {Weekday}.",
+                                isTimeSlotDuplicate.From.ToString(@"hh\:mm"),
+                                isTimeSlotDuplicate.To.ToString(@"hh\:mm"),
+                                isTimeSlotDuplicate.Weekday);
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
                             _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm")) };
@@ -124,6 +135,9 @@ namespace backend_api.Controllers.v1
                     }
                     else
                     {
+                        _logger.LogWarning("Duplicate time slot detected: From time ({From}) to To time ({To}) already exists.",
+                            isTimeSlotDuplicate.From.ToString(@"hh\:mm"),
+                            isTimeSlotDuplicate.To.ToString(@"hh\:mm"));
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm")) };
@@ -152,6 +166,7 @@ namespace backend_api.Controllers.v1
                 {
                     if(createDTO.TutorRequestId > 0)
                     {
+                        _logger.LogWarning("Invalid request: TutorRequestId ({TutorRequestId}) should not be greater than 0.", createDTO.TutorRequestId);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.STUDENT_PROFILE) };
@@ -163,6 +178,7 @@ namespace backend_api.Controllers.v1
                     var parentEmailExist = await _userRepository.GetAsync(x => x.Email.Equals(createDTO.Email));
                     if (parentEmailExist != null)
                     {
+                        _logger.LogWarning("Duplicate email attempt: The email ({Email}) already exists.", parentEmailExist.Email);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EMAIL) };
@@ -223,6 +239,7 @@ namespace backend_api.Controllers.v1
                 }              
                 else if (createDTO.ChildId <= 0)
                 {
+                    _logger.LogWarning("Invalid ChildId: The ChildId ({ChildId}) is missing or invalid.", createDTO.ChildId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.MISSING_2_INFORMATIONS, SD.PARENT, SD.CHILD };
@@ -238,6 +255,7 @@ namespace backend_api.Controllers.v1
 
                 if (childTutorExist != null)
                 {
+                    _logger.LogWarning("Duplicate student profile detected: The student profile already exists for the child with ID {ChildId}.", childTutorExist.ChildId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.STUDENT_PROFILE) };
@@ -248,6 +266,7 @@ namespace backend_api.Controllers.v1
                 model.Child = child;
                 if (child == null)
                 {
+                    _logger.LogError("Child information not found: No child found with the given criteria.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO) };
@@ -330,6 +349,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating student profile for tutor {TutorId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -390,6 +410,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while fetching student profiles.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -415,6 +436,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while fetching schedule time slots.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -432,8 +454,9 @@ namespace backend_api.Controllers.v1
 
                 var childs = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId));
 
-                if (childs.list == null)
+                if (childs.list == null || !childs.list.Any())
                 {
+                    _logger.LogInformation("No children found for the parent. Returning empty result.");
                     _response.Result = null;
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -479,6 +502,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while fetching child student profiles.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -505,6 +529,7 @@ namespace backend_api.Controllers.v1
 
                 if (studentProfile == null)
                 {
+                    _logger.LogWarning("Bad Request: changeStatusDTO is null.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
@@ -515,6 +540,7 @@ namespace backend_api.Controllers.v1
                 {
                     if (studentProfile.CreatedDate.AddHours(24) <= DateTime.Now)
                     {
+                        _logger.LogWarning($"Student profile with ID: {changeStatusDTO.Id} has expired. Cannot change status to Teaching.");
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.STUDENT_PROFILE_EXPIRED) };
@@ -593,6 +619,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, $"An error occurred while changing the status for student profile {changeStatusDTO.Id}.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -657,6 +684,7 @@ namespace backend_api.Controllers.v1
 
                 if (closeDTO == null)
                 {
+                    _logger.LogWarning($"Student profile with ID {id} not found");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.END_TUTORING) };
@@ -703,6 +731,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, $"An error occurred while fetching Student Profile ID: {id}");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -720,6 +749,15 @@ namespace backend_api.Controllers.v1
 
                 var scheduleTimeSlots = await _studentProfileRepository.GetAsync(x => x.Id == studentProfileId, true,"ScheduleTimeSlots,Child");
 
+                if (scheduleTimeSlots == null)
+                {
+                    _logger.LogWarning($"No schedule time slots found for Student Profile ID: {studentProfileId}");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE_TIME_SLOT) };
+                    return BadRequest(_response);
+                }
+
                 _response.Result = _mapper.Map<GetAllStudentProfileTimeSlotDTO>(scheduleTimeSlots);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -727,6 +765,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, $"An error occurred while fetching schedule time slots for Student Profile ID: {studentProfileId}");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

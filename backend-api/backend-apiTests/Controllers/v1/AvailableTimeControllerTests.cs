@@ -20,7 +20,7 @@ using Xunit;
 
 namespace backend_api.Controllers.v1.Tests
 {
-    public class AvailableTimeControllerTests
+    public class AvailableTimeControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {
 
         private readonly WebApplicationFactory<Program> _factory;

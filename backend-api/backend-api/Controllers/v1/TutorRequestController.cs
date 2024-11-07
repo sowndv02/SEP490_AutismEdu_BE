@@ -26,6 +26,7 @@ namespace backend_api.Controllers.v1
         private readonly ITutorRequestRepository _tutorRequestRepository;
         private readonly IMapper _mapper;
         private string queueName = string.Empty;
+        private readonly ILogger<TutorRequestController> _logger;
         private readonly IRabbitMQMessageSender _messageBus;
         protected APIResponse _response;
         protected int pageSize = 0;
@@ -33,7 +34,7 @@ namespace backend_api.Controllers.v1
 
         public TutorRequestController(IUserRepository userRepository, ITutorRequestRepository tutorRequestRepository,
             IMapper mapper, IConfiguration configuration,
-            IRabbitMQMessageSender messageBus, IResourceService resourceService)
+            IRabbitMQMessageSender messageBus, IResourceService resourceService, ILogger<TutorRequestController> logger)
         {
             _messageBus = messageBus;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -43,11 +44,13 @@ namespace backend_api.Controllers.v1
             _userRepository = userRepository;
             _tutorRequestRepository = tutorRequestRepository;
             _resourceService = resourceService;
+            _logger = logger;
         }
 
 
         [HttpGet("NoStudentProfile")]
-        public async Task<ActionResult<APIResponse>> GetAllRequestNoStudentProfileAsync(string? status = SD.STATUS_APPROVE, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> GetAllRequestNoStudentProfileAsync(string? status = SD.STATUS_APPROVE, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
             {
@@ -63,7 +66,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -84,6 +87,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while processing the request for TutorRequests with status {Status}.", status);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -92,8 +96,8 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet("history")]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllHistoryRequestAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        [Authorize(Roles = SD.PARENT_ROLE)]
+        public async Task<ActionResult<APIResponse>> GetAllHistoryRequestAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -109,7 +113,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -149,6 +153,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while processing the history request for user {UserId} with status {Status}.", User.FindFirst(ClaimTypes.NameIdentifier)?.Value, status);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -157,7 +162,8 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -177,7 +183,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -214,6 +220,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while fetching TutorRequests for user {UserId} with search {Search}, status {Status}.", User.FindFirst(ClaimTypes.NameIdentifier)?.Value, search, status);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -222,7 +229,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = SD.PARENT_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateAsync(TutorRequestCreateDTO tutorRequestCreateDTO)
         {
             try
@@ -230,6 +237,7 @@ namespace backend_api.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (tutorRequestCreateDTO == null)
                 {
+                    _logger.LogWarning("Received null tutor request from user {UserId}.", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST) };
@@ -237,6 +245,15 @@ namespace backend_api.Controllers.v1
                 }
                 TutorRequest model = _mapper.Map<TutorRequest>(tutorRequestCreateDTO);
                 model.ParentId = userId;
+                var isExistedRequest = await _tutorRequestRepository.GetAllNotPagingAsync(x => x.ParentId == userId && x.TutorId == tutorRequestCreateDTO.TutorId && x.ChildId == tutorRequestCreateDTO.ChildId && x.RequestStatus == SD.Status.PENDING);
+                if (isExistedRequest.list != null && isExistedRequest.list.Any()) 
+                {
+                    _logger.LogWarning("Duplicated request tutor {userId}-{childId}-{tutorId}.", userId, tutorRequestCreateDTO.ChildId, tutorRequestCreateDTO.TutorId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.TUTOR_REQUEST) };
+                    return BadRequest(_response);
+                }
                 model.CreatedDate = DateTime.Now;
                 var createdObject = await _tutorRequestRepository.CreateAsync(model);
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId);
@@ -278,6 +295,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while creating a tutor request for ParentId {ParentId}.", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -287,20 +305,20 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPut("changeStatus/{id}")]
-        //[Authorize(Policy = "UpdateTutorPolicy")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<IActionResult> ApproveOrRejectWorkExperienceRequest(ChangeStatusTutorRequestDTO changeStatusDTO)
         {
             try
             {
-                var userId = _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id;
-                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //if (string.IsNullOrEmpty(userId))
-                //{
-                //    _response.StatusCode = HttpStatusCode.BadRequest;
-                //    _response.IsSuccess = false;
-                //    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                //    return BadRequest(_response);
-                //}
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (changeStatusDTO == null)
+                {
+                    _logger.LogWarning($"Received a bad request for tutor request with ID {changeStatusDTO.Id}.");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST) };
+                    return BadRequest(_response);
+                }
 
                 TutorRequest model = await _tutorRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "Parent,Tutor", null);
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
@@ -388,6 +406,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Error processing tutor request with ID {changeStatusDTO.Id}: {ex.Message}");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

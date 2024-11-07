@@ -25,6 +25,7 @@ namespace backend_api.Controllers.v1
         private readonly ITutorRequestRepository _tutorRequestRepository;
         private readonly ITutorProfileUpdateRequestRepository _tutorProfileUpdateRequestRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<TutorController> _logger;
         private readonly FormatString _formatString;
         protected APIResponse _response;
         protected int pageSize = 0;
@@ -33,7 +34,7 @@ namespace backend_api.Controllers.v1
         public TutorController(IUserRepository userRepository, ITutorRepository tutorRepository,
             IMapper mapper, IConfiguration configuration,
             FormatString formatString, ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository, 
-            ITutorRequestRepository tutorRequestRepository, IResourceService resourceService)
+            ITutorRequestRepository tutorRequestRepository, IResourceService resourceService, ILogger<TutorController> logger)
         {
             _tutorProfileUpdateRequestRepository = tutorProfileUpdateRequestRepository;
             _formatString = formatString;
@@ -44,11 +45,12 @@ namespace backend_api.Controllers.v1
             _tutorRepository = tutorRepository;
             _tutorRequestRepository = tutorRequestRepository;
             _resourceService = resourceService;
+            _logger = logger;
         }
 
         [HttpGet("updateRequest")]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllUpdateRequestProfileAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> GetAllUpdateRequestProfileAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -64,7 +66,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -99,6 +101,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving update request profiles for TutorId={TutorId}.", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -107,7 +110,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet("profile")]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> GetProfileTutor()
         {
             try
@@ -140,6 +143,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving the profile for TutorId={TutorId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -153,7 +157,14 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-
+                if (string.IsNullOrEmpty(id))
+                {
+                    _logger.LogWarning("Bad request. Missing or invalid TutorId.");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 var requests = new List<int>();
                 if (userRoles != null && userRoles.Contains(SD.PARENT_ROLE))
@@ -164,16 +175,15 @@ namespace backend_api.Controllers.v1
                     requests = listRequests.Select(x => x.ChildId).ToList();
                 }
 
-
-                if (string.IsNullOrEmpty(id))
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
-                    return BadRequest(_response);
-                }
-
                 Tutor model = await _tutorRepository.GetAsync(x => x.TutorId == id, false, "User,Curriculums,AvailableTimeSlots,Certificates,WorkExperiences,Reviews");
+                if (model == null)
+                {
+                    _logger.LogWarning("Tutor with TutorId={TutorId} not found", id);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR) };
+                    return NotFound(_response);
+                }
                 model.TotalReview = model.Reviews.Count;
                 model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Average(x => x.RateScore) : 5;
                 if (model == null)
@@ -192,6 +202,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving tutor details for TutorId={TutorId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -201,8 +212,7 @@ namespace backend_api.Controllers.v1
 
 
         [HttpPut("{id}")]
-        //[Authorize(Policy = "UpdateTutorPolicy")]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<IActionResult> UpdateAsync(TutorProfileUpdateRequestCreateDTO updateDTO)
         {
             try
@@ -219,6 +229,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while updating the TutorProfile for TutorId={TutorId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -271,6 +282,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while fetching tutors.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

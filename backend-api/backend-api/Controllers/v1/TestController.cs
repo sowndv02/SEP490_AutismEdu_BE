@@ -5,6 +5,7 @@ using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
+using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,12 +25,12 @@ namespace backend_api.Controllers.v1
         private readonly ITestResultDetailRepository _resultDetailRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
-        protected ILogger<AssessmentScoreRange> _logger;
+        protected ILogger<TestController> _logger;
         private readonly IResourceService _resourceService;
         protected int pageSize = 0;
 
         public TestController(ITestRepository testRepository, ITestResultRepository resultRepository, 
-            ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<AssessmentScoreRange> logger, 
+            ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<TestController> logger, 
             IResourceService resourceService, IConfiguration configuration)
         {
             _testRepository = testRepository;
@@ -43,15 +44,15 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        //[Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateAsync(TestCreateDTO createDTO)
         {
             try
             {
-                // TODO: remove fixed id
-                var userId = "90c999b0-8d79-429d-9c45-174efea1266e";//User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (createDTO == null)
                 {
+                    _logger.LogWarning("Received null TestCreateDTO object.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TEST) };
@@ -61,6 +62,7 @@ namespace backend_api.Controllers.v1
                 var testExist = await _testRepository.GetAsync(x => x.TestName.Equals(createDTO.TestName));
                 if (testExist != null)
                 {
+                    _logger.LogWarning("Test with name {TestName} already exists.", createDTO.TestName);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.TEST) };
@@ -80,6 +82,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while creating the test.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -89,7 +92,7 @@ namespace backend_api.Controllers.v1
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search = "", string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search = "", string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -99,13 +102,16 @@ namespace backend_api.Controllers.v1
                 Expression<Func<Test, object>> orderByQuery = u => true;
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
 
-                filter = u => u.TestName.Contains(search);
+                if (!string.IsNullOrEmpty(search))
+                {
+                    filter = filter.AndAlso(u => u.TestName.Contains(search));
+                }
 
                 if (orderBy != null)
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -131,6 +137,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while fetching tests.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

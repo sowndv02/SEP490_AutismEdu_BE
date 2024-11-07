@@ -169,7 +169,12 @@ namespace backend_api
         public const string CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION = "CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION";
         public const string UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION = "UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION";
         public const string CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION = "CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION";
-        public const string CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION = "CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION";
+        public const string CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION = "CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION";
+        public const string CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION = "CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION";
+        public const string CHANGE_STATUS_CERTIFICATE_TUTOR_NOTIFICATION = "CHANGE_STATUS_CERTIFICATE_TUTOR_NOTIFICATION";
+        public const string CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION = "CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION";
+        public const string TUTOR_REQUEST_TUTOR_NOTIFICATION = "TUTOR_REQUEST_TUTOR_NOTIFICATION";
+        public const string NEW_REVIEW_TUTOR_NOTIFICATION = "NEW_REVIEW_TUTOR_NOTIFICATION";
 
 
         // DTO require message
@@ -289,7 +294,7 @@ namespace backend_api
         public const string ORDER_ASC = "asc";
 
         // Order by
-        public const string CREADTED_DATE = "createdDate";
+        public const string CREATED_DATE = "createdDate";
         public const string AGE_FROM = "ageFrom";
         public const string DATE_FROM = "dateFrom";
         public const string DATE_TO = "dateTo";

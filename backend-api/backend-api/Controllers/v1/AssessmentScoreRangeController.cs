@@ -22,11 +22,11 @@ namespace backend_api.Controllers.v1
         private readonly IAssessmentScoreRangeRepository _assessmentScoreRangeRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
-        protected ILogger<AssessmentScoreRange> _logger;
+        protected ILogger<AssessmentScoreRangeController> _logger;
         private readonly IResourceService _resourceService;
 
         public AssessmentScoreRangeController(IAssessmentScoreRangeRepository assessmentScoreRangeRepository, 
-            IMapper mapper, ILogger<AssessmentScoreRange> logger, IResourceService resourceService)
+            IMapper mapper, ILogger<AssessmentScoreRangeController> logger, IResourceService resourceService)
         {
             _assessmentScoreRangeRepository = assessmentScoreRangeRepository;
             _mapper = mapper;
@@ -36,22 +36,24 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateAsync(AssessmentScoreRangeCreateDTO createDTO)
         {
             try
             {
-                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //if (createDTO == null)
-                //{
-                //    _response.StatusCode = HttpStatusCode.BadRequest;
-                //    _response.IsSuccess = false;
-                //    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_QUESTION) };
-                //    return BadRequest(_response);
-                //}
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (createDTO == null)
+                {
+                    _logger.LogWarning("Received null createDTO for AssessmentScoreRange creation.");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_QUESTION) };
+                    return BadRequest(_response);
+                }
 
                 if (createDTO.MinScore > createDTO.MaxScore)
                 {
+                    _logger.LogWarning("Invalid score range: MinScore ({MinScore}) is greater than MaxScore ({MaxScore}).", createDTO.MinScore, createDTO.MaxScore);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCORE_RANGE) };
@@ -61,14 +63,15 @@ namespace backend_api.Controllers.v1
                 var rangeOverLap = await _assessmentScoreRangeRepository.GetAsync(x => createDTO.MinScore <= x.MaxScore && createDTO.MaxScore >= x.MinScore);
                 if(rangeOverLap != null)
                 {
+                    _logger.LogWarning("Overlap found with existing score range: MinScore = {MinScore}, MaxScore = {MaxScore}",
+                     rangeOverLap.MinScore, rangeOverLap.MaxScore);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE, rangeOverLap.MinScore, rangeOverLap.MaxScore) };
                     return BadRequest(_response);
                 }
-                // TODO: remove fixed id
                 var model = _mapper.Map<AssessmentScoreRange>(createDTO);
-                model.CreateBy = "cddcd5ed-a26b-466f-8af6-d2ac4174cd6e";//userId;
+                model.CreateBy = userId;
                 model.CreateDate = DateTime.Now;
                 model = await _assessmentScoreRangeRepository.CreateAsync(model);
 
@@ -79,6 +82,8 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating AssessmentScoreRange with MinScore: {MinScore} and MaxScore: {MaxScore}",
+                    createDTO?.MinScore, createDTO?.MaxScore);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -98,6 +103,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving all assessment score ranges.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -106,13 +112,15 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut]
-        //[Authorize]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<ActionResult<APIResponse>> UpdateAsync(AssessmentScoreRangeUpdateDTO updateDTO)
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (updateDTO == null || updateDTO.Id <= 0)
                 {
+                    _logger.LogWarning("Invalid update request for AssessmentScoreRange with ID: {AssessmentScoreRangeId}", updateDTO?.Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_SCORE_RANGE) };
@@ -123,6 +131,7 @@ namespace backend_api.Controllers.v1
 
                 if (model == null)
                 {
+                    _logger.LogWarning("Assessment score range with ID: {AssessmentScoreRangeId} not found for update.", updateDTO?.Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ASSESSMENT_SCORE_RANGE) };
@@ -132,6 +141,7 @@ namespace backend_api.Controllers.v1
 
                 if (updateDTO.MinScore > updateDTO.MaxScore)
                 {
+                    _logger.LogWarning("Invalid score range. MinScore: {MinScore} is greater than MaxScore: {MaxScore}", updateDTO.MinScore, updateDTO.MaxScore);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCORE_RANGE) };
@@ -141,6 +151,7 @@ namespace backend_api.Controllers.v1
                 var rangeOverLap = await _assessmentScoreRangeRepository.GetAsync(x => updateDTO.MinScore <= x.MaxScore && updateDTO.MaxScore >= x.MinScore && x != model);
                 if (rangeOverLap != null)
                 {
+                    _logger.LogWarning("Duplicate score range found with MinScore: {MinScore} and MaxScore: {MaxScore}", rangeOverLap.MinScore, rangeOverLap.MaxScore);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE, rangeOverLap.MinScore, rangeOverLap.MaxScore) };
@@ -161,6 +172,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating assessment score range with ID: {AssessmentScoreRangeId}", updateDTO?.Id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -169,13 +181,14 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpDelete("{id}")]
-        //[Authorize]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
             try
             {
-                if(id == null || id <= 0)
+                if(id <= 0)
                 {
+                    _logger.LogWarning("Invalid delete request for AssessmentScoreRange with ID: {AssessmentScoreRangeId}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -186,6 +199,7 @@ namespace backend_api.Controllers.v1
 
                 if (model == null)
                 {
+                    _logger.LogWarning("Assessment score range with ID: {AssessmentScoreRangeId} not found for deletion.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ASSESSMENT_SCORE_RANGE) };
@@ -199,6 +213,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while deleting assessment score range with ID: {AssessmentScoreRangeId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

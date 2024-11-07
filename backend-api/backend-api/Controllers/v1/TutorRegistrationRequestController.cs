@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
+using System.Security.Claims;
 using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
@@ -19,7 +20,6 @@ namespace backend_api.Controllers.v1
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
-    //[Authorize]
     public class TutorRegistrationRequestController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
@@ -32,7 +32,7 @@ namespace backend_api.Controllers.v1
         private readonly ICertificateRepository _certificateRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
-        private readonly ILogger<TutorController> _logger;
+        private readonly ILogger<TutorRegistrationRequestController> _logger;
         private readonly IMapper _mapper;
         private string queueName = string.Empty;
         private readonly FormatString _formatString;
@@ -41,7 +41,7 @@ namespace backend_api.Controllers.v1
         private readonly IResourceService _resourceService;
 
         public TutorRegistrationRequestController(IUserRepository userRepository, ITutorRepository tutorRepository,
-            ILogger<TutorController> logger, IBlobStorageRepository blobStorageRepository,
+            ILogger<TutorRegistrationRequestController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration, IRoleRepository roleRepository,
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
             ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
@@ -76,6 +76,7 @@ namespace backend_api.Controllers.v1
             {
                 if (tutorRegistrationRequestCreateDTO == null)
                 {
+                    _logger.LogWarning("Tutor registration request is null.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
@@ -83,6 +84,7 @@ namespace backend_api.Controllers.v1
                 }
                 if (_tutorRegistrationRequestRepository.GetAsync(x => x.Email.Equals(tutorRegistrationRequestCreateDTO.Email) && (x.RequestStatus == Status.PENDING || x.RequestStatus == Status.APPROVE), true, null).GetAwaiter().GetResult() != null)
                 {
+                    _logger.LogWarning("A tutor registration request already exists or is in pending/approved status for email: {Email}", tutorRegistrationRequestCreateDTO.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR) };
@@ -90,6 +92,7 @@ namespace backend_api.Controllers.v1
                 }
                 if (_userRepository.GetAsync(x => x.Email.ToLower().Equals(tutorRegistrationRequestCreateDTO.Email.ToLower()), true, null).GetAwaiter().GetResult() != null)
                 {
+                    _logger.LogWarning("Email already exists: {Email}", tutorRegistrationRequestCreateDTO.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.EMAIL_EXISTING_MESSAGE) };
@@ -97,6 +100,7 @@ namespace backend_api.Controllers.v1
                 }
                 if (tutorRegistrationRequestCreateDTO.StartAge > tutorRegistrationRequestCreateDTO.EndAge)
                 {
+                    _logger.LogWarning("Invalid age range for tutor registration: {StartAge} - {EndAge}", tutorRegistrationRequestCreateDTO.StartAge, tutorRegistrationRequestCreateDTO.EndAge);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
@@ -157,6 +161,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while processing the tutor registration request.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -165,7 +170,8 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        [Authorize(Roles = SD.STAFF_ROLE)]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -183,7 +189,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -235,6 +241,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while processing GetAllAsync");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -243,22 +250,15 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut("changeStatus/{id}")]
-        //[Authorize(Policy = "UpdateTutorPolicy")]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<IActionResult> ApproveOrRejectTutorRegistrationRequest(ChangeStatusDTO tutorRegistrationRequestChange)
         {
             try
             {
-                var userId = _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id;
-                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //if (string.IsNullOrEmpty(userId))
-                //{
-                //    _response.StatusCode = HttpStatusCode.BadRequest;
-                //    _response.IsSuccess = false;
-                //    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                //    return BadRequest(_response);
-                //}
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (tutorRegistrationRequestChange.StatusChange == (int)Status.PENDING)
                 {
+                    _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.TUTOR_UPDATE_STATUS_IS_PENDING) };
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -310,7 +310,7 @@ namespace backend_api.Controllers.v1
                             item.ApprovedId = userId;
                             item.IsActive = true;
                             item.UpdatedDate = DateTime.Now;
-                            item.SubmiterId = tutor.TutorId;
+                            item.SubmitterId = tutor.TutorId;
                             await _curriculumRepository.UpdateAsync(item);
                         }
                     }
@@ -322,7 +322,7 @@ namespace backend_api.Controllers.v1
                         foreach (var cert in certificates)
                         {
                             cert.RequestStatus = Status.APPROVE;
-                            cert.SubmiterId = tutor.TutorId;
+                            cert.SubmitterId = tutor.TutorId;
                             cert.ApprovedId = userId;
                             cert.UpdatedDate = DateTime.Now;
                             await _certificateRepository.UpdateAsync(cert);
@@ -336,7 +336,7 @@ namespace backend_api.Controllers.v1
                         foreach (var workExperience in workExperiences)
                         {
                             workExperience.RequestStatus = Status.APPROVE;
-                            workExperience.SubmiterId = tutor.TutorId;
+                            workExperience.SubmitterId = tutor.TutorId;
                             workExperience.ApprovedId = userId;
                             workExperience.IsActive = true;
                             workExperience.UpdatedDate = DateTime.Now;
@@ -450,6 +450,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while processing Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

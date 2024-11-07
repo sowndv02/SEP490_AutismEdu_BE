@@ -21,22 +21,24 @@ namespace backend_api.Controllers.v1
         private readonly IExerciseRepository _exerciseRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
+        private readonly ILogger<ExerciseController> _logger;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
 
 
         public ExerciseController(IExerciseRepository exerciseRepository, IConfiguration configuration, IMapper mapper
-            , IResourceService resourceService)
+            , IResourceService resourceService, ILogger<ExerciseController> logger)
         {
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
             _mapper = mapper;
             _exerciseRepository = exerciseRepository;
             _resourceService = resourceService;
+            _logger = logger;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute] int id, [FromQuery] string? search, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC)
+        public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute] int id, [FromQuery] string? search, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
             {
@@ -61,7 +63,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -84,6 +86,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while fetching exercises for ExerciseTypeId: {ExerciseTypeId}, Search: {Search}", id, search);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -92,7 +95,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateExerciseAsync(ExerciseCreateDTO exerciseCreateDTO)
         {
             try
@@ -101,6 +104,7 @@ namespace backend_api.Controllers.v1
 
                 if (exerciseCreateDTO == null)
                 {
+                    _logger.LogWarning("Received null ExerciseCreateDTO from user: {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE) };
@@ -124,6 +128,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating exercise for user: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -182,7 +187,7 @@ namespace backend_api.Controllers.v1
         //}
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<IActionResult> DeleteExerciseAsync(int id)
         {
             try
@@ -191,6 +196,7 @@ namespace backend_api.Controllers.v1
                 var exercise = await _exerciseRepository.GetAsync(x => x.Id == id && !x.IsDeleted && x.IsActive && x.TutorId == userId, false, null);
                 if (exercise == null)
                 {
+                    _logger.LogWarning("Exercise with ID {ExerciseId} not found for user: {UserId}", id, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.EXERCISE) };
@@ -206,6 +212,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while deleting exercise with ID {ExerciseId} for user: {UserId}", id, User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

@@ -23,9 +23,9 @@ namespace backend_api.Models
         public int? OriginalCurriculumId { get; set; }
         [ForeignKey(nameof(OriginalCurriculumId))]
         public Curriculum? OriginalCurriculum { get; set; }
-        public string? SubmiterId { get; set; }
-        [ForeignKey(nameof(SubmiterId))]
-        public Tutor? Submiter { get; set; }
+        public string? SubmitterId { get; set; }
+        [ForeignKey(nameof(SubmitterId))]
+        public Tutor? Submitter { get; set; }
         public int? TutorRegistrationRequestId { get; set; }
         public TutorRegistrationRequest? TutorRegistrationRequest { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;

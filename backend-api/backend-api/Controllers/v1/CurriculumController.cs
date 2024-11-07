@@ -65,7 +65,7 @@ namespace backend_api.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var model = await _curriculumRepository.GetAsync(x => x.Id == id && x.SubmiterId == userId, false, null);
+                var model = await _curriculumRepository.GetAsync(x => x.Id == id && x.SubmitterId == userId, false, null);
 
                 if (model == null)
                 {
@@ -97,14 +97,14 @@ namespace backend_api.Controllers.v1
 
         [HttpGet("updateRequest")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<Curriculum> list = new();
-                Expression<Func<Curriculum, bool>> filter = u => u.SubmiterId == userId && !u.IsDeleted;
+                Expression<Func<Curriculum, bool>> filter = u => u.SubmitterId == userId && !u.IsDeleted;
                 Expression<Func<Curriculum, object>> orderByQuery = u => true;
 
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
@@ -113,7 +113,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         default:
@@ -148,6 +148,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while fetching curricula for user ID: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -156,7 +157,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREADTED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -167,7 +168,7 @@ namespace backend_api.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    Expression<Func<Curriculum, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmiterId) && u.SubmiterId == userId && !u.IsDeleted;
+                    Expression<Func<Curriculum, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted;
 
                     var combinedFilter = Expression.Lambda<Func<Curriculum, bool>>(
                         Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
@@ -182,7 +183,7 @@ namespace backend_api.Controllers.v1
                 {
                     switch (orderBy)
                     {
-                        case SD.CREADTED_DATE:
+                        case SD.CREATED_DATE:
                             orderByQuery = x => x.CreatedDate;
                             break;
                         case SD.AGE_FROM:
@@ -210,7 +211,7 @@ namespace backend_api.Controllers.v1
                     }
                 }
                 var (count, result) = await _curriculumRepository.GetAllAsync(filter,
-                                "Submiter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                                "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                 list = result;
                 totalCount = count;
 
@@ -222,6 +223,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while fetching curricula for user ID: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -230,65 +232,77 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<IActionResult> CreateAsync(CurriculumCreateDTO curriculumDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
-                return BadRequest(_response);
-            }
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmiterId == userId && !x.IsDeleted && x.IsActive);
-            foreach (var item in list)
-            {
-                if (item.AgeFrom == curriculumDto.AgeFrom || item.AgeEnd == curriculumDto.AgeEnd)
+                if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state for CreateAsync method. Model state errors: {@ModelState}", ModelState);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
                     return BadRequest(_response);
                 }
-            }
-            var newCurriculum = _mapper.Map<Curriculum>(curriculumDto);
 
-            newCurriculum.SubmiterId = userId;
-            newCurriculum.IsActive = false;
-            newCurriculum.VersionNumber = await _curriculumRepository.GetNextVersionNumberAsync(curriculumDto.OriginalCurriculumId);
-            if (curriculumDto.OriginalCurriculumId == 0)
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive);
+                foreach (var item in list)
+                {
+                    if (item.AgeFrom == curriculumDto.AgeFrom || item.AgeEnd == curriculumDto.AgeEnd)
+                    {
+                        _logger.LogWarning("Duplicate age range found for AgeFrom: {AgeFrom} and AgeEnd: {AgeEnd}", curriculumDto.AgeFrom, curriculumDto.AgeEnd);
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
+                        return BadRequest(_response);
+                    }
+                }
+                var newCurriculum = _mapper.Map<Curriculum>(curriculumDto);
+
+                newCurriculum.SubmitterId = userId;
+                newCurriculum.IsActive = false;
+                newCurriculum.VersionNumber = await _curriculumRepository.GetNextVersionNumberAsync(curriculumDto.OriginalCurriculumId);
+                if (curriculumDto.OriginalCurriculumId == 0)
+                {
+                    newCurriculum.OriginalCurriculumId = null;
+                }
+                await _curriculumRepository.CreateAsync(newCurriculum);
+                _response.StatusCode = HttpStatusCode.Created;
+                _response.Result = _mapper.Map<CurriculumDTO>(newCurriculum);
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }catch(Exception ex)
             {
-                newCurriculum.OriginalCurriculumId = null;
+                _logger.LogError(ex, "Error occurred while creating curriculum for user ID: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
-            await _curriculumRepository.CreateAsync(newCurriculum);
-            _response.StatusCode = HttpStatusCode.Created;
-            _response.Result = _mapper.Map<CurriculumDTO>(newCurriculum);
-            _response.IsSuccess = true;
-            return Ok(_response);
         }
 
         [HttpPut("changeStatus/{id}")]
-        //[Authorize(Policy = "UpdateTutorPolicy")]
+        [Authorize(Roles = SD.STAFF_ROLE)]
         public async Task<IActionResult> ApproveOrRejectCurriculumRequest(ChangeStatusDTO changeStatusDTO)
         {
             try
             {
-                var userId = _userRepository.GetAsync(x => x.Email == SD.ADMIN_EMAIL_DEFAULT).GetAwaiter().GetResult().Id;
-                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //if (string.IsNullOrEmpty(userId))
-                //{
-                //    _response.StatusCode = HttpStatusCode.BadRequest;
-                //    _response.IsSuccess = false;
-                //    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-                //    return BadRequest(_response);
-                //}
-
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 Curriculum model = await _curriculumRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
-                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmiterId);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
+                    _logger.LogWarning("Curriculum not found for ID: {CurriculumId}", changeStatusDTO.Id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
+                    return BadRequest(_response);
+                }
+                if (model.RequestStatus != Status.PENDING)
+                {
+                    _logger.LogWarning("Curriculum ID: {CurriculumId} has already been processed with status: {RequestStatus}", changeStatusDTO.Id, model.RequestStatus);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
@@ -359,6 +373,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while approving or rejecting curriculum request for curriculum ID: {CurriculumId}", changeStatusDTO.Id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
