@@ -54,10 +54,18 @@ namespace backend_api.Data
         public DbSet<Syllabus> Syllabuses { get; set; }
         public DbSet<SyllabusExercise> SyllabusExercises { get; set; }
         public DbSet<AssessmentScoreRange> AssessmentScoreRanges { get; set; }
+        public DbSet<PacketPayment> PacketPayments { get; set; }
+        public DbSet<PaymentHistory> PaymentHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<PaymentHistory>()
+                .HasOne(a => a.Submitter)
+                .WithMany()
+                .HasForeignKey(a => a.SubmitterId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<AssessmentQuestion>()
                 .HasOne(a => a.Submitter)

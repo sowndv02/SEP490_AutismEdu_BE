@@ -90,6 +90,8 @@ builder.Services.AddScoped<ISyllabusRepository, SyllabusRepository>();
 builder.Services.AddScoped<ISyllabusExerciseRepository, SyllabusExerciseRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IAssessmentScoreRangeRepository, AssessmentScoreRangeRepository>();
+builder.Services.AddScoped<IPacketPaymentRepository, PacketPaymentRepository>();
+builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>();
 
 
 // Add DI requirement authorization handler

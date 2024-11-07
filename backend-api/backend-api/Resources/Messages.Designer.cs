@@ -115,6 +115,33 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Phụ huynh {0} vừa {1} hồ sơ học sinh của bạn..
+        /// </summary>
+        public static string CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gia sư {0} vừa tạo một sổ liên lạc mới.
+        /// </summary>
+        public static string CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gia sư {0} vừa tạo một hồ sơ học sinh cho con  của bạn. Vui lòng xác nhận thông tin học sinh.
+        /// </summary>
+        public static string CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; đã tồn tại.
         /// </summary>
         public static string DATA_DUPLICATED_MESSAGE {
@@ -246,6 +273,15 @@ namespace backend_api.Resources {
         public static string TUTOR_UPDATE_STATUS_IS_PENDING {
             get {
                 return ResourceManager.GetString("TUTOR_UPDATE_STATUS_IS_PENDING", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gia sư {0} vừa cập nhật sổ liên lạc từ ngày {1} đến ngày {2}.
+        /// </summary>
+        public static string UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION", resourceCulture);
             }
         }
         

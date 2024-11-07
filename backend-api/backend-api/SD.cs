@@ -162,6 +162,13 @@ namespace backend_api
         public const string USER_IS_LOCKED_OUT = "USER_IS_LOCKED_OUT";
         public const string PROGRESS_REPORT_MODIFICATION_EXPIRED = "PROGRESS_REPORT_MODIFICATION_EXPIRED";
 
+        // const notification
+        public const string CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION = "CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION";
+        public const string UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION = "UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION";
+        public const string CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION = "CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION";
+        public const string CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION = "CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION";
+
+
         // DTO require message
         public const string WEEKDAY_REQUIRED = "Chưa nhập ngày trong tuần";
         public const string TIMESLOT_REQUIRED = "Chưa nhập khung giờ";
