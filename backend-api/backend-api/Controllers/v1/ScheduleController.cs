@@ -196,6 +196,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null)
         {
             try
@@ -203,9 +204,15 @@ namespace backend_api.Controllers.v1
                 List<Schedule> list = new();
                 Expression<Func<Schedule, bool>> filter = u => true;
 
+                var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                
                 if (studentProfileId != 0)
                 {
                     filter = u => u.StudentProfileId == studentProfileId && !u.IsHidden;
+                }
+                else
+                {
+                    filter = u => u.TutorId.Equals(tutorId);
                 }
 
                 if (startDate != null)
@@ -233,7 +240,12 @@ namespace backend_api.Controllers.v1
                     .ThenBy(x => x.Start)
                     .ToList();
 
-                _response.Result = _mapper.Map<List<ScheduleDTO>>(list);
+                var model = new ListScheduleDTO();
+                var allTutorSchedule = await _scheduleRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId));
+                model.MaxDate = allTutorSchedule.list.Max(x => x.ScheduleDate.Date).Date;
+                model.Schedules = _mapper.Map<List<ScheduleDTO>>(list);
+
+                _response.Result = model;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
@@ -280,7 +292,7 @@ namespace backend_api.Controllers.v1
                     ScheduleDate = updateDTO.ScheduleDate,
                     Start = updateDTO.Start,
                     End = updateDTO.End,
-                    CreatedDate = DateTime.Now, 
+                    CreatedDate = DateTime.Now,
                 };
                 newSchedule = await _scheduleRepository.CreateAsync(newSchedule);
 
