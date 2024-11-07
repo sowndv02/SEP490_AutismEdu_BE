@@ -88,6 +88,7 @@ namespace backend_api.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTOs);
+                List<ScheduleTimeSlot> createdTimeSlots = new();
                 foreach (var slot in scheduleTimeSlot)
                 {
                     var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot 
@@ -133,9 +134,11 @@ namespace backend_api.Controllers.v1
                     slot.IsDeleted = false;
                     slot.CreatedDate = DateTime.Now;
                     slot.AppliedDate = timeTillApply.Date;
-                    await _scheduleTimeSlotRepository.CreateAsync(slot);
+                    var newTimeSLot = await _scheduleTimeSlotRepository.CreateAsync(slot);
+                    createdTimeSlots.Add(newTimeSLot);
                 }
                 
+                _response.Result = _mapper.Map<List<ScheduleTimeSlotDTO>>(createdTimeSlots);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
