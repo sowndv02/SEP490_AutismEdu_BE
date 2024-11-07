@@ -141,7 +141,7 @@ namespace backend_api.Controllers.v1.Tests
                 },
                 SubmitterId = "testUserId",
                 IsHidden = false,
-                IsAssessment = true,
+                //IsAssessment = true,
                 CreatedDate = DateTime.Now,
             };
 

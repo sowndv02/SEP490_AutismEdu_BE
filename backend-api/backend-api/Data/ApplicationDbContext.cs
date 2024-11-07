@@ -54,6 +54,9 @@ namespace backend_api.Data
         public DbSet<Syllabus> Syllabuses { get; set; }
         public DbSet<SyllabusExercise> SyllabusExercises { get; set; }
         public DbSet<AssessmentScoreRange> AssessmentScoreRanges { get; set; }
+        public DbSet<Test> Tests { get; set; }
+        public DbSet<TestResult> TestResults { get; set; }
+        public DbSet<TestResultDetail> TestResultDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -172,7 +175,18 @@ namespace backend_api.Data
                 .WithMany()
                 .HasForeignKey(pr => pr.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            builder.Entity<TestResultDetail>()
+                .HasOne(pr => pr.Question)
+                .WithMany()
+                .HasForeignKey(pr => pr.QuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<TestResult>()
+                .HasOne(tr => tr.Parent)
+                .WithMany()
+                .HasForeignKey(tr => tr.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             foreach (var entityType in builder.Model.GetEntityTypes())
             {

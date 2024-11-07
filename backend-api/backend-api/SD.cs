@@ -132,6 +132,9 @@ namespace backend_api
 		public const string ASSESSMENT_SCORE_RANGE = "Khoảng điểm đánh giá";
 		public const string SCORE_RANGE = "Khoảng điểm";
 		public const string END_TUTORING = "Đơn kết thúc dạy";
+		public const string TEST = "Bài test";
+		public const string QUESTION = "Câu hỏi";
+		public const string OPTION = "Lựa chọn";
 
 
 
