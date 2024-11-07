@@ -12,7 +12,7 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241107155724_InitDB")]
+    [Migration("20241107161435_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -870,6 +870,109 @@ namespace backend_api.Migrations
                     b.HasIndex("StudentProfileId");
 
                     b.ToTable("InitialAndFinalAssessmentResult");
+                });
+
+            modelBuilder.Entity("backend_api.Models.PacketPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("OriginalId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("float");
+
+                    b.Property<string>("SubmitterId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OriginalId");
+
+                    b.HasIndex("SubmitterId");
+
+                    b.ToTable("PacketPayments");
+                });
+
+            modelBuilder.Entity("backend_api.Models.PaymentHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
+
+                    b.Property<string>("BankAccount")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BankTransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PackagePeymentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SubmitterId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("TransactionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PackagePeymentId");
+
+                    b.HasIndex("SubmitterId");
+
+                    b.ToTable("PaymentHistories");
                 });
 
             modelBuilder.Entity("backend_api.Models.ProgressReport", b =>
@@ -1970,6 +2073,42 @@ namespace backend_api.Migrations
                     b.Navigation("Question");
 
                     b.Navigation("StudentProfile");
+                });
+
+            modelBuilder.Entity("backend_api.Models.PacketPayment", b =>
+                {
+                    b.HasOne("backend_api.Models.PacketPayment", "Original")
+                        .WithMany()
+                        .HasForeignKey("OriginalId");
+
+                    b.HasOne("backend_api.Models.ApplicationUser", "Submitter")
+                        .WithMany()
+                        .HasForeignKey("SubmitterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Original");
+
+                    b.Navigation("Submitter");
+                });
+
+            modelBuilder.Entity("backend_api.Models.PaymentHistory", b =>
+                {
+                    b.HasOne("backend_api.Models.PacketPayment", "PacketPayment")
+                        .WithMany()
+                        .HasForeignKey("PackagePeymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend_api.Models.ApplicationUser", "Submitter")
+                        .WithMany()
+                        .HasForeignKey("SubmitterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PacketPayment");
+
+                    b.Navigation("Submitter");
                 });
 
             modelBuilder.Entity("backend_api.Models.ProgressReport", b =>
