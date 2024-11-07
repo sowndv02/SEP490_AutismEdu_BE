@@ -186,4 +186,20 @@
   <data name="EMAIL_EXISTING_MESSAGE" xml:space="preserve">
     <value>Email đã tồn tại trên hệ thống</value>
   </data>
+  <data name="CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION" xml:space="preserve">
+    <value>Gia sư {0} vừa tạo một hồ sơ học sinh cho con  của bạn. Vui lòng xác nhận thông tin học sinh</value>
+    <comment>/autismedu/approve-student-profile/{StudentProfileID}</comment>
+  </data>
+  <data name="CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION" xml:space="preserve">
+    <value>Gia sư {0} vừa tạo một sổ liên lạc mới</value>
+    <comment>/autismedu/my-tutor/{StudentProfileID}</comment>
+  </data>
+  <data name="UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION" xml:space="preserve">
+    <value>Gia sư {0} vừa cập nhật sổ liên lạc từ ngày {1} đến ngày {2}</value>
+    <comment>/autismedu/my-tutor/{StudentProfileID}</comment>
+  </data>
+  <data name="CHANGE_STATUS_STUDENT_PROFILE_NOTIFICATION" xml:space="preserve">
+    <value>Phụ huynh {0} vừa {1} hồ sơ học sinh của bạn.</value>
+    <comment>/autismedu/my-tutor/{StudentProfileID}</comment>
+  </data>
 </root>

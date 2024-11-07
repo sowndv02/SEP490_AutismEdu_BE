@@ -90,7 +90,8 @@ builder.Services.AddScoped<ISyllabusRepository, SyllabusRepository>();
 builder.Services.AddScoped<ISyllabusExerciseRepository, SyllabusExerciseRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IAssessmentScoreRangeRepository, AssessmentScoreRangeRepository>();
-builder.Services.AddScoped<ITestRepository, TestRepository>();
+builder.Services.AddScoped<IPacketPaymentRepository, PacketPaymentRepository>();
+builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>();builder.Services.AddScoped<ITestRepository, TestRepository>();
 builder.Services.AddScoped<ITestResultRepository, TestResultRepository>();
 builder.Services.AddScoped<ITestResultDetailRepository, TestResultDetailRepository>();
 
