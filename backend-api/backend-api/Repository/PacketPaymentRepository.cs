@@ -2,21 +2,20 @@
 using backend_api.Models;
 using backend_api.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace backend_api.Repository
 {
-    public class ExerciseTypeRepository : Repository<ExerciseType>, IExerciseTypeRepository
+    public class PacketPaymentRepository : Repository<PacketPayment>, IPacketPaymentRepository
     {
         private readonly ApplicationDbContext _context;
-        public ExerciseTypeRepository(ApplicationDbContext context) : base(context)
+        public PacketPaymentRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
         public async Task DeactivatePreviousVersionsAsync(int? originalId)
         {
             if (originalId == 0 || originalId == null) return;
-            var previousVersions = await _context.ExerciseTypes
+            var previousVersions = await _context.PacketPayments
                 .Where(c => (c.OriginalId == originalId || c.Id == originalId) && c.IsActive)
                 .ToListAsync();
 
@@ -28,14 +27,14 @@ namespace backend_api.Repository
             foreach (var version in previousVersions)
             {
                 version.IsActive = false;
-                _context.ExerciseTypes.Update(version);
+                _context.PacketPayments.Update(version);
             }
             await _context.SaveChangesAsync();
         }
 
         public async Task<int> GetNextVersionNumberAsync(int? originalId)
         {
-            var previousVersions = await _context.ExerciseTypes
+            var previousVersions = await _context.PacketPayments
                 .Where(c => c.OriginalId == originalId)
                 .ToListAsync();
 
@@ -46,11 +45,11 @@ namespace backend_api.Repository
 
             return previousVersions.Max(c => c.VersionNumber) + 1;
         }
-        public async Task<ExerciseType> UpdateAsync(ExerciseType model)
+        public async Task<PacketPayment> UpdateAsync(PacketPayment model)
         {
             try
             {
-                _context.ExerciseTypes.Update(model);
+                _context.PacketPayments.Update(model);
                 await _context.SaveChangesAsync();
                 return model;
             }
