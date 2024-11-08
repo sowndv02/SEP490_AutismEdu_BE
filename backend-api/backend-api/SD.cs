@@ -135,6 +135,7 @@ namespace backend_api
 		public const string TEST = "Bài test";
 		public const string QUESTION = "Câu hỏi";
 		public const string OPTION = "Lựa chọn";
+		public const string TEST_RESULT = "Kết quả bài test";
 
 
 
@@ -201,6 +202,8 @@ namespace backend_api
         public const string EMAIL_REQUIRED = "Chưa nhập email";
         public const string SESSION_HOUR_REQUIRED = "Chưa nhập thời gian một tiết học";
         public const string POSITION_REQUIRED = "Chưa nhập vị trí";
+        public const string TEST_RESULT_REQUIRED = "Chưa nhập kết quả bài test";
+        public const string TOTAL_POINT_REQUIRED = "Chưa nhập tổng điểm";
 
         // const exercise type
         public const string DEFAULT_EXERCISE_TYPE_1 = "Tập phát âm thuở ban đầu - nhưng âm thanh của trẻ nhỏ";

@@ -260,6 +260,18 @@ namespace backend_api.Mapper
             CreateMap<AssessmentQuestion, TestQuestionCreateDTO>()
                 .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.AssessmentOptions))
                 .ReverseMap();
+
+            CreateMap<Test, TestDTO>().ReverseMap();
+            CreateMap<TestResult, TestResultCreateDTO>()
+                .ForMember(dest => dest.TestResults, opt => opt.MapFrom(src => src.Results))
+                .ReverseMap();
+            CreateMap<TestResultDetail, TestResultDetailCreateDTO>().ReverseMap();
+            CreateMap<TestResult, TestResultDTO>()
+                .ForMember(dest => dest.TestName, opt => opt.MapFrom(src => src.Test.TestName))
+                .ForMember(dest => dest.TestDescription, opt => opt.MapFrom(src => src.Test.TestDescription))
+                .ForMember(dest => dest.Results, opt => opt.MapFrom(src => src.Results))
+                .ReverseMap();
+            CreateMap<TestResultDetail, TestResultDetailDTO>().ReverseMap();
         }
     }
 }
