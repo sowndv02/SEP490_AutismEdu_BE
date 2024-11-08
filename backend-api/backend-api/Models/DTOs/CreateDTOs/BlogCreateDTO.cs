@@ -8,6 +8,7 @@ namespace backend_api.Models.DTOs.CreateDTOs
         public string Title { get; set; }
         [Required(ErrorMessage = SD.CONTENT_REQUIRED)]
         public string Content { get; set; }
-        public IFormFile UrlImageDisplay { get; set; }
+        public IFormFile ImageDisplay { get; set; }
+        public bool IsPublished { get; set; }
     }
 }

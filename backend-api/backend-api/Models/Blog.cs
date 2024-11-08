@@ -18,6 +18,7 @@ namespace backend_api.Models
         public ApplicationUser Author { get; set; }
         public int ViewCount { get; set; } = 0;
         public bool IsPublished { get; set; } = false;
+        public DateTime PublishDate { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
     }

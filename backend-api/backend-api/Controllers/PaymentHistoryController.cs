@@ -96,6 +96,7 @@ namespace backend_api.Controllers
                             break;
                     }
                 }
+                int total = 0;
                 if (paymentId != 0) 
                 {
                     filter = filter.AndAlso(x => x.PackagePaymentId == paymentId);
@@ -115,16 +116,20 @@ namespace backend_api.Controllers
                 var result = new List<PaymentHistory>();
                 if (userRoles != null && (userRoles.Contains(SD.MANAGER_ROLE) || userRoles.Contains(SD.STAFF_ROLE)))
                 {
-                    var (count, list) = await _paymentHistoryRepository.GetAllAsync(filter, "Submitter,PackagePayment", pageSize, pageNumber, x => x.CreatedDate, isDesc);
+                    var (count, list) = await _paymentHistoryRepository.GetAllAsync(filter, "Submitter,PackagePayment", pageSize, pageNumber, orderByQuery, isDesc);
                     result = list;
+                    total = count;
                 }
                 else if(userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     filter = filter.AndAlso(x => x.SubmitterId == userId);
-                    var (count, list) = await _paymentHistoryRepository.GetAllAsync(filter, "Submitter,PackagePayment", pageSize, pageNumber, x => x.CreatedDate, isDesc);
+                    var (count, list) = await _paymentHistoryRepository.GetAllAsync(filter, "Submitter,PackagePayment", pageSize, pageNumber, orderByQuery, isDesc);
                     result = list;
+                    total = count;
                 }
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = total };
+                _response.Pagination = pagination;
                 _response.IsSuccess = true;
                 _response.Result = _mapper.Map<List<PaymentHistoryDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;

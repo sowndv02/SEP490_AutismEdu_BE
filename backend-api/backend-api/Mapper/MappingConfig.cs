@@ -277,6 +277,7 @@ namespace backend_api.Mapper
                 .ReverseMap();
             CreateMap<TestResultDetail, TestResultDetailDTO>().ReverseMap();
             CreateMap<NotificationDTO, Notification>().ReverseMap();
+            CreateMap<BlogDTO, Blog>().ReverseMap();
         }
     }
 }

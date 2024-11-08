@@ -144,6 +144,7 @@
         public const string OPTION = "Lựa chọn";
         public const string PACKAGE_PAYMENT = "Gói thanh toán";
 		public const string TEST_RESULT = "Kết quả bài test";
+		public const string NOTIFICATION = "Thông báo";
 
 
 
@@ -308,6 +309,7 @@
 
         // Order by
         public const string CREATED_DATE = "createdDate";
+        public const string PUBLISH_DATE = "publishDate";
         public const string AGE_FROM = "ageFrom";
         public const string DATE_FROM = "dateFrom";
         public const string DATE_TO = "dateTo";
