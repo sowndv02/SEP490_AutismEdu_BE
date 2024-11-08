@@ -37,7 +37,7 @@ namespace backend_api.Controllers.v1
             IMapper mapper, IConfiguration configuration, ILogger<CurriculumController> logger,
             ICurriculumRepository curriculumRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService)
         {
-            _logger = logger;   
+            _logger = logger;
             _messageBus = messageBus;
             _curriculumRepository = curriculumRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -91,7 +91,7 @@ namespace backend_api.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return _response;
             }
-            
+
         }
 
 
@@ -273,7 +273,8 @@ namespace backend_api.Controllers.v1
                 _response.Result = _mapper.Map<CurriculumDTO>(newCurriculum);
                 _response.IsSuccess = true;
                 return Ok(_response);
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating curriculum for user ID: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;

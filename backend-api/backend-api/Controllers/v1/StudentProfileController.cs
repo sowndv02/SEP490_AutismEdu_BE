@@ -9,7 +9,6 @@ using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -89,7 +88,7 @@ namespace backend_api.Controllers.v1
                 List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTO.ScheduleTimeSlots);
                 foreach (var slot in scheduleTimeSlot)
                 {
-                    if(createDTO.ChildId <= 0)
+                    if (createDTO.ChildId <= 0)
                     {
                         slot.AppliedDate = DateTime.Today;
                     }
@@ -97,12 +96,12 @@ namespace backend_api.Controllers.v1
                     {
                         slot.IsDeleted = true;
                     }
-                    var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot 
-                                                                       && x.Weekday == slot.Weekday 
+                    var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot
+                                                                       && x.Weekday == slot.Weekday
                                                                        && !(slot.To <= x.From || slot.From >= x.To)).FirstOrDefault();
                     if (isTimeSlotDuplicate == null)
                     {
-                        if(slot.From >= slot.To)
+                        if (slot.From >= slot.To)
                         {
                             _logger.LogWarning("Invalid time slot detected: From time ({From}) is greater than or equal to To time ({To}) for the time slot {Weekday}.",
                                 slot.From.ToString(@"hh\:mm"),
@@ -114,13 +113,13 @@ namespace backend_api.Controllers.v1
                             return BadRequest(_response);
                         }
 
-                        isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday 
-                                                                                           && x.StudentProfile.TutorId.Equals(tutorId) 
-                                                                                           && !(slot.To <= x.From || slot.From >= x.To) 
-                                                                                           && !x.IsDeleted 
-                                                                                           && (x.StudentProfile.Status == SD.StudentProfileStatus.Pending 
+                        isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday
+                                                                                           && x.StudentProfile.TutorId.Equals(tutorId)
+                                                                                           && !(slot.To <= x.From || slot.From >= x.To)
+                                                                                           && !x.IsDeleted
+                                                                                           && (x.StudentProfile.Status == SD.StudentProfileStatus.Pending
                                                                                            || x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
-                                                                                           ,true, "StudentProfile");
+                                                                                           , true, "StudentProfile");
                         if (isTimeSlotDuplicate != null)
                         {
                             _logger.LogWarning("Duplicate time slot detected: From time ({From}) to To time ({To}) already exists for the time slot on {Weekday}.",
@@ -164,7 +163,7 @@ namespace backend_api.Controllers.v1
                     !string.IsNullOrEmpty(createDTO.BirthDate.ToString()) &&
                     createDTO.Media != null)
                 {
-                    if(createDTO.TutorRequestId > 0)
+                    if (createDTO.TutorRequestId > 0)
                     {
                         _logger.LogWarning("Invalid request: TutorRequestId ({TutorRequestId}) should not be greater than 0.", createDTO.TutorRequestId);
                         _response.StatusCode = HttpStatusCode.BadRequest;
@@ -236,7 +235,7 @@ namespace backend_api.Controllers.v1
                     });
 
                     model.ChildId = childInformation.Id;
-                }              
+                }
                 else if (createDTO.ChildId <= 0)
                 {
                     _logger.LogWarning("Invalid ChildId: The ChildId ({ChildId}) is missing or invalid.", createDTO.ChildId);
@@ -282,7 +281,7 @@ namespace backend_api.Controllers.v1
                 model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(tutorId), true, "User");
                 model = await _studentProfileRepository.CreateAsync(model);
 
-                if(createDTO.ChildId <= 0)
+                if (createDTO.ChildId <= 0)
                 {
                     //Generate current week schedule
                     foreach (var timeslot in model.ScheduleTimeSlots)
@@ -576,7 +575,7 @@ namespace backend_api.Controllers.v1
                 studentProfile.InitialAndFinalAssessmentResults = initialAssessmentResults;
                 await _studentProfileRepository.UpdateAsync(studentProfile);
 
-                if(changeStatusDTO.StatusChange == (int)SD.StudentProfileStatus.Teaching)
+                if (changeStatusDTO.StatusChange == (int)SD.StudentProfileStatus.Teaching)
                 {
                     //Generate current week schedule
                     foreach (var timeslot in studentProfile.ScheduleTimeSlots)
@@ -658,7 +657,7 @@ namespace backend_api.Controllers.v1
                 studentProfile.InitialAndFinalAssessmentResults = initialAssessmentResults;
                 studentProfile.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(studentProfile.TutorId), true, "User");
 
-                _response.Result = roles.Contains(SD.PARENT_ROLE) ? 
+                _response.Result = roles.Contains(SD.PARENT_ROLE) ?
                     _mapper.Map<StudentProfileDetailParentDTO>(studentProfile) : _mapper.Map<StudentProfileDetailTutorDTO>(studentProfile);
 
                 _response.StatusCode = HttpStatusCode.NoContent;
@@ -684,7 +683,7 @@ namespace backend_api.Controllers.v1
 
                 if (closeDTO == null)
                 {
-                    _logger.LogWarning($"Student profile with ID {id} not found");
+                    _logger.LogWarning($"CloseTutoringCreateDTO is null");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.END_TUTORING) };
@@ -703,7 +702,7 @@ namespace backend_api.Controllers.v1
 
                 studentProfile.InitialAndFinalAssessmentResults.AddRange(_mapper.Map<List<InitialAssessmentResult>>(closeDTO.FinalAssessmentResults));
                 studentProfile.FinalCondition = closeDTO.FinalCondition;
-                studentProfile.Status = StudentProfileStatus.Stop;           
+                studentProfile.Status = StudentProfileStatus.Stop;
                 studentProfile.UpdatedDate = DateTime.Now;
 
                 studentProfile = await _studentProfileRepository.UpdateAsync(studentProfile);
@@ -717,9 +716,9 @@ namespace backend_api.Controllers.v1
                 studentProfile.Child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, true, "Parent");
 
                 // Remove schedule after stop tutoring
-                var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == closeDTO.StudentProfileId 
+                var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == closeDTO.StudentProfileId
                                                                                         && x.ScheduleDate.Date > DateTime.Now);
-                foreach(var schedule in scheduleToDelete.list)
+                foreach (var schedule in scheduleToDelete.list)
                 {
                     await _scheduleRepository.RemoveAsync(schedule);
                 }
@@ -731,7 +730,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An error occurred while fetching Student Profile ID: {id}");
+                _logger.LogError(ex, $"An error occurred while fetching close tutoring");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -747,14 +746,14 @@ namespace backend_api.Controllers.v1
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                var scheduleTimeSlots = await _studentProfileRepository.GetAsync(x => x.Id == studentProfileId, true,"ScheduleTimeSlots,Child");
+                var scheduleTimeSlots = await _studentProfileRepository.GetAsync(x => x.Id == studentProfileId, true, "ScheduleTimeSlots,Child");
 
                 if (scheduleTimeSlots == null)
                 {
                     _logger.LogWarning($"No schedule time slots found for Student Profile ID: {studentProfileId}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE_TIME_SLOT) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TIME_SLOT) };
                     return BadRequest(_response);
                 }
 
