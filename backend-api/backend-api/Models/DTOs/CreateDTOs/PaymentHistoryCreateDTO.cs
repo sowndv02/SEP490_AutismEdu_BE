@@ -8,6 +8,6 @@
         public DateTime PaymentDate { get; set; }
         public string BankTransactionId { get; set; }
         public string BankAccount { get; set; }
-        public int PackagePeymentId { get; set; }
+        public int PackagePaymentId { get; set; }
     }
 }

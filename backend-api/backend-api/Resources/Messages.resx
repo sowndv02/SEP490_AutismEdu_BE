@@ -222,4 +222,7 @@
     <value>Bạn có đánh giá mới từ phụ huynh</value>
     <comment>/autismtutor/review-list</comment>
   </data>
+  <data name="NEED_PAYMENT_MESSAGE" xml:space="preserve">
+    <value>Cần phải thanh toán. Vui lòng thanh toán để tiếp tục.</value>
+  </data>
 </root>

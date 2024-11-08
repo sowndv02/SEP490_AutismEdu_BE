@@ -21,12 +21,14 @@ namespace backend_api.Controllers
     public class PaymentHistoryController : ControllerBase
     {
         private readonly IPaymentHistoryRepository _paymentHistoryRepository;
+        private readonly IPackagePaymentRepository _packagePaymentRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
         private readonly ILogger<PaymentHistoryController> _logger;
         private readonly IResourceService _resourceService;
-        public PaymentHistoryController(IPaymentHistoryRepository paymentHistoryRepository,
+        public PaymentHistoryController(IPaymentHistoryRepository paymentHistoryRepository, 
+            IPackagePaymentRepository packagePaymentRepository,
             IConfiguration configuration, IMapper mapper, IResourceService resourceService,
             ILogger<PaymentHistoryController> logger)
         {
@@ -36,6 +38,7 @@ namespace backend_api.Controllers
             _paymentHistoryRepository = paymentHistoryRepository;
             _resourceService = resourceService;
             _logger = logger;
+            _packagePaymentRepository = packagePaymentRepository;
         }
 
         [HttpPost]
@@ -55,6 +58,26 @@ namespace backend_api.Controllers
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var newModel = _mapper.Map<PaymentHistory>(createDTO);
+                var packagePayment = await _packagePaymentRepository.GetAsync(x => x.Id == createDTO.PackagePaymentId);
+
+                var latestPaymentHistoryResult = await _paymentHistoryRepository.GetAllAsync(
+                    x => x.SubmitterId == userId,
+                    includeProperties: null,
+                    pageSize: 1,
+                    pageNumber: 1,
+                    orderBy: x => x.ExpirationDate,
+                    isDesc: true
+                );
+
+                var latestPaymentHistory = latestPaymentHistoryResult.list.FirstOrDefault();
+
+                if (packagePayment != null && latestPaymentHistory != null)
+                {
+                    var additionalMonths = packagePayment.Duration;
+                    var remainingDaysFromLastExpiration = (latestPaymentHistory.ExpirationDate - DateTime.Now).Days;
+                    newModel.ExpirationDate = DateTime.Now.AddMonths(additionalMonths).AddDays(remainingDaysFromLastExpiration);
+                }
+
                 var result = await _paymentHistoryRepository.CreateAsync(newModel);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<PackagePaymentDTO>(result);

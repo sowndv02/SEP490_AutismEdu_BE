@@ -34,6 +34,7 @@
         public const string URL_FE_PARENT_UPDATE_STATUS_STUDENT_PROFILE = "/autismedu/approve-student-profile/";
         public const string URL_FE_TUTOR_REVIEW_LIST = "/autismtutor/review-list";
         public const string URL_FE_TUTOR_TUTOR_REQUEST = "/autismtutor/tutor-request";
+        public const string URL_FE_PAYMENT_QR = "/autismtutor/payment-package";
 
         // Const folder mail save
         public const string FOLDER_NAME_LOG_EMAIL = "MailSave";
@@ -174,6 +175,7 @@
         public const string ADD_ROLE_USER_TO_USER = "ADD_ROLE_USER_TO_USER";
         public const string USER_IS_LOCKED_OUT = "USER_IS_LOCKED_OUT";
         public const string PROGRESS_REPORT_MODIFICATION_EXPIRED = "PROGRESS_REPORT_MODIFICATION_EXPIRED";
+        public const string NEED_PAYMENT_MESSAGE = "NEED_PAYMENT_MESSAGE";
 
         // const notification
         public const string CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION = "CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION";

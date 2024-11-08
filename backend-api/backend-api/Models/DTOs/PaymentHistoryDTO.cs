@@ -11,6 +11,7 @@
         public string BankAccount { get; set; }
         public PackagePayment PackagePayment { get; set; }
         public ApplicationUser Submitter { get; set; }
+        public DateTime ExpirationDate { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
     }

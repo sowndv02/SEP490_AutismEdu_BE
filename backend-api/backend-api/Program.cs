@@ -89,7 +89,8 @@ builder.Services.AddScoped<ISyllabusExerciseRepository, SyllabusExerciseReposito
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IAssessmentScoreRangeRepository, AssessmentScoreRangeRepository>();
 builder.Services.AddScoped<IPackagePaymentRepository, PackagePaymentRepository>();
-builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>(); builder.Services.AddScoped<ITestRepository, TestRepository>();
+builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>(); 
+builder.Services.AddScoped<ITestRepository, TestRepository>();
 builder.Services.AddScoped<ITestResultRepository, TestResultRepository>();
 builder.Services.AddScoped<ITestResultDetailRepository, TestResultDetailRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -248,6 +249,7 @@ app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
 app.UseMiddleware<RequestTimeLoggingMidleware>();
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<PaymentCheckerMiddleware>();
 
 
 app.UseStaticFiles();
