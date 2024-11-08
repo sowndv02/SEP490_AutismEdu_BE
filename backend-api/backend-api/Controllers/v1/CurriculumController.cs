@@ -285,7 +285,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut("changeStatus/{id}")]
-        [Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<IActionResult> ApproveOrRejectCurriculumRequest(ChangeStatusDTO changeStatusDTO)
         {
             try

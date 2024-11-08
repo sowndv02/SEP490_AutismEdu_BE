@@ -258,7 +258,13 @@ namespace backend_api.Controllers
         {
             try
             {
-                if (createDTO == null) return BadRequest(createDTO);
+                if (createDTO == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.USER) };
+                    return BadRequest(_response);
+                }
                 var currentUser = await _userRepository.GetUserByEmailAsync(createDTO.Email);
                 if (currentUser != null)
                 {

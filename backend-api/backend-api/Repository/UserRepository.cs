@@ -728,46 +728,18 @@ namespace backend_api.Repository
 
             if (result.Succeeded)
             {
-                var roleIds = user.RoleIds;
-                if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
-                {
-                    await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
-                }
-                var resultAddRole = await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
+                var roleId = user.RoleId;
                 if (user.UserType == SD.GOOGLE_USER)
                 {
                     await _userManager.AddToRoleAsync(obj, SD.PARENT_ROLE);
                 }
-                if (resultAddRole.Succeeded)
+                
+                if (!string.IsNullOrEmpty(roleId))
                 {
-                    Console.WriteLine(_resourceService.GetString(SD.ADD_ROLE_USER_TO_USER));
-                }
-                if (roleIds != null && roleIds.Count != 0)
-                {
-                    foreach (var roleId in roleIds)
+                    user.Role = _roleManager.FindByIdAsync(roleId).GetAwaiter().GetResult().Name;
+                    if (user.Role != null)
                     {
-                        user.Role = _roleManager.FindByIdAsync(roleId).GetAwaiter().GetResult().Name;
-                        if (user.Role != null)
-                        {
-                            await _userManager.AddToRoleAsync(obj, user.Role);
-                        }
-                        else
-                        {
-                            var role_user = _userManager.GetRolesAsync(user).GetAwaiter().GetResult().FirstOrDefault(x => x.Equals(SD.USER_ROLE));
-                            if (role_user != null && role_user == SD.USER_ROLE)
-                            {
-                                continue;
-                            }
-                            else
-                            {
-                                if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult())
-                                {
-                                    await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
-                                }
-                                await _userManager.AddToRoleAsync(obj, SD.USER_ROLE);
-                            }
-
-                        }
+                        await _userManager.AddToRoleAsync(obj, user.Role);
                     }
                 }
                 var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);

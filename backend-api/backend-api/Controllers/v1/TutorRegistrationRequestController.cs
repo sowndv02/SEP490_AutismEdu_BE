@@ -170,7 +170,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet]
-        [Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
@@ -250,7 +250,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut("changeStatus/{id}")]
-        [Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<IActionResult> ApproveOrRejectTutorRegistrationRequest(ChangeStatusDTO tutorRegistrationRequestChange)
         {
             try
@@ -282,7 +282,7 @@ namespace backend_api.Controllers.v1
                         UserName = model.Email,
                         UserType = SD.APPLICATION_USER,
                         LockoutEnabled = true,
-                        RoleIds = new List<string>() { _roleRepository.GetByNameAsync(SD.TUTOR_ROLE).GetAwaiter().GetResult().Id }
+                        RoleId = _roleRepository.GetByNameAsync(SD.TUTOR_ROLE).GetAwaiter().GetResult().Id
                     }, passsword);
 
                     // Create tutor profile

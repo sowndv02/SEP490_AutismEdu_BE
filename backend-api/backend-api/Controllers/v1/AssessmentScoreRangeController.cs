@@ -36,7 +36,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        [Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> CreateAsync(AssessmentScoreRangeCreateDTO createDTO)
         {
             try
@@ -112,7 +112,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPut]
-        [Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> UpdateAsync(AssessmentScoreRangeUpdateDTO updateDTO)
         {
             try
@@ -181,7 +181,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
             try

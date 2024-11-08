@@ -198,7 +198,7 @@ namespace backend_api.Controllers.v1
                         UserName = createDTO.Email,
                         UserType = SD.APPLICATION_USER,
                         LockoutEnabled = true,
-                        RoleIds = new List<string>() { _roleRepository.GetByNameAsync(SD.PARENT_ROLE).GetAwaiter().GetResult().Id }
+                        RoleId = _roleRepository.GetByNameAsync(SD.PARENT_ROLE).GetAwaiter().GetResult().Id
                     }, passsword);
 
                     // TODO: Send mail
