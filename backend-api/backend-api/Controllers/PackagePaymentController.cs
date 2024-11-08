@@ -6,8 +6,10 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
+using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 using static backend_api.SD;
@@ -78,17 +80,30 @@ namespace backend_api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync()
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL)
         {
             try
             {
 
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
+                Expression<Func<PackagePayment, bool>> filter = u => true;
+                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
+                {
+                    switch (status.ToLower())
+                    {
+                        case "hide":
+                            filter = filter.AndAlso(x => !x.IsActive);
+                            break;
+                        case "show":
+                            filter = filter.AndAlso(x => !x.IsActive);
+                            break;
+                    }
+                }
                 var result = new List<PackagePayment>();
                 if (userRoles != null && userRoles.Contains(SD.MANAGER_ROLE))
                 {
-                    var(count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(null, "Submitter", null, x => x.Price, true);
+                    var(count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(filter, "Submitter", null, x => x.Price, true);
                     result = list;
                 }
                 else
