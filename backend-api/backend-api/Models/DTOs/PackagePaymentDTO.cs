@@ -9,8 +9,7 @@
         public double Price { get; set; }
         public int VersionNumber { get; set; }
         public PackagePayment? Original { get; set; }
-        public bool IsDeleted { get; set; } = false;
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; }
         public ApplicationUser Submitter { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }

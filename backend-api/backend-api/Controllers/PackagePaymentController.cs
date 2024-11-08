@@ -54,8 +54,9 @@ namespace backend_api.Controllers
                 var newModel = _mapper.Map<PackagePayment>(createDTO);
 
                 newModel.SubmitterId = userId;
-                newModel.IsActive = false;
+                newModel.IsActive = createDTO.IsActive;
                 newModel.VersionNumber = await _packagePaymentRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
+                await _packagePaymentRepository.DeactivatePreviousVersionsAsync(createDTO.OriginalId);
                 if (createDTO.OriginalId == 0)
                 {
                     newModel.OriginalId = null;
@@ -92,7 +93,7 @@ namespace backend_api.Controllers
                 }
                 else
                 {
-                    var (count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(x => !x.IsDeleted, "Submitter", null, x => x.Price, true);
+                    var (count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(x => x.IsActive, "Submitter", null, x => x.Price, true);
                     result = list;
                 }
                 _response.IsSuccess = true;
@@ -154,49 +155,5 @@ namespace backend_api.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
-
-
-        [HttpDelete("{id:int}")]
-        [Authorize(Roles = SD.MANAGER_ROLE)]
-        public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            try
-            {
-                if (id == 0)
-                {
-                    _logger.LogWarning("Invalid curriculum ID: {CurriculumId}. Returning BadRequest.", id);
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
-                    return BadRequest(_response);
-                }
-                var model = await _packagePaymentRepository.GetAsync(x => x.Id == id, false, null);
-
-                if (model == null)
-                {
-                    _logger.LogWarning("Packet payment not found for ID: {id} and User ID: {userId}. Returning BadRequest.", id, userId);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
-                    return BadRequest(_response);
-                }
-                model.IsDeleted = true;
-                await _packagePaymentRepository.UpdateAsync(model);
-                _response.StatusCode = HttpStatusCode.NoContent;
-                _response.IsSuccess = true;
-                return Ok(_response);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while deleting Packet payment ID: {id}", id);
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
     }
 }

@@ -377,7 +377,7 @@ namespace backend_api.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? searchValue, string? searchType, string? searchTypeId, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? searchValue, string? searchType, string? searchTypeId,int pageNumber = 1)
         {
             try
             {
@@ -385,8 +385,7 @@ namespace backend_api.Controllers
                 List<ApplicationUser> list = new();
                 bool isAdmin = true;
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                // TODO: HANDLE FOR ROLE
-                if (userRoles.Contains(SD.STAFF_ROLE))
+                if (userRoles.Contains(SD.STAFF_ROLE) || userRoles.Contains(SD.MANAGER_ROLE))
                 {
                     isAdmin = false;
                 }
@@ -423,6 +422,16 @@ namespace backend_api.Controllers
                                 list = users;
                                 totalCount = totalResult;
                             }
+                            break;
+                        case "parent":
+                            var (totalParent, resultParent) = await _userRepository.GetAllAsync(x => x.Role.Contains(SD.PARENT_ROLE), pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
+                            totalCount = totalParent;
+                            list = resultParent;
+                            break;
+                        case "tutor":
+                            var (totalTutor, resultTutor) = await _userRepository.GetAllAsync(x => x.Role.Contains(SD.TUTOR_ROLE), pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
+                            totalCount = totalTutor;
+                            list = resultTutor;
                             break;
                         default:
                             var (total, result) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
