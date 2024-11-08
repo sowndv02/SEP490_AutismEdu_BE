@@ -87,7 +87,7 @@ namespace backend_api.Controllers.v1
         {
             try
             {
-                var question = await _assessmentQuestionRepository.GetAllNotPagingAsync(null, "AssessmentOptions", null);
+                var question = await _assessmentQuestionRepository.GetAllNotPagingAsync(x => x.TestId == null, "AssessmentOptions", null);
                 var scoreRange = await _assessmentScoreRangeRepository.GetAllNotPagingAsync();
                 AllAssessmentDTO model = new AllAssessmentDTO();
                 model.Questions = _mapper.Map<List<AssessmentQuestionDTO>>(question.list);
