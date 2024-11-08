@@ -94,7 +94,7 @@ namespace backend_api.Controllers.v1
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search = "", string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageSize = 10, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search = "", string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -124,7 +124,7 @@ namespace backend_api.Controllers.v1
 
                 var (count, result) = await _testRepository.GetAllAsync(filter, includeProperties: null , 
                                                                                 pageSize: pageSize, 
-                                                                                pageNumber: pageNumber, 
+                                                                                pageNumber: 9, 
                                                                                 orderBy: orderByQuery, 
                                                                                 isDesc: isDesc);
                 list = result;
