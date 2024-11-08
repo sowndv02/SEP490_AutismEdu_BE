@@ -58,6 +58,7 @@ namespace backend_api.Data
         public DbSet<TestResultDetail> TestResultDetails { get; set; }
         public DbSet<PackagePayment> PackagePayments { get; set; }
         public DbSet<PaymentHistory> PaymentHistories { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

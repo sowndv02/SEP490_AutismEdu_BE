@@ -16,7 +16,8 @@ namespace backend_api.Models
         public int? OriginalId { get; set; }
         [ForeignKey(nameof(OriginalId))]
         public PackagePayment? Original { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsDeleted { get; set; } = false;
+        public bool IsActive { get; set; } = true;
         public string SubmitterId { get; set; }
         [ForeignKey(nameof(SubmitterId))]
         public ApplicationUser Submitter { get; set; }

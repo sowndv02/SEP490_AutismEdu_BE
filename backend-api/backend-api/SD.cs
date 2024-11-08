@@ -32,6 +32,8 @@
         public const string URL_FE_PARENT_TUTOR_REQUEST = "/autismedu/request-history";
         public const string URL_FE_PARENT_STUDENT_PROFILE_LIST = "/autismedu/my-tutor/";
         public const string URL_FE_PARENT_UPDATE_STATUS_STUDENT_PROFILE = "/autismedu/approve-student-profile/";
+        public const string URL_FE_TUTOR_REVIEW_LIST = "/autismtutor/review-list";
+        public const string URL_FE_TUTOR_TUTOR_REQUEST = "/autismtutor/tutor-request";
 
         // Const folder mail save
         public const string FOLDER_NAME_LOG_EMAIL = "MailSave";

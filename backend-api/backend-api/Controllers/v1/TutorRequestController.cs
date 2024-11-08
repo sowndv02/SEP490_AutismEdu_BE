@@ -6,10 +6,12 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
+using backend_api.SignalR;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -31,10 +33,13 @@ namespace backend_api.Controllers.v1
         protected APIResponse _response;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         public TutorRequestController(IUserRepository userRepository, ITutorRequestRepository tutorRequestRepository,
             IMapper mapper, IConfiguration configuration,
-            IRabbitMQMessageSender messageBus, IResourceService resourceService, ILogger<TutorRequestController> logger)
+            IRabbitMQMessageSender messageBus, IResourceService resourceService, ILogger<TutorRequestController> logger, 
+            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
         {
             _messageBus = messageBus;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -45,6 +50,8 @@ namespace backend_api.Controllers.v1
             _tutorRequestRepository = tutorRequestRepository;
             _resourceService = resourceService;
             _logger = logger;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
         }
 
 
@@ -289,6 +296,23 @@ namespace backend_api.Controllers.v1
                 _messageBus.SendMessage(
                     new EmailLogger() { Email = tutor.Email, Subject = subjectForTutor, Message = tutorHtmlMessage }, queueName);
 
+                // Notification
+                var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                var notfication = new Notification()
+                {
+                    ReceiverId = tutor.Id,
+                    Message = _resourceService.GetString(SD.TUTOR_REQUEST_TUTOR_NOTIFICATION, parent.FullName),
+                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_TUTOR_REQUEST),
+                    IsRead = false,
+                    CreatedDate = DateTime.Now
+                };
+                var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                if (!string.IsNullOrEmpty(connectionId))
+                {
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                }
+
+
                 _response.Result = _mapper.Map<TutorRequestDTO>(createdObject);
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
@@ -344,7 +368,20 @@ namespace backend_api.Controllers.v1
                         Subject = subject,
                         Message = htmlMessage
                     }, queueName);
-
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = model.ParentId,
+                        Message = _resourceService.GetString(SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION, SD.STATUS_APPROVE_VIE, tutor.FullName),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_TUTOR_REQUEST),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
                     _response.Result = _mapper.Map<TutorRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -392,7 +429,20 @@ namespace backend_api.Controllers.v1
                         Subject = subject,
                         Message = htmlMessage
                     }, queueName);
-
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = model.ParentId,
+                        Message = _resourceService.GetString(SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION, SD.STATUS_REJECT_VIE, tutor.FullName),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_TUTOR_REQUEST),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
                     _response.Result = _mapper.Map<TutorRequestDTO>(returnObject);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;

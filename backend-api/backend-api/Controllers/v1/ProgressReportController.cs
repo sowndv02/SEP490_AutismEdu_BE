@@ -14,6 +14,9 @@ using MailKit.Search;
 using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.SignalR;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace backend_api.Controllers.v1
 {
@@ -28,12 +31,18 @@ namespace backend_api.Controllers.v1
         private readonly IProgressReportRepository _progressReportRepository;
         private readonly IAssessmentResultRepository _assessmentResultRepository;
         private readonly IInitialAssessmentResultRepository _initialAssessmentResultRepository;
+        private readonly IStudentProfileRepository _studentProfileRepository;
+        private readonly IChildInformationRepository _childInformationRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IResourceService _resourceService;
         private readonly ILogger<ProgressReportController> _logger;
-
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
         public ProgressReportController(IMapper mapper, IConfiguration configuration,
             IProgressReportRepository progressReportRepository, IAssessmentResultRepository assessmentResultRepository,
-            IInitialAssessmentResultRepository initialAssessmentResultRepository, IResourceService resourceService, ILogger<ProgressReportController> logger)
+            IInitialAssessmentResultRepository initialAssessmentResultRepository, IResourceService resourceService, ILogger<ProgressReportController> logger, 
+            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext, IStudentProfileRepository studentProfileRepository, 
+            IChildInformationRepository childInformationRepository, IUserRepository userRepository)
         {
             _response = new APIResponse();
             _mapper = mapper;
@@ -43,6 +52,11 @@ namespace backend_api.Controllers.v1
             _initialAssessmentResultRepository = initialAssessmentResultRepository;
             _resourceService = resourceService;
             _logger = logger;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
+            _studentProfileRepository = studentProfileRepository;
+            _childInformationRepository = childInformationRepository;
+            _userRepository = userRepository;   
         }
 
         [HttpPost]
@@ -75,6 +89,24 @@ namespace backend_api.Controllers.v1
                 }
                 progressReport.AssessmentResults = assessmentResults;
 
+                // Notification
+                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == createDTO.StudentProfileId);
+                var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
+                var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
+                var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                var notfication = new Notification()
+                {
+                    ReceiverId = child.ParentId,
+                    Message = _resourceService.GetString(SD.CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName),
+                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, progressReport.Id),
+                    IsRead = false,
+                    CreatedDate = DateTime.Now
+                };
+                var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                if (!string.IsNullOrEmpty(connectionId))
+                {
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                }
                 _response.Result = _mapper.Map<ProgressReportDTO>(progressReport);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.IsSuccess = true;
@@ -274,6 +306,26 @@ namespace backend_api.Controllers.v1
                     updatedAssessmentResults.Add(assessmentResult);
                 }
                 model.AssessmentResults = updatedAssessmentResults;
+
+
+                // Notification
+                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId);
+                var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
+                var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
+                var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                var notfication = new Notification()
+                {
+                    ReceiverId = child.ParentId,
+                    Message = _resourceService.GetString(SD.UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName, model.From.ToString("dd/mm/yyyy"), model.To.ToString("dd/mm/yyyy")),
+                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_REVIEW_LIST),
+                    IsRead = false,
+                    CreatedDate = DateTime.Now
+                };
+                var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                if (!string.IsNullOrEmpty(connectionId))
+                {
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                }
 
                 _response.Result = _mapper.Map<ProgressReportDTO>(model);
                 _response.StatusCode = HttpStatusCode.Created;

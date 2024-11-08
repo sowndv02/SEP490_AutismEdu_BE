@@ -21,6 +21,8 @@ using System.Net;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using backend_api.SignalR;
+using Microsoft.AspNetCore.SignalR;
 
 namespace backend_api.Controllers.v1.Tests
 {
@@ -37,6 +39,8 @@ namespace backend_api.Controllers.v1.Tests
         private readonly IMapper _mapper;
         private readonly Mock<IConfiguration> _configurationMock = new Mock<IConfiguration>();
         private readonly CurriculumController _controller;
+        private readonly Mock<INotificationRepository> _notificationRepositoryMock;
+        private readonly Mock<IHubContext<NotificationHub>> _hubContextMock;
         public CurriculumControllerTests()
         {
             _configurationMock.Setup(config => config["APIConfig:PageSize"]).Returns("10");
@@ -45,6 +49,8 @@ namespace backend_api.Controllers.v1.Tests
             {
                 cfg.AddProfile(new MappingConfig());
             });
+            _hubContextMock = new Mock<IHubContext<NotificationHub>>();
+            _notificationRepositoryMock = new Mock<INotificationRepository>();
             _mapper = config.CreateMapper();
             _controller = new CurriculumController(
                 _userRepositoryMock.Object,
@@ -54,7 +60,9 @@ namespace backend_api.Controllers.v1.Tests
                 _loggerMock.Object,               // Make sure the logger mock is also provided
                 _curriculumRepositoryMock.Object,
                 _messageBusMock.Object,
-                _resourceServiceMock.Object);
+                _resourceServiceMock.Object,
+                _notificationRepositoryMock.Object,
+                _hubContextMock.Object);
 
             _controller.ControllerContext = new ControllerContext
             {

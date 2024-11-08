@@ -3,11 +3,14 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
+using backend_api.SignalR;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Net;
 using System.Security.Claims;
 
@@ -24,11 +27,13 @@ namespace backend_api.Controllers.v1
         protected APIResponse _response;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         public ReviewController(IMapper mapper, IConfiguration configuration,
             IReviewRepository reviewRepository, IUserRepository userRepository
-            , IResourceService resourceService
-)
+            , IResourceService resourceService, 
+            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
         {
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
@@ -36,6 +41,8 @@ namespace backend_api.Controllers.v1
             _reviewRepository = reviewRepository;
             _userRepository = userRepository;
             _resourceService = resourceService;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
         }
 
         [HttpGet("GetTutorReviewStats/{tutorId}")]
@@ -219,6 +226,21 @@ namespace backend_api.Controllers.v1
                     UpdatedDate = createdReview.UpdatedDate
                 };
 
+                // Notification
+                var connectionId = NotificationHub.GetConnectionIdByUserId(reviewModel.TutorId);
+                var notfication = new Notification()
+                {
+                    ReceiverId = reviewModel.TutorId,
+                    Message = _resourceService.GetString(SD.NEW_REVIEW_TUTOR_NOTIFICATION),
+                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_REVIEW_LIST),
+                    IsRead = false,
+                    CreatedDate = DateTime.Now
+                };
+                var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                if (!string.IsNullOrEmpty(connectionId))
+                {
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{reviewModel.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
+                }
                 _response.Result = reviewDTO;
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.IsSuccess = true;
