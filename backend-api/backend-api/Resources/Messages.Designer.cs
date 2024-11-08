@@ -250,6 +250,15 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cần phải thanh toán. Vui lòng thanh toán để tiếp tục..
+        /// </summary>
+        public static string NEED_PAYMENT_MESSAGE {
+            get {
+                return ResourceManager.GetString("NEED_PAYMENT_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bạn có đánh giá mới từ phụ huynh.
         /// </summary>
         public static string NEW_REVIEW_TUTOR_NOTIFICATION {

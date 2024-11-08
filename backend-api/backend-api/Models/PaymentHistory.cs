@@ -20,6 +20,7 @@ namespace backend_api.Models
         public string SubmitterId { get; set; }
         [ForeignKey(nameof(SubmitterId))]
         public ApplicationUser Submitter { get; set; }
+        public DateTime ExpirationDate { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
     }
