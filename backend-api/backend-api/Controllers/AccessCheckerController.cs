@@ -49,7 +49,7 @@ namespace backend_api.Controllers
                 // API: Đánh dấu đã đọc
                 // API Đánh dấu all
 
-                var connectionId = NotificationHub.GetConnectionIdByEmail(SD.ADMIN_EMAIL_DEFAULT);
+                var connectionId = NotificationHub.GetConnectionIdByUserId("Notifications-{userId}");
                 if (!string.IsNullOrEmpty(connectionId))
                 {
                     await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{userId}", "Notification Test Message");

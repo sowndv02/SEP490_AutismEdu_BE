@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using System.Security.Claims;
 
 namespace backend_api.SignalR
 {
@@ -8,28 +9,27 @@ namespace backend_api.SignalR
         private static readonly ConcurrentDictionary<string, string> UserConnections = new();
         public override Task OnConnectedAsync()
         {
-            var email = SD.ADMIN_EMAIL_DEFAULT;
-            if (!string.IsNullOrEmpty(email))
-            {
-                UserConnections[email] = Context.ConnectionId;
-                Console.WriteLine($"Connected: {email}, ConnectionId: {Context.ConnectionId}"); // Log connection
-            }
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Anonymous";
+            UserConnections[userId] = Context.ConnectionId;
+
+            Console.WriteLine($"Connected: {userId}, ConnectionId: {Context.ConnectionId}"); // Log the connection
             return base.OnConnectedAsync();
         }
 
         public override Task OnDisconnectedAsync(Exception? exception)
         {
-            var email = SD.ADMIN_EMAIL_DEFAULT;
-            if (!string.IsNullOrEmpty(email))
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Anonymous";
+            if (UserConnections.TryRemove(userId, out var connectionId))
             {
-                UserConnections.TryRemove(email, out _);
+                Console.WriteLine($"Disconnected: {userId}, ConnectionId: {connectionId}"); // Log disconnection
             }
+
             return base.OnDisconnectedAsync(exception);
         }
 
-        public static string? GetConnectionIdByEmail(string email)
+        public static string? GetConnectionIdByUserId(string userId)
         {
-            UserConnections.TryGetValue(email, out var connectionId);
+            UserConnections.TryGetValue(userId, out var connectionId);
             return connectionId;
         }
     }

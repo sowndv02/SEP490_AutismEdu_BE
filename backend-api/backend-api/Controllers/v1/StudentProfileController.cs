@@ -4,11 +4,14 @@ using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
+using backend_api.SignalR;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -36,6 +39,8 @@ namespace backend_api.Controllers.v1
         private readonly IScheduleRepository _scheduleRepository;
         private readonly IResourceService _resourceService;
         private readonly ILogger<StudentProfileController> _logger;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         protected APIResponse _response;
         private readonly IMapper _mapper;
@@ -46,7 +51,8 @@ namespace backend_api.Controllers.v1
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository,
             IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IRabbitMQMessageSender messageBus,
             IUserRepository userRepository, IRoleRepository roleRepository, IBlobStorageRepository blobStorageRepository
-            , IScheduleRepository scheduleRepository, IResourceService resourceService, ILogger<StudentProfileController> logger)
+            , IScheduleRepository scheduleRepository, IResourceService resourceService, ILogger<StudentProfileController> logger, 
+            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
         {
             _studentProfileRepository = studentProfileRepository;
             _assessmentQuestionRepository = assessmentQuestionRepository;
@@ -66,6 +72,8 @@ namespace backend_api.Controllers.v1
             _scheduleRepository = scheduleRepository;
             _resourceService = resourceService;
             _logger = logger;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
         }
 
         [HttpPost]
@@ -280,6 +288,23 @@ namespace backend_api.Controllers.v1
                 model.StudentCode += model.ChildId;
                 model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(tutorId), true, "User");
                 model = await _studentProfileRepository.CreateAsync(model);
+
+                // Notification
+                var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                var notfication = new Notification()
+                {
+                    ReceiverId = child.ParentId,
+                    Message = _resourceService.GetString(SD.CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION, model.Tutor?.User.FullName),
+                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_UPDATE_STATUS_STUDENT_PROFILE, model.Id),
+                    IsRead = false,
+                    CreatedDate = DateTime.Now
+                };
+                var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                if (!string.IsNullOrEmpty(connectionId))
+                {
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                }
+
 
                 if (createDTO.ChildId <= 0)
                 {
@@ -573,6 +598,45 @@ namespace backend_api.Controllers.v1
                     initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id && x.isInitialAssessment == true, true, "Question,Option"));
                 }
                 studentProfile.InitialAndFinalAssessmentResults = initialAssessmentResults;
+                if(changeStatusDTO.StatusChange == (int)StudentProfileStatus.Teaching)
+                {
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(studentProfile.TutorId);
+                    var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false,"Parent", null);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = studentProfile.TutorId,
+                        Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "chấp nhận"),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
+
+                }
+                else if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Reject)
+                {
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(studentProfile.TutorId);
+                    var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, "Parent", null);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = studentProfile.TutorId,
+                        Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "từ chối"),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
+                }
+                
+
                 await _studentProfileRepository.UpdateAsync(studentProfile);
 
                 if (changeStatusDTO.StatusChange == (int)SD.StudentProfileStatus.Teaching)

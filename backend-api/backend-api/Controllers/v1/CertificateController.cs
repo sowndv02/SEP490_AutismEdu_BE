@@ -6,13 +6,17 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
+using backend_api.SignalR;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Azure.Amqp.Framing;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
+using System.Threading;
 using static backend_api.SD;
 
 namespace backend_api.Controllers.v1
@@ -29,6 +33,7 @@ namespace backend_api.Controllers.v1
         private readonly ICurriculumRepository _curriculumRepository;
         private readonly IWorkExperienceRepository _workExperienceRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
+        private readonly INotificationRepository _notificationRepository;
         private readonly ILogger<CertificateController> _logger;
         private readonly IMapper _mapper;
         private readonly IRabbitMQMessageSender _messageBus;
@@ -36,13 +41,15 @@ namespace backend_api.Controllers.v1
         protected APIResponse _response;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
 
         public CertificateController(IUserRepository userRepository, ICertificateRepository certificateRepository,
             ILogger<CertificateController> logger, IBlobStorageRepository blobStorageRepository,
             IMapper mapper, IConfiguration configuration,
             ICertificateMediaRepository certificateMediaRepository, ICurriculumRepository curriculumRepository,
-            IWorkExperienceRepository workExperienceRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService)
+            IWorkExperienceRepository workExperienceRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService, 
+            IHubContext<NotificationHub> hubContext, INotificationRepository notificationRepository)
         {
             _resourceService = resourceService;
             _workExperienceRepository = workExperienceRepository;
@@ -54,9 +61,11 @@ namespace backend_api.Controllers.v1
             _mapper = mapper;
             _blobStorageRepository = blobStorageRepository;
             _logger = logger;
+            _hubContext = hubContext;
             _userRepository = userRepository;
             _certificateRepository = certificateRepository;
             _messageBus = messageBus;
+            _notificationRepository = notificationRepository;
         }
 
 
@@ -150,7 +159,7 @@ namespace backend_api.Controllers.v1
             try
             {
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
-                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId, false, null);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
                     _logger.LogWarning("Invalid request status or certificate not found for certificate ID {CertificateId} by user {UserId}", changeStatusDTO.Id, userId);
@@ -184,7 +193,20 @@ namespace backend_api.Controllers.v1
                             Message = htmlMessage
                         }, queueName);
                     }
-
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = tutor.Id,
+                        Message = _resourceService.GetString(SD.CHANGE_STATUS_CERTIFICATE_TUTOR_NOTIFICATION, SD.STATUS_APPROVE_VIE),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_SETTING),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -217,7 +239,20 @@ namespace backend_api.Controllers.v1
                             Message = htmlMessage
                         }, queueName);
                     }
-
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = tutor.Id,
+                        Message = _resourceService.GetString(SD.CHANGE_STATUS_CERTIFICATE_TUTOR_NOTIFICATION, SD.STATUS_REJECT_VIE),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_SETTING),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;

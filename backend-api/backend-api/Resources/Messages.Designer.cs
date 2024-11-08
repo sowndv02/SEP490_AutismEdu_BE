@@ -115,7 +115,7 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chứng chỉ của bạn đã được {0}.
+        ///   Looks up a localized string similar to Chứng chỉ của bạn đã {0}.
         /// </summary>
         public static string CHANGE_STATUS_CERTIFICATE_TUTOR_NOTIFICATION {
             get {
@@ -124,7 +124,7 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Khung chương trình của bạn đã được {0}.
+        ///   Looks up a localized string similar to Khung chương trình của bạn đã {0}.
         /// </summary>
         public static string CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION {
             get {
@@ -142,7 +142,7 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Yêu cầu của bạn đã được gia sư {0}.
+        ///   Looks up a localized string similar to Yêu cầu dạy học của bạn {0} bởi {1}.
         /// </summary>
         public static string CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION {
             get {
@@ -304,7 +304,7 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to “Bạn có yêu cầu mới từ phụ huynh {0}.
+        ///   Looks up a localized string similar to Bạn có yêu cầu mới từ phụ huynh {0}.
         /// </summary>
         public static string TUTOR_REQUEST_TUTOR_NOTIFICATION {
             get {

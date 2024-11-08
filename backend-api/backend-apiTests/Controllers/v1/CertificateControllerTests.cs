@@ -7,10 +7,12 @@ using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
+using backend_api.SignalR;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -39,6 +41,9 @@ namespace backend_api.Controllers.v1.Tests
         private readonly Mock<IRabbitMQMessageSender> _messageBusMock;
         private readonly Mock<IResourceService> _resourceServiceMock;
         private readonly Mock<IConfiguration> _configurationMock;
+        private readonly Mock<INotificationRepository> _notificationRepositoryMock;
+        private readonly Mock<IHubContext<NotificationHub>> _hubContextMock;
+        
         private CertificateController _controller;
         private readonly WebApplicationFactory<Program> _factory;
 
@@ -51,7 +56,9 @@ namespace backend_api.Controllers.v1.Tests
             _curriculumRepositoryMock = new Mock<ICurriculumRepository>();
             _workExperienceRepositoryMock = new Mock<IWorkExperienceRepository>();
             _blobStorageRepositoryMock = new Mock<IBlobStorageRepository>();
+            _notificationRepositoryMock = new Mock<INotificationRepository>();
             _loggerMock = new Mock<ILogger<CertificateController>>();
+            _hubContextMock = new Mock<IHubContext<NotificationHub>>();
             _messageBusMock = new Mock<IRabbitMQMessageSender>();
             _resourceServiceMock = new Mock<IResourceService>();
             _configurationMock = new Mock<IConfiguration>();
@@ -73,7 +80,9 @@ namespace backend_api.Controllers.v1.Tests
                _curriculumRepositoryMock.Object,
                _workExperienceRepositoryMock.Object,
                _messageBusMock.Object,
-               _resourceServiceMock.Object
+               _resourceServiceMock.Object,
+               _hubContextMock.Object,
+               _notificationRepositoryMock.Object
            );
             var claims = new List<Claim>
             {

@@ -92,6 +92,7 @@ builder.Services.AddScoped<IPackagePaymentRepository, PackagePaymentRepository>(
 builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>(); builder.Services.AddScoped<ITestRepository, TestRepository>();
 builder.Services.AddScoped<ITestResultRepository, TestResultRepository>();
 builder.Services.AddScoped<ITestResultDetailRepository, TestResultDetailRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 
 // Add DI requirement authorization handler

@@ -200,22 +200,22 @@
   </data>
   <data name="CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION" xml:space="preserve">
     <value>Phụ huynh {0} vừa {1} hồ sơ học sinh của bạn.</value>
-    <comment>/autismedu/my-tutor/{StudentProfileID}</comment>
+    <comment>/autismtutor/student-detail/{id}</comment>
   </data>
   <data name="TUTOR_REQUEST_TUTOR_NOTIFICATION" xml:space="preserve">
-    <value>“Bạn có yêu cầu mới từ phụ huynh {0}</value>
+    <value>Bạn có yêu cầu mới từ phụ huynh {0}</value>
     <comment>/autismtutor/tutor-request</comment>
   </data>
   <data name="CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION" xml:space="preserve">
-    <value>Yêu cầu của bạn đã được gia sư {0}</value>
+    <value>Yêu cầu dạy học của bạn {0} bởi {1}</value>
     <comment>/autismedu/request-history</comment>
   </data>
   <data name="CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION" xml:space="preserve">
-    <value>Khung chương trình của bạn đã được {0}</value>
+    <value>Khung chương trình của bạn đã {0}</value>
     <comment>/autismtutor/tutor-setting</comment>
   </data>
   <data name="CHANGE_STATUS_CERTIFICATE_TUTOR_NOTIFICATION" xml:space="preserve">
-    <value>Chứng chỉ của bạn đã được {0}</value>
+    <value>Chứng chỉ của bạn đã {0}</value>
     <comment>/autismtutor/tutor-setting</comment>
   </data>
   <data name="NEW_REVIEW_TUTOR_NOTIFICATION" xml:space="preserve">

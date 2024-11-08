@@ -276,6 +276,7 @@ namespace backend_api.Mapper
                 .ForMember(dest => dest.Results, opt => opt.MapFrom(src => src.Results))
                 .ReverseMap();
             CreateMap<TestResultDetail, TestResultDetailDTO>().ReverseMap();
+            CreateMap<NotificationDTO, Notification>().ReverseMap();
         }
     }
 }
