@@ -222,13 +222,6 @@ namespace backend_api.Data
                 Roles.Add(roleTutor);
             }
 
-            var roleUser = Roles.FirstOrDefault(x => x.Name.Equals(SD.USER_ROLE));
-            if (roleUser == null)
-            {
-                roleUser = new IdentityRole { Id = Guid.NewGuid().ToString(), Name = SD.USER_ROLE, NormalizedName = SD.USER_ROLE.ToUpper() };
-                Roles.Add(roleUser);
-            }
-
             var roleParent = Roles.FirstOrDefault(x => x.Name.Equals(SD.PARENT_ROLE));
             if (roleParent == null)
             {

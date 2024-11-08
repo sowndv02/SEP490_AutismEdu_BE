@@ -9,7 +9,6 @@
         public static string ADMIN_PHONENUMBER_DEFAULT = "0999999999";
 
         // Const role
-        public const string USER_ROLE = "User";
         public const string MANAGER_ROLE = "Manager";
         public const string PARENT_ROLE = "Parent";
         public const string STAFF_ROLE = "Staff";

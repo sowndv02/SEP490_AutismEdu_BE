@@ -363,13 +363,11 @@ namespace backend_api.Repository
                 var result = await _userManager.CreateAsync(user, registerationRequestDTO.Password);
                 if (result.Succeeded)
                 {
-                    if (!_roleManager.RoleExistsAsync(SD.USER_ROLE).GetAwaiter().GetResult() && !_roleManager.RoleExistsAsync(SD.PARENT_ROLE).GetAwaiter().GetResult())
+                    if (!_roleManager.RoleExistsAsync(SD.PARENT_ROLE).GetAwaiter().GetResult())
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(SD.USER_ROLE));
                         await _roleManager.CreateAsync(new IdentityRole(SD.PARENT_ROLE));
                     }
 
-                    await _userManager.AddToRoleAsync(user, SD.USER_ROLE);
                     await _userManager.AddToRoleAsync(user, SD.PARENT_ROLE);
                     ApplicationUser objReturn = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email == user.Email);
                     if (objReturn.LockoutEnd == null || objReturn.LockoutEnd <= DateTime.Now)
@@ -801,8 +799,7 @@ namespace backend_api.Repository
                     query = query.OrderBy(orderBy);
             }
             int count = query.Count();
-            if (filter != null)
-                query = query.Where(filter);
+            
             var users = await query.ToListAsync();
             foreach (var user in users)
             {
@@ -810,18 +807,20 @@ namespace backend_api.Repository
                     user.IsLockedOut = false;
                 else user.IsLockedOut = true;
                 var user_role = await _userManager.GetRolesAsync(user) as List<string>;
-                var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
-                var claimString = user_claim.Select(x => $"{x.Type}-{x.Value}").ToList();
-                user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
+                //var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
+                //var claimString = user_claim.Select(x => $"{x.Type}-{x.Value}").ToList();
+                //user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
                 user.Role = String.Join(",", user_role);
             }
+            if (filter != null)
+                query = query.Where(filter);
             if (isAdminRole)
             {
-                users = users.Where(x => x.Role.Contains(SD.STAFF_ROLE)).ToList();
+                users = users.Where(x => x.Role.Contains(SD.STAFF_ROLE) || x.Role.Contains(SD.MANAGER_ROLE)).ToList();
             }
             else
             {
-                users = users.Where(x => !x.Role.Contains(SD.STAFF_ROLE)).ToList();
+                users = users.Where(x => !x.Role.Contains(SD.STAFF_ROLE) && !x.Role.Contains(SD.MANAGER_ROLE) && !x.Role.Contains(SD.ADMIN_ROLE)).ToList();
             }
             query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
 

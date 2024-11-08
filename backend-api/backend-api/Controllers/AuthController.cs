@@ -460,7 +460,7 @@ namespace backend_api.Controllers
                     user = await _userRepository.CreateAsync(new ApplicationUser
                     {
                         Email = payload.Email,
-                        Role = SD.USER_ROLE,
+                        Role = SD.PARENT_ROLE,
                         UserType = SD.GOOGLE_USER,
                         ImageUrl = payload.Picture,
                         FullName = payload.Name,
@@ -552,7 +552,7 @@ namespace backend_api.Controllers
                     user = await _userRepository.CreateAsync(new ApplicationUser
                     {
                         Email = payload.Email,
-                        Role = SD.USER_ROLE,
+                        Role = SD.PARENT_ROLE,
                         UserType = SD.GOOGLE_USER,
                         ImageUrl = payload.Picture,
                         FullName = payload.Name,

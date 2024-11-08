@@ -135,7 +135,7 @@ namespace backend_api.Controllers
         }
 
         [HttpGet("user-or-admin-role-access")]
-        [Authorize(Roles = $"{SD.ADMIN_ROLE},{SD.USER_ROLE}")]
+        [Authorize(Roles = $"{SD.ADMIN_ROLE}")]
         //account with role of user or admin can access
         public IActionResult UserORAdminRoleAccess()
         {
