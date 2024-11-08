@@ -135,13 +135,13 @@ namespace backend_api.Controllers
             {
                 if (id == 0)
                 {
-                    _logger.LogWarning("Invalid curriculum ID: {CurriculumId}. Returning BadRequest.", id);
+                    _logger.LogWarning("Invalid Package payment ID: {Id}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var model = await _packagePaymentRepository.GetAsync(x => x.Id == id, false, null);
+                var model = await _packagePaymentRepository.GetAsync(x => x.Id == id, true, null);
                 if (model == null)
                 {
                     _logger.LogWarning("Packet payment not found for ID: {id} and User ID: {userId}. Returning BadRequest.", id, userId);
@@ -169,7 +169,7 @@ namespace backend_api.Controllers
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = SD.MANAGER_ROLE)]
-        public async Task<IActionResult> UpdateStatus(UpdateActiveDTO updateActiveDTO)
+        public async Task<IActionResult> UpdateStatus(int id, UpdateActiveDTO updateActiveDTO)
         {
             try
             {
@@ -183,7 +183,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
 
-                PackagePayment model = await _packagePaymentRepository.GetAsync(x => x.Id == updateActiveDTO.Id, true, null, null);
+                PackagePayment model = await _packagePaymentRepository.GetAsync(x => x.Id == updateActiveDTO.Id, true, "Submitter", null);
                 if (model == null)
                 {
                     _logger.LogWarning("Package payment with ID: {Id} is either not found.", updateActiveDTO.Id);
