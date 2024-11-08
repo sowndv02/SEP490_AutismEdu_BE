@@ -148,15 +148,15 @@ namespace backend_api.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var rangeOverLap = await _assessmentScoreRangeRepository.GetAsync(x => updateDTO.MinScore <= x.MaxScore && updateDTO.MaxScore >= x.MinScore && x != model);
-                if (rangeOverLap != null)
-                {
-                    _logger.LogWarning("Duplicate score range found with MinScore: {MinScore} and MaxScore: {MaxScore}", rangeOverLap.MinScore, rangeOverLap.MaxScore);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE, rangeOverLap.MinScore, rangeOverLap.MaxScore) };
-                    return BadRequest(_response);
-                }
+                //var rangeOverLap = await _assessmentScoreRangeRepository.GetAsync(x => updateDTO.MinScore <= x.MaxScore && updateDTO.MaxScore >= x.MinScore && x != model);
+                //if (rangeOverLap != null)
+                //{
+                //    _logger.LogWarning("Duplicate score range found with MinScore: {MinScore} and MaxScore: {MaxScore}", rangeOverLap.MinScore, rangeOverLap.MaxScore);
+                //    _response.StatusCode = HttpStatusCode.BadRequest;
+                //    _response.IsSuccess = false;
+                //    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE, rangeOverLap.MinScore, rangeOverLap.MaxScore) };
+                //    return BadRequest(_response);
+                //}
 
                 model.Description = updateDTO.Description;
                 model.MinScore = updateDTO.MinScore;
