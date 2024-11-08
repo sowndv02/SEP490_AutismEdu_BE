@@ -266,12 +266,9 @@ namespace backend_api.Data
                     LockoutEnabled = false,
                     NormalizedEmail = SD.ADMIN_EMAIL_DEFAULT.ToUpper(),
                     NormalizedUserName = SD.ADMIN_ADDRESS_DEFAULT.ToUpper(),
-                    ConcurrencyStamp = Guid.NewGuid().ToString(),
                     AccessFailedCount = 0,
-                    LockoutEnd = DateTime.MinValue,
                     PhoneNumber = SD.ADMIN_PHONENUMBER_DEFAULT,
                     PhoneNumberConfirmed = false,
-                    SecurityStamp = Guid.NewGuid().ToString(),
                     TwoFactorEnabled = false,
                     UserType = SD.APPLICATION_USER
                 };
