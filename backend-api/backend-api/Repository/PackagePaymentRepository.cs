@@ -5,17 +5,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend_api.Repository
 {
-    public class PacketPaymentRepository : Repository<PacketPayment>, IPacketPaymentRepository
+    public class PackagePaymentRepository : Repository<PackagePayment>, IPackagePaymentRepository
     {
         private readonly ApplicationDbContext _context;
-        public PacketPaymentRepository(ApplicationDbContext context) : base(context)
+        public PackagePaymentRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
         public async Task DeactivatePreviousVersionsAsync(int? originalId)
         {
             if (originalId == 0 || originalId == null) return;
-            var previousVersions = await _context.PacketPayments
+            var previousVersions = await _context.PackagePayments
                 .Where(c => (c.OriginalId == originalId || c.Id == originalId) && c.IsActive)
                 .ToListAsync();
 
@@ -27,14 +27,14 @@ namespace backend_api.Repository
             foreach (var version in previousVersions)
             {
                 version.IsActive = false;
-                _context.PacketPayments.Update(version);
+                _context.PackagePayments.Update(version);
             }
             await _context.SaveChangesAsync();
         }
 
         public async Task<int> GetNextVersionNumberAsync(int? originalId)
         {
-            var previousVersions = await _context.PacketPayments
+            var previousVersions = await _context.PackagePayments
                 .Where(c => c.OriginalId == originalId)
                 .ToListAsync();
 
@@ -45,11 +45,11 @@ namespace backend_api.Repository
 
             return previousVersions.Max(c => c.VersionNumber) + 1;
         }
-        public async Task<PacketPayment> UpdateAsync(PacketPayment model)
+        public async Task<PackagePayment> UpdateAsync(PackagePayment model)
         {
             try
             {
-                _context.PacketPayments.Update(model);
+                _context.PackagePayments.Update(model);
                 await _context.SaveChangesAsync();
                 return model;
             }

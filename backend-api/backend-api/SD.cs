@@ -1,12 +1,12 @@
-﻿using System.Threading;
-
-namespace backend_api
+﻿namespace backend_api
 {
     public static class SD
     {
         // Const default account
         public static string ADMIN_EMAIL_DEFAULT = "admin@admin.com";
-        public static string ADMIN_PASSWORD_DEFAULT = "Sa12345@";
+        public static string ADMIN_PASSWORD_DEFAULT = "AQAAAAEAACcQAAAAEOjDDzJdPlquEhfypVX/5nwm9uhcqeJuN4AO5jXlmTQ+/Ql9BqVmT6x5hCi1eS1BsQ==";
+        public static string ADMIN_ADDRESS_DEFAULT = "Khu Giáo dục và Đào tạo – Khu Công nghệ cao Hòa Lạc – Km29 Đại lộ Thăng Long, H. Thạch Thất, TP. Hà Nội";
+        public static string ADMIN_PHONENUMBER_DEFAULT = "0999999999";
 
         // Const role
         public const string USER_ROLE = "User";
@@ -127,14 +127,15 @@ namespace backend_api
         public const string TUTOR_REQUEST = "Đơn đăng ký học gia sư";
         public const string USER = "Người dùng";
         public const string WORK_EXPERIENCE = "Kinh nghiệm làm việc";
-		public const string SCHEDULE = "Lịch học";
-		public const string PASSWORD = "Mật khẩu";
-		public const string ASSESSMENT_SCORE_RANGE = "Khoảng điểm đánh giá";
-		public const string SCORE_RANGE = "Khoảng điểm";
-		public const string END_TUTORING = "Đơn kết thúc dạy";
-		public const string TEST = "Bài test";
-		public const string QUESTION = "Câu hỏi";
-		public const string OPTION = "Lựa chọn";
+        public const string SCHEDULE = "Lịch học";
+        public const string PASSWORD = "Mật khẩu";
+        public const string ASSESSMENT_SCORE_RANGE = "Khoảng điểm đánh giá";
+        public const string SCORE_RANGE = "Khoảng điểm";
+        public const string END_TUTORING = "Đơn kết thúc dạy";
+        public const string TEST = "Bài test";
+        public const string QUESTION = "Câu hỏi";
+        public const string OPTION = "Lựa chọn";
+        public const string PACKET_PAYMENT = "Gói thanh toán";
 
 
 
@@ -143,7 +144,7 @@ namespace backend_api
         public const string TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR = "TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR";
         public const string EMAIL_EXISTING_MESSAGE = "EMAIL_EXISTING_MESSAGE";
         public const string TUTOR_UPDATE_STATUS_IS_PENDING = "TUTOR_UPDATE_STATUS_IS_PENDING";
-        public const string BAD_REQUEST_MESSAGE = "BAD_REQUEST_MESSAGE";       
+        public const string BAD_REQUEST_MESSAGE = "BAD_REQUEST_MESSAGE";
         public const string DATA_DUPLICATED_MESSAGE = "DATA_DUPLICATED_MESSAGE";
         public const string NOT_FOUND_MESSAGE = "NOT_FOUND_MESSAGE";
         public const string TIMESLOT_DUPLICATED_MESSAGE = "TIMESLOT_DUPLICATED_MESSAGE";
@@ -156,7 +157,7 @@ namespace backend_api
         public const string CANNOT_ADD_ROLE = "CANNOT_ADD_ROLE";
         public const string USER_HAVE_NO_ROLE = "USER_HAVE_NO_ROLE";
         public const string DUPPLICATED_ASSIGN_EXERCISE = "DUPPLICATED_ASSIGN_EXERCISE";
-		public const string ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE = "ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE";
+        public const string ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE = "ASSESSMENT_SCORE_RANGE_DUPLICATED_MESSAGE";
         public const string EMAIL_NOT_CONFIRM = "EMAIL_NOT_CONFIRM";
         public const string LOGIN_WRONG_SIDE = "LOGIN_WRONG_SIDE";
         public const string GG_CANNOT_CHANGE_PASSWORD = "GG_CANNOT_CHANGE_PASSWORD";

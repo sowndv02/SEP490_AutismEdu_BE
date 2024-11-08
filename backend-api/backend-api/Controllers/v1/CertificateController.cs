@@ -40,7 +40,7 @@ namespace backend_api.Controllers.v1
 
         public CertificateController(IUserRepository userRepository, ICertificateRepository certificateRepository,
             ILogger<CertificateController> logger, IBlobStorageRepository blobStorageRepository,
-            IMapper mapper, IConfiguration configuration, 
+            IMapper mapper, IConfiguration configuration,
             ICertificateMediaRepository certificateMediaRepository, ICurriculumRepository curriculumRepository,
             IWorkExperienceRepository workExperienceRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService)
         {
@@ -90,14 +90,14 @@ namespace backend_api.Controllers.v1
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while get a certificate {Id}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            } 
+            }
         }
 
         [HttpPost]
@@ -132,7 +132,7 @@ namespace backend_api.Controllers.v1
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while creating a certificate for user {UserId}", userId);
                 _response.IsSuccess = false;

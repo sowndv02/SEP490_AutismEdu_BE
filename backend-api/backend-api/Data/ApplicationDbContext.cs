@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace backend_api.Data
 {
@@ -54,9 +53,10 @@ namespace backend_api.Data
         public DbSet<Syllabus> Syllabuses { get; set; }
         public DbSet<SyllabusExercise> SyllabusExercises { get; set; }
         public DbSet<AssessmentScoreRange> AssessmentScoreRanges { get; set; }
-		public DbSet<Test> Tests { get; set; }
+        public DbSet<Test> Tests { get; set; }
         public DbSet<TestResult> TestResults { get; set; }
-        public DbSet<TestResultDetail> TestResultDetails { get; set; }        public DbSet<PacketPayment> PacketPayments { get; set; }
+        public DbSet<TestResultDetail> TestResultDetails { get; set; }
+        public DbSet<PackagePayment> PackagePayments { get; set; }
         public DbSet<PaymentHistory> PaymentHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -182,7 +182,7 @@ namespace backend_api.Data
                 .WithMany()
                 .HasForeignKey(pr => pr.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             builder.Entity<TestResultDetail>()
                 .HasOne(pr => pr.Question)
                 .WithMany()
@@ -259,7 +259,21 @@ namespace backend_api.Data
                     PasswordHash = SD.ADMIN_PASSWORD_DEFAULT,
                     UserName = "admin@admin.com",
                     CreatedDate = DateTime.Now,
-                    ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB
+                    ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB,
+                    EmailConfirmed = true,
+                    IsLockedOut = false,
+                    Address = SD.ADMIN_ADDRESS_DEFAULT,
+                    LockoutEnabled = false,
+                    NormalizedEmail = SD.ADMIN_EMAIL_DEFAULT.ToUpper(),
+                    NormalizedUserName = SD.ADMIN_ADDRESS_DEFAULT.ToUpper(),
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                    AccessFailedCount = 0,
+                    LockoutEnd = DateTime.MinValue,
+                    PhoneNumber = SD.ADMIN_PHONENUMBER_DEFAULT,
+                    PhoneNumberConfirmed = false,
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    TwoFactorEnabled = false,
+                    UserType = SD.APPLICATION_USER
                 };
 
                 ApplicationUsers.Add(adminUser);

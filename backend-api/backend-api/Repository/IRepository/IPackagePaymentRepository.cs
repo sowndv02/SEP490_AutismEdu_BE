@@ -2,9 +2,9 @@
 
 namespace backend_api.Repository.IRepository
 {
-    public interface IPacketPaymentRepository : IRepository<PacketPayment>
+    public interface IPackagePaymentRepository : IRepository<PackagePayment>
     {
-        Task<PacketPayment> UpdateAsync(PacketPayment model);
+        Task<PackagePayment> UpdateAsync(PackagePayment model);
         Task<int> GetNextVersionNumberAsync(int? originalId);
         Task DeactivatePreviousVersionsAsync(int? originalId);
     }
