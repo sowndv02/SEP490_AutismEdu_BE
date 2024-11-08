@@ -260,6 +260,11 @@ namespace backend_api.Mapper
             CreateMap<AssessmentQuestion, TestQuestionCreateDTO>()
                 .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.AssessmentOptions))
                 .ReverseMap();
+
+            CreateMap<PackagePayment, PackagePaymentCreateDTO>().ReverseMap();
+            CreateMap<PackagePayment, PackagePaymentDTO>().ReverseMap();
+            CreateMap<PaymentHistory, PaymentHistoryCreateDTO>().ReverseMap();
+            CreateMap<PaymentHistory, PaymentHistoryDTO>().ReverseMap();
         }
     }
 }

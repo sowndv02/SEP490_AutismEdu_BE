@@ -12,6 +12,7 @@ using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services;
 using backend_api.Services.IServices;
+using backend_api.SignalR;
 using backend_api.Swagger;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,9 +24,6 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
-using Serilog.Sinks.Elasticsearch;
-using System.Reflection;
-using backend_api.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,8 +88,8 @@ builder.Services.AddScoped<ISyllabusRepository, SyllabusRepository>();
 builder.Services.AddScoped<ISyllabusExerciseRepository, SyllabusExerciseRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IAssessmentScoreRangeRepository, AssessmentScoreRangeRepository>();
-builder.Services.AddScoped<IPacketPaymentRepository, PacketPaymentRepository>();
-builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>();builder.Services.AddScoped<ITestRepository, TestRepository>();
+builder.Services.AddScoped<IPackagePaymentRepository, PackagePaymentRepository>();
+builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>(); builder.Services.AddScoped<ITestRepository, TestRepository>();
 builder.Services.AddScoped<ITestResultRepository, TestResultRepository>();
 builder.Services.AddScoped<ITestResultDetailRepository, TestResultDetailRepository>();
 

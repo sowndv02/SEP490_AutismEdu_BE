@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_api.Models
 {
-    public class PacketPayment
+    public class PackagePayment
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -15,7 +15,7 @@ namespace backend_api.Models
         public int VersionNumber { get; set; } = 1;
         public int? OriginalId { get; set; }
         [ForeignKey(nameof(OriginalId))]
-        public PacketPayment? Original { get; set; }
+        public PackagePayment? Original { get; set; }
         public bool IsDeleted { get; set; } = false;
         public bool IsActive { get; set; } = true;
         public string SubmitterId { get; set; }

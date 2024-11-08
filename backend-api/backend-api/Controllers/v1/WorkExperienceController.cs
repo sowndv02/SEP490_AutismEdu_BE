@@ -244,7 +244,7 @@ namespace backend_api.Controllers.v1
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError($"Error occurred while fetching active work experience for ID: {id}. Exception: {ex.Message}");
 
@@ -286,7 +286,7 @@ namespace backend_api.Controllers.v1
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError($"An error occurred while creating work experience: {ex.Message}");
                 _response.StatusCode = HttpStatusCode.InternalServerError;
