@@ -73,7 +73,7 @@ namespace backend_api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int? paymentId = 0, int pageNumber = 1)
         {
             try
             {
@@ -96,7 +96,10 @@ namespace backend_api.Controllers
                             break;
                     }
                 }
-
+                if (paymentId != 0) 
+                {
+                    filter = filter.AndAlso(x => x.PackagePaymentId == paymentId);
+                }
                 if (!string.IsNullOrEmpty(search))
                 {
                     filter = filter.AndAlso(x => x.Description.Contains(search));
