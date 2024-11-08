@@ -10,6 +10,7 @@ namespace backend_api.Models
         public int Id { get; set; }
         public int TestId { get; set; }
         public string ParentId { get; set; }
+        public double TotalPoint { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         [ForeignKey(nameof(TestId))]
         public Test Test { get; set; }
