@@ -26,6 +26,12 @@
         public const string URL_IMAGE_DEFAULT_BLOB = "https://sep490g50v1.blob.core.windows.net/logos-public/default-avatar.png";
         public const string URL_FE_STUDENT_PROFILE_DETAIL = "http://localhost:5173/autismedu/approve-student-profile/";
         public const string URL_FE_PARENT_LOGIN = "";
+        public const string URL_FE_TUTOR_SETTING = "/autismtutor/tutor-setting";
+        public const string URL_FE_TUTOR = "/autismtutor";
+        public const string URL_FE_TUTOR_STUDENT_PROFILE_DETAIL = "/autismtutor/student-detail/";
+        public const string URL_FE_PARENT_TUTOR_REQUEST = "/autismedu/request-history";
+        public const string URL_FE_PARENT_STUDENT_PROFILE_LIST = "/autismedu/my-tutor/";
+        public const string URL_FE_PARENT_UPDATE_STATUS_STUDENT_PROFILE = "/autismedu/approve-student-profile/";
 
         // Const folder mail save
         public const string FOLDER_NAME_LOG_EMAIL = "MailSave";
@@ -134,7 +140,7 @@
         public const string TEST = "Bài test";
         public const string QUESTION = "Câu hỏi";
         public const string OPTION = "Lựa chọn";
-        public const string PACKET_PAYMENT = "Gói thanh toán";
+        public const string PACKAGE_PAYMENT = "Gói thanh toán";
 		public const string TEST_RESULT = "Kết quả bài test";
 
 
@@ -291,6 +297,8 @@
         public const string STATUS_REJECT = "reject";
         public const string STATUS_ALL = "all";
 
+        public const string STATUS_APPROVE_VIE = "được chấp nhận";
+        public const string STATUS_REJECT_VIE = "bị từ chối";
 
         // sort Order
         public const string ORDER_DESC = "desc";
