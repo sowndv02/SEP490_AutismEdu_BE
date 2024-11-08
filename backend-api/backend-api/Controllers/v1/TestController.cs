@@ -21,8 +21,9 @@ namespace backend_api.Controllers.v1
     public class TestController : ControllerBase
     {
         private readonly ITestRepository _testRepository;
-        private readonly ITestResultRepository _resultRepository;
-        private readonly ITestResultDetailRepository _resultDetailRepository;
+        private readonly ITestResultRepository _testResultRepository;
+        private readonly ITestResultDetailRepository _testResultDetailRepository;
+        private readonly IAssessmentQuestionRepository _assessmentQuestionRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
         protected ILogger<TestController> _logger;
@@ -31,16 +32,17 @@ namespace backend_api.Controllers.v1
 
         public TestController(ITestRepository testRepository, ITestResultRepository resultRepository, 
             ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<TestController> logger, 
-            IResourceService resourceService, IConfiguration configuration)
+            IResourceService resourceService, IConfiguration configuration, IAssessmentQuestionRepository assessmentQuestionRepository)
         {
             _testRepository = testRepository;
-            _resultRepository = resultRepository;
-            _resultDetailRepository = resultDetailRepository;
+            _testResultRepository = resultRepository;
+            _testResultDetailRepository = resultDetailRepository;
             _mapper = mapper;
             _logger = logger;
             _resourceService = resourceService;
             _response = new APIResponse();
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            _assessmentQuestionRepository = assessmentQuestionRepository;
         }
 
         [HttpPost]
@@ -75,7 +77,7 @@ namespace backend_api.Controllers.v1
 
                 var test = await _testRepository.CreateAsync(model);
 
-                _response.Result = test;
+                _response.Result = _mapper.Map<TestDTO>(test);
                 _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
@@ -130,7 +132,7 @@ namespace backend_api.Controllers.v1
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
 
-                _response.Result = list;//_mapper.Map<List<TestDTO>>(list);
+                _response.Result = _mapper.Map<List<TestDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);
@@ -144,5 +146,40 @@ namespace backend_api.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
+        [HttpGet("{testId}")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetTestById(int testId)
+        {
+            try
+            {
+                var test = await _testRepository.GetAsync(x => x.Id == testId);
+                if (test == null)
+                {
+                    _logger.LogWarning("TestId {testId} doesn't exist.", testId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TEST) };
+                    return BadRequest(_response);
+                }
+
+                var model = _mapper.Map<TestDTO>(test);
+                var questions = await _assessmentQuestionRepository.GetAllWithIncludeAsync(x => x.TestId == testId, "AssessmentOptions");
+                model.Questions = _mapper.Map<List<AssessmentQuestionDTO>>(questions.list);
+
+                _response.Result = model;
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching test.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }      
     }
 }
