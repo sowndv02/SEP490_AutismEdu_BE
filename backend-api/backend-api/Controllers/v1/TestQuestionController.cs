@@ -43,7 +43,7 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpPost]
-        [Authorize(Roles = SD.STAFF_ROLE)]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> CreateAsync(TestQuestionCreateDTO createDTO)
         {
             try

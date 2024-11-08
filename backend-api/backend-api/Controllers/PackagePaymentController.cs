@@ -2,12 +2,15 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
+using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
+using static backend_api.SD;
 
 namespace backend_api.Controllers
 {
@@ -57,9 +60,9 @@ namespace backend_api.Controllers
                 {
                     newModel.OriginalId = null;
                 }
-                await _packagePaymentRepository.CreateAsync(newModel);
+                var result = await _packagePaymentRepository.CreateAsync(newModel);
                 _response.StatusCode = HttpStatusCode.Created;
-                _response.Result = _mapper.Map<PackagePaymentDTO>(newModel);
+                _response.Result = _mapper.Map<PackagePaymentDTO>(result);
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
@@ -78,9 +81,22 @@ namespace backend_api.Controllers
         {
             try
             {
-                var list = await _packagePaymentRepository.GetAllNotPagingAsync(null, "Submitter", null);
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+
+                var result = new List<PackagePayment>();
+                if (userRoles != null && userRoles.Contains(SD.MANAGER_ROLE))
+                {
+                    var(count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(null, "Submitter", null, x => x.Price, true);
+                    result = list;
+                }
+                else
+                {
+                    var (count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(x => !x.IsDeleted, "Submitter", null, x => x.Price, true);
+                    result = list;
+                }
                 _response.IsSuccess = true;
-                _response.Result = _mapper.Map<List<PackagePaymentDTO>>(list);
+                _response.Result = _mapper.Map<List<PackagePaymentDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
@@ -88,6 +104,51 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
+        [HttpPut("changeStatus/{id}")]
+        [Authorize(Roles = SD.MANAGER_ROLE)]
+        public async Task<IActionResult> UpdateStatus(UpdateActiveDTO updateActiveDTO)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
+
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
+                    return BadRequest(_response);
+                }
+
+                PackagePayment model = await _packagePaymentRepository.GetAsync(x => x.Id == updateActiveDTO.Id, true, null, null);
+                if (model == null)
+                {
+                    _logger.LogWarning("Package payment with ID: {Id} is either not found.", updateActiveDTO.Id);
+
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
+                    return BadRequest(_response);
+                }
+                model.IsActive = updateActiveDTO.IsActive;
+                model.UpdatedDate = DateTime.Now;
+                await _packagePaymentRepository.UpdateAsync(model);
+                _response.Result = _mapper.Map<PackagePaymentDTO>(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An error occurred while processing the status change for package payment ID: {Id}. Error: {Error}", updateActiveDTO.Id, ex.Message);
+                _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);

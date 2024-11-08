@@ -13,7 +13,7 @@ namespace backend_api.Models.DTOs.CreateDTOs
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Password and ConfirmPassword do not match.")]
         public string ConfirmPassword { get; set; }
-        public List<string>? RoleIds { get; set; }
+        public string? RoleId { get; set; }
         public bool IsLockedOut { get; set; }
     }
 }
