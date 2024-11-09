@@ -21,8 +21,6 @@ namespace backend_api.Controllers.v1
     public class TestController : ControllerBase
     {
         private readonly ITestRepository _testRepository;
-        private readonly ITestResultRepository _testResultRepository;
-        private readonly ITestResultDetailRepository _testResultDetailRepository;
         private readonly IAssessmentQuestionRepository _assessmentQuestionRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
@@ -30,13 +28,10 @@ namespace backend_api.Controllers.v1
         private readonly IResourceService _resourceService;
         protected int pageSize = 0;
 
-        public TestController(ITestRepository testRepository, ITestResultRepository resultRepository, 
-            ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<TestController> logger, 
+        public TestController(ITestRepository testRepository, IMapper mapper, ILogger<TestController> logger, 
             IResourceService resourceService, IConfiguration configuration, IAssessmentQuestionRepository assessmentQuestionRepository)
         {
             _testRepository = testRepository;
-            _testResultRepository = resultRepository;
-            _testResultDetailRepository = resultDetailRepository;
             _mapper = mapper;
             _logger = logger;
             _resourceService = resourceService;
@@ -122,9 +117,9 @@ namespace backend_api.Controllers.v1
                     }
                 }
 
-                var (count, result) = await _testRepository.GetAllAsync(filter, includeProperties: null , 
-                                                                                pageSize: pageSize, 
-                                                                                pageNumber: 9, 
+                var (count, result) = await _testRepository.GetAllAsync(filter, includeProperties: null, 
+                                                                                pageSize: 9, 
+                                                                                pageNumber: pageNumber, 
                                                                                 orderBy: orderByQuery, 
                                                                                 isDesc: isDesc);
                 list = result;
