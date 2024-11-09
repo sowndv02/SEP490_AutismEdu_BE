@@ -9,7 +9,8 @@ namespace backend_api.SignalR
         private static readonly ConcurrentDictionary<string, string> UserConnections = new();
         public override Task OnConnectedAsync()
         {
-            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Anonymous";
+            var userId = Context.GetHttpContext().Request.Query["userId"].ToString() ?? "Anonymous";
+
             UserConnections[userId] = Context.ConnectionId;
 
             Console.WriteLine($"Connected: {userId}, ConnectionId: {Context.ConnectionId}"); // Log the connection
@@ -18,7 +19,7 @@ namespace backend_api.SignalR
 
         public override Task OnDisconnectedAsync(Exception? exception)
         {
-            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Anonymous";
+            var userId = Context.GetHttpContext().Request.Query["userId"].ToString() ?? "Anonymous";
             if (UserConnections.TryRemove(userId, out var connectionId))
             {
                 Console.WriteLine($"Disconnected: {userId}, ConnectionId: {connectionId}"); // Log disconnection
