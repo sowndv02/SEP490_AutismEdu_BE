@@ -301,6 +301,14 @@
             Stop = 0
         }
 
+        // enum report type
+        public enum ReportType
+        {
+            TUTOR = 2,
+            REVIEW = 1,
+            UNLOCKREQUEST = 0
+        }
+
         public const string IncompatibilityWithCurriculumMsg = "Không tương thích với chương trình giảng dạy";
         public const string SchedulingConflictsMsg = "Xung đột lịch trình";
         public const string REQUEST_TIMEOUT_EXPIRED = "Thời gian yêu cầu hết hạn";
