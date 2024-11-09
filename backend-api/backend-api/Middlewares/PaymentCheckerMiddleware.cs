@@ -26,46 +26,51 @@ namespace backend_api.Middlewares
 
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    using (var scope = _serviceProvider.CreateScope())
+                    var roleClaim = context.User?.FindFirst(ClaimTypes.Role)?.Value;
+                    if (roleClaim != null && roleClaim == SD.TUTOR_ROLE) 
                     {
-                        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-                        var paymentHistoryRepository = scope.ServiceProvider.GetRequiredService<IPaymentHistoryRepository>();
-                        var resourceService = scope.ServiceProvider.GetRequiredService<IResourceService>();
-
-                        var user = await userRepository.GetAsync(x => x.Id == userId);
-
-                        if (user != null)
+                        using (var scope = _serviceProvider.CreateScope())
                         {
-                            bool isTrialAccount = user.CreatedDate <= DateTime.Now.AddDays(-30);
-                            var (total, list) = await paymentHistoryRepository.GetAllAsync(
-                                x => x.SubmitterId == userId,
-                                "PackagePayment",
-                                pageSize: 1,
-                                pageNumber: 1,
-                                x => x.CreatedDate,
-                                true
-                            );
+                            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+                            var paymentHistoryRepository = scope.ServiceProvider.GetRequiredService<IPaymentHistoryRepository>();
+                            var resourceService = scope.ServiceProvider.GetRequiredService<IResourceService>();
 
-                            var latestPaymentHistory = list.FirstOrDefault();
-                            if (latestPaymentHistory != null)
+                            var user = await userRepository.GetAsync(x => x.Id == userId);
+
+                            if (user != null)
                             {
-                                bool needPaymentPackage = latestPaymentHistory.ExpirationDate <= DateTime.Now;
-                                if (needPaymentPackage && !isTrialAccount)
-                                {
-                                    var response = new APIResponse()
-                                    {
-                                        StatusCode = HttpStatusCode.PaymentRequired,
-                                        ErrorMessages = new List<string>() { resourceService.GetString(SD.NEED_PAYMENT_MESSAGE) },
-                                        IsSuccess = false
-                                    };
+                                bool isTrialAccount = user.CreatedDate <= DateTime.Now.AddDays(-30);
+                                var (total, list) = await paymentHistoryRepository.GetAllAsync(
+                                    x => x.SubmitterId == userId,
+                                    "PackagePayment",
+                                    pageSize: 1,
+                                    pageNumber: 1,
+                                    x => x.CreatedDate,
+                                    true
+                                );
 
-                                    context.Response.ContentType = "application/json";
-                                    await context.Response.WriteAsJsonAsync(response);
-                                    return;
+                                var latestPaymentHistory = list.FirstOrDefault();
+                                if (latestPaymentHistory != null)
+                                {
+                                    bool needPaymentPackage = latestPaymentHistory.ExpirationDate <= DateTime.Now;
+                                    if (needPaymentPackage && !isTrialAccount)
+                                    {
+                                        var response = new APIResponse()
+                                        {
+                                            StatusCode = HttpStatusCode.PaymentRequired,
+                                            ErrorMessages = new List<string>() { resourceService.GetString(SD.NEED_PAYMENT_MESSAGE) },
+                                            IsSuccess = false
+                                        };
+
+                                        context.Response.ContentType = "application/json";
+                                        await context.Response.WriteAsJsonAsync(response);
+                                        return;
+                                    }
                                 }
                             }
                         }
                     }
+                    
                 }
             }
 
