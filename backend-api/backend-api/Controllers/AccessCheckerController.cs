@@ -15,18 +15,20 @@ namespace backend_api.Controllers
     [Route("api/v{version:apiVersion}/test")]
     [ApiController]
     [ApiVersionNeutral]
-    [Authorize]
     public class AccessCheckerController : ControllerBase
     {
         protected APIResponse _response;
         private readonly ILogger<AccessCheckerController> _logger;
         private IRabbitMQMessageSender _messageBus;
         private IConfiguration _configuration;
+        private INotificationRepository _notificationRepository;
         private readonly IHubContext<NotificationHub> _hubContext;
         private IUserRepository _userRepository;
         public AccessCheckerController(ILogger<AccessCheckerController> logger, IRabbitMQMessageSender messageBus, 
-            IConfiguration configuration, IHubContext<NotificationHub> hubContext, IUserRepository userRepository)
+            IConfiguration configuration, IHubContext<NotificationHub> hubContext, IUserRepository userRepository, 
+            INotificationRepository notificationRepository)
         {
+            _notificationRepository = notificationRepository;
             _messageBus = messageBus;
             _logger = logger;
             _response = new();
@@ -42,11 +44,21 @@ namespace backend_api.Controllers
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = "f53e66ab-9374-4870-8ec5-ea145a30c16f";
+                var notfication = new Notification()
+                {
+                    ReceiverId = userId,
+                    Message = "Notification Test Message",
+                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_TUTOR_REQUEST),
+                    IsRead = false,
+                    CreatedDate = DateTime.Now
+                };
+                var notificationResult = await _notificationRepository.CreateAsync(notfication);
+
                 var connectionId = NotificationHub.GetConnectionIdByUserId("Notifications-{userId}");
                 if (!string.IsNullOrEmpty(connectionId))
                 {
-                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{userId}", "Notification Test Message");
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{userId}", notificationResult);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);

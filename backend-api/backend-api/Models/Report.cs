@@ -11,7 +11,7 @@ namespace backend_api.Models
         public string UserId { get; set; }
         public string Title { get; set; }
         public string Subject { get; set; }
-        public string Desc { get; set; }
+        public string Description { get; set; }
         public bool Status { get; set; }
         public string? Reply { get; set; }
         [ForeignKey(nameof(UserId))]
