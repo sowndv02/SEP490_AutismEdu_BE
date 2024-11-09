@@ -19,22 +19,15 @@ namespace backend_api.Controllers.v1
     [ApiVersion("1.0")]
     public class TestQuestionController : ControllerBase
     {
-        private readonly ITestRepository _testRepository;
-        private readonly ITestResultRepository _resultRepository;
-        private readonly ITestResultDetailRepository _resultDetailRepository;
         private readonly IAssessmentQuestionRepository _assessmentQuestionRepository;
         protected APIResponse _response;
         private readonly IMapper _mapper;
         protected ILogger<TestQuestionController> _logger;
         private readonly IResourceService _resourceService;
 
-        public TestQuestionController(ITestRepository testRepository, ITestResultRepository resultRepository,
-            ITestResultDetailRepository resultDetailRepository, IMapper mapper, ILogger<TestQuestionController> logger,
+        public TestQuestionController(IMapper mapper, ILogger<TestQuestionController> logger,
             IResourceService resourceService, IAssessmentQuestionRepository assessmentQuestionRepository)
         {
-            _testRepository = testRepository;
-            _resultRepository = resultRepository;
-            _resultDetailRepository = resultDetailRepository;
             _assessmentQuestionRepository = assessmentQuestionRepository;
             _mapper = mapper;
             _logger = logger;
