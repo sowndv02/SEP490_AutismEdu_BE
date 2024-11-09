@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using backend_api.Models.DTOs;
 using backend_api.Repository;
+using System.Linq.Expressions;
+using backend_api.Utils;
 
 namespace backend_api.Controllers.v1
 {
@@ -26,10 +28,11 @@ namespace backend_api.Controllers.v1
         private readonly IMapper _mapper;
         protected ILogger<TestController> _logger;
         private readonly IResourceService _resourceService;
+        protected int pageSize = 0;
 
         public TestResultController(ITestResultRepository testResultRepository, 
             ITestResultDetailRepository testResultDetailRepository, IMapper mapper, ILogger<TestController> logger, 
-            IResourceService resourceService, IAssessmentQuestionRepository assessmentQuestionRepository)
+            IResourceService resourceService, IAssessmentQuestionRepository assessmentQuestionRepository, IConfiguration configuration)
         {
             _testResultRepository = testResultRepository;
             _testResultDetailRepository = testResultDetailRepository;
@@ -37,6 +40,7 @@ namespace backend_api.Controllers.v1
             _mapper = mapper;
             _logger = logger;
             _resourceService = resourceService;
+            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
         }
 
@@ -75,19 +79,54 @@ namespace backend_api.Controllers.v1
             }
         }
 
-        [HttpGet("{testId}")]
+        [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllParentTestResult(int testId)
+        public async Task<ActionResult<APIResponse>> GetAllParentTestResult([FromQuery] string? search = "", string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                
-                var model = await _testResultRepository.GetAllNotPagingAsync(x => x.TestId == testId && x.ParentId.Equals(userId), "Test");
+                int totalCount = 0;
+                List<TestResult> list = new();
+                Expression<Func<TestResult, bool>> filter = u => true;
+                Expression<Func<TestResult, object>> orderByQuery = u => true;
+                bool isDesc = sort != null && sort == SD.ORDER_DESC;
 
-                _response.Result = _mapper.Map<List<TestResultDTO>>(model.list);
-                _response.IsSuccess = true;
+                if (!string.IsNullOrEmpty(search))
+                {
+                    filter = filter.AndAlso(u => u.Test.TestName.Contains(search));
+                }
+
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREATED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        case SD.POINT:
+                            orderByQuery = x => x.TotalPoint;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+
+                var (count, result) = await _testResultRepository.GetAllAsync(filter, includeProperties: "Test",
+                                                                                pageSize: pageSize,
+                                                                                pageNumber: pageNumber,
+                                                                                orderBy: orderByQuery,
+                                                                                isDesc: isDesc);
+                list = result;
+                totalCount = count;
+
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+
+                _response.Result = _mapper.Map<List<TestResultDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = pagination;            
+                _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)
