@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System.Net;
+using System.Security.Claims;
 
 namespace backend_api.Controllers
 {
@@ -37,18 +38,11 @@ namespace backend_api.Controllers
 
 
         [HttpGet("SendNotification")]
-        [AllowAnonymous]
         public async Task<object> SendNotificationAsync()
         {
             try
             {
-                string userId = "";
-
-                // TODO: Tạo 1 bảng lưu notification
-                // Trả về total record chưa đọc
-                // API: Đánh dấu đã đọc
-                // API Đánh dấu all
-
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var connectionId = NotificationHub.GetConnectionIdByUserId("Notifications-{userId}");
                 if (!string.IsNullOrEmpty(connectionId))
                 {
