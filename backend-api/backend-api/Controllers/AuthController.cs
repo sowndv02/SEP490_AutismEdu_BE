@@ -25,7 +25,7 @@ namespace backend_api.Controllers
         private string audience = string.Empty;
         private readonly FormatString _formatString;
         private readonly IRabbitMQMessageSender _messageBus;
-        private static int ValidateTime = 0;
+        private static int validateTime = 0;
         private static string clientId = string.Empty;
         private static string queueName = string.Empty;
         private static string clientSecret = string.Empty;
@@ -33,7 +33,7 @@ namespace backend_api.Controllers
             IConfiguration configuration, IRabbitMQMessageSender messageBus, DateTimeEncryption dateTimeEncryption,
             TokenEcryption tokenEncryption, FormatString formatString)
         {
-            ValidateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
+            validateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
             clientId = configuration.GetValue<string>("Authentication:Google:ClientId");
             clientSecret = configuration.GetValue<string>("Authentication:Google:ClientSecret");
             queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
@@ -108,7 +108,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
-                if (DateTime.Now > security.AddMinutes(ValidateTime))
+                if (DateTime.Now > security.AddMinutes(validateTime))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -166,7 +166,7 @@ namespace backend_api.Controllers
                     return NotFound(_response);
                 }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
-                if (DateTime.Now > security.AddMinutes(ValidateTime))
+                if (DateTime.Now > security.AddMinutes(validateTime))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
