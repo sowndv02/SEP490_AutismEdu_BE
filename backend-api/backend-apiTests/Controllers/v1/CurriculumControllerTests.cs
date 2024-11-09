@@ -41,8 +41,11 @@ namespace backend_api.Controllers.v1.Tests
         private readonly CurriculumController _controller;
         private readonly Mock<INotificationRepository> _notificationRepositoryMock;
         private readonly Mock<IHubContext<NotificationHub>> _hubContextMock;
-        public CurriculumControllerTests()
+        private readonly WebApplicationFactory<Program> _factory;
+
+        public CurriculumControllerTests(WebApplicationFactory<Program> factory)
         {
+            _factory = factory; 
             _configurationMock.Setup(config => config["APIConfig:PageSize"]).Returns("10");
             _configurationMock.Setup(config => config["RabbitMQSettings:QueueName"]).Returns("TestQueue");
             var config = new MapperConfiguration(cfg =>
@@ -159,6 +162,12 @@ namespace backend_api.Controllers.v1.Tests
             apiResponse.ErrorMessages.FirstOrDefault().Should().Be("An error occurred.");
         }
 
-
+        //[Fact]
+        //public async Task DeleteAsync_ReturnsUnauthorized_WhenUserIsNotInTutorRole()
+        //{
+        //    var client = _factory.CreateClient();
+        //    var result = await client.DeleteAsync("/api/v1/certificate/3");
+        //    result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+        //}
     }
 }

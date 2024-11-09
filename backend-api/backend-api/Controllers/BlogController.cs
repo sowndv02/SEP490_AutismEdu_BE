@@ -115,11 +115,11 @@ namespace backend_api.Controllers
                 }
                 if (startDate != null)
                 {
-                    filter = filter.AndAlso(x => x.PublishDate >= startDate);
+                    filter = filter.AndAlso(x => x.PublishDate.Date >= startDate.Value.Date);
                 }
                 if (endDate != null)
                 {
-                    filter = filter.AndAlso(x => x.PublishDate <= endDate);
+                    filter = filter.AndAlso(x => x.PublishDate.Date <= endDate.Value.Date);
                 }
                 var result = new List<Blog>();
                 if (userRoles != null && (userRoles.Contains(SD.MANAGER_ROLE) || userRoles.Contains(SD.STAFF_ROLE)))
