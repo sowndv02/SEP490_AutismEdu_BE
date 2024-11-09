@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using static backend_api.SD;
 
 namespace backend_api.Models
 {
@@ -8,13 +9,24 @@ namespace backend_api.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string UserId { get; set; }
+        public string? ReporterId { get; set; }
         public string Title { get; set; }
-        public string Subject { get; set; }
+        public ReportType ReportType { get; set; }
         public string Description { get; set; }
-        public bool Status { get; set; }
-        public string? Reply { get; set; }
-        [ForeignKey(nameof(UserId))]
-        public ApplicationUser User { get; set; }
+        public Status Status { get; set; }
+        public string? Comments { get; set; }
+        public string? HandlerId { get; set; }
+        [ForeignKey(nameof(HandlerId))]
+        public ApplicationUser Handler { get; set; }
+        public string? TutorId { get; set; }
+        [ForeignKey(nameof(TutorId))]
+        public Tutor Tutor { get; set; }
+        public int? ReviewId { get; set; }
+        [ForeignKey(nameof(ReviewId))]
+        public Review Review { get; set; }
+        [ForeignKey(nameof(ReporterId))]
+        public ApplicationUser Reporter { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime? UpdatedDate { get; set; }
     }
 }

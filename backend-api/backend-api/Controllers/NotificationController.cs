@@ -24,13 +24,11 @@ namespace backend_api.Controllers
         protected APIResponse _response;
         private readonly ILogger<NotificationController> _logger;
         private readonly IResourceService _resourceService;
-        protected int pageSize = 0;
 
         public NotificationController(INotificationRepository notificationRepository,
             IMapper mapper, IResourceService resourceService, IConfiguration configuration,
             ILogger<NotificationController> logger)
         {
-            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
             _mapper = mapper;
             _notificationRepository = notificationRepository;
@@ -104,7 +102,7 @@ namespace backend_api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync(int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10)
         {
             try
             {
