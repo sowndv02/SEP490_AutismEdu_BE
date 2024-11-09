@@ -51,6 +51,7 @@ namespace backend_api.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(id) || userId != id || userId != updatePasswordRequestDTO.Id)
                 {
+                    _logger.LogWarning("Invalid ID or mismatch. Request ID: {RequestId}, Authenticated User ID: {UserId}", id, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -63,6 +64,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating password for User ID: {UserId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -71,12 +73,14 @@ namespace backend_api.Controllers
         }
 
         [HttpDelete("role/{userId}")]
+        [Authorize(SD.ADMIN_ROLE)]
         public async Task<ActionResult<APIResponse>> RemoveRoleByUserId(string userId, UserRoleDTO userRoleDTO)
         {
             try
             {
                 if (!userId.Equals(userRoleDTO.UserId))
                 {
+                    _logger.LogWarning("User ID mismatch. Request ID: {RequestId}, Provided DTO UserId: {UserRoleDTOUserId}", userId, userRoleDTO.UserId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -85,6 +89,7 @@ namespace backend_api.Controllers
                 var result = await _userRepository.RemoveRoleByUserId(userId, userRoleDTO.UserRoleIds);
                 if (!result)
                 {
+                    _logger.LogError("Failed to remove roles for User ID: {UserId}", userId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -99,6 +104,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while removing roles for User ID: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -107,12 +113,14 @@ namespace backend_api.Controllers
         }
 
         [HttpPost("role/{userId}")]
+        [Authorize(SD.ADMIN_ROLE)]
         public async Task<ActionResult<APIResponse>> AddRoleToUser(string userId, UserRoleDTO userRoleDTO)
         {
             try
             {
                 if (!userId.Equals(userRoleDTO.UserId))
                 {
+                    _logger.LogWarning("User ID mismatch. Request ID: {RequestId}, Provided DTO UserId: {UserRoleDTOUserId}", userId, userRoleDTO.UserId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -138,6 +146,7 @@ namespace backend_api.Controllers
                         {
                             if (userRoleDTO.UserRoleIds.Contains(restrictedRole))
                             {
+                                _logger.LogWarning("Attempt to add restricted role {RestrictedRole} to user with role {CurrentRole}", restrictedRole, role);
                                 _response.StatusCode = HttpStatusCode.BadRequest;
                                 _response.IsSuccess = false;
                                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_ADD_ROLE, restrictedRole, role) };
@@ -150,6 +159,7 @@ namespace backend_api.Controllers
                 var result = await _userRepository.AddRoleToUser(userId, userRoleDTO.UserRoleIds);
                 if (!result)
                 {
+                    _logger.LogError("Failed to add roles for User ID: {UserId}", userId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -171,6 +181,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while adding roles for User ID: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -180,12 +191,14 @@ namespace backend_api.Controllers
 
 
         [HttpDelete("claim/{userId}")]
+        [Authorize(SD.ADMIN_ROLE)]
         public async Task<ActionResult<APIResponse>> RemoveClaimByUserId(string userId, UserClaimDTO userClaimDTO)
         {
             try
             {
                 if (!userId.Equals(userClaimDTO.UserId))
                 {
+                    _logger.LogWarning("User ID mismatch. Request ID: {RequestId}, Provided DTO UserId: {UserClaimDTOUserId}", userId, userClaimDTO.UserId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -194,6 +207,7 @@ namespace backend_api.Controllers
                 var result = await _userRepository.RemoveClaimByUserId(userId, userClaimDTO.UserClaimIds);
                 if (!result)
                 {
+                    _logger.LogError("Failed to remove claims for User ID: {UserId}", userId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -208,6 +222,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while removing claims for User ID: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -216,12 +231,14 @@ namespace backend_api.Controllers
         }
 
         [HttpPost("claim/{userId}")]
+        [Authorize(SD.ADMIN_ROLE)]
         public async Task<ActionResult<APIResponse>> AddClaimToUser(string userId, UserClaimDTO userClaimDTO)
         {
             try
             {
                 if (!userId.Equals(userClaimDTO.UserId))
                 {
+                    _logger.LogWarning("User ID mismatch. Request ID: {RequestId}, Provided DTO UserId: {UserClaimDTOUserId}", userId, userClaimDTO.UserId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -230,6 +247,7 @@ namespace backend_api.Controllers
                 var result = await _userRepository.AddClaimToUser(userId, userClaimDTO.UserClaimIds);
                 if (!result)
                 {
+                    _logger.LogError("Failed to add claims for User ID: {UserId}", userId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -245,6 +263,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while adding claims for User ID: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -254,12 +273,14 @@ namespace backend_api.Controllers
 
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> CreateAsync([FromBody] UserCreateDTO createDTO)
         {
             try
             {
                 if (createDTO == null)
                 {
+                    _logger.LogWarning("Received null DTO for user creation.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.USER) };
@@ -268,6 +289,7 @@ namespace backend_api.Controllers
                 var currentUser = await _userRepository.GetUserByEmailAsync(createDTO.Email);
                 if (currentUser != null)
                 {
+                    _logger.LogWarning("User with email {Email} already exists.", createDTO.Email);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.USER) };
@@ -285,6 +307,7 @@ namespace backend_api.Controllers
                 var user = await _userRepository.CreateAsync(model, createDTO.Password);
                 if (user == null)
                 {
+                    _logger.LogError("Failed to create user with email: {Email}", createDTO.Email);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -299,6 +322,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating user with email: {Email}", createDTO.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -314,6 +338,7 @@ namespace backend_api.Controllers
             {
                 if (string.IsNullOrEmpty(id))
                 {
+                    _logger.LogWarning("Received empty or null user ID for claim retrieval.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -327,6 +352,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while fetching claims for user with ID: {UserId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -342,6 +368,7 @@ namespace backend_api.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (updateDTO == null || !id.Equals(userId))
                 {
+                    _logger.LogWarning("Bad Request: User ID mismatch or empty update data. UserId: {UserId}, RequestId: {RequestId}", userId, id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -349,6 +376,14 @@ namespace backend_api.Controllers
                 }
 
                 var model = await _userRepository.GetAsync(x => x.Id == userId);
+                if (model == null)
+                {
+                    _logger.LogWarning("User not found: UserId: {UserId}", userId);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
+                    return NotFound(_response);
+                }
                 if (updateDTO.Image != null)
                 {
                     using var stream = updateDTO.Image.OpenReadStream();
@@ -368,6 +403,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating user information for UserId: {UserId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -456,6 +492,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving users.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -470,18 +507,28 @@ namespace backend_api.Controllers
             {
                 if (string.IsNullOrEmpty(id))
                 {
+                    _logger.LogWarning("Received a bad request with an empty or null id.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
                 ApplicationUser model = await _userRepository.GetAsync(x => x.Id == id, false, "TutorProfile");
+                if (model == null)
+                {
+                    _logger.LogWarning("User not found for Id: {UserId}", id);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
+                    return NotFound(_response);
+                }
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving user with Id: {UserId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -497,12 +544,22 @@ namespace backend_api.Controllers
             {
                 if (string.IsNullOrEmpty(email))
                 {
+                    _logger.LogWarning("Received a bad request with an empty or null email.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EMAIL) };
                     return BadRequest(_response);
                 }
                 ApplicationUser model = await _userRepository.GetAsync(x => x.Email == email, false, null);
+
+                if (model == null)
+                {
+                    _logger.LogWarning("User not found for email: {Email}", email);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
+                    return NotFound(_response);
+                }
                 if (model.Role.Contains(SD.PARENT_ROLE))
                 {
                     _response.Result = _mapper.Map<ApplicationUserDTO>(model);
@@ -511,13 +568,16 @@ namespace backend_api.Controllers
                 }
                 else
                 {
-                    _response.StatusCode = HttpStatusCode.OK;
-                    return Ok(_response);
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    return NotFound(_response);
                 }
 
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving user with email: {Email}", email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -533,18 +593,28 @@ namespace backend_api.Controllers
             {
                 if (string.IsNullOrEmpty(userId))
                 {
+                    _logger.LogWarning("Received a bad request with an empty or null userId.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
                 ApplicationUser model = await _userRepository.LockoutUser(userId);
+                if (model == null)
+                {
+                    _logger.LogWarning("User with userId: {UserId} not found or unable to lockout.", userId);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
+                    return NotFound(_response);
+                }
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while locking out the user with userId: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -559,51 +629,34 @@ namespace backend_api.Controllers
             {
                 if (string.IsNullOrEmpty(userId))
                 {
+                    _logger.LogWarning("Received a bad request with an empty or null userId.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
                 ApplicationUser model = await _userRepository.UnlockUser(userId);
+                if (model == null)
+                {
+                    _logger.LogWarning("User with userId: {UserId} not found or unable to unlock.", userId);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
+                    return NotFound(_response);
+                }
                 _response.Result = _mapper.Map<ApplicationUserDTO>(model);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while unlocking the user with userId: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<APIResponse>> DeleteAsync(string id)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(id)) return BadRequest();
-                var obj = await _userRepository.GetAsync(x => x.Id == id);
-
-                if (obj == null) return NotFound();
-
-                await _userRepository.RemoveAsync(id);
-                _response.StatusCode = HttpStatusCode.NoContent;
-                _response.IsSuccess = true;
-                return Ok(_response);
-
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-
 
         [HttpGet("role/{userId}", Name = "GetRoleByUserId")]
         public async Task<ActionResult<APIResponse>> GetRoleByUserIdAsync(string userId)
@@ -612,6 +665,7 @@ namespace backend_api.Controllers
             {
                 if (string.IsNullOrEmpty(userId))
                 {
+                    _logger.LogWarning("Received a bad request with an empty or null userId.");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -620,6 +674,7 @@ namespace backend_api.Controllers
                 List<IdentityRole> model = await _userRepository.GetRoleByUserId(userId);
                 if (model == null || model.Count == 0)
                 {
+                    _logger.LogWarning("User with userId: {UserId} has no roles.", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.USER_HAVE_NO_ROLE, userId) };
@@ -631,6 +686,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving roles for user with userId: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

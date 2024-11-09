@@ -29,11 +29,13 @@ namespace backend_api.Controllers.v1
         private readonly IResourceService _resourceService;
         private readonly INotificationRepository _notificationRepository;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly ILogger<ReviewController> _logger;
 
         public ReviewController(IMapper mapper, IConfiguration configuration,
             IReviewRepository reviewRepository, IUserRepository userRepository
             , IResourceService resourceService, 
-            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
+            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext, 
+            ILogger<ReviewController> logger)
         {
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
@@ -43,6 +45,7 @@ namespace backend_api.Controllers.v1
             _resourceService = resourceService;
             _notificationRepository = notificationRepository;
             _hubContext = hubContext;
+            _logger = logger;
         }
 
         [HttpGet("GetTutorReviewStats/{tutorId}")]
@@ -52,6 +55,7 @@ namespace backend_api.Controllers.v1
             {
                 if (string.IsNullOrEmpty(tutorId))
                 {
+                    _logger.LogWarning("Bad request: tutorId is null or empty.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -130,6 +134,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving tutor review information for tutorId: {TutorId}", tutorId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -150,6 +155,7 @@ namespace backend_api.Controllers.v1
 
                 if (reviews == null || !reviews.Any())
                 {
+                    _logger.LogWarning("No reviews found.");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.REVIEW) };
@@ -172,6 +178,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving all reviews.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -190,6 +197,7 @@ namespace backend_api.Controllers.v1
 
                 if (reviewCreateDTO == null)
                 {
+                    _logger.LogWarning("Received null ReviewCreateDTO");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
@@ -199,6 +207,7 @@ namespace backend_api.Controllers.v1
                 var existingReview = await _reviewRepository.GetAsync(x => x.TutorId == reviewCreateDTO.TutorId && x.ParentId == userId);
                 if (existingReview != null)
                 {
+                    _logger.LogWarning("Duplicate review detected for tutor {TutorId} by user {UserId}", reviewCreateDTO.TutorId, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.REVIEW) };
@@ -248,6 +257,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred in CreateReviewAsync");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -266,6 +276,7 @@ namespace backend_api.Controllers.v1
 
                 if (reviewUpdateDTO == null || reviewId == 0)
                 {
+                    _logger.LogWarning("Invalid input: ReviewUpdateDTO is null or reviewId is 0");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
@@ -276,6 +287,7 @@ namespace backend_api.Controllers.v1
 
                 if (existingReview == null)
                 {
+                    _logger.LogWarning("Review not found for reviewId {ReviewId} by user {UserId}", reviewId, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_ACTION_REVIEW) };
@@ -295,6 +307,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred in EditReview for reviewId {ReviewId}", reviewId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -315,6 +328,7 @@ namespace backend_api.Controllers.v1
 
                 if (review == null)
                 {
+                    _logger.LogWarning("Review not found for reviewId {ReviewId} by user {UserId}", reviewId, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
@@ -330,6 +344,7 @@ namespace backend_api.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred in DeleteReview for reviewId {ReviewId}", reviewId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

@@ -111,16 +111,18 @@ namespace backend_api.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var (total, list) = await _notificationRepository.GetAllAsync(x => x.ReceiverId == userId, null, pageSize, pageNumber, x => x.CreatedDate, true);
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = total };
+                var resultMapping = _mapper.Map<List<NotificationDTO>>(list);
+                int totalUnRead = await _notificationRepository.TotalUnRead(x => x.ReceiverId == userId && !x.IsRead);
                 _response.IsSuccess = true;
                 _response.Pagination = pagination;
-                _response.Result = _mapper.Map<List<NotificationDTO>>(list);
+                _response.Result = new { result = resultMapping, TotalUnRead = totalUnRead };
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
             {
-                _response.IsSuccess = false;
                 _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
+                _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);

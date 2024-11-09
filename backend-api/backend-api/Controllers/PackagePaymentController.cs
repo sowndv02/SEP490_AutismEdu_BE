@@ -93,10 +93,10 @@ namespace backend_api.Controllers
                     switch (status.ToLower())
                     {
                         case "hide":
-                            filter = filter.AndAlso(x => !x.IsActive && x.IsDeleted);
+                            filter = filter.AndAlso(x => x.IsActive && x.IsHide);
                             break;
                         case "show":
-                            filter = filter.AndAlso(x => x.IsActive && !x.IsDeleted);
+                            filter = filter.AndAlso(x => x.IsActive && !x.IsHide);
                             break;
                     }
                 }
@@ -108,7 +108,7 @@ namespace backend_api.Controllers
                 }
                 else
                 {
-                    var (count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(x => x.IsActive && !x.IsDeleted, "Submitter", null, x => x.Price, true);
+                    var (count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(x => x.IsActive && !x.IsHide, "Submitter", null, x => x.Price, true);
                     result = list;
                 }
                 _response.IsSuccess = true;
@@ -120,46 +120,6 @@ namespace backend_api.Controllers
             {
                 _response.IsSuccess = false;
                 _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-        [HttpDelete("{id:int}")]
-        [Authorize(Roles = SD.MANAGER_ROLE)]
-        public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            try
-            {
-                if (id == 0)
-                {
-                    _logger.LogWarning("Invalid Package payment ID: {Id}. Returning BadRequest.", id);
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
-                    return BadRequest(_response);
-                }
-                var model = await _packagePaymentRepository.GetAsync(x => x.Id == id, true, null);
-                if (model == null)
-                {
-                    _logger.LogWarning("Packet payment not found for ID: {id} and User ID: {userId}. Returning BadRequest.", id, userId);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
-                    return BadRequest(_response);
-                }
-                model.IsDeleted = true;
-                await _packagePaymentRepository.UpdateAsync(model);
-                _response.StatusCode = HttpStatusCode.NoContent;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while deleting Packet payment ID: {id}", id);
-                _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
@@ -193,7 +153,7 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
                     return BadRequest(_response);
                 }
-                model.IsActive = updateActiveDTO.IsActive;
+                model.IsHide = updateActiveDTO.IsActive;
                 model.UpdatedDate = DateTime.Now;
                 await _packagePaymentRepository.UpdateAsync(model);
                 _response.Result = _mapper.Map<PackagePaymentDTO>(model);

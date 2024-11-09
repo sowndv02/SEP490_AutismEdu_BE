@@ -9,6 +9,7 @@ namespace backend_api.Models.DTOs.CreateDTOs
         public int Duration { get; set; }
         public string? Description { get; set; }
         public double Price { get; set; }
+        public bool IsHide { get; set; }
         public int? OriginalId { get; set; }
     }
 }

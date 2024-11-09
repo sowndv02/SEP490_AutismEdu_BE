@@ -49,6 +49,7 @@ namespace backend_api.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (createDTO == null)
                 {
+                    _logger.LogWarning("Invalid BlogCreateDTO received. createDTO is null.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
@@ -143,6 +144,7 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving blogs.");
                 _response.IsSuccess = false;
                 _logger.LogError("Error occurred while get an blog: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;

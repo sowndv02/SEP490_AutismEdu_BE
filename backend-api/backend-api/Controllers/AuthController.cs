@@ -3,6 +3,7 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 
@@ -29,9 +30,13 @@ namespace backend_api.Controllers
         private static string clientId = string.Empty;
         private static string queueName = string.Empty;
         private static string clientSecret = string.Empty;
+        private readonly ILogger<AuthController> _logger;
+        private readonly IResourceService _resourceService;
+
         public AuthController(IUserRepository userRepository, IMapper mapper,
             IConfiguration configuration, IRabbitMQMessageSender messageBus, DateTimeEncryption dateTimeEncryption,
-            TokenEcryption tokenEncryption, FormatString formatString)
+            TokenEcryption tokenEncryption, FormatString formatString, ILogger<AuthController> logger, 
+            IResourceService resourceService)
         {
             validateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
             clientId = configuration.GetValue<string>("Authentication:Google:ClientId");
@@ -44,6 +49,8 @@ namespace backend_api.Controllers
             _messageBus = messageBus;
             _tokenEncryption = tokenEncryption;
             _formatString = formatString;
+            _logger = logger;
+            _resourceService = resourceService; 
         }
 
         [HttpPost("resend-confirm-email")]
@@ -55,31 +62,34 @@ namespace backend_api.Controllers
             {
                 if (model == null)
                 {
+                    _logger.LogWarning("ResendConfirmEmail called with a null model.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EMAIL) };
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetUserByEmailAsync(model.Email);
                 if (user == null)
                 {
+                    _logger.LogWarning($"User not found with email: {model.Email}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { $"User not found with email is {model.Email} invalid." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
                     return BadRequest(_response);
                 }
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
-                _messageBus.SendMessage(new EmailLogger() { Email = user.Email, Subject = "Confirm Email", Message = $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>" }, queueName);
+                _messageBus.SendMessage(new EmailLogger() { Email = user.Email, Subject = "Xác nhận Email", Message = $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>" }, queueName);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while resending the confirmation email.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -94,33 +104,37 @@ namespace backend_api.Controllers
             {
                 if (model == null)
                 {
+                    _logger.LogWarning("ConfirmEmail called with a null model.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Data invalid." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.INFORMATION) };
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetAsync(x => x.Id == model.UserId);
                 if (user == null)
                 {
+                    _logger.LogWarning($"User not found with ID: {model.UserId}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { $"User not found with email is {model.UserId} invalid." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
                     return BadRequest(_response);
                 }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
                 if (DateTime.Now > security.AddMinutes(validateTime))
                 {
+                    _logger.LogWarning($"Link expired for user: {model.UserId}. Expiry time: {security.AddMinutes(validateTime)}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Link Expired." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.LINK_EXPIRED_MESSAGE) };
                     return BadRequest(_response);
                 }
                 var result = await _userRepository.ConfirmEmailAsync(user, model.Code);
                 if (!result)
                 {
+                    _logger.LogError($"Email confirmation failed for user: {model.UserId}. Internal server error.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { "Internal server error!" };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 _response.StatusCode = HttpStatusCode.OK;
@@ -129,9 +143,10 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while confirming the email.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -145,21 +160,24 @@ namespace backend_api.Controllers
             {
                 if (model == null)
                 {
+                    _logger.LogWarning("ResetPassword called with a null model.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Data invalid." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.INFORMATION) };
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetAsync(x => x.Id == model.UserId);
                 if (user == null)
                 {
+                    _logger.LogWarning($"User not found with UserId: {model.UserId}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { $"User not found with UserId is {model.UserId} invalid." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
                     return BadRequest(_response);
                 }
                 else if (user.UserType == SD.GOOGLE_USER)
                 {
+                    _logger.LogWarning($"Google user with UserId: {model.UserId} attempted password reset.");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { $"User gooogle cannot forgot password." };
@@ -168,6 +186,7 @@ namespace backend_api.Controllers
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
                 if (DateTime.Now > security.AddMinutes(validateTime))
                 {
+                    _logger.LogWarning($"Reset password link expired for UserId: {model.UserId}. Expiry time: {security.AddMinutes(validateTime)}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { "Link Expired." };
@@ -176,9 +195,10 @@ namespace backend_api.Controllers
                 var result = await _userRepository.ResetPasswordAsync(user, model.Code, model.Password);
                 if (!result)
                 {
+                    _logger.LogError($"Password reset failed for UserId: {model.UserId}. Internal server error.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
-                    _response.ErrorMessages = new List<string>() { "Internal server error!" };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                 }
                 _response.StatusCode = HttpStatusCode.OK;
@@ -187,9 +207,10 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while resetting the password.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -203,6 +224,7 @@ namespace backend_api.Controllers
             {
                 if (forgotPasswordDTO == null)
                 {
+                    _logger.LogWarning("ForgotPassword called with a null model.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { "Data invalid." };
@@ -211,16 +233,18 @@ namespace backend_api.Controllers
                 var user = await _userRepository.GetUserByEmailAsync(forgotPasswordDTO.Email);
                 if (user == null)
                 {
+                    _logger.LogWarning($"User not found with email: {forgotPasswordDTO.Email}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { $"User not found with email is {forgotPasswordDTO.Email} invalid." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
                     return NotFound(_response);
                 }
                 else if (user.UserType == SD.GOOGLE_USER)
                 {
-                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _logger.LogWarning($"Google user with email: {forgotPasswordDTO.Email} attempted password reset.");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { $"User gooogle cannot forgot password." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.GOOGLE_USER_INVALID_FORGOT_PASSWORD_MESSAGE) };
                     return NotFound(_response);
                 }
                 var code = await _userRepository.GeneratePasswordResetTokenAsync(user);
@@ -230,8 +254,8 @@ namespace backend_api.Controllers
                 _messageBus.SendMessage(new EmailLogger()
                 {
                     Email = forgotPasswordDTO.Email,
-                    Subject = "Reset password",
-                    Message = $"Expiration time 5 minutes. \nPlease reset your password by clicking here: <a href='{callbackUrl}'>link</a>"
+                    Subject = "Đặt lại mật khẩu",
+                    Message = $"Thời gian hết hạn 5 phút. \nĐể đặt lại mật khẩu vui lòng click vào đường dẫn này: <a href='{callbackUrl}'>link</a>"
                 }, queueName);
 
                 _response.StatusCode = HttpStatusCode.OK;
@@ -240,9 +264,10 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while processing the forgot password request.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -256,16 +281,18 @@ namespace backend_api.Controllers
                 var tokenDto = await _userRepository.Login(model);
                 if (tokenDto == null)
                 {
+                    _logger.LogWarning("Login failed for user: {Email}. User is locked out.", model.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "User is currently locked out." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE) };
                     return BadRequest(_response);
                 }
                 if (string.IsNullOrEmpty(tokenDto.AccessToken))
                 {
+                    _logger.LogWarning("Login failed for user: {Email}. Incorrect username or password.", model.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Username or password is incorrect" };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.USERNAME_PASSWORD_INVALID_MESSAGE) };
                     return BadRequest(_response);
                 }
                 _response.StatusCode = HttpStatusCode.OK;
@@ -275,6 +302,15 @@ namespace backend_api.Controllers
             }
             catch (MissingMemberException e)
             {
+                _logger.LogError(e, "Missing member exception occurred during login for user: {Email}", model.Email);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.NotAcceptable;
+                _response.ErrorMessages = new List<string>() { e.Message };
+                return BadRequest(_response);
+            }
+            catch (InvalidOperationException e)
+            {
+                _logger.LogError(e, "Missing member exception occurred during login for user: {Email}", model.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.NotAcceptable;
                 _response.ErrorMessages = new List<string>() { e.Message };
@@ -282,9 +318,10 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while processing the login for user: {Email}", model.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -298,18 +335,20 @@ namespace backend_api.Controllers
                 bool ifUserNameUnique = _userRepository.IsUniqueUser(model.Email);
                 if (!ifUserNameUnique)
                 {
+                    _logger.LogWarning("Registration failed. Email already exists: {Email}", model.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Username already exists" };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.EMAIL_EXISTING_MESSAGE) };
                     return BadRequest(_response);
                 }
 
                 var user = await _userRepository.Register(model);
                 if (user == null)
                 {
+                    _logger.LogWarning("Registration failed for email: {Email}. Error while registering.", model.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Error while registering" };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.REGISTER_FAILED_MESSAGE) };
                     return BadRequest(_response);
                 }
                 user.ImageUrl = SD.URL_IMAGE_DEFAULT_BLOB;
@@ -332,9 +371,10 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while registering user with email: {Email}", model.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -349,9 +389,10 @@ namespace backend_api.Controllers
                     var tokenDTOResponse = await _userRepository.RefreshAccessToken(model);
                     if (tokenDTOResponse == null || string.IsNullOrEmpty(tokenDTOResponse.AccessToken))
                     {
+                        _logger.LogWarning("Token refresh failed: Invalid token for refresh request.");
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string>() { "Token Invalid" };
+                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.APPLICATION_TOKEN) };
                         return BadRequest(_response);
                     }
                     if (isRequiredGoogle && model.AccessTokenGoogle != null)
@@ -360,25 +401,28 @@ namespace backend_api.Controllers
 
                         if (payload == null)
                         {
+                            _logger.LogWarning("Invalid Google token provided.");
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
-                            _response.ErrorMessages = new List<string>() { "Invalid Google token." };
+                            _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_TOKEN) };
                             return BadRequest(_response);
                         }
                         var user = await _userRepository.GetUserByEmailAsync(payload.Email);
                         if (user == null)
                         {
+                            _logger.LogWarning("No user found for Google email: {Email}", payload.Email);
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
-                            _response.ErrorMessages = new List<string>() { "Invalid Google User." };
+                            _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_USER) };
                             return BadRequest(_response);
                         }
                         var refreshToken = await _userRepository.GetRefreshTokenGoogleValid(user.Id);
                         if (refreshToken == null)
                         {
+                            _logger.LogWarning("No valid refresh token found for Google user: {Email}", user.Email);
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
-                            _response.ErrorMessages = new List<string>() { "User dont have any refresh token google valid." };
+                            _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_REFRESH_TOKEN_STRING) };
                             return BadRequest(_response);
                         }
                         var newAccessToken = await GetNewAccessTokenUsingRefreshTokenGoogle(refreshToken);
@@ -391,17 +435,27 @@ namespace backend_api.Controllers
                 }
                 else
                 {
+                    _logger.LogWarning("Model state is invalid for token refresh request.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = new List<string>() { "Error while refresh token" };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.REFRESH_TOKEN_ERROR_MESSAGE) };
                     return BadRequest(_response);
                 }
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
+                _logger.LogError(ex, "An error occurred while trying to generate a new access token for Google.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing the refresh token request.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -420,14 +474,15 @@ namespace backend_api.Controllers
                 }
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.ErrorMessages = new List<string> { "Invalid Input" };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.INFORMATION) };
                 return BadRequest(_response);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while processing the revoke refresh token request.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -442,16 +497,18 @@ namespace backend_api.Controllers
 
                 if (payload == null)
                 {
+                    _logger.LogWarning("Invalid Google token received: {Token}", model?.Token);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Invalid Google token." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_TOKEN) };
                     return BadRequest(_response);
                 }
                 if (payload.ExpirationTimeSeconds == 0)
                 {
+                    _logger.LogWarning("Google token expired for token: {Token}", model?.Token);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = new List<string>() { "Token google expired." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.TOKEN_EXPIRED_MESSAGE) };
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetUserByEmailAsync(payload.Email);
@@ -470,6 +527,7 @@ namespace backend_api.Controllers
 
                     if (user == null)
                     {
+                        _logger.LogError("Error while creating user with email {Email}.", payload.Email);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string>() { "Error while registering" };
@@ -487,9 +545,10 @@ namespace backend_api.Controllers
 
                 if (tokenDto == null)
                 {
+                    _logger.LogWarning("User login failed. User is locked out or invalid credentials for email: {Email}", user.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "User is currently locked out." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE) };
                     return BadRequest(_response);
                 }
 
@@ -500,6 +559,15 @@ namespace backend_api.Controllers
             }
             catch (MissingMemberException e)
             {
+                _logger.LogError(e, "Missing member exception occurred during external login.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.NotAcceptable;
+                _response.ErrorMessages = new List<string>() { e.Message };
+                return BadRequest(_response);
+            }
+            catch (InvalidOperationException e)
+            {
+                _logger.LogError(e, "User locked");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.NotAcceptable;
                 _response.ErrorMessages = new List<string>() { e.Message };
@@ -507,9 +575,10 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while processing the external login request.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
 
@@ -525,25 +594,28 @@ namespace backend_api.Controllers
 
                 if (tokenResponse == null)
                 {
+                    _logger.LogWarning("Invalid Google token received: {Token}", model?.Token);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Invalid Google token." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_TOKEN) };
                     return BadRequest(_response);
                 }
                 var payload = await _userRepository.VerifyGoogleToken(tokenResponse.IdToken);
 
                 if (payload == null)
                 {
+                    _logger.LogWarning("Invalid Google ID token: {IdToken}", tokenResponse?.IdToken);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Invalid Google token." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_TOKEN) };
                     return BadRequest(_response);
                 }
                 if (payload.ExpirationTimeSeconds == 0)
                 {
+                    _logger.LogWarning("Google token expired for token: {IdToken}", tokenResponse?.IdToken);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = new List<string>() { "Token google expired." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.TOKEN_EXPIRED_MESSAGE) };
                     return BadRequest(_response);
                 }
                 var user = await _userRepository.GetUserByEmailAsync(payload.Email);
@@ -562,9 +634,10 @@ namespace backend_api.Controllers
 
                     if (user == null)
                     {
+                        _logger.LogError("Error while creating user with email {Email}.", payload.Email);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string>() { "Error while registering" };
+                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.REGISTER_FAILED_MESSAGE) };
                         return BadRequest(_response);
                     }
                     await _userRepository.UpdateAsync(user);
@@ -579,9 +652,10 @@ namespace backend_api.Controllers
 
                 if (tokenDto == null)
                 {
+                    _logger.LogWarning("User login failed. User is locked out or invalid credentials for email: {Email}", user.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "User is currently locked out." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE) };
                     return BadRequest(_response);
                 }
 
@@ -593,16 +667,34 @@ namespace backend_api.Controllers
             }
             catch (MissingMemberException e)
             {
+                _logger.LogError(e, "Missing member exception occurred during token exchange process.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.NotAcceptable;
                 _response.ErrorMessages = new List<string>() { e.Message };
                 return BadRequest(_response);
             }
-            catch (Exception ex)
+            catch (InvalidOperationException e)
             {
+                _logger.LogError(e, "Missing member exception occurred during login for user");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.NotAcceptable;
+                _response.ErrorMessages = new List<string>() { e.Message };
+                return BadRequest(_response);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "An error occurred while trying to generate a new access token for Google.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing the external login token request.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -616,17 +708,19 @@ namespace backend_api.Controllers
                 var user = await _userRepository.GetUserByEmailAsync(userInfor.Email);
                 if (user == null)
                 {
+                    _logger.LogWarning("No user found with email: {Email}. Invalid data.", userInfor.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Data invalid." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.INFORMATION) };
                     return BadRequest(_response);
                 }
                 var refreshToken = await _userRepository.GetRefreshTokenGoogleValid(user.Id);
                 if (refreshToken == null)
                 {
+                    _logger.LogWarning("No valid refresh token found for user with ID: {UserId}", user.Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "User dont have any refresh token google valid." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.REFRESH_TOKEN_ERROR_MESSAGE) };
                     return BadRequest(_response);
                 }
                 var newAccessToken = await GetNewAccessTokenUsingRefreshTokenGoogle(refreshToken);
@@ -635,42 +729,63 @@ namespace backend_api.Controllers
                 _response.Result = _tokenEncryption.EncryptToken(newAccessToken);
                 return Ok(_response);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
+                _logger.LogError(ex, "An error occurred while trying to generate a new access token for Google.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while trying to generate a new access token for Google.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
         private async Task<GoogleUserInfo> GetGoogleUserInfoAsync(string accessToken)
         {
-            using (var httpClient = new HttpClient())
+            try
             {
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-                var response = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v3/userinfo");
-
-                if (response.IsSuccessStatusCode)
+                using (var httpClient = new HttpClient())
                 {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var userInfo = JsonSerializer.Deserialize<GoogleUserInfo>(jsonResponse);
-                    return userInfo;
-                }
-                else
-                {
-                    var errorResponse = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Error retrieving user info: {errorResponse}");
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+                    var response = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v3/userinfo");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var jsonResponse = await response.Content.ReadAsStringAsync();
+                        var userInfo = JsonSerializer.Deserialize<GoogleUserInfo>(jsonResponse);
+                        return userInfo;
+                    }
+                    else
+                    {
+                        var errorResponse = await response.Content.ReadAsStringAsync();
+                        _logger.LogError("Failed to retrieve Google user info. Status code: {StatusCode}. Error: {ErrorResponse}",
+                                      response.StatusCode, errorResponse);
+                        throw new ArgumentException("Đã xảy ra lỗi khi lấy thông tin người dùng từ Google");
+                    }
                 }
             }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "An error occurred while retrieving Google user info.");
+                throw new ArgumentException("Đã xảy ra lỗi khi lấy thông tin người dùng từ Google");
+            } 
         }
 
         private async Task<string> GetNewAccessTokenUsingRefreshTokenGoogle(string refreshToken)
         {
-            using (var httpClient = new HttpClient())
+            try
             {
-                var requestBody = new Dictionary<string, string>
+                using (var httpClient = new HttpClient())
+                {
+                    var requestBody = new Dictionary<string, string>
                 {
                     { "client_id", clientId },
                     { "client_secret", clientSecret },
@@ -678,21 +793,30 @@ namespace backend_api.Controllers
                     { "grant_type", "refresh_token" }
                 };
 
-                var requestContent = new FormUrlEncodedContent(requestBody);
+                    var requestContent = new FormUrlEncodedContent(requestBody);
 
-                var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", requestContent);
+                    var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", requestContent);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent);
-                    return tokenResponse.AccessToken;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var responseContent = await response.Content.ReadAsStringAsync();
+                        var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent);
+                        return tokenResponse.AccessToken;
+                    }
+                    else
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync();
+
+                        _logger.LogError("Failed to refresh Google access token. Status code: {StatusCode}. Error: {ErrorContent}",
+                                          response.StatusCode, errorContent);
+                        throw new ArgumentException($"Đã xảy ra lỗi khi lấy accesstoken từ refresh token từ Google");
+                    }
                 }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Error refreshing token: {errorContent}");
-                }
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "An error occurred while refreshing Google access token.");
+                throw new ArgumentException($"Đã xảy ra lỗi khi lấy accesstoken từ refresh token từ Google");
             }
         }
 
@@ -720,12 +844,23 @@ namespace backend_api.Controllers
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine("Response Content: " + responseContent);
-                var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent);
-                return tokenResponse;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent);
+                    return tokenResponse;
+                }
+                else
+                {
+                    _logger.LogError("Failed to get token from Google. Status Code: {StatusCode}, Response: {ResponseContent}",
+                                      response.StatusCode, responseContent);
+                    throw new ArgumentException($" Đã xảy ra lỗi khi lấy thông tin token từ Google");
+                }
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                _logger.LogError(ex, "An error occurred while exchanging authorization code for Google token.");
+                throw new ArgumentException($" Đã xảy ra lỗi khi lấy thông tin token từ Google");
             }
         }
 
