@@ -92,9 +92,11 @@ namespace backend_api.Controllers.v1
                 Expression<Func<TestResult, object>> orderByQuery = u => true;
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
 
+                filter = x => x.ParentId.Equals(userId);
+
                 if (!string.IsNullOrEmpty(search))
                 {
-                    filter = filter.AndAlso(u => u.Test.TestName.Contains(search));
+                    filter.AndAlso(u => u.Test.TestName.Contains(search));
                 }
 
                 if (orderBy != null)
