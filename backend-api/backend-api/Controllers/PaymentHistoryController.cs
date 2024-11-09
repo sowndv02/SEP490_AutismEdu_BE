@@ -130,11 +130,11 @@ namespace backend_api.Controllers
                 }
                 if(startDate != null)
                 {
-                    filter = filter.AndAlso(x => x.CreatedDate >= startDate);
+                    filter = filter.AndAlso(x => x.CreatedDate.Date >= startDate.Value.Date);
                 }
                 if (endDate != null) 
                 {
-                    filter = filter.AndAlso(x => x.CreatedDate <= endDate);
+                    filter = filter.AndAlso(x => x.CreatedDate.Date <= endDate.Value.Date);
                 } 
                 var result = new List<PaymentHistory>();
                 if (userRoles != null && (userRoles.Contains(SD.MANAGER_ROLE) || userRoles.Contains(SD.STAFF_ROLE)))
