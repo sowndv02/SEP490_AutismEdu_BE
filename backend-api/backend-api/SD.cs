@@ -315,5 +315,6 @@
         public const string AGE_FROM = "ageFrom";
         public const string DATE_FROM = "dateFrom";
         public const string DATE_TO = "dateTo";
+        public const string POINT = "point";
     }
 }
