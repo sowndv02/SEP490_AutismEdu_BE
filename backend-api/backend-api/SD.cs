@@ -146,6 +146,11 @@
         public const string PACKAGE_PAYMENT = "Gói thanh toán";
 		public const string TEST_RESULT = "Kết quả bài test";
 		public const string NOTIFICATION = "Thông báo";
+		public const string INFORMATION = "Thông tin";
+		public const string APPLICATION_TOKEN = "Token hệ thống";
+		public const string GOOGLE_TOKEN = "Token Google";
+		public const string GOOGLE_REFRESH_TOKEN_STRING = "Refresh Token Google";
+		public const string ROLE = "Vai trò";
 
 
 
@@ -173,9 +178,15 @@
         public const string GG_CANNOT_CHANGE_PASSWORD = "GG_CANNOT_CHANGE_PASSWORD";
         public const string CHANGE_PASS_FAIL = "CHANGE_PASS_FAIL";
         public const string ADD_ROLE_USER_TO_USER = "ADD_ROLE_USER_TO_USER";
-        public const string USER_IS_LOCKED_OUT = "USER_IS_LOCKED_OUT";
         public const string PROGRESS_REPORT_MODIFICATION_EXPIRED = "PROGRESS_REPORT_MODIFICATION_EXPIRED";
         public const string NEED_PAYMENT_MESSAGE = "NEED_PAYMENT_MESSAGE";
+        public const string LINK_EXPIRED_MESSAGE = "LINK_EXPIRED_MESSAGE";
+        public const string GOOGLE_USER_INVALID_FORGOT_PASSWORD_MESSAGE = "GOOGLE_USER_INVALID_FORGOT_PASSWORD_MESSAGE";
+        public const string ACCOUNT_IS_LOCK_MESSAGE = "ACCOUNT_IS_LOCK_MESSAGE";
+        public const string USERNAME_PASSWORD_INVALID_MESSAGE = "USERNAME_PASSWORD_INVALID_MESSAGE";
+        public const string REGISTER_FAILED_MESSAGE = "REGISTER_FAILED_MESSAGE";
+        public const string REFRESH_TOKEN_ERROR_MESSAGE = "REFRESH_TOKEN_ERROR_MESSAGE";
+        public const string TOKEN_EXPIRED_MESSAGE = "TOKEN_EXPIRED_MESSAGE";
 
         // const notification
         public const string CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION = "CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION";

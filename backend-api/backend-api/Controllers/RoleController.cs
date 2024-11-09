@@ -3,7 +3,9 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using backend_api.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -18,11 +20,14 @@ namespace backend_api.Controllers
         private readonly IRoleRepository _roleRepository;
         private readonly FormatString _formatString;
         private readonly IUserRepository _userRepository;
+        private readonly ILogger<RoleController> _logger;
+        private readonly IResourceService _resourceService;
         protected APIResponse _response;
         private readonly IMapper _mapper;
         protected int takeValue = 0;
         public RoleController(IRoleRepository roleRepository, IMapper mapper, IUserRepository userRepository,
-            IConfiguration configuration, FormatString formatString)
+            IConfiguration configuration, FormatString formatString, ILogger<RoleController> logger, 
+            IResourceService resourceService)
         {
             takeValue = configuration.GetValue<int>("APIConfig:TakeValue");
             _response = new();
@@ -30,6 +35,8 @@ namespace backend_api.Controllers
             _roleRepository = roleRepository;
             _userRepository = userRepository;
             _formatString = formatString;
+            _logger = logger;
+            _resourceService= resourceService;
         }
 
         [HttpGet]
@@ -51,9 +58,10 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred in GetAllRolesAsync");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
@@ -65,6 +73,7 @@ namespace backend_api.Controllers
             {
                 if (string.IsNullOrEmpty(id))
                 {
+                    _logger.LogWarning("Invalid Role ID provided: {RoleId}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
@@ -73,6 +82,7 @@ namespace backend_api.Controllers
                 IdentityRole model = await _roleRepository.GetByIdAsync(id);
                 if (model == null)
                 {
+                    _logger.LogWarning("Role with ID: {RoleId} not found", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
@@ -89,26 +99,36 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving role with ID: {RoleId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
         [HttpPost]
+        [Authorize(SD.ADMIN_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateRoleAsync(RoleCreateDTO roleDTO)
         {
             try
             {
                 if (await _roleRepository.GetByNameAsync(roleDTO.Name.Trim()) != null)
                 {
+                    _logger.LogWarning("Role with name {RoleName} already exists", roleDTO.Name);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { $"{roleDTO.Name} tồn tại!" };
                     return BadRequest(_response);
                 }
-                if (roleDTO == null) return BadRequest(roleDTO);
+                if (roleDTO == null)
+                {
+                    _logger.LogWarning("RoleDTO is null, returning BadRequest");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ROLE) };
+                    return BadRequest(_response);
+                }
                 roleDTO.Name = _formatString.FormatStringUpperCaseFirstChar(roleDTO.Name);
                 IdentityRole model = _mapper.Map<IdentityRole>(roleDTO);
                 await _roleRepository.CreateAsync(model);
@@ -118,14 +138,16 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating role with name: {RoleName}", roleDTO?.Name);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
 
         [HttpDelete("{roleId}")]
+        [Authorize(SD.ADMIN_ROLE)]
         public async Task<IActionResult> DeleteRoleAsync(string roleId)
         {
 
@@ -137,12 +159,14 @@ namespace backend_api.Controllers
                     bool result = await _roleRepository.RemoveAsync(role);
                     if (result)
                     {
+                        _logger.LogInformation("Role with ID: {RoleId} removed successfully.", roleId);
                         _response.IsSuccess = true;
                         _response.StatusCode = HttpStatusCode.NoContent;
                         return Ok(_response);
                     }
                     else
                     {
+                        _logger.LogWarning("Failed to remove role with ID: {RoleId}. It might be assigned to users.", roleId);
                         _response.IsSuccess = false;
                         _response.StatusCode = HttpStatusCode.NotFound;
                         _response.ErrorMessages = new List<string>() { $"Không thể xóa vai trò này vì có những người dùng được chỉ định cho vai trò này với ID vai trò là: {roleId}" };
@@ -151,6 +175,7 @@ namespace backend_api.Controllers
                 }
                 else
                 {
+                    _logger.LogWarning("Role with ID: {RoleId} not found.", roleId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.ErrorMessages = new List<string>() { SD.NOT_FOUND_MESSAGE };
@@ -160,9 +185,10 @@ namespace backend_api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while deleting role with ID: {RoleId}", roleId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { ex.Message };
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

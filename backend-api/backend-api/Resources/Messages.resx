@@ -225,4 +225,25 @@
   <data name="NEED_PAYMENT_MESSAGE" xml:space="preserve">
     <value>Cần phải thanh toán. Vui lòng thanh toán để tiếp tục.</value>
   </data>
+  <data name="LINK_EXPIRED_MESSAGE" xml:space="preserve">
+    <value>LIên kết đã hết hạn.</value>
+  </data>
+  <data name="GOOGLE_USER_INVALID_FORGOT_PASSWORD_MESSAGE" xml:space="preserve">
+    <value>Người dùng Google không thể truy cập quên mật khẩu.</value>
+  </data>
+  <data name="ACCOUNT_IS_LOCK_MESSAGE" xml:space="preserve">
+    <value>Tài khoản của bạn đang bị khóa.</value>
+  </data>
+  <data name="USERNAME_PASSWORD_INVALID_MESSAGE" xml:space="preserve">
+    <value>Email hoặc mật khẩu không đúng.</value>
+  </data>
+  <data name="REGISTER_FAILED_MESSAGE" xml:space="preserve">
+    <value>Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại sau.</value>
+  </data>
+  <data name="REFRESH_TOKEN_ERROR_MESSAGE" xml:space="preserve">
+    <value>Đã xảy ra lỗi với refresh token.</value>
+  </data>
+  <data name="TOKEN_EXPIRED_MESSAGE" xml:space="preserve">
+    <value>Token đã hết hạn,</value>
+  </data>
 </root>
