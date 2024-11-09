@@ -483,7 +483,7 @@ namespace backend_api.Controllers.v1
                 if (childs.list == null || !childs.list.Any())
                 {
                     _logger.LogInformation("No children found for the parent. Returning empty result.");
-                    _response.Result = null;
+                    _response.Result = new List<StudentProfile>();
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
