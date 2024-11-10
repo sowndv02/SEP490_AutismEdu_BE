@@ -4,6 +4,8 @@ using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Identity;
 using System.Net;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace backend_api.Middlewares
 {
@@ -20,40 +22,34 @@ namespace backend_api.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
+            // Check if the user is authenticated
             if (context.User.Identity.IsAuthenticated)
             {
-                var userId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                // Check if the endpoint requires authorization
+                var endpoint = context.Features.Get<IEndpointFeature>()?.Endpoint;
+                var authorizeData = endpoint?.Metadata.GetMetadata<IAuthorizeData>();
 
-                if (!string.IsNullOrEmpty(userId))
+                if (authorizeData != null) // Only check if [Authorize] is applied
                 {
-                    var roleClaim = context.User?.FindFirst(ClaimTypes.Role)?.Value;
-                    if (roleClaim != null && roleClaim == SD.TUTOR_ROLE) 
+                    var userId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                    if (!string.IsNullOrEmpty(userId))
                     {
-                        using (var scope = _serviceProvider.CreateScope())
+                        var roleClaim = context.User?.FindFirst(ClaimTypes.Role)?.Value;
+                        if (roleClaim != null && roleClaim == SD.TUTOR_ROLE)
                         {
-                            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-                            var paymentHistoryRepository = scope.ServiceProvider.GetRequiredService<IPaymentHistoryRepository>();
-                            var resourceService = scope.ServiceProvider.GetRequiredService<IResourceService>();
-
-                            var user = await userRepository.GetAsync(x => x.Id == userId);
-
-                            if (user != null)
+                            using (var scope = _serviceProvider.CreateScope())
                             {
-                                bool isTrialAccount = user.CreatedDate <= DateTime.Now.AddDays(-30);
-                                var (total, list) = await paymentHistoryRepository.GetAllAsync(
-                                    x => x.SubmitterId == userId,
-                                    "PackagePayment",
-                                    pageSize: 1,
-                                    pageNumber: 1,
-                                    x => x.CreatedDate,
-                                    true
-                                );
+                                var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+                                var paymentHistoryRepository = scope.ServiceProvider.GetRequiredService<IPaymentHistoryRepository>();
+                                var resourceService = scope.ServiceProvider.GetRequiredService<IResourceService>();
 
-                                var latestPaymentHistory = list.FirstOrDefault();
-                                if (latestPaymentHistory != null)
+                                var user = await userRepository.GetAsync(x => x.Id == userId);
+
+                                if (user != null)
                                 {
-                                    bool needPaymentPackage = latestPaymentHistory.ExpirationDate <= DateTime.Now;
-                                    if (needPaymentPackage && !isTrialAccount)
+                                    bool isTrialAccount = user.CreatedDate.Date >= DateTime.Now.AddDays(-30).Date;
+                                    if (!isTrialAccount)
                                     {
                                         var response = new APIResponse()
                                         {
@@ -63,14 +59,45 @@ namespace backend_api.Middlewares
                                         };
 
                                         context.Response.ContentType = "application/json";
+                                        context.Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
                                         await context.Response.WriteAsJsonAsync(response);
+                                        await context.Response.CompleteAsync();
                                         return;
+                                    }
+
+                                    var (total, list) = await paymentHistoryRepository.GetAllAsync(
+                                        x => x.SubmitterId == userId,
+                                        "PackagePayment",
+                                        pageSize: 1,
+                                        pageNumber: 1,
+                                        x => x.CreatedDate,
+                                        true
+                                    );
+
+                                    var latestPaymentHistory = list.FirstOrDefault();
+                                    if (latestPaymentHistory != null)
+                                    {
+                                        bool needPaymentPackage = latestPaymentHistory.ExpirationDate <= DateTime.Now;
+                                        if (needPaymentPackage)
+                                        {
+                                            var response = new APIResponse()
+                                            {
+                                                StatusCode = HttpStatusCode.PaymentRequired,
+                                                ErrorMessages = new List<string>() { resourceService.GetString(SD.NEED_PAYMENT_MESSAGE) },
+                                                IsSuccess = false
+                                            };
+
+                                            context.Response.ContentType = "application/json";
+                                            context.Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
+                                            await context.Response.WriteAsJsonAsync(response);
+                                            await context.Response.CompleteAsync();
+                                            return;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    
                 }
             }
 

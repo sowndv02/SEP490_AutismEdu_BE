@@ -14,6 +14,7 @@ namespace backend_api.Models
         public Tutor Tutor { get; set; }
         [ForeignKey(nameof(ParentId))]
         public ApplicationUser Parent { get; set; }
+        public bool IsDeleted { get; set; } = false;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
     }

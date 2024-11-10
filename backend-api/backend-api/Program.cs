@@ -245,11 +245,10 @@ app.UseSwaggerUI(options =>
 });
 app.UseCors("AllowSpecificOrigin");
 
-app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
-app.UseMiddleware<RequestTimeLoggingMidleware>();
-app.UseMiddleware<ExceptionMiddleware>();
-app.UseMiddleware<RequestLoggingMiddleware>();
-app.UseMiddleware<PaymentCheckerMiddleware>();
+//app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
+//app.UseMiddleware<RequestTimeLoggingMidleware>();
+//app.UseMiddleware<ExceptionMiddleware>();
+//app.UseMiddleware<RequestLoggingMiddleware>();
 
 
 app.UseStaticFiles();
@@ -271,6 +270,7 @@ app.MapHub<NotificationHub>("/hub/notifications");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<PaymentCheckerMiddleware>();
 
 
 app.MapControllers();
