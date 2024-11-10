@@ -337,7 +337,7 @@ namespace backend_api.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (changeStatusDTO == null)
                 {
-                    _logger.LogWarning($"Received a bad request for tutor request with ID {changeStatusDTO.Id}.");
+                    _logger.LogWarning($"Received a bad request for tutor request with ID {id}.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST) };
