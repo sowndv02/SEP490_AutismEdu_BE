@@ -278,6 +278,7 @@ namespace backend_api.Controllers.v1
                     .Replace("@Model.RequestDescription", model.Description);
                 _messageBus.SendMessage(new EmailLogger()
                 {
+                    UserId = parent.Id,
                     Email = parent.Email,
                     Subject = subjectForParent,
                     Message = parentHtmlMessage
@@ -294,7 +295,7 @@ namespace backend_api.Controllers.v1
                     .Replace("@Model.ParentFullName", parent.FullName)
                     .Replace("@Model.RequestDescription", model.Description);
                 _messageBus.SendMessage(
-                    new EmailLogger() { Email = tutor.Email, Subject = subjectForTutor, Message = tutorHtmlMessage }, queueName);
+                    new EmailLogger() {UserId = tutor.Id, Email = tutor.Email, Subject = subjectForTutor, Message = tutorHtmlMessage }, queueName);
 
                 // Notification
                 var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
@@ -364,6 +365,7 @@ namespace backend_api.Controllers.v1
                         ;
                     _messageBus.SendMessage(new EmailLogger()
                     {
+                        UserId = model.ParentId,
                         Email = model.Parent.Email,
                         Subject = subject,
                         Message = htmlMessage
@@ -425,6 +427,7 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.RejectionReason", reason);
                     _messageBus.SendMessage(new EmailLogger()
                     {
+                        UserId = model.ParentId,
                         Email = model.Parent.Email,
                         Subject = subject,
                         Message = htmlMessage

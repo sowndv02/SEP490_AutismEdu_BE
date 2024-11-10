@@ -151,6 +151,7 @@
 		public const string GOOGLE_TOKEN = "Token Google";
 		public const string GOOGLE_REFRESH_TOKEN_STRING = "Refresh Token Google";
 		public const string ROLE = "Vai trò";
+		public const string REPORT = "Báo cáo";
 
 
 
@@ -321,6 +322,12 @@
         public const string STATUS_REJECT = "reject";
         public const string STATUS_ALL = "all";
 
+        // type string
+        public const string TYPE_REVIEW = "review";
+        public const string TYPE_TUTOR = "tutor";
+        public const string TYPE_UNLOCKREQUEST = "account";
+        public const string TYPE_ALL = "all";
+
         public const string STATUS_APPROVE_VIE = "được chấp nhận";
         public const string STATUS_REJECT_VIE = "bị từ chối";
 
@@ -335,5 +342,11 @@
         public const string DATE_FROM = "dateFrom";
         public const string DATE_TO = "dateTo";
         public const string POINT = "point";
+
+        // const Title
+        public const string REPORT_REVIEW_TITLE = "Báo cáo đánh giá";
+        public const string REPORT_TUTOR_TITLE = "Báo cáo gia sư";
+        public const string REPORT_UNLOCKREQUEST_TITLE = "Mở khóa tài khoản";
+
     }
 }

@@ -223,6 +223,7 @@ namespace backend_api.Controllers.v1
 
                     _messageBus.SendMessage(new EmailLogger()
                     {
+                        UserId = parent.Id,
                         Email = parent.Email,
                         Subject = subject,
                         Message = htmlMessage
@@ -354,6 +355,7 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
                     _messageBus.SendMessage(new EmailLogger()
                     {
+                        UserId = child.ParentId,
                         Email = child.Parent.Email,
                         Subject = subject,
                         Message = htmlMessage

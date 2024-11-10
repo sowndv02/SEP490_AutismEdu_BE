@@ -79,7 +79,7 @@ namespace backend_api.Controllers
                 }
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
-                _messageBus.SendMessage(new EmailLogger() { Email = user.Email, Subject = "Xác nhận Email", Message = $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>" }, queueName);
+                _messageBus.SendMessage(new EmailLogger() { UserId = user.Id, Email = user.Email, Subject = "Xác nhận Email", Message = $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>" }, queueName);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -253,6 +253,7 @@ namespace backend_api.Controllers
 
                 _messageBus.SendMessage(new EmailLogger()
                 {
+                    UserId = user.Id,
                     Email = forgotPasswordDTO.Email,
                     Subject = "Đặt lại mật khẩu",
                     Message = $"Thời gian hết hạn 5 phút. \nĐể đặt lại mật khẩu vui lòng click vào đường dẫn này: <a href='{callbackUrl}'>link</a>"
@@ -360,6 +361,7 @@ namespace backend_api.Controllers
                 var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
                 _messageBus.SendMessage(new EmailLogger()
                 {
+                    UserId = user.Id,
                     Email = user.Email,
                     Subject = "Confirm Email",
                     Message = $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>"

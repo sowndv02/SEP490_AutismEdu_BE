@@ -18,7 +18,7 @@ namespace backend_api.Models
         public string? Description { get; set; }
         public Status RequestStatus { get; set; } = Status.PENDING;
         public string? RejectionReason { get; set; }
-        public RejectType RejectType { get; set; }
+        public RejectType? RejectType { get; set; }
         public string TutorId { get; set; }
         [ForeignKey(nameof(TutorId))]
         public Tutor Tutor { get; set; }

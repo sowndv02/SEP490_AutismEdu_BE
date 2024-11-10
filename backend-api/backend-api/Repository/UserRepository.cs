@@ -262,7 +262,7 @@ namespace backend_api.Repository
 
         public async Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO, bool checkPassword = true, string refreshTokenGoogle = null)
         {
-            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName.ToLower() == loginRequestDTO.Email.ToLower());
+            var user = await _userManager.FindByEmailAsync(loginRequestDTO.Email);
             if (user == null)
             {
                 return new TokenDTO()

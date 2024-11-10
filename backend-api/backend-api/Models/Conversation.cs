@@ -11,7 +11,7 @@ namespace backend_api.Models
         public string ParentId { get; set; }
         public string TutorId { get; set; }
         [ForeignKey(nameof(TutorId))]
-        public ApplicationUser Tutor { get; set; }
+        public Tutor Tutor { get; set; }
         [ForeignKey(nameof(ParentId))]
         public ApplicationUser Parent { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;

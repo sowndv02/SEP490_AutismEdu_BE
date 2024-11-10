@@ -12,8 +12,8 @@ using backend_api.Data;
 namespace backend_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241107165555_InitDB_v2")]
-    partial class InitDB_v2
+    [Migration("20241110041911_initdb")]
+    partial class initdb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -504,6 +504,9 @@ namespace backend_api.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime>("PublishDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -735,7 +738,12 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("EmailLoggers");
                 });
@@ -872,7 +880,43 @@ namespace backend_api.Migrations
                     b.ToTable("InitialAndFinalAssessmentResult");
                 });
 
-            modelBuilder.Entity("backend_api.Models.PacketPayment", b =>
+            modelBuilder.Entity("backend_api.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UrlDetail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("backend_api.Models.PackagePayment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -892,7 +936,7 @@ namespace backend_api.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool>("IsHide")
                         .HasColumnType("bit");
 
                     b.Property<int?>("OriginalId")
@@ -921,7 +965,7 @@ namespace backend_api.Migrations
 
                     b.HasIndex("SubmitterId");
 
-                    b.ToTable("PacketPayments");
+                    b.ToTable("PackagePayments");
                 });
 
             modelBuilder.Entity("backend_api.Models.PaymentHistory", b =>
@@ -950,7 +994,10 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PackagePeymentId")
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PackagePaymentId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("PaymentDate")
@@ -968,7 +1015,7 @@ namespace backend_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PackagePeymentId");
+                    b.HasIndex("PackagePaymentId");
 
                     b.HasIndex("SubmitterId");
 
@@ -1065,31 +1112,50 @@ namespace backend_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Desc")
+                    b.Property<string>("Comments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Reply")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("HandlerId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
+                    b.Property<int>("ReportType")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("ReporterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("ReviewId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
+                    b.Property<string>("TutorId")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("HandlerId");
+
+                    b.HasIndex("ReporterId");
+
+                    b.HasIndex("ReviewId");
+
+                    b.HasIndex("TutorId");
 
                     b.ToTable("Reports");
                 });
@@ -1336,7 +1402,7 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -1419,6 +1485,9 @@ namespace backend_api.Migrations
 
                     b.Property<int>("TestId")
                         .HasColumnType("int");
+
+                    b.Property<double>("TotalPoint")
+                        .HasColumnType("float");
 
                     b.HasKey("Id");
 
@@ -1656,7 +1725,7 @@ namespace backend_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("RejectType")
+                    b.Property<int?>("RejectType")
                         .HasColumnType("int");
 
                     b.Property<string>("RejectionReason")
@@ -2006,6 +2075,15 @@ namespace backend_api.Migrations
                     b.Navigation("TutorRegistrationRequest");
                 });
 
+            modelBuilder.Entity("backend_api.Models.EmailLogger", b =>
+                {
+                    b.HasOne("backend_api.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("backend_api.Models.Exercise", b =>
                 {
                     b.HasOne("backend_api.Models.ExerciseType", "ExerciseType")
@@ -2075,9 +2153,20 @@ namespace backend_api.Migrations
                     b.Navigation("StudentProfile");
                 });
 
-            modelBuilder.Entity("backend_api.Models.PacketPayment", b =>
+            modelBuilder.Entity("backend_api.Models.Notification", b =>
                 {
-                    b.HasOne("backend_api.Models.PacketPayment", "Original")
+                    b.HasOne("backend_api.Models.ApplicationUser", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+                });
+
+            modelBuilder.Entity("backend_api.Models.PackagePayment", b =>
+                {
+                    b.HasOne("backend_api.Models.PackagePayment", "Original")
                         .WithMany()
                         .HasForeignKey("OriginalId");
 
@@ -2094,9 +2183,9 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.PaymentHistory", b =>
                 {
-                    b.HasOne("backend_api.Models.PacketPayment", "PacketPayment")
+                    b.HasOne("backend_api.Models.PackagePayment", "PackagePayment")
                         .WithMany()
-                        .HasForeignKey("PackagePeymentId")
+                        .HasForeignKey("PackagePaymentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2106,7 +2195,7 @@ namespace backend_api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PacketPayment");
+                    b.Navigation("PackagePayment");
 
                     b.Navigation("Submitter");
                 });
@@ -2143,13 +2232,29 @@ namespace backend_api.Migrations
 
             modelBuilder.Entity("backend_api.Models.Report", b =>
                 {
-                    b.HasOne("backend_api.Models.ApplicationUser", "User")
+                    b.HasOne("backend_api.Models.ApplicationUser", "Handler")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("HandlerId");
 
-                    b.Navigation("User");
+                    b.HasOne("backend_api.Models.ApplicationUser", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId");
+
+                    b.HasOne("backend_api.Models.Review", "Review")
+                        .WithMany()
+                        .HasForeignKey("ReviewId");
+
+                    b.HasOne("backend_api.Models.Tutor", "Tutor")
+                        .WithMany()
+                        .HasForeignKey("TutorId");
+
+                    b.Navigation("Handler");
+
+                    b.Navigation("Reporter");
+
+                    b.Navigation("Review");
+
+                    b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("backend_api.Models.ReportMedia", b =>

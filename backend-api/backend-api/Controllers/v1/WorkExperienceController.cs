@@ -350,6 +350,7 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.IsApproved", Status.APPROVE.ToString());
                     _messageBus.SendMessage(new EmailLogger()
                     {
+                        UserId = tutor.Id,
                         Email = tutor.Email,
                         Subject = subject,
                         Message = htmlMessage
@@ -381,6 +382,7 @@ namespace backend_api.Controllers.v1
                         .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
                     _messageBus.SendMessage(new EmailLogger()
                     {
+                        UserId = tutor.Id,
                         Email = tutor.Email,
                         Subject = subject,
                         Message = htmlMessage

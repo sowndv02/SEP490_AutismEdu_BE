@@ -278,6 +278,15 @@ namespace backend_api.Mapper
             CreateMap<TestResultDetail, TestResultDetailDTO>().ReverseMap();
             CreateMap<NotificationDTO, Notification>().ReverseMap();
             CreateMap<BlogDTO, Blog>().ReverseMap();
+
+            CreateMap<Report, ReportReviewCreateDTO>();
+            CreateMap<Report, ReportReviewDTO>();
+            CreateMap<Report, ReportTutorCreateDTO>();
+            CreateMap<Report, ReportTutorDTO>();
+            CreateMap<Report, ReportAppealBanCreateDTO>();
+            CreateMap<Report, ReportAppealBanDTO>();
+            CreateMap<Report, ReportDTO>();
+            CreateMap<ReportMedia, ReportMediaDTO>();
         }
     }
 }
