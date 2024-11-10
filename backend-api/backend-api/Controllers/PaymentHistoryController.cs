@@ -94,6 +94,32 @@ namespace backend_api.Controllers
             }
         }
 
+
+        [HttpGet("currentUserPaymentHistory")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetCurrentPaymentHistoryAsync()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var result = await _paymentHistoryRepository.GetAllNotPagingAsync(x => x.SubmitterId == userId && x.ExpirationDate.Date >= DateTime.Now.Date, null, null, x => x.CreatedDate, true);
+                if(result.list.FirstOrDefault() != null) _response.Result = _mapper.Map<PaymentHistoryDTO>(result.list.FirstOrDefault());
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
+
         [HttpGet]
         [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int? paymentId = 0, int pageNumber = 1)

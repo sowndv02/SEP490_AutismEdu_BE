@@ -22,6 +22,14 @@ namespace backend_api.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
+
+            if (context.Request.Path.StartsWithSegments("/api/v1/PaymentHistory") ||
+                context.Request.Path.StartsWithSegments("/api/v1/PackagePayment"))
+            {
+                await _next(context);
+                return;
+            }
+
             // Check if the user is authenticated
             if (context.User.Identity.IsAuthenticated)
             {

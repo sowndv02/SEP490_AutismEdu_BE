@@ -9,8 +9,8 @@
         public DateTime PaymentDate { get; set; }
         public string BankTransactionId { get; set; }
         public string BankAccount { get; set; }
-        public PackagePayment PackagePayment { get; set; }
-        public ApplicationUser Submitter { get; set; }
+        public PackagePaymentDTO PackagePayment { get; set; }
+        public ApplicationUserDTO Submitter { get; set; }
         public DateTime ExpirationDate { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
