@@ -330,7 +330,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> ApproveOrRejectWorkExperienceRequest(ChangeStatusTutorRequestDTO changeStatusDTO)
+        public async Task<IActionResult> ApproveOrRejectWorkExperienceRequest(int id, ChangeStatusTutorRequestDTO changeStatusDTO)
         {
             try
             {
