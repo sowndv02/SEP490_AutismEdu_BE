@@ -16,7 +16,7 @@ namespace backend_api.Models
         public string TutorId { get; set; }
         public Tutor Tutor { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public DateTime UpdatedDate { get; set; }
+        public DateTime? UpdatedDate { get; set; }
         [NotMapped]
         public List<ExerciseTypeDTO> ExerciseTypes { get; set; }
     }

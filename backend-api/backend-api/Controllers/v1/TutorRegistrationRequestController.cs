@@ -363,6 +363,7 @@ namespace backend_api.Controllers.v1
 
                     _messageBus.SendMessage(new EmailLogger()
                     {
+                        UserId = user.Id,
                         Email = model.Email,
                         Subject = subject,
                         Message = htmlMessage

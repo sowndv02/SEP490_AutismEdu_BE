@@ -11,9 +11,10 @@ namespace backend_api.Models
         public int Id { get; set; }
         public string? ReporterId { get; set; }
         public string Title { get; set; }
+        public string? Email { get; set; }
         public ReportType ReportType { get; set; }
         public string Description { get; set; }
-        public Status Status { get; set; }
+        public Status Status { get; set; } = SD.Status.PENDING;
         public string? Comments { get; set; }
         public string? HandlerId { get; set; }
         [ForeignKey(nameof(HandlerId))]
@@ -26,6 +27,7 @@ namespace backend_api.Models
         public Review Review { get; set; }
         [ForeignKey(nameof(ReporterId))]
         public ApplicationUser Reporter { get; set; }
+        public List<ReportMedia>? ReportMedias { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
     }
