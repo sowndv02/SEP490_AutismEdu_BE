@@ -41,7 +41,7 @@ namespace backend_api.Controllers
 
 
         [HttpPost]
-        [Authorize($"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] BlogCreateDTO createDTO)
         {
             try
@@ -65,7 +65,8 @@ namespace backend_api.Controllers
                     string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(createDTO.ImageDisplay.FileName)));
                     model.UrlImageDisplay = mediaUrl;
                 }
-                await _blogRepository.CreateAsync(model);
+                var result = await _blogRepository.CreateAsync(model);
+                var returnModel = await _blogRepository.GetAsync(x => x.Id == result.Id, false, "Author", null);
                 _response.IsSuccess = true;
                 _response.Result = _mapper.Map<BlogDTO>(model);
                 _response.StatusCode = HttpStatusCode.Created;

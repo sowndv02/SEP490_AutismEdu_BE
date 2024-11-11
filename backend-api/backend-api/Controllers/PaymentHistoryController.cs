@@ -59,7 +59,7 @@ namespace backend_api.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var newModel = _mapper.Map<PaymentHistory>(createDTO);
                 var packagePayment = await _packagePaymentRepository.GetAsync(x => x.Id == createDTO.PackagePaymentId);
-
+                newModel.SubmitterId = userId;
                 var latestPaymentHistoryResult = await _paymentHistoryRepository.GetAllAsync(
                     x => x.SubmitterId == userId,
                     includeProperties: null,
@@ -79,8 +79,9 @@ namespace backend_api.Controllers
                 }
 
                 var result = await _paymentHistoryRepository.CreateAsync(newModel);
+                var reuturnModel = await _packagePaymentRepository.GetAsync(x => x.Id == result.Id, false, "Submitter,PackagePayment", null);
                 _response.StatusCode = HttpStatusCode.Created;
-                _response.Result = _mapper.Map<PackagePaymentDTO>(result);
+                _response.Result = _mapper.Map<PaymentHistoryDTO>(reuturnModel);
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
