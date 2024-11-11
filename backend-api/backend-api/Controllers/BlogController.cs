@@ -41,7 +41,7 @@ namespace backend_api.Controllers
 
 
         [HttpPost]
-        [Authorize($"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] BlogCreateDTO createDTO)
         {
             try
@@ -196,7 +196,7 @@ namespace backend_api.Controllers
 
 
         [HttpPut("{id}")]
-        [Authorize($"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id, UpdateActiveDTO updateActiveDTO)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
