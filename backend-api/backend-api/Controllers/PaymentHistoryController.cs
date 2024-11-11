@@ -79,7 +79,7 @@ namespace backend_api.Controllers
                 }
 
                 var result = await _paymentHistoryRepository.CreateAsync(newModel);
-                var reuturnModel = await _packagePaymentRepository.GetAsync(x => x.Id == result.Id, false, "Submitter,PackagePayment", null);
+                var reuturnModel = await _paymentHistoryRepository.GetAsync(x => x.Id == result.Id, false, "Submitter,PackagePayment", null);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<PaymentHistoryDTO>(reuturnModel);
                 _response.IsSuccess = true;
