@@ -87,7 +87,7 @@ namespace backend_api.Controllers
 
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
-                Expression<Func<PackagePayment, bool>> filter = u => true;
+                Expression<Func<PackagePayment, bool>> filter = u => u.IsActive;
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
                     switch (status.ToLower())
