@@ -260,7 +260,7 @@ namespace backend_api.Mapper
             CreateMap<AssessmentQuestion, TestQuestionCreateDTO>()
                 .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.AssessmentOptions))
                 .ReverseMap();
-			CreateMap<PackagePayment, PackagePaymentCreateDTO>().ReverseMap();
+            CreateMap<PackagePayment, PackagePaymentCreateDTO>().ReverseMap();
             CreateMap<PackagePayment, PackagePaymentDTO>().ReverseMap();
             CreateMap<PaymentHistory, PaymentHistoryCreateDTO>().ReverseMap();
             CreateMap<PaymentHistory, PaymentHistoryDTO>().ReverseMap();
@@ -278,7 +278,7 @@ namespace backend_api.Mapper
             CreateMap<TestResultDetail, TestResultDetailDTO>().ReverseMap();
             CreateMap<NotificationDTO, Notification>().ReverseMap();
             CreateMap<BlogDTO, Blog>().ReverseMap();
-
+            CreateMap<BlogUpdateDTO, Blog>().ReverseMap();
             CreateMap<Report, ReportReviewCreateDTO>();
             CreateMap<Report, ReportReviewDTO>();
             CreateMap<Report, ReportTutorCreateDTO>();
@@ -287,6 +287,7 @@ namespace backend_api.Mapper
             CreateMap<Report, ReportAppealBanDTO>();
             CreateMap<Report, ReportDTO>();
             CreateMap<ReportMedia, ReportMediaDTO>();
+            CreateMap<Conversation, ConversationDTO>();
         }
     }
 }

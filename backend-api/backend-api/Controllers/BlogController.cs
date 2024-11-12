@@ -208,19 +208,19 @@ namespace backend_api.Controllers
         }
 
 
-        [HttpPut("{id}")]
+        [HttpPut("UpdateStatus/{id}")]
         [Authorize($"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<ActionResult<APIResponse>> DeleteAsync(int id, UpdateActiveDTO updateActiveDTO)
+        public async Task<ActionResult<APIResponse>> UpdateStatusAsync(int id, BlogUpdateDTO updateDTO)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try
             {
-                if (id == 0 || id != updateActiveDTO.Id)
+                if (id == 0 || id != updateDTO.Id)
                 {
                     _logger.LogWarning("Invalid blog ID: {Id}. Returning BadRequest.", id);
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
                     return BadRequest(_response);
                 }
                 var model = await _blogRepository.GetAsync(x => x.Id == id, true, "Author", null);
@@ -229,7 +229,56 @@ namespace backend_api.Controllers
                     _logger.LogWarning("Blog not found for ID: {id} and User ID: {userId}. Returning BadRequest.", id, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
+                    return BadRequest(_response);
+                }
+                model.Title = updateDTO.Title;
+                model.Content = updateDTO.Content;
+                model.UpdatedDate = DateTime.Now;
+                if (updateDTO.ImageDisplay != null)
+                {
+                    using var stream = updateDTO.ImageDisplay.OpenReadStream();
+                    var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(updateDTO.ImageDisplay.FileName)));
+                    model.UrlImageDisplay = url;
+                }
+                await _blogRepository.UpdateAsync(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.Result = _mapper.Map<BlogDTO>(model);
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating blog status ID: {id}", id);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPut("{id}")]
+        [Authorize($"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        public async Task<ActionResult<APIResponse>> UpdateAsync(int id, UpdateActiveDTO updateActiveDTO)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            try
+            {
+                if (id == 0 || id != updateActiveDTO.Id)
+                {
+                    _logger.LogWarning("Invalid blog ID: {Id}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
+                    return BadRequest(_response);
+                }
+                var model = await _blogRepository.GetAsync(x => x.Id == id, true, "Author", null);
+                if (model == null)
+                {
+                    _logger.LogWarning("Blog not found for ID: {id} and User ID: {userId}. Returning BadRequest.", id, userId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
                     return BadRequest(_response);
                 }
                 model.IsPublished = updateActiveDTO.IsActive;
