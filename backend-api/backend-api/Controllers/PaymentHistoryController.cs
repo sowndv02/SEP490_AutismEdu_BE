@@ -105,7 +105,7 @@ namespace backend_api.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var result = await _paymentHistoryRepository.GetAllNotPagingAsync(x => x.SubmitterId == userId && x.ExpirationDate.Date >= DateTime.Now.Date, null, null, x => x.CreatedDate, true);
+                var result = await _paymentHistoryRepository.GetAllNotPagingAsync(x => x.SubmitterId == userId && x.ExpirationDate.Date >= DateTime.Now.Date, "PackagePayment,Submitter", null, x => x.CreatedDate, true);
                 if (result.list.FirstOrDefault() != null) _response.Result = _mapper.Map<PaymentHistoryDTO>(result.list.FirstOrDefault());
                 _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.OK;
