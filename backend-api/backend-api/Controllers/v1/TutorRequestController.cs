@@ -331,7 +331,7 @@ namespace backend_api.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> ApproveOrRejectWorkExperienceRequest(int id, ChangeStatusTutorRequestDTO changeStatusDTO)
+        public async Task<IActionResult> ApproveOrRejectRequest(int id, ChangeStatusTutorRequestDTO changeStatusDTO)
         {
             try
             {
@@ -354,13 +354,13 @@ namespace backend_api.Controllers.v1
                     await _tutorRequestRepository.UpdateAsync(model);
                     var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId);
                     // Send mail
-                    var subject = "Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã được chấp nhận";
+                    var subject = $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã được chấp nhận";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.Parent.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
-                        .Replace("@Model.IsApproved", true.ToString())
+                        .Replace("@Model.IsApproved", Status.APPROVE.ToString())
                         .Replace("@Model.IsApprovedString", "Chấp nhận")
                         ;
                     _messageBus.SendMessage(new EmailLogger()
@@ -422,7 +422,7 @@ namespace backend_api.Controllers.v1
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.Parent.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
-                        .Replace("@Model.IsApproved", false.ToString())
+                        .Replace("@Model.IsApproved", Status.REJECT.ToString())
                         .Replace("@Model.IsApprovedString", "Từ chối")
                         .Replace("@Model.RejectionReason", reason);
                     _messageBus.SendMessage(new EmailLogger()
