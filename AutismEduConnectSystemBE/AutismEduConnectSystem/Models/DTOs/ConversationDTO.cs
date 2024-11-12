@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public TutorDTO Tutor { get; set; }
         public ApplicationUserDTO Parent { get; set; }
+        public List<MessageDTO> Messages { get; set; }
         public DateTime CreatedDate { get; set; }
-        public DateTime? UpdatedDate { get; set; }
     }
 }

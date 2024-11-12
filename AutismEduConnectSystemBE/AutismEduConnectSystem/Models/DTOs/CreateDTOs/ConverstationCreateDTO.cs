@@ -6,5 +6,6 @@ namespace AutismEduConnectSystem.Models.DTOs.CreateDTOs
     {
         [Required]
         public string ReceiverId { get; set; }
+        public string Message { get; set; }
     }
 }

@@ -287,7 +287,9 @@ namespace AutismEduConnectSystem.Mapper
             CreateMap<Report, ReportAppealBanDTO>();
             CreateMap<Report, ReportDTO>();
             CreateMap<ReportMedia, ReportMediaDTO>();
+
             CreateMap<Conversation, ConversationDTO>();
+            CreateMap<MessageDTO, Message>();
         }
     }
 }

@@ -8,6 +8,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
+using AutismEduConnectSystem.SignalR;
+using Microsoft.AspNetCore.SignalR;
+using AutismEduConnectSystem.Repository;
+using System.Linq.Expressions;
 
 namespace AutismEduConnectSystem.Controllers
 {
@@ -17,16 +21,24 @@ namespace AutismEduConnectSystem.Controllers
     public class ConversationController : ControllerBase
     {
         private readonly IConversationRepository _conversationRepository;
+        private readonly IMessageRepository _messageRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         private readonly ILogger<ConversationController> _logger;
         private readonly IResourceService _resourceService;
+        protected int pageSize = 0;
 
         public ConversationController(IConversationRepository conversationRepository,
             IMapper mapper, IResourceService resourceService,
-            ILogger<ConversationController> logger, IUserRepository userRepository)
+            ILogger<ConversationController> logger, IUserRepository userRepository,
+            IMessageRepository messageRepository, IHubContext<NotificationHub> hubContext, 
+            IConfiguration configuration)
         {
+            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            _hubContext = hubContext;
+            _messageRepository = messageRepository;
             _userRepository = userRepository;
             _response = new APIResponse();
             _mapper = mapper;
@@ -65,7 +77,23 @@ namespace AutismEduConnectSystem.Controllers
                 }
 
                 var result = await _conversationRepository.CreateAsync(newConversation);
-                var returnModel = await _conversationRepository.GetAsync(x => x.Id == result.Id, false, "Parent,Tutor", null);
+                var message = await _messageRepository.CreateAsync(new Message()
+                {
+                    Content = createDTO.Message,
+                    SenderId = userId,
+                    IsRead = false,
+                    ConversationId = result.Id,
+                    CreatedDate = DateTime.Now,
+                });
+                var returnModel = await _messageRepository.GetAsync(x => x.Id == message.Id, false, "Sender,Conversation", null);
+
+
+                //SignalR
+                var connectionId = NotificationHub.GetConnectionIdByUserId(createDTO.ReceiverId);
+                if (!string.IsNullOrEmpty(connectionId))
+                {
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"Messages-{createDTO.ReceiverId}", _mapper.Map<MessageDTO>(returnModel));
+                }
 
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<ConversationDTO>(result);
@@ -78,6 +106,58 @@ namespace AutismEduConnectSystem.Controllers
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
+        [HttpGet]
+        [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.PARENT_ROLE}")]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int pageNumber = 1)
+        {
+            try
+            {
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                int totalCount = 0;
+                List<Conversation> result = new();
+                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    var (countTutorConversation, listTutorConversation) = await _conversationRepository.GetAllAsync(x => x.TutorId == userId, "Parent,Tutor", pageSize, pageNumber, null, false);
+                    totalCount = countTutorConversation;
+                    result = listTutorConversation;
+                }
+                else if(userRoles != null && userRoles.Contains(SD.PARENT_ROLE))
+                {
+                    var (countParentConversation, listParentConversation) = await _conversationRepository.GetAllAsync(x => x.ParentId == userId, "Parent,Tutor", pageSize, pageNumber, null, false);
+                    totalCount = countParentConversation;
+                    result = listParentConversation;
+                }
+                foreach (var conversation in result) 
+                {
+                    conversation.Tutor.User = await _userRepository.GetAsync(x => x.Id == conversation.TutorId, false, null);
+                    var(countMessages, listMessages) = await _messageRepository.GetAllAsync(x => x.ConversationId == conversation.Id, null, pageSize, 1, x => x.CreatedDate, true);
+                    conversation.Messages = listMessages;
+                }
+
+                var sortedConversations = result
+                    .OrderByDescending(conversation => conversation.Messages
+                        .OrderByDescending(message => message.CreatedDate)
+                        .FirstOrDefault()?.CreatedDate)
+                    .ToList();
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                _response.IsSuccess = true;
+                _response.Result = _mapper.Map<List<ConversationDTO>>(result);
+                _response.Pagination = pagination;
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }

@@ -15,6 +15,7 @@ namespace AutismEduConnectSystem.Models
         [ForeignKey(nameof(ParentId))]
         public ApplicationUser Parent { get; set; }
         public bool IsDeleted { get; set; } = false;
+        public List<Message> Messages { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
     }
