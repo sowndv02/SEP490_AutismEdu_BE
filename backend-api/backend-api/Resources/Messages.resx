@@ -246,4 +246,7 @@
   <data name="TOKEN_EXPIRED_MESSAGE" xml:space="preserve">
     <value>Token đã hết hạn,</value>
   </data>
+  <data name="CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION" xml:space="preserve">
+    <value>Thông tin của bạn đã {0}</value>
+  </data>
 </root>
