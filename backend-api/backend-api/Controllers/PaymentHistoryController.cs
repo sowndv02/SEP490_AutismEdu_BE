@@ -75,6 +75,10 @@ namespace backend_api.Controllers
                     var remainingDaysFromLastExpiration = (latestPaymentHistory.ExpirationDate - DateTime.Now).Days;
                     newModel.ExpirationDate = DateTime.Now.AddMonths(additionalMonths).AddDays(remainingDaysFromLastExpiration);
                 }
+                else if (packagePayment != null)
+                {
+                    newModel.ExpirationDate = DateTime.Now.AddMonths(packagePayment.Duration);
+                }
 
                 var result = await _paymentHistoryRepository.CreateAsync(newModel);
                 var reuturnModel = await _paymentHistoryRepository.GetAsync(x => x.Id == result.Id, false, "Submitter,PackagePayment", null);
