@@ -1,11 +1,10 @@
 ﻿using backend_api.Models;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
-using Microsoft.AspNetCore.Identity;
-using System.Net;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
+using System.Net;
+using System.Security.Claims;
 
 namespace backend_api.Middlewares
 {
@@ -24,7 +23,8 @@ namespace backend_api.Middlewares
         {
 
             if (context.Request.Path.StartsWithSegments("/api/v1/PaymentHistory") ||
-                context.Request.Path.StartsWithSegments("/api/v1/PackagePayment"))
+                context.Request.Path.StartsWithSegments("/api/v1/PackagePayment") ||
+                context.Request.Path.StartsWithSegments("/hub/notifications"))
             {
                 await _next(context);
                 return;
