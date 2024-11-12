@@ -2,7 +2,6 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
 using backend_api.Utils;
@@ -11,11 +10,10 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using static backend_api.SD;
 
 namespace backend_api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersionNeutral]
     public class PaymentHistoryController : ControllerBase
@@ -27,7 +25,7 @@ namespace backend_api.Controllers
         protected int pageSize = 0;
         private readonly ILogger<PaymentHistoryController> _logger;
         private readonly IResourceService _resourceService;
-        public PaymentHistoryController(IPaymentHistoryRepository paymentHistoryRepository, 
+        public PaymentHistoryController(IPaymentHistoryRepository paymentHistoryRepository,
             IPackagePaymentRepository packagePaymentRepository,
             IConfiguration configuration, IMapper mapper, IResourceService resourceService,
             ILogger<PaymentHistoryController> logger)
@@ -104,7 +102,7 @@ namespace backend_api.Controllers
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var result = await _paymentHistoryRepository.GetAllNotPagingAsync(x => x.SubmitterId == userId && x.ExpirationDate.Date >= DateTime.Now.Date, null, null, x => x.CreatedDate, true);
-                if(result.list.FirstOrDefault() != null) _response.Result = _mapper.Map<PaymentHistoryDTO>(result.list.FirstOrDefault());
+                if (result.list.FirstOrDefault() != null) _response.Result = _mapper.Map<PaymentHistoryDTO>(result.list.FirstOrDefault());
                 _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
@@ -147,7 +145,7 @@ namespace backend_api.Controllers
                     }
                 }
                 int total = 0;
-                if (paymentId != 0) 
+                if (paymentId != 0)
                 {
                     filter = filter.AndAlso(x => x.PackagePaymentId == paymentId);
                 }
@@ -155,14 +153,14 @@ namespace backend_api.Controllers
                 {
                     filter = filter.AndAlso(x => x.Description.Contains(search));
                 }
-                if(startDate != null)
+                if (startDate != null)
                 {
                     filter = filter.AndAlso(x => x.CreatedDate.Date >= startDate.Value.Date);
                 }
-                if (endDate != null) 
+                if (endDate != null)
                 {
                     filter = filter.AndAlso(x => x.CreatedDate.Date <= endDate.Value.Date);
-                } 
+                }
                 var result = new List<PaymentHistory>();
                 if (userRoles != null && (userRoles.Contains(SD.MANAGER_ROLE) || userRoles.Contains(SD.STAFF_ROLE)))
                 {
@@ -170,7 +168,7 @@ namespace backend_api.Controllers
                     result = list;
                     total = count;
                 }
-                else if(userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+                else if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     filter = filter.AndAlso(x => x.SubmitterId == userId);

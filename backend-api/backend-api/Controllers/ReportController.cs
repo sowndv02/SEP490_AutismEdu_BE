@@ -3,15 +3,11 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.RabbitMQSender;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Tls;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -19,14 +15,14 @@ using static backend_api.SD;
 
 namespace backend_api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersionNeutral]
     public class ReportController : ControllerBase
     {
         private readonly IReportRepository _reportRepository;
         private readonly IReportMediaRepository _reportMediaRepository;
-        private readonly IBlobStorageRepository _blobStorageRepository ;
+        private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly IStudentProfileRepository _studentProfileRepository;
         private readonly IChildInformationRepository _childInformationRepository;
         private readonly IUserRepository _userRepository;
@@ -35,11 +31,11 @@ namespace backend_api.Controllers
         private object blog;
         private readonly ILogger<ReportController> _logger;
         private readonly IResourceService _resourceService;
-        public ReportController(IReportRepository reportRepository, 
+        public ReportController(IReportRepository reportRepository,
             IReportMediaRepository reportMediaRepository,
             IMapper mapper, IResourceService resourceService,
-            ILogger<ReportController> logger, 
-            IStudentProfileRepository studentProfileRepository, 
+            ILogger<ReportController> logger,
+            IStudentProfileRepository studentProfileRepository,
             IChildInformationRepository childInformationRepository,
             IBlobStorageRepository blobStorageRepository,
             IUserRepository userRepository)
@@ -48,7 +44,7 @@ namespace backend_api.Controllers
             _blobStorageRepository = blobStorageRepository;
             _childInformationRepository = childInformationRepository;
             _studentProfileRepository = studentProfileRepository;
-            _reportMediaRepository = reportMediaRepository; 
+            _reportMediaRepository = reportMediaRepository;
             _response = new APIResponse();
             _mapper = mapper;
             _reportRepository = reportRepository;
@@ -90,7 +86,7 @@ namespace backend_api.Controllers
                 }
                 var newModel = _mapper.Map<Report>(createDTO);
 
-                if(user != null) newModel.ReporterId = user.Id;
+                if (user != null) newModel.ReporterId = user.Id;
                 newModel.ReportType = SD.ReportType.UNLOCKREQUEST;
                 newModel.Title = SD.REPORT_UNLOCKREQUEST_TITLE;
 
@@ -129,7 +125,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 var existReport = await _reportRepository.GetAllNotPagingAsync(x => x.ReportType == SD.ReportType.REVIEW && x.ReporterId == userId && x.Status == SD.Status.PENDING);
-                if(existReport.list != null && !existReport.list.Any())
+                if (existReport.list != null && !existReport.list.Any())
                 {
                     _logger.LogWarning("Cannot spam report");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -188,10 +184,10 @@ namespace backend_api.Controllers
                 var child = await _childInformationRepository.GetAllNotPagingAsync(x => x.ParentId == userId);
                 if (child.list != null && !child.list.Any())
                 {
-                    foreach (var item in child.list) 
+                    foreach (var item in child.list)
                     {
                         var studentProfiles = await _studentProfileRepository.GetAllNotPagingAsync(x => x.ChildId == item.Id);
-                        if(studentProfiles.list != null && !studentProfiles.list.Any())
+                        if (studentProfiles.list != null && !studentProfiles.list.Any())
                         {
                             if (studentProfiles.list.Any(x => x.TutorId == createDTO.TutorId))
                             {
@@ -257,11 +253,11 @@ namespace backend_api.Controllers
                 }
 
                 if (search != null && !string.IsNullOrEmpty(search))
-                    filter = filter.AndAlso(x => x.Tutor.User != null && (x.Tutor.User.Email.ToLower().Contains(search.ToLower()) || x.Tutor.User.FullName.Contains(search.ToLower())) );
-                
-                if (startDate != null) 
+                    filter = filter.AndAlso(x => x.Tutor.User != null && (x.Tutor.User.Email.ToLower().Contains(search.ToLower()) || x.Tutor.User.FullName.Contains(search.ToLower())));
+
+                if (startDate != null)
                     filter.AndAlso(x => x.CreatedDate.Date >= startDate.Value.Date);
-                
+
                 if (endDate != null)
                     filter.AndAlso(x => x.CreatedDate.Date <= endDate.Value.Date);
 
@@ -326,7 +322,7 @@ namespace backend_api.Controllers
 
                 list = result;
                 totalCount = count;
-                
+
                 // Setup pagination and response
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 10, Total = totalCount };
                 _response.Result = _mapper.Map<List<ReportDTO>>(list);
@@ -373,7 +369,7 @@ namespace backend_api.Controllers
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
                     return BadRequest(_response);
                 }
-                
+
                 if (updateDTO.StatusChange == (int)Status.APPROVE)
                 {
                     model.Status = Status.APPROVE;
@@ -391,7 +387,7 @@ namespace backend_api.Controllers
                         var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id, null, null, x => x.CreatedDate, true);
                         reports = listReportReview;
                     }
-                    foreach(var item in reports)
+                    foreach (var item in reports)
                     {
                         item.Status = Status.APPROVE;
                         item.UpdatedDate = DateTime.Now;
@@ -471,12 +467,12 @@ namespace backend_api.Controllers
                     var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == report.TutorId && x.Id != report.Id, "Handler,Reporter,ReportMedias", null, x => x.CreatedDate, true);
                     reports = listReportTutor;
                 }
-                else if (report.ReviewId != null && report.ReviewId > 0) 
+                else if (report.ReviewId != null && report.ReviewId > 0)
                 {
                     var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == report.ReviewId && x.Id != report.Id, "Handler,Reporter", null, x => x.CreatedDate, true);
                     reports = listReportReview;
                 }
-                _response.Result = new { Result = _mapper.Map<ReportDTO>(report) , ReportsRelated = _mapper.Map<List<ReportDTO>>(reports) };
+                _response.Result = new { Result = _mapper.Map<ReportDTO>(report), ReportsRelated = _mapper.Map<List<ReportDTO>>(reports) };
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
