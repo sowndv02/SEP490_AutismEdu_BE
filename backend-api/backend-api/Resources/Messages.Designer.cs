@@ -61,6 +61,15 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tài khoản của bạn đang bị khóa..
+        /// </summary>
+        public static string ACCOUNT_IS_LOCK_MESSAGE {
+            get {
+                return ResourceManager.GetString("ACCOUNT_IS_LOCK_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Thêm role user cho người dùng.
         /// </summary>
         public static string ADD_ROLE_USER_TO_USER {
@@ -129,6 +138,15 @@ namespace backend_api.Resources {
         public static string CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION {
             get {
                 return ResourceManager.GetString("CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thông tin của bạn đã {0}.
+        /// </summary>
+        public static string CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION", resourceCulture);
             }
         }
         
@@ -214,11 +232,29 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Người dùng Google không thể truy cập quên mật khẩu..
+        /// </summary>
+        public static string GOOGLE_USER_INVALID_FORGOT_PASSWORD_MESSAGE {
+            get {
+                return ResourceManager.GetString("GOOGLE_USER_INVALID_FORGOT_PASSWORD_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lỗi hệ thống. Vui lòng thử lại sau!.
         /// </summary>
-        public static string INTERAL_ERROR_MESSAGE {
+        public static string INTERNAL_SERVER_ERROR_MESSAGE {
             get {
-                return ResourceManager.GetString("INTERAL_ERROR_MESSAGE", resourceCulture);
+                return ResourceManager.GetString("INTERNAL_SERVER_ERROR_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LIên kết đã hết hạn..
+        /// </summary>
+        public static string LINK_EXPIRED_MESSAGE {
+            get {
+                return ResourceManager.GetString("LINK_EXPIRED_MESSAGE", resourceCulture);
             }
         }
         
@@ -286,6 +322,24 @@ namespace backend_api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Đã xảy ra lỗi với refresh token..
+        /// </summary>
+        public static string REFRESH_TOKEN_ERROR_MESSAGE {
+            get {
+                return ResourceManager.GetString("REFRESH_TOKEN_ERROR_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại sau..
+        /// </summary>
+        public static string REGISTER_FAILED_MESSAGE {
+            get {
+                return ResourceManager.GetString("REGISTER_FAILED_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quá hạn xét duyệt hồ sơ học sinh.
         /// </summary>
         public static string STUDENT_PROFILE_EXPIRED {
@@ -300,6 +354,15 @@ namespace backend_api.Resources {
         public static string TIMESLOT_DUPLICATED_MESSAGE {
             get {
                 return ResourceManager.GetString("TIMESLOT_DUPLICATED_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Token đã hết hạn,.
+        /// </summary>
+        public static string TOKEN_EXPIRED_MESSAGE {
+            get {
+                return ResourceManager.GetString("TOKEN_EXPIRED_MESSAGE", resourceCulture);
             }
         }
         
@@ -354,6 +417,15 @@ namespace backend_api.Resources {
         public static string USER_IS_LOCKED_OUT {
             get {
                 return ResourceManager.GetString("USER_IS_LOCKED_OUT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Email hoặc mật khẩu không đúng..
+        /// </summary>
+        public static string USERNAME_PASSWORD_INVALID_MESSAGE {
+            get {
+                return ResourceManager.GetString("USERNAME_PASSWORD_INVALID_MESSAGE", resourceCulture);
             }
         }
     }

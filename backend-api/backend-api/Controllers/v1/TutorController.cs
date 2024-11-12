@@ -2,11 +2,15 @@
 using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
+using backend_api.Models.DTOs.UpdateDTOs;
+using backend_api.RabbitMQSender;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
+using backend_api.SignalR;
 using backend_api.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -30,14 +34,23 @@ namespace backend_api.Controllers.v1
         protected APIResponse _response;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
+        private readonly IRabbitMQMessageSender _messageBus;
+        private string queueName = string.Empty;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly INotificationRepository _notificationRepository;
 
         public TutorController(IUserRepository userRepository, ITutorRepository tutorRepository,
             IMapper mapper, IConfiguration configuration,
             FormatString formatString, ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository,
-            ITutorRequestRepository tutorRequestRepository, IResourceService resourceService, ILogger<TutorController> logger)
+            ITutorRequestRepository tutorRequestRepository, IResourceService resourceService, ILogger<TutorController> logger,
+            IHubContext<NotificationHub> hubContext, INotificationRepository notificationRepository,
+            IRabbitMQMessageSender messageBus)
         {
+            _messageBus = messageBus;
+            _notificationRepository = notificationRepository;
             _tutorProfileUpdateRequestRepository = tutorProfileUpdateRequestRepository;
             _formatString = formatString;
+            queueName = configuration["RabbitMQSettings:QueueName"];
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
             _mapper = mapper;
@@ -46,6 +59,7 @@ namespace backend_api.Controllers.v1
             _tutorRequestRepository = tutorRequestRepository;
             _resourceService = resourceService;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         [HttpGet("updateRequest")]
@@ -297,6 +311,141 @@ namespace backend_api.Controllers.v1
             }
         }
 
+        [HttpPut("changeStatus/{id}")]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        public async Task<IActionResult> ApproveOrRejectRequest(ChangeStatusDTO changeStatusDTO)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            try
+            {
+                TutorProfileUpdateRequest model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId, true, null);
+                var tutorProfile = await _tutorRepository.GetAsync(x => x.TutorId == model.TutorId, true, null);
+                if (model == null || model.RequestStatus != Status.PENDING)
+                {
+                    _logger.LogWarning("Invalid request status or tutor update request not found for tutor update request ID {Id} by user {UserId}", changeStatusDTO.Id, userId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_UPDATE_PROFILE_REQUEST) };
+                    return BadRequest(_response);
+                }
+                if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
+                {
+                    model.RequestStatus = Status.APPROVE;
+                    model.UpdatedDate = DateTime.Now;
+                    model.ApprovedId = userId;
+                    await _tutorProfileUpdateRequestRepository.UpdateAsync(model);
 
+                    tutorProfile.AboutMe = model.AboutMe;
+                    tutorProfile.PriceFrom = model.PriceFrom;
+                    tutorProfile.PriceEnd = model.PriceEnd;
+                    tutorProfile.SessionHours = model.SessionHours;
+                    tutorProfile.StartAge = model.StartAge;
+                    tutorProfile.EndAge = model.EndAge;
+                    tutor.PhoneNumber = model.PhoneNumber;
+                    tutor.Address = model.Address;
+                    tutorProfile.UpdatedDate = DateTime.Now;
+
+                    await _tutorRepository.UpdateAsync(tutorProfile);
+                    await _userRepository.UpdateAsync(tutor);
+                    tutorProfile.User = tutor;
+                    // Send mail
+                    var subject = "Yêu cập nhật thông tin của bạn đã được chấp nhận!";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    if (System.IO.File.Exists(templatePath))
+                    {
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                        .Replace("@Model.FullName", tutor.FullName)
+                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật thông tin của bạn")
+                        .Replace("@Model.IsApproved", Status.APPROVE.ToString());
+
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = tutor.Id,
+                            Email = tutor.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = tutor.Id,
+                        Message = _resourceService.GetString(SD.CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION, SD.STATUS_APPROVE_VIE),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_SETTING),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
+                    _response.Result = _mapper.Map<TutorDTO>(tutorProfile);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
+                }
+                else if (changeStatusDTO.StatusChange == (int)Status.REJECT)
+                {
+                    // Handle for reject
+                    model.RejectionReason = changeStatusDTO.RejectionReason;
+                    model.RequestStatus = Status.REJECT;
+                    model.UpdatedDate = DateTime.Now;
+                    model.ApprovedId = userId;
+                    await _tutorProfileUpdateRequestRepository.UpdateAsync(model);
+
+                    //Send mail
+                    var subject = "Yêu cập nhật thông tin của bạn đã bị từ chối!";
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    if (System.IO.File.Exists(templatePath))
+                    {
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", tutor.FullName)
+                            .Replace("@Model.IssueName", $"Yêu cầu cập nhật thông tin của bạn")
+                            .Replace("@Model.IsApproved", Status.REJECT.ToString())
+                            .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = tutor.Id,
+                            Email = tutor.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = tutor.Id,
+                        Message = _resourceService.GetString(SD.CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION, SD.STATUS_REJECT_VIE),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_SETTING),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
+                    _response.Result = _mapper.Map<TutorProfileUpdateRequestDTO>(model);
+                    _response.StatusCode = HttpStatusCode.OK;
+                    _response.IsSuccess = true;
+                    return Ok(_response);
+                }
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while changing the status of certificate ID {CertificateId} by user {UserId}", changeStatusDTO.Id, userId);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
     }
 }

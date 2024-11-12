@@ -144,14 +144,15 @@
         public const string QUESTION = "Câu hỏi";
         public const string OPTION = "Lựa chọn";
         public const string PACKAGE_PAYMENT = "Gói thanh toán";
-		public const string TEST_RESULT = "Kết quả bài test";
-		public const string NOTIFICATION = "Thông báo";
-		public const string INFORMATION = "Thông tin";
-		public const string APPLICATION_TOKEN = "Token hệ thống";
-		public const string GOOGLE_TOKEN = "Token Google";
-		public const string GOOGLE_REFRESH_TOKEN_STRING = "Refresh Token Google";
-		public const string ROLE = "Vai trò";
-		public const string REPORT = "Báo cáo";
+        public const string TEST_RESULT = "Kết quả bài test";
+        public const string NOTIFICATION = "Thông báo";
+        public const string INFORMATION = "Thông tin";
+        public const string APPLICATION_TOKEN = "Token hệ thống";
+        public const string GOOGLE_TOKEN = "Token Google";
+        public const string GOOGLE_REFRESH_TOKEN_STRING = "Refresh Token Google";
+        public const string ROLE = "Vai trò";
+        public const string REPORT = "Báo cáo";
+        public const string TUTOR_UPDATE_PROFILE_REQUEST = "Yêu cầu cập nhận thông tin";
 
 
 
@@ -199,6 +200,7 @@
         public const string CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION = "CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION";
         public const string TUTOR_REQUEST_TUTOR_NOTIFICATION = "TUTOR_REQUEST_TUTOR_NOTIFICATION";
         public const string NEW_REVIEW_TUTOR_NOTIFICATION = "NEW_REVIEW_TUTOR_NOTIFICATION";
+        public const string CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION = "CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION";
 
 
         // DTO require message
