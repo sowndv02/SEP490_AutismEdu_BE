@@ -3,7 +3,6 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
 using backend_api.Utils;
@@ -57,9 +56,9 @@ namespace backend_api.Controllers
                 }
                 Blog model = _mapper.Map<Blog>(createDTO);
                 model.AuthorId = userId;
-                if(model.IsPublished) model.PublishDate = DateTime.Now;
+                if (model.IsPublished) model.PublishDate = DateTime.Now;
                 model.CreatedDate = DateTime.Now;
-                if(createDTO.ImageDisplay != null)
+                if (createDTO.ImageDisplay != null)
                 {
                     using var mediaStream = createDTO.ImageDisplay.OpenReadStream();
                     string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(createDTO.ImageDisplay.FileName)));
@@ -83,7 +82,7 @@ namespace backend_api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.PUBLISH_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string isPublished = SD.STATUS_ALL, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.PUBLISH_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -94,6 +93,19 @@ namespace backend_api.Controllers
 
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 int total = 0;
+                if (!string.IsNullOrEmpty(isPublished) && isPublished != SD.STATUS_ALL)
+                {
+                    switch (isPublished.ToLower())
+                    {
+                        case "true":
+                            filter = filter.AndAlso(x => x.IsPublished);
+                            break;
+                        case "false":
+                            filter = filter.AndAlso(x => !x.IsPublished);
+                            break;
+                    }
+                }
+
                 if (orderBy != null)
                 {
                     switch (orderBy)
@@ -109,7 +121,7 @@ namespace backend_api.Controllers
                             break;
                     }
                 }
-                
+
                 if (!string.IsNullOrEmpty(search))
                 {
                     filter = filter.AndAlso(x => x.Title.Contains(search));
@@ -221,7 +233,7 @@ namespace backend_api.Controllers
                     return BadRequest(_response);
                 }
                 model.IsPublished = updateActiveDTO.IsActive;
-                if(updateActiveDTO.IsActive) model.PublishDate = DateTime.Now;
+                if (updateActiveDTO.IsActive) model.PublishDate = DateTime.Now;
                 model.UpdatedDate = DateTime.Now;
                 await _blogRepository.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;

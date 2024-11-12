@@ -12,6 +12,7 @@ namespace backend_api.Models.DTOs
         public decimal PriceFrom { get; set; }
         public decimal PriceEnd { get; set; }
         public float SessionHours { get; set; }
+        public TutorDTO Tutor { get; set; }
         public Status RequestStatus { get; set; }
         public string? RejectionReason { get; set; }
         public DateTime CreatedDate { get; set; }

@@ -3,7 +3,6 @@ using backend_api.Models;
 using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
 using backend_api.Utils;
@@ -12,11 +11,10 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using static backend_api.SD;
 
 namespace backend_api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersionNeutral]
     public class PackagePaymentController : ControllerBase
@@ -103,7 +101,7 @@ namespace backend_api.Controllers
                 var result = new List<PackagePayment>();
                 if (userRoles != null && userRoles.Contains(SD.MANAGER_ROLE))
                 {
-                    var(count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(filter, "Submitter", null, x => x.Price, true);
+                    var (count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(filter, "Submitter", null, x => x.Price, true);
                     result = list;
                 }
                 else

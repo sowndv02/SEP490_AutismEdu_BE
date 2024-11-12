@@ -33,7 +33,7 @@ namespace backend_api.Controllers.v1
 
         public TutorController(IUserRepository userRepository, ITutorRepository tutorRepository,
             IMapper mapper, IConfiguration configuration,
-            FormatString formatString, ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository, 
+            FormatString formatString, ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository,
             ITutorRequestRepository tutorRequestRepository, IResourceService resourceService, ILogger<TutorController> logger)
         {
             _tutorProfileUpdateRequestRepository = tutorProfileUpdateRequestRepository;
@@ -49,16 +49,23 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet("updateRequest")]
-        [Authorize(Roles = SD.TUTOR_ROLE)]
+        [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> GetAllUpdateRequestProfileAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<TutorProfileUpdateRequest> list = new();
-                Expression<Func<TutorProfileUpdateRequest, bool>> filter = u => u.TutorId == userId;
+                Expression<Func<TutorProfileUpdateRequest, bool>> filter = u => true;
                 Expression<Func<TutorProfileUpdateRequest, object>> orderByQuery = u => true;
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    filter = filter.AndAlso(u => u.TutorId == userId);
+                }
+
 
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
 
@@ -90,7 +97,7 @@ namespace backend_api.Controllers.v1
                             break;
                     }
                 }
-                var (count, result) = await _tutorProfileUpdateRequestRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
+                var (count, result) = await _tutorProfileUpdateRequestRepository.GetAllAsync(filter: filter, includeProperties: "Tutor", pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
                 list = result;
                 totalCount = count;
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };

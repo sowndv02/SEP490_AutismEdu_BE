@@ -1,20 +1,15 @@
 ﻿using AutoMapper;
 using backend_api.Models;
-using backend_api.Models.DTOs.UpdateDTOs;
-using backend_api.Models.DTOs;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
+using backend_api.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using backend_api.Services.IServices;
 using System.Security.Claims;
-using System.Linq.Expressions;
 
 namespace backend_api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersionNeutral]
     public class NotificationController : ControllerBase
@@ -79,7 +74,7 @@ namespace backend_api.Controllers
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var (total, list) = await _notificationRepository.GetAllNotPagingAsync(x => x.ReceiverId == userId, null, null, x => x.CreatedDate, true);
-                foreach (var item in list) 
+                foreach (var item in list)
                 {
                     item.IsRead = true;
                     item.UpdatedDate = DateTime.Now;
