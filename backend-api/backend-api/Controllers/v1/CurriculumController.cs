@@ -4,7 +4,6 @@ using backend_api.Models.DTOs;
 using backend_api.Models.DTOs.CreateDTOs;
 using backend_api.Models.DTOs.UpdateDTOs;
 using backend_api.RabbitMQSender;
-using backend_api.Repository;
 using backend_api.Repository.IRepository;
 using backend_api.Services.IServices;
 using backend_api.SignalR;
@@ -40,7 +39,7 @@ namespace backend_api.Controllers.v1
 
         public CurriculumController(IUserRepository userRepository, ITutorRepository tutorRepository,
             IMapper mapper, IConfiguration configuration, ILogger<CurriculumController> logger,
-            ICurriculumRepository curriculumRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService, 
+            ICurriculumRepository curriculumRepository, IRabbitMQMessageSender messageBus, IResourceService resourceService,
             INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
         {
             _logger = logger;
@@ -104,17 +103,21 @@ namespace backend_api.Controllers.v1
 
 
         [HttpGet("updateRequest")]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        public async Task<ActionResult<APIResponse>> GetAllUpdateRequestAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int totalCount = 0;
                 List<Curriculum> list = new();
-                Expression<Func<Curriculum, bool>> filter = u => u.SubmitterId == userId && !u.IsDeleted;
+                Expression<Func<Curriculum, bool>> filter = u => true;
                 Expression<Func<Curriculum, object>> orderByQuery = u => true;
-
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    filter = filter.AndAlso(u => u.SubmitterId == userId && !u.IsDeleted);
+                }
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
 
                 if (orderBy != null)
