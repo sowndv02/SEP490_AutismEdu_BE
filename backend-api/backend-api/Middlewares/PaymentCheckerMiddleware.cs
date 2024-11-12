@@ -24,7 +24,9 @@ namespace backend_api.Middlewares
 
             if (context.Request.Path.StartsWithSegments("/api/v1/PaymentHistory") ||
                 context.Request.Path.StartsWithSegments("/api/v1/PackagePayment") ||
-                context.Request.Path.StartsWithSegments("/hub/notifications"))
+                context.Request.Path.StartsWithSegments("/hub/notifications") || (context.Request.Path.StartsWithSegments("/api/v1/user") && 
+                context.Request.Method == HttpMethods.Get &&
+                context.Request.RouteValues.TryGetValue("id", out var id)))
             {
                 await _next(context);
                 return;

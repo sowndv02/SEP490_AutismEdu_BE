@@ -500,6 +500,7 @@ namespace backend_api.Controllers
         }
 
         [HttpGet("{id}", Name = "GetUserById")]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> GetByIdAsync(string id)
         {
             try

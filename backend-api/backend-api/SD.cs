@@ -341,6 +341,7 @@
         // Order by
         public const string CREATED_DATE = "createdDate";
         public const string PUBLISH_DATE = "publishDate";
+        public const string TITLE = "title";
         public const string AGE_FROM = "ageFrom";
         public const string DATE_FROM = "dateFrom";
         public const string DATE_TO = "dateTo";
