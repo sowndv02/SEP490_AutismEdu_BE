@@ -116,6 +116,9 @@ namespace backend_api.Controllers
                         case SD.PUBLISH_DATE:
                             orderByQuery = x => x.PublishDate;
                             break;
+                        case SD.TITLE: 
+                            orderByQuery = x => x.Title;
+                            break;
                         default:
                             orderByQuery = x => x.PublishDate;
                             break;
@@ -209,7 +212,7 @@ namespace backend_api.Controllers
 
 
         [HttpPut("UpdateStatus/{id}")]
-        [Authorize($"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> UpdateStatusAsync(int id, BlogUpdateDTO updateDTO)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -258,7 +261,7 @@ namespace backend_api.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize($"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> UpdateAsync(int id, UpdateActiveDTO updateActiveDTO)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
