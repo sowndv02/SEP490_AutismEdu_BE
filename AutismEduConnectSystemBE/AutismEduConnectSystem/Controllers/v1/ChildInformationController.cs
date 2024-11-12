@@ -1,0 +1,197 @@
+﻿using AutoMapper;
+using AutismEduConnectSystem.Models;
+using AutismEduConnectSystem.Models.DTOs;
+using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+using AutismEduConnectSystem.Repository.IRepository;
+using AutismEduConnectSystem.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Security.Claims;
+
+namespace AutismEduConnectSystem.Controllers.v1
+{
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiController]
+    [ApiVersion("1.0")]
+    [Authorize]
+    public class ChildInformationController : ControllerBase
+    {
+        private readonly IChildInformationRepository _childInfoRepository;
+        protected APIResponse _response;
+        private readonly IMapper _mapper;
+        private readonly ILogger<ChildInformationController> _logger;
+        private readonly IStudentProfileRepository _studentProfileRepository;
+        private readonly IBlobStorageRepository _blobStorageRepository;
+        private readonly IResourceService _resourceService;
+
+        public ChildInformationController(IChildInformationRepository childInfoRepository, IMapper mapper, ILogger<ChildInformationController> logger,
+            IStudentProfileRepository studentProfileRepository, IBlobStorageRepository blobStorageRepository, IResourceService resourceService)
+        {
+            _logger = logger;
+            _childInfoRepository = childInfoRepository;
+            _response = new APIResponse();
+            _mapper = mapper;
+            _studentProfileRepository = studentProfileRepository;
+            _blobStorageRepository = blobStorageRepository;
+            _resourceService = resourceService;
+        }
+
+        [HttpPost]
+        [Authorize(Roles = SD.PARENT_ROLE)]
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] ChildInformationCreateDTO childInformationCreateDTO)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (childInformationCreateDTO == null)
+                {
+                    _logger.LogWarning("Received null ChildInformationCreateDTO. UserId: {UserId}", userId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CHILD_INFO) };
+                    return BadRequest(_response);
+                }
+
+
+                var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(childInformationCreateDTO.Name) && x.ParentId.Equals(userId));
+                if (isChildExist != null)
+                {
+                    _logger.LogWarning("Duplicate child information found for Name: {ChildName}, ParentId: {ParentId}", childInformationCreateDTO.Name, userId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME) };
+                    return BadRequest(_response);
+                }
+
+                ChildInformation model = _mapper.Map<ChildInformation>(childInformationCreateDTO);
+                model.ParentId = userId;
+                model.CreatedDate = DateTime.Now;
+
+                // Handle child media uploads
+                if (childInformationCreateDTO.Media != null)
+                {
+                    using var mediaStream = childInformationCreateDTO.Media.OpenReadStream();
+                    string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(childInformationCreateDTO.Media.FileName)));
+                    model.ImageUrlPath = mediaUrl;
+                }
+
+                var childInfo = await _childInfoRepository.CreateAsync(model);
+
+                _response.Result = _mapper.Map<ChildInformationDTO>(childInfo);
+                _response.StatusCode = HttpStatusCode.Created;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating child information. UserId: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet("{parentId}")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetParentChildInfo(string parentId)
+        {
+            try
+            {
+                var childInfos = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId), "Parent");
+                _response.Result = _mapper.Map<List<ChildInformationDTO>>(childInfos.list);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while retrieving child information for ParentId: {ParentId}", parentId);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPut]
+        [Authorize(Roles = SD.PARENT_ROLE)]
+        public async Task<IActionResult> UpdateAsync([FromForm] ChildInformationUpdateDTO updateDTO)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var model = await _childInfoRepository.GetAsync(x => x.Id == updateDTO.ChildId && x.ParentId == userId);
+                if (model == null)
+                {
+                    _logger.LogWarning("Child information not found for ParentId: {ParentId}, ChildId: {ChildId}", userId, updateDTO.ChildId);
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO) };
+                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                }
+
+                var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(updateDTO.Name) && !x.Name.Equals(model.Name) && x.ParentId.Equals(model.ParentId));
+                if (isChildExist != null)
+                {
+                    _logger.LogWarning("Child name already exists for ParentId: {ParentId}, Name: {ChildName}", userId, updateDTO.Name);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME) };
+                    return BadRequest(_response);
+                }
+
+                if (!string.IsNullOrEmpty(updateDTO.Name))
+                {
+                    model.Name = updateDTO.Name;
+
+                    var studentProfile = await _studentProfileRepository.GetAsync(x => x.ChildId == model.Id);
+
+                    if (studentProfile != null)
+                    {
+                        string[] names = updateDTO.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                        studentProfile.StudentCode = "";
+                        foreach (var name in names)
+                        {
+                            studentProfile.StudentCode += name.ToUpper().ElementAt(0);
+                        }
+                        studentProfile.StudentCode += studentProfile.ChildId;
+
+                        await _studentProfileRepository.UpdateAsync(studentProfile);
+                    }
+                }
+                if (!string.IsNullOrEmpty(updateDTO.BirthDate.ToString()))
+                {
+                    model.BirthDate = updateDTO.BirthDate;
+                }
+
+                // Update child media
+                if (updateDTO.Media != null)
+                {
+                    using var mediaStream = updateDTO.Media.OpenReadStream();
+                    string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(updateDTO.Media.FileName)));
+
+                    model.ImageUrlPath = mediaUrl;
+                }
+
+                model.isMale = updateDTO.isMale;
+                model.UpdatedDate = DateTime.Now;
+                var childInfo = await _childInfoRepository.UpdateAsync(model);
+
+                _response.Result = _mapper.Map<ChildInformationDTO>(childInfo);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating Child information for ParentId: {ParentId}, ChildId: {ChildId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value, updateDTO.ChildId);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+    }
+}
