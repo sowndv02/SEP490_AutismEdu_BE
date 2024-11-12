@@ -159,7 +159,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPost("tutor")]
         [Authorize(Roles = SD.PARENT_ROLE)]
-        public async Task<ActionResult<APIResponse>> CreateReportTutorAsync(ReportTutorCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateReportTutorAsync([FromForm]ReportTutorCreateDTO createDTO)
         {
             try
             {
