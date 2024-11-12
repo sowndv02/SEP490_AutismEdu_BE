@@ -4,6 +4,7 @@ namespace backend_api.Models.DTOs
 {
     public class TutorProfileUpdateRequestDTO
     {
+        public int Id { get; set; }
         public string PhoneNumber { get; set; }
         public int StartAge { get; set; }
         public int EndAge { get; set; }
