@@ -91,17 +91,21 @@ namespace backend_api.Controllers.v1
         }
 
         [HttpGet("updateRequest")]
-        [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        public async Task<ActionResult<APIResponse>> GetAllUpdateRequestAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try
             {
                 int totalCount = 0;
                 List<WorkExperience> list = new();
-                Expression<Func<WorkExperience, bool>> filter = u => u.SubmitterId == userId && !u.IsDeleted;
+                Expression<Func<WorkExperience, bool>> filter = u => true;
                 Expression<Func<WorkExperience, object>> orderByQuery = u => true;
-
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    filter = filter.AndAlso(u => u.SubmitterId == userId && !u.IsDeleted);
+                }
                 bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
 
                 if (orderBy != null)
