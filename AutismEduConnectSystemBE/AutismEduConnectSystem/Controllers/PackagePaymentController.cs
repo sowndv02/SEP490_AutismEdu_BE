@@ -55,6 +55,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 newModel.SubmitterId = userId;
                 newModel.IsActive = true;
+                newModel.IsHide = createDTO.IsHide;
                 newModel.VersionNumber = await _packagePaymentRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
                 await _packagePaymentRepository.DeactivatePreviousVersionsAsync(createDTO.OriginalId);
                 if (createDTO.OriginalId == 0)
