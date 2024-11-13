@@ -9,6 +9,6 @@ namespace AutismEduConnectSystem.Models.DTOs.UpdateDTOs
         public string Title { get; set; }
         [Required(ErrorMessage = SD.CONTENT_REQUIRED)]
         public string Content { get; set; }
-        public IFormFile ImageDisplay { get; set; }
+        public IFormFile? ImageDisplay { get; set; }
     }
 }
