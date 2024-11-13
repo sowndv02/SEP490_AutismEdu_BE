@@ -70,18 +70,26 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetActive(int id)
+        [Authorize(Roles = $"{SD.MANAGER_ROLE},{SD.TUTOR_ROLE},{SD.STAFF_ROLE}")]
+        public async Task<IActionResult> GetByIdAsync(int id)
         {
             try
             {
+                if (id == 0)
+                {
+                    _logger.LogWarning("Invalid certificate ID: {certificateId}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-
                 var result = new Certificate();
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     result = await _certificateRepository.GetAsync(x => x.Id == id && !x.IsDeleted, false, "CertificateMedias", null);
                 }
-                else
+                else if (userRoles != null && (userRoles.Contains(SD.MANAGER_ROLE) || userRoles.Contains(SD.STAFF_ROLE)))
                 {
                     result = await _certificateRepository.GetAsync(x => x.Id == id, false, "CertificateMedias", null);
                 }
@@ -89,10 +97,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (result == null)
                 {
                     _logger.LogError("Certificate with ID {Id} not found or is deleted.", id);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<CertificateDTO>(result);
@@ -153,14 +161,14 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> ApproveOrRejectRequest(ChangeStatusDTO changeStatusDTO)
+        public async Task<IActionResult> UpdateStatusRequest(int id, ChangeStatusDTO changeStatusDTO)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try
             {
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId, false, null);
-                if (model == null || model.RequestStatus != Status.PENDING)
+                if (model == null || model.RequestStatus != Status.PENDING || id != changeStatusDTO.Id)
                 {
                     _logger.LogWarning("Invalid request status or certificate not found for certificate ID {CertificateId} by user {UserId}", changeStatusDTO.Id, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -223,10 +231,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                     await _certificateRepository.UpdateAsync(model);
 
                     //Send mail
-                    var subject = "Yêu cập nhật chứng chỉ của bạn đã bị từ chối!";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
                     if (System.IO.File.Exists(templatePath))
                     {
+                        var subject = "Yêu cập nhật chứng chỉ của bạn đã bị từ chối!";
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
                         var htmlMessage = templateContent
                             .Replace("@Model.FullName", tutor.FullName)
@@ -276,7 +284,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{MANAGER_ROLE},{TUTOR_ROLE}")]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
@@ -344,10 +352,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 foreach (var item in list)
                 {
                     item.Submitter.User = await _userRepository.GetAsync(x => x.Id == item.Submitter.TutorId, false, null);
-                    var (total, curriculums) = await _curriculumRepository.GetAllNotPagingAsync(x => x.SubmitterId == item.Submitter.TutorId && x.IsActive, null, null);
-                    item.Submitter.Curriculums = curriculums;
-                    var (totalWorkExperience, workexperiences) = await _workExperienceRepository.GetAllNotPagingAsync(x => x.SubmitterId == item.Submitter.TutorId && x.IsActive, null, null);
-                    item.Submitter.WorkExperiences = workexperiences;
                 }
                 // Setup pagination and response
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
@@ -369,7 +373,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
         [HttpDelete("{id:int}", Name = "DeleteCertificate")]
-        [Authorize]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -377,8 +381,8 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 if (id == 0)
                 {
-                    _logger.LogWarning("Invalid curriculum ID: {CurriculumId}. Returning BadRequest.", id);
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _logger.LogWarning("Invalid certificate ID: {certificateId}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
@@ -388,10 +392,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (model == null)
                 {
                     _logger.LogWarning("Certificate not found for ID: {CertificateId} and User ID: {UserId}. Returning BadRequest.", id, userId);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
-                    return BadRequest(_response);
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE) };
+                    return NotFound(_response);
                 }
                 model.IsDeleted = true;
                 await _certificateRepository.UpdateAsync(model);

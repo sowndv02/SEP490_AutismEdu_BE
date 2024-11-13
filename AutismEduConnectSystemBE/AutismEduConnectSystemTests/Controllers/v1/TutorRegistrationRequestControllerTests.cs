@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AutismEduConnectSystemTests.Controllers.v1
+namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
     internal class TutorRegistrationRequestControllerTests
     {

@@ -32,7 +32,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly IRabbitMQMessageSender _messageBus;
         private readonly ILogger<CurriculumController> _logger;
         protected APIResponse _response;
-        protected int pageSize = 0;
         private readonly IResourceService _resourceService;
         private readonly INotificationRepository _notificationRepository;
         private readonly IHubContext<NotificationHub> _hubContext;
@@ -45,7 +44,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             _logger = logger;
             _messageBus = messageBus;
             _curriculumRepository = curriculumRepository;
-            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             queueName = configuration["RabbitMQSettings:QueueName"];
             _response = new APIResponse();
             _mapper = mapper;
@@ -72,15 +70,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var model = await _curriculumRepository.GetAsync(x => x.Id == id && x.SubmitterId == userId, false, null);
+                var model = await _curriculumRepository.GetAsync(x => x.Id == id && x.SubmitterId == userId, true, null);
 
                 if (model == null)
                 {
                     _logger.LogWarning("Curriculum not found for ID: {CurriculumId} and User ID: {UserId}. Returning BadRequest.", id, userId);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CURRICULUM) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 model.IsActive = false;
                 model.IsDeleted = true;
@@ -101,74 +99,9 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         }
 
-
-        [HttpGet("updateRequest")]
-        [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<ActionResult<APIResponse>> GetAllUpdateRequestAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
-        {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                int totalCount = 0;
-                List<Curriculum> list = new();
-                Expression<Func<Curriculum, bool>> filter = u => true;
-                Expression<Func<Curriculum, object>> orderByQuery = u => true;
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
-                {
-                    filter = filter.AndAlso(u => u.SubmitterId == userId && !u.IsDeleted);
-                }
-                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
-
-                if (orderBy != null)
-                {
-                    switch (orderBy)
-                    {
-                        case SD.CREATED_DATE:
-                            orderByQuery = x => x.CreatedDate;
-                            break;
-                        default:
-                            orderByQuery = x => x.CreatedDate;
-                            break;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
-                {
-                    switch (status.ToLower())
-                    {
-                        case "approve":
-                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE);
-                            break;
-                        case "reject":
-                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT);
-                            break;
-                        case "pending":
-                            filter = filter.AndAlso(x => x.RequestStatus == Status.PENDING);
-                            break;
-                    }
-                }
-                var (count, result) = await _curriculumRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
-                list = result;
-                totalCount = count;
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
-                _response.Result = _mapper.Map<List<CurriculumDTO>>(list);
-                _response.StatusCode = HttpStatusCode.OK;
-                _response.Pagination = pagination;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching curricula for user ID: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, int pageSize = 0, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -179,13 +112,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    Expression<Func<Curriculum, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted;
-
-                    var combinedFilter = Expression.Lambda<Func<Curriculum, bool>>(
-                        Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
-                        filter.Parameters
-                    );
-                    filter = combinedFilter;
+                    filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted);
                 }
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 Expression<Func<Curriculum, object>>? orderByQuery = null;
@@ -221,10 +148,20 @@ namespace AutismEduConnectSystem.Controllers.v1
                             break;
                     }
                 }
-                var (count, result) = await _curriculumRepository.GetAllAsync(filter,
+                if(pageSize != 0)
+                {
+                    var (count, result) = await _curriculumRepository.GetAllAsync(filter,
                                 "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
-                list = result;
-                totalCount = count;
+                    list = result;
+                    totalCount = count;
+                }
+                else
+                {
+                    var (count, result) = await _curriculumRepository.GetAllNotPagingAsync(filter,
+                                "Submitter",null, orderByQuery, isDesc);
+                    list = result;
+                    totalCount = count;
+                }
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<CurriculumDTO>>(list);
@@ -297,7 +234,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> ApproveOrRejectCurriculumRequest(ChangeStatusDTO changeStatusDTO)
+        public async Task<IActionResult> UpdateStatusRequest(ChangeStatusDTO changeStatusDTO)
         {
             try
             {
@@ -330,20 +267,23 @@ namespace AutismEduConnectSystem.Controllers.v1
                     await _curriculumRepository.UpdateAsync(model);
 
                     // Send mail
-                    var subject = "Yêu cập nhật khung chương trình của bạn đã được chấp nhận!";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", tutor.FullName)
-                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật khung chương trình của bạn")
-                        .Replace("@Model.IsApproved", Status.APPROVE.ToString());
-                    _messageBus.SendMessage(new EmailLogger()
+                    if (System.IO.File.Exists(templatePath))
                     {
-                        UserId = tutor.Id,
-                        Email = tutor.Email,
-                        Message = htmlMessage,
-                        Subject = subject
-                    }, queueName);
+                        var subject = "Yêu cập nhật khung chương trình của bạn đã được chấp nhận!";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", tutor.FullName)
+                            .Replace("@Model.IssueName", $"Yêu cầu cập nhật khung chương trình của bạn")
+                            .Replace("@Model.IsApproved", Status.APPROVE.ToString());
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = tutor.Id,
+                            Email = tutor.Email,
+                            Message = htmlMessage,
+                            Subject = subject
+                        }, queueName);
+                    }
                     var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
                     var notfication = new Notification()
                     {
