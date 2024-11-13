@@ -179,21 +179,22 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
         }
 
+        [HttpPut]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> UpdateAsync(ScheduleTimeSlotUpdateDTO updateDTO)
         {
             try
             {
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
                 var oldTimeSlot = await _scheduleTimeSlotRepository.GetAsync(x => x.Id == updateDTO.TimeSlotId);
-                if(oldTimeSlot == null)
+                if (oldTimeSlot == null)
                 {
                     _logger.LogWarning("Schedule time slot with Id: {TimeSlotId} not found", updateDTO.TimeSlotId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
                     return BadRequest(_response);
-                }               
+                }
 
                 var isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x != oldTimeSlot
                                                                                    && x.Weekday == updateDTO.Weekday
@@ -227,13 +228,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                     To = TimeSpan.Parse(updateDTO.To),
                     IsDeleted = false,
                     AppliedDate = timeTillApply.Date,
-                    CreatedDate = DateTime.Now,                  
-                };                
+                    CreatedDate = DateTime.Now,
+                };
                 newTimeSlot = await _scheduleTimeSlotRepository.CreateAsync(newTimeSlot);
 
                 // Clear old schedule start from next week
                 var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.ScheduleDate >= timeTillApply && x.ScheduleTimeSlotId == oldTimeSlot.Id);
-                foreach(var schedule in scheduleToDelete.list)
+                foreach (var schedule in scheduleToDelete.list)
                 {
                     await _scheduleRepository.RemoveAsync(schedule);
                 }
@@ -264,7 +265,41 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating time slots for studentProfileId: {StudentProfileId}", studentProfileId);
+                _logger.LogError(ex, "Error occurred while updating TimeSlot with Id: {TimeSlotId}", updateDTO.TimeSlotId);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet("CheckOverlapTimeSlot")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> CheckOverlapTimeSlot(List<ScheduleTimeSlotDTO> scheduleTimeSlots)
+        {
+            try
+            {
+                List<ScheduleDTO> overLapSchedule = new();
+                foreach (var timeSlot in scheduleTimeSlots)
+                {
+                    var isTimeSlotDuplicate = await _scheduleRepository.GetAllNotPagingAsync(x => !x.IsHidden
+                                                                                             && x.ScheduleDate.Date > DateTime.Now.Date
+                                                                                             && (int)x.ScheduleDate.DayOfWeek == timeSlot.Weekday
+                                                                                             && !(timeSlot.To <= x.Start || timeSlot.From >= x.End));
+                    if (isTimeSlotDuplicate.list != null)
+                    {
+                        overLapSchedule.AddRange(_mapper.Map<List<ScheduleDTO>>(isTimeSlotDuplicate.list));
+                    }
+                }
+
+                _response.Result = _mapper.Map<List<ScheduleDTO>>(overLapSchedule);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while checking for duplicate TimeSlot {list}", scheduleTimeSlots);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
