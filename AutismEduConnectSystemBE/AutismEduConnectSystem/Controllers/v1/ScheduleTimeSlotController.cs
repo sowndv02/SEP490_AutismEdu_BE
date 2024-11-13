@@ -63,6 +63,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 DateTime lastDayOfWeek = DateTime.Now.AddDays(dayTillSunday);
 
                 var scheduleToRemove = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == model.StudentProfileId
+                                                                                        && !x.IsUpdatedSchedule
                                                                                         && x.ScheduleTimeSlotId == timeSlotId
                                                                                         && x.ScheduleDate > lastDayOfWeek);
                 foreach (var schedule in scheduleToRemove.list)
@@ -233,7 +234,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                 newTimeSlot = await _scheduleTimeSlotRepository.CreateAsync(newTimeSlot);
 
                 // Clear old schedule start from next week
-                var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.ScheduleDate >= timeTillApply && x.ScheduleTimeSlotId == oldTimeSlot.Id);
+                var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.ScheduleDate >= timeTillApply
+                                                                                        && !x.IsUpdatedSchedule
+                                                                                        && x.ScheduleTimeSlotId == oldTimeSlot.Id);
                 foreach (var schedule in scheduleToDelete.list)
                 {
                     await _scheduleRepository.RemoveAsync(schedule);
@@ -266,40 +269,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while updating TimeSlot with Id: {TimeSlotId}", updateDTO.TimeSlotId);
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-        [HttpGet("CheckOverlapTimeSlot")]
-        [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<ActionResult<APIResponse>> CheckOverlapTimeSlot(List<ScheduleTimeSlotDTO> scheduleTimeSlots)
-        {
-            try
-            {
-                List<ScheduleDTO> overLapSchedule = new();
-                foreach (var timeSlot in scheduleTimeSlots)
-                {
-                    var isTimeSlotDuplicate = await _scheduleRepository.GetAllNotPagingAsync(x => !x.IsHidden
-                                                                                             && x.ScheduleDate.Date > DateTime.Now.Date
-                                                                                             && (int)x.ScheduleDate.DayOfWeek == timeSlot.Weekday
-                                                                                             && !(timeSlot.To <= x.Start || timeSlot.From >= x.End));
-                    if (isTimeSlotDuplicate.list != null)
-                    {
-                        overLapSchedule.AddRange(_mapper.Map<List<ScheduleDTO>>(isTimeSlotDuplicate.list));
-                    }
-                }
-
-                _response.Result = _mapper.Map<List<ScheduleDTO>>(overLapSchedule);
-                _response.StatusCode = HttpStatusCode.OK;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while checking for duplicate TimeSlot {list}", scheduleTimeSlots);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
