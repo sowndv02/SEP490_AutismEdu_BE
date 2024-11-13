@@ -15,7 +15,7 @@ namespace AutismEduConnectSystem.Models.DTOs
         public string? RejectionReason { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
-        public TutorInfoDTO? Submitter { get; set; }
+        public TutorUserInfo? Submitter { get; set; }
         public string? Feedback { get; set; }
         public Status RequestStatus { get; set; }
         public List<CertificateMediaDTO> CertificateMedias { get; set; }
