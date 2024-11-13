@@ -1703,7 +1703,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
                             expr.Body.ToString().Contains("CreatedDate")
                         ),
-                        false
+                        true
                     )
                 ) // Sort descending by CreatedDate
                 .ReturnsAsync(pagedResult);
@@ -1739,7 +1739,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
                             expr.Body.ToString().Contains("CreatedDate")
                         ),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by CreatedDate
@@ -1807,7 +1807,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by Age
                 .ReturnsAsync(pagedResult);
@@ -1841,7 +1841,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by Age
@@ -2113,7 +2113,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by Age
                 .ReturnsAsync(pagedResult);
@@ -2147,7 +2147,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by Age
@@ -2215,7 +2215,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by CreatedDate
                 .ReturnsAsync(pagedResult);
@@ -2249,7 +2249,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by CreatedDate
@@ -2708,7 +2708,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true
+                        false
                     )
                 ) // Sort ascending by Age
                 .ReturnsAsync(pagedResult);
@@ -2743,7 +2743,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true
+                        false
                     ),
                 Times.Once
             ); // Ensure sorting is ascending by Age
@@ -2806,7 +2806,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true
+                        false
                     )
                 ) // Sort ascending by Age
                 .ReturnsAsync(pagedResult);
@@ -2841,7 +2841,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true
+                        false
                     ),
                 Times.Once
             ); // Ensure sorting is ascending by Age
@@ -3503,7 +3503,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by Age
                 .ReturnsAsync(pagedResult);
@@ -3537,7 +3537,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by Age
@@ -3605,7 +3605,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by CreatedDate
                 .ReturnsAsync(pagedResult);
@@ -3639,7 +3639,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by CreatedDate
@@ -3911,7 +3911,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by AgeFrom
                 .ReturnsAsync(pagedResult);
@@ -3945,7 +3945,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by AgeFrom
@@ -4106,7 +4106,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by AgeFrom
                 .ReturnsAsync(pagedResult);
@@ -4136,12 +4136,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filter for status (All status)
+                       It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by AgeFrom
@@ -4302,7 +4302,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true
+                        false
                     )
                 ) // Sort ascending by CreatedDate
                 .ReturnsAsync(pagedResult);
@@ -4337,7 +4337,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true
+                        false
                     ),
                 Times.Once
             ); // Ensure sorting is ascending by CreatedDate
@@ -4400,7 +4400,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true
+                        false
                     )
                 ) // Sort ascending by CreatedDate
                 .ReturnsAsync(pagedResult);
@@ -4435,7 +4435,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true
+                        false
                     ),
                 Times.Once
             ); // Ensure sorting is ascending by CreatedDate
@@ -5002,7 +5002,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by Age (AgeFrom or AgeEnd)
                 .ReturnsAsync(pagedResult);
@@ -5036,7 +5036,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by Age (AgeFrom or AgeEnd)
@@ -5311,7 +5311,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by Age (AgeFrom or AgeEnd)
                 .ReturnsAsync(pagedResult);
@@ -5345,7 +5345,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by Age (AgeFrom or AgeEnd)
@@ -5517,7 +5517,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     )
                 ) // Sort descending by CreatedDate
                 .ReturnsAsync(pagedResult);
@@ -5551,7 +5551,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false
+                        true
                     ),
                 Times.Once
             ); // Ensure sorting is descending by CreatedDate
@@ -6350,7 +6350,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsStaffWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsApprove()
+        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsStaffNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsApprove()
         {
             // Arrange
             var userClaims = new List<Claim>
@@ -6404,7 +6404,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
-                        "searchCurriculum", // Search term applied
+                        null, // Search term applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
                     )
@@ -6413,7 +6413,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.GetAllAsync(
-                "searchCurriculum",
+                null,
                 SD.STATUS_APPROVE,
                 0,
                 SD.AGE,
@@ -6438,7 +6438,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
                         "Submitter",
-                        "searchCurriculum", // Ensure search term is applied
+                        null, // Ensure search term is applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
                     ),
@@ -6447,7 +6447,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsStaffWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsApprove()
+        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsStaffNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsApprove()
         {
             // Arrange
             var userClaims = new List<Claim>
@@ -6501,7 +6501,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
-                        "searchCurriculum", // Search term applied
+                        null, // Search term applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
                     )
@@ -6510,7 +6510,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.GetAllAsync(
-                "searchCurriculum",
+                null,
                 SD.STATUS_APPROVE,
                 0,
                 SD.AGE,
@@ -6535,7 +6535,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
                         "Submitter",
-                        "searchCurriculum", // Ensure search term is applied
+                        null, // Ensure search term is applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
                     ),
@@ -6544,7 +6544,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsStaffWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsApprove()
+        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsStaffNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsApprove()
         {
             // Arrange
             var userClaims = new List<Claim>
@@ -6604,7 +6604,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
-                        "searchCurriculum", // Search term applied
+                        null, // Search term applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
                     )
@@ -6613,7 +6613,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.GetAllAsync(
-                "searchCurriculum",
+                null,
                 SD.STATUS_APPROVE,
                 0,
                 SD.CREATED_DATE,
@@ -6638,7 +6638,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
                         "Submitter",
-                        "searchCurriculum", // Ensure search term is applied
+                        null, // Ensure search term is applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
                     ),
@@ -6647,7 +6647,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsStaffWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsApprove()
+        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsStaffNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsApprove()
         {
             // Arrange
             var userClaims = new List<Claim>
@@ -6707,7 +6707,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
-                        "searchCurriculum", // Search term applied
+                        null, // Search term applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
                     )
@@ -6716,7 +6716,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.GetAllAsync(
-                "searchCurriculum",
+                null,
                 SD.STATUS_APPROVE,
                 0,
                 SD.CREATED_DATE,
@@ -6741,12 +6741,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
                         "Submitter",
-                        "searchCurriculum", // Ensure search term is applied
+                        null, // Ensure search term is applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
                     ),
                 Times.Once
             ); // Ensure sorting is ascending by CreatedDate
         }
+
+
     }
 }
