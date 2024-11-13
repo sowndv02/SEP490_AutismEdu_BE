@@ -87,11 +87,17 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                var question = await _assessmentQuestionRepository.GetAllNotPagingAsync(x => x.TestId == null, "AssessmentOptions", null);
-                var scoreRange = await _assessmentScoreRangeRepository.GetAllNotPagingAsync();
+                var questions = await _assessmentQuestionRepository.GetAllNotPagingAsync(x => x.TestId == null, "AssessmentOptions", null);
+                var scoreRanges = await _assessmentScoreRangeRepository.GetAllNotPagingAsync();
+
+                foreach (var question in questions.list)
+                {
+                    question.AssessmentOptions = question.AssessmentOptions.OrderBy(x => x.Point).ToList();
+                }
+
                 AllAssessmentDTO model = new AllAssessmentDTO();
-                model.Questions = _mapper.Map<List<AssessmentQuestionDTO>>(question.list);
-                model.ScoreRanges = _mapper.Map<List<AssessmentScoreRangeDTO>>(scoreRange.list);
+                model.Questions = _mapper.Map<List<AssessmentQuestionDTO>>(questions.list);
+                model.ScoreRanges = _mapper.Map<List<AssessmentScoreRangeDTO>>(scoreRanges.list);
                 _response.Result = model;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
