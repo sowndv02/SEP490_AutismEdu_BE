@@ -28,6 +28,7 @@ namespace AutismEduConnectSystem.Models
         [ForeignKey(nameof(ExerciseTypeId))]
         public ExerciseType ExerciseType { get; set; }
         public bool IsHidden { get; set; }
+        public bool IsUpdatedSchedule { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         [ForeignKey(nameof(TutorId))]

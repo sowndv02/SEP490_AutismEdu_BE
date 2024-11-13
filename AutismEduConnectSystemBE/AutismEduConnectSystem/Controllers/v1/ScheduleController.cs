@@ -317,6 +317,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     ExerciseTypeId = originalSchedule.ExerciseTypeId,
                     ExerciseId = originalSchedule.ExerciseId,
                     IsHidden = false,
+                    IsUpdatedSchedule = true,
                     ScheduleDate = updateDTO.ScheduleDate,
                     Start = updateDTO.Start,
                     End = updateDTO.End,
