@@ -108,7 +108,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost]
-        [Authorize(SD.ADMIN_ROLE)]
+        [Authorize(Roles = SD.ADMIN_ROLE)]
         public async Task<ActionResult<APIResponse>> CreateRoleAsync(RoleCreateDTO roleDTO)
         {
             try
@@ -147,7 +147,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpDelete("{roleId}")]
-        [Authorize(SD.ADMIN_ROLE)]
+        [Authorize(Roles = SD.ADMIN_ROLE)]
         public async Task<IActionResult> DeleteRoleAsync(string roleId)
         {
 
