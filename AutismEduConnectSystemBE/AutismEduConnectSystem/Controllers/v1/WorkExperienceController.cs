@@ -47,7 +47,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         }
 
         [HttpDelete("{id}")]
-        [Authorize(SD.TUTOR_ROLE)]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

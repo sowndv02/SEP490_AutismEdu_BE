@@ -118,7 +118,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         }
 
         [HttpPost]
-        [Authorize(SD.TUTOR_ROLE)]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<IActionResult> CreateAsync([FromForm] CertificateCreateDTO createDTO)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

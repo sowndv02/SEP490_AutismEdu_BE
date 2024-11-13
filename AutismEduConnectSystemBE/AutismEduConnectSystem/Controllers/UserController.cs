@@ -72,7 +72,8 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpDelete("role/{userId}")]
-        [Authorize(SD.ADMIN_ROLE)]
+        [Authorize(Roles = SD.ADMIN_ROLE)]
+
         public async Task<ActionResult<APIResponse>> RemoveRoleByUserId(string userId, UserRoleDTO userRoleDTO)
         {
             try
@@ -112,7 +113,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost("role/{userId}")]
-        [Authorize(SD.ADMIN_ROLE)]
+        [Authorize(Roles = SD.ADMIN_ROLE)]
         public async Task<ActionResult<APIResponse>> AddRoleToUser(string userId, UserRoleDTO userRoleDTO)
         {
             try
@@ -190,7 +191,7 @@ namespace AutismEduConnectSystem.Controllers
 
 
         [HttpDelete("claim/{userId}")]
-        [Authorize(SD.ADMIN_ROLE)]
+        [Authorize(Roles = SD.ADMIN_ROLE)]
         public async Task<ActionResult<APIResponse>> RemoveClaimByUserId(string userId, UserClaimDTO userClaimDTO)
         {
             try
@@ -230,7 +231,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost("claim/{userId}")]
-        [Authorize(SD.ADMIN_ROLE)]
+        [Authorize(Roles = SD.ADMIN_ROLE)]
         public async Task<ActionResult<APIResponse>> AddClaimToUser(string userId, UserClaimDTO userClaimDTO)
         {
             try
