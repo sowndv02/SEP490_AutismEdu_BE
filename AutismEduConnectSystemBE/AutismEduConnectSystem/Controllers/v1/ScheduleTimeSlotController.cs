@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
+using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 
 namespace AutismEduConnectSystem.Controllers.v1
 {
@@ -24,7 +25,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly IResourceService _resourceService;
         protected APIResponse _response;
         private readonly IMapper _mapper;
-        private readonly ILogger<ScheduleTimeSlotController> _logger;   
+        private readonly ILogger<ScheduleTimeSlotController> _logger;
 
         public ScheduleTimeSlotController(IScheduleRepository scheduleRepository, IScheduleTimeSlotRepository scheduleTimeSlotRepository
             , IStudentProfileRepository studentProfileRepository, IResourceService resourceService, IMapper mapper, ILogger<ScheduleTimeSlotController> logger)
@@ -61,8 +62,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var dayTillSunday = ((int)DayOfWeek.Sunday - (int)DateTime.Now.DayOfWeek + 7) % 7;
                 DateTime lastDayOfWeek = DateTime.Now.AddDays(dayTillSunday);
 
-                var scheduleToRemove = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == model.StudentProfileId 
-                                                                                        && x.ScheduleTimeSlotId == timeSlotId 
+                var scheduleToRemove = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == model.StudentProfileId
+                                                                                        && x.ScheduleTimeSlotId == timeSlotId
                                                                                         && x.ScheduleDate > lastDayOfWeek);
                 foreach (var schedule in scheduleToRemove.list)
                 {
@@ -95,8 +96,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                 List<ScheduleTimeSlot> createdTimeSlots = new();
                 foreach (var slot in scheduleTimeSlot)
                 {
-                    var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot 
-                                                                       && x.Weekday == slot.Weekday 
+                    var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot
+                                                                       && x.Weekday == slot.Weekday
                                                                        && !(slot.To <= x.From || slot.From >= x.To)).FirstOrDefault();
                     if (isTimeSlotDuplicate == null)
                     {
@@ -109,11 +110,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                             return BadRequest(_response);
                         }
 
-                        isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday 
-                                                                                           && x.StudentProfile.TutorId.Equals(tutorId) 
-                                                                                           && !(slot.To <= x.From || slot.From >= x.To) 
-                                                                                           && !x.IsDeleted 
-                                                                                           && (x.StudentProfile.Status == SD.StudentProfileStatus.Pending 
+                        isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x.Weekday == slot.Weekday
+                                                                                           && x.StudentProfile.TutorId.Equals(tutorId)
+                                                                                           && !(slot.To <= x.From || slot.From >= x.To)
+                                                                                           && !x.IsDeleted
+                                                                                           && (x.StudentProfile.Status == SD.StudentProfileStatus.Pending
                                                                                            || x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
                                                                                            , true, "StudentProfile");
                         if (isTimeSlotDuplicate != null)
@@ -135,7 +136,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
 
                     var daysTillNextWeek = ((int)DayOfWeek.Monday - (int)DateTime.Today.DayOfWeek + 7) % 7;
-                    DateTime timeTillApply = daysTillNextWeek == 0? DateTime.Today.AddDays(7) : DateTime.Today.AddDays(daysTillNextWeek);
+                    DateTime timeTillApply = daysTillNextWeek == 0 ? DateTime.Today.AddDays(7) : DateTime.Today.AddDays(daysTillNextWeek);
 
                     slot.StudentProfileId = studentProfileId;
                     slot.IsDeleted = false;
@@ -162,8 +163,101 @@ namespace AutismEduConnectSystem.Controllers.v1
                     };
                     await _scheduleRepository.CreateAsync(schedule);
                 }
-                
+
                 _response.Result = _mapper.Map<List<ScheduleTimeSlotDTO>>(createdTimeSlots);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating time slots for studentProfileId: {StudentProfileId}", studentProfileId);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        public async Task<ActionResult<APIResponse>> UpdateAsync(ScheduleTimeSlotUpdateDTO updateDTO)
+        {
+            try
+            {
+                var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                var oldTimeSlot = await _scheduleTimeSlotRepository.GetAsync(x => x.Id == updateDTO.TimeSlotId);
+                if(oldTimeSlot == null)
+                {
+                    _logger.LogWarning("Schedule time slot with Id: {TimeSlotId} not found", updateDTO.TimeSlotId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
+                    return BadRequest(_response);
+                }               
+
+                var isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x != oldTimeSlot
+                                                                                   && x.Weekday == updateDTO.Weekday
+                                                                                   && x.StudentProfile.TutorId.Equals(tutorId)
+                                                                                   && !(TimeSpan.Parse(updateDTO.To) <= x.From || TimeSpan.Parse(updateDTO.From) >= x.To)
+                                                                                   && !x.IsDeleted
+                                                                                   && (x.StudentProfile.Status == SD.StudentProfileStatus.Pending
+                                                                                   || x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
+                                                                                   , true, "StudentProfile");
+                if (isTimeSlotDuplicate != null)
+                {
+                    _logger.LogWarning("Duplicate time slot found: From: {From}, To: {To}", isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm"));
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm")) };
+                    return BadRequest(_response);
+                }
+
+                oldTimeSlot.IsDeleted = true;
+                oldTimeSlot.UpdatedDate = DateTime.Now;
+                oldTimeSlot = await _scheduleTimeSlotRepository.UpdateAsync(oldTimeSlot);
+
+                var daysTillNextWeek = ((int)DayOfWeek.Monday - (int)DateTime.Today.DayOfWeek + 7) % 7;
+                DateTime timeTillApply = daysTillNextWeek == 0 ? DateTime.Today.AddDays(7) : DateTime.Today.AddDays(daysTillNextWeek);
+
+                var newTimeSlot = new ScheduleTimeSlot()
+                {
+                    Weekday = updateDTO.Weekday,
+                    StudentProfileId = oldTimeSlot.StudentProfileId,
+                    From = TimeSpan.Parse(updateDTO.From),
+                    To = TimeSpan.Parse(updateDTO.To),
+                    IsDeleted = false,
+                    AppliedDate = timeTillApply.Date,
+                    CreatedDate = DateTime.Now,                  
+                };                
+                newTimeSlot = await _scheduleTimeSlotRepository.CreateAsync(newTimeSlot);
+
+                // Clear old schedule start from next week
+                var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.ScheduleDate >= timeTillApply);
+                foreach(var schedule in scheduleToDelete.list)
+                {
+                    await _scheduleRepository.RemoveAsync(schedule);
+                }
+
+                // Generate next week schedule
+                DateTime nextWeekSchedule = newTimeSlot.Weekday == 0 ? timeTillApply : timeTillApply.AddDays(newTimeSlot.Weekday - 1);
+
+                Schedule newSchedule = new Schedule()
+                {
+                    TutorId = tutorId,
+                    AttendanceStatus = SD.AttendanceStatus.NOT_YET,
+                    ScheduleDate = nextWeekSchedule,
+                    StudentProfileId = newTimeSlot.StudentProfileId,
+                    CreatedDate = DateTime.Now,
+                    PassingStatus = SD.PassingStatus.NOT_YET,
+                    UpdatedDate = DateTime.Now,
+                    Start = newTimeSlot.From,
+                    End = newTimeSlot.To,
+                    ScheduleTimeSlotId = newTimeSlot.Id
+                };
+                await _scheduleRepository.CreateAsync(newSchedule);
+
+
+                _response.Result = _mapper.Map<ScheduleTimeSlotDTO>(newTimeSlot);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
