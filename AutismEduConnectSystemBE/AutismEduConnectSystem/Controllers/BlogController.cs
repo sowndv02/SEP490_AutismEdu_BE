@@ -213,7 +213,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPut("UpdateStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<ActionResult<APIResponse>> UpdateStatusAsync(int id, BlogUpdateDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateStatusAsync(int id, [FromForm] BlogUpdateDTO updateDTO)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             try

@@ -227,7 +227,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 else
                 {
-                    filter = u => u.TutorId.Equals(tutorId);
+                    filter = u => u.TutorId.Equals(tutorId) && !u.IsHidden;
                 }
 
                 if (startDate != null)
@@ -256,7 +256,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     .ToList();
 
                 var model = new ListScheduleDTO();
-                var allTutorSchedule = await _scheduleRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId));
+                var allTutorSchedule = await _scheduleRepository.GetAllNotPagingAsync(x => !x.IsHidden && studentProfileId != 0 ? (x.StudentProfileId == studentProfileId) : (x.TutorId.Equals(tutorId)));
                 model.MaxDate = allTutorSchedule.list.Max(x => x.ScheduleDate.Date).Date;
                 model.Schedules = _mapper.Map<List<ScheduleDTO>>(list);
 
