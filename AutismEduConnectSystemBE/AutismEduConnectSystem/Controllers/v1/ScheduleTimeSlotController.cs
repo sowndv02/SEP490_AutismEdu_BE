@@ -232,7 +232,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 newTimeSlot = await _scheduleTimeSlotRepository.CreateAsync(newTimeSlot);
 
                 // Clear old schedule start from next week
-                var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.ScheduleDate >= timeTillApply);
+                var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.ScheduleDate >= timeTillApply && x.ScheduleTimeSlotId == oldTimeSlot.Id);
                 foreach(var schedule in scheduleToDelete.list)
                 {
                     await _scheduleRepository.RemoveAsync(schedule);
