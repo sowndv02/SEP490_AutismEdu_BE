@@ -57,12 +57,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (id == 0)
                 {
                     _logger.LogWarning($"Invalid ID {id} provided for deletion.");
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var model = await _workExperienceRepository.GetAsync(x => x.Id == id && x.SubmitterId == userId, false, null);
+                var model = await _workExperienceRepository.GetAsync(x => x.Id == id && x.SubmitterId == userId, true, null, null);
 
                 if (model == null)
                 {
@@ -83,71 +83,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             catch (Exception ex)
             {
                 _logger.LogError($"Error occurred while deleting work experience with ID {id} for user {userId}: {ex.Message}");
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-        [HttpGet("updateRequest")]
-        [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<ActionResult<APIResponse>> GetAllUpdateRequestAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            try
-            {
-                int totalCount = 0;
-                List<WorkExperience> list = new();
-                Expression<Func<WorkExperience, bool>> filter = u => true;
-                Expression<Func<WorkExperience, object>> orderByQuery = u => true;
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
-                {
-                    filter = filter.AndAlso(u => u.SubmitterId == userId && !u.IsDeleted);
-                }
-                bool isDesc = !string.IsNullOrEmpty(orderBy) && orderBy == SD.ORDER_DESC;
-
-                if (orderBy != null)
-                {
-                    switch (orderBy)
-                    {
-                        case SD.CREATED_DATE:
-                            orderByQuery = x => x.CreatedDate;
-                            break;
-                        default:
-                            orderByQuery = x => x.CreatedDate;
-                            break;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
-                {
-                    switch (status.ToLower())
-                    {
-                        case "approve":
-                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE);
-                            break;
-                        case "reject":
-                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT);
-                            break;
-                        case "pending":
-                            filter = filter.AndAlso(x => x.RequestStatus == Status.PENDING);
-                            break;
-                    }
-                }
-                var (count, result) = await _workExperienceRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
-                list = result;
-                totalCount = count;
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
-                _response.Result = _mapper.Map<List<WorkExperienceDTO>>(list);
-                _response.StatusCode = HttpStatusCode.OK;
-                _response.Pagination = pagination;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error occurred while retrieving work experiences for user {userId}: {ex.Message}");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -176,6 +111,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                         filter.Parameters
                     );
                     filter = combinedFilter;
+                }
+                if (!string.IsNullOrEmpty(search))
+                {
+                    filter = filter.AndAlso(x => x.CompanyName.ToLower().Contains(search.ToLower()));
                 }
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 if (orderBy != null)
@@ -209,7 +148,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                                 "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                 list = result;
                 totalCount = count;
-
+                foreach (var item in list) 
+                {
+                    item.Submitter.User = await _userRepository.GetAsync(x => x.Id == item.SubmitterId);
+                }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<WorkExperienceDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -219,39 +161,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             catch (Exception ex)
             {
                 _logger.LogError($"Error occurred while fetching work experiences: {ex.Message}");
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetActive(int id)
-        {
-            try
-            {
-                var model = await _workExperienceRepository.GetAsync(x => x.Id == id && x.IsActive);
-                if (model == null)
-                {
-                    _logger.LogWarning($"Work experience with ID: {id} not found or is not active.");
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
-                    return BadRequest(_response);
-                }
-
-                _response.StatusCode = HttpStatusCode.Created;
-                _response.Result = _mapper.Map<WorkExperienceDTO>(model);
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error occurred while fetching active work experience for ID: {id}. Exception: {ex.Message}");
-
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

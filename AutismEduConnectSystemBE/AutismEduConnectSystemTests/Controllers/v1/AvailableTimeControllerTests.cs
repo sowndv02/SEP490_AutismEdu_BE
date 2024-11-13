@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using AutismEduConnectSystem;
-using AutismEduConnectSystem.Controllers.v1;
 using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
@@ -19,8 +18,9 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using Xunit;
+using AutismEduConnectSystem.Controllers;
 
-namespace AutismEduConnectSystemTests.Controllers.v1
+namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
     public class AvailableTimeControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {

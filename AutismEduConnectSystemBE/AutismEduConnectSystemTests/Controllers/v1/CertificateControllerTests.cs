@@ -26,7 +26,7 @@ using Xunit;
 using static AutismEduConnectSystem.SD;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
-namespace AutismEduConnectSystemTests.Controllers.v1
+namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
     public class CertificateControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {
@@ -95,93 +95,6 @@ namespace AutismEduConnectSystemTests.Controllers.v1
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
         }
 
-        [Fact]
-        public async Task GetActive_ReturnsCertificate_WhenUserIsTutorAndCertificateExists()
-        {
-            // Arrange
-            var certificateId = 1;
-            var certificate = new Certificate { Id = certificateId, IsDeleted = false };
-            var certificateDTO = new CertificateDTO { Id = certificateId };
-
-            _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
-                .ReturnsAsync(certificate);
-
-            var userClaims = new List<Claim> { new Claim(ClaimTypes.Role, TUTOR_ROLE) };
-            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
-            // Act
-            var result = await _controller.GetActive(certificateId);
-            var okResult = result as OkObjectResult;
-
-            // Assert
-            okResult.Should().NotBeNull();
-            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
-
-            var apiResponse = okResult.Value as APIResponse;
-            apiResponse.Should().NotBeNull();
-            apiResponse.IsSuccess.Should().BeTrue();
-            apiResponse.Result.Should().NotBeNull();
-        }
-
-        [Fact]
-        public async Task GetActive_ReturnsCertificate_WhenUserIsNotTutorAndCertificateExists()
-        {
-            // Arrange
-            var certificateId = 1;
-            var certificate = new Certificate { Id = certificateId };
-            var certificateDTO = new CertificateDTO { Id = certificateId };
-
-            _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
-                .ReturnsAsync(certificate);
-
-            var user = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), "mock"));
-
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
-
-            // Act
-            var result = await _controller.GetActive(certificateId);
-            var okResult = result as OkObjectResult;
-
-            // Assert
-            okResult.Should().NotBeNull();
-            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
-
-            var apiResponse = okResult.Value as APIResponse;
-            apiResponse.Should().NotBeNull();
-            apiResponse.IsSuccess.Should().BeTrue();
-            apiResponse.Result.Should().NotBeNull();
-        }
-
-        [Fact]
-        public async Task GetActive_ReturnsNotFound_WhenCertificateDoesNotExist()
-        {
-            // Arrange
-            var certificateId = 1;
-            _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), It.IsAny<bool>(), "CertificateMedias", It.IsAny<string>()))
-                .ReturnsAsync((Certificate)null);
-
-            _resourceServiceMock.Setup(r => r.GetString(NOT_FOUND_MESSAGE, CERTIFICATE))
-                .Returns("Không tìm thấy 'Chứng chỉ'.");
-
-            // Act
-            var result = await _controller.GetActive(certificateId);
-            var badRequestResult = result as BadRequestObjectResult;
-
-            // Assert
-            badRequestResult.Should().NotBeNull();
-            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
-
-            var apiResponse = badRequestResult.Value as APIResponse;
-            apiResponse.Should().NotBeNull();
-            apiResponse.IsSuccess.Should().BeFalse();
-            apiResponse.ErrorMessages.Should().Contain("Không tìm thấy 'Chứng chỉ'.");
-        }
 
         //[Fact]
         //public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsNotInStaffRole()
@@ -327,7 +240,7 @@ namespace AutismEduConnectSystemTests.Controllers.v1
 
 
         [Fact]
-        public async Task ApproveOrRejectRequest_ApproveStatus_Succeeds()
+        public async Task UpdateStatusRequest_ApproveStatus_Succeeds()
         {
             // Arrange
             var certificateId = 1;
@@ -347,7 +260,7 @@ namespace AutismEduConnectSystemTests.Controllers.v1
             _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
 
             // Act
-            var result = await _controller.ApproveOrRejectRequest(changeStatusDTO);
+            var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
             var okResult = result as OkObjectResult;
 
             // Assert
@@ -361,7 +274,7 @@ namespace AutismEduConnectSystemTests.Controllers.v1
         }
 
         [Fact]
-        public async Task ApproveOrRejectRequest_RejectStatus_Succeeds()
+        public async Task UpdateStatusRequest_RejectStatus_Succeeds()
         {
             // Arrange
             var certificateId = 1;
@@ -380,7 +293,7 @@ namespace AutismEduConnectSystemTests.Controllers.v1
             _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
 
             // Act
-            var result = await _controller.ApproveOrRejectRequest(changeStatusDTO);
+            var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
             var okResult = result as OkObjectResult;
 
             // Assert
@@ -395,9 +308,10 @@ namespace AutismEduConnectSystemTests.Controllers.v1
 
 
         [Fact]
-        public async Task ApproveOrRejectRequest_ReturnsBadRequest_IfCertificateIsNull()
+        public async Task UpdateStatusRequest_ReturnsBadRequest_IfCertificateIsNull()
         {
             // Arrange
+            var certificateId = 1;
             var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.APPROVE };
 
             _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
@@ -405,7 +319,7 @@ namespace AutismEduConnectSystemTests.Controllers.v1
             _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
 
             // Act
-            var result = await _controller.ApproveOrRejectRequest(changeStatusDTO);
+            var result = await _controller.UpdateStatusRequest(certificateId,changeStatusDTO);
             var badRequestResult = result as BadRequestObjectResult;
 
             // Assert
@@ -418,9 +332,10 @@ namespace AutismEduConnectSystemTests.Controllers.v1
 
 
         [Fact]
-        public async Task ApproveOrRejectRequest_ReturnsBadRequest_IfCertificateStatusIsNotPending()
+        public async Task UpdateStatusRequest_ReturnsBadRequest_IfCertificateStatusIsNotPending()
         {
             // Arrange
+            var certificateId = 1;
             var certificate = new Certificate { Id = 1, RequestStatus = Status.APPROVE };
             var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.REJECT };
 
@@ -429,7 +344,7 @@ namespace AutismEduConnectSystemTests.Controllers.v1
             _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
 
             // Act
-            var result = await _controller.ApproveOrRejectRequest(changeStatusDTO);
+            var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
             var badRequestResult = result as BadRequestObjectResult;
 
             // Assert
@@ -441,16 +356,17 @@ namespace AutismEduConnectSystemTests.Controllers.v1
         }
 
         [Fact]
-        public async Task ApproveOrRejectRequest_ReturnsInternalServerError_OnException()
+        public async Task UpdateStatusRequest_ReturnsInternalServerError_OnException()
         {
             // Arrange
+            var certificateId = 1;
             var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.APPROVE };
             _resourceServiceMock.Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE)).Returns("Internal server error");
             _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
                 .ThrowsAsync(new Exception("Database error"));
 
             // Act
-            var result = await _controller.ApproveOrRejectRequest(changeStatusDTO);
+            var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
             var internalServerErrorResult = result as ObjectResult;
 
             // Assert

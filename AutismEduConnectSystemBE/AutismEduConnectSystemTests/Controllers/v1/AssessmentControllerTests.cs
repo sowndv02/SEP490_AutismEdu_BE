@@ -18,7 +18,7 @@ using System.Net;
 using System.Security.Claims;
 using Xunit;
 
-namespace AutismEduConnectSystemTests.Controllers.v1
+namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
     public class AssessmentControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {

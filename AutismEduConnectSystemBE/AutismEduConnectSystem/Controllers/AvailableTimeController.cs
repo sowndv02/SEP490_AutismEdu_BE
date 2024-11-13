@@ -11,11 +11,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
 
-namespace AutismEduConnectSystem.Controllers.v1
+namespace AutismEduConnectSystem.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    [ApiVersion("1.0")]
+    [ApiVersionNeutral]
     public class AvailableTimeController : ControllerBase
     {
         private readonly IAvailableTimeSlotRepository _availableTimeSlotRepository;
@@ -24,7 +24,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         protected ILogger<AvailableTimeController> _logger;
         private readonly IResourceService _resourceService;
 
-        public AvailableTimeController(IAvailableTimeSlotRepository availableTimeSlotRepository, IMapper mapper, 
+        public AvailableTimeController(IAvailableTimeSlotRepository availableTimeSlotRepository, IMapper mapper,
             IResourceService resourceService, ILogger<AvailableTimeController> logger)
         {
             _resourceService = resourceService;
@@ -61,9 +61,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 AvailableTimeSlot availableTimeSlot = _mapper.Map<AvailableTimeSlot>(availableTimeSlotCreateDTO);
-                
+
                 var existingTimeSlots = await _availableTimeSlotRepository.GetAllNotPagingAsync(x => x.Weekday == availableTimeSlot.Id, null, null);
-                if (existingTimeSlots.list != null && existingTimeSlots.list.Count > 0) 
+                if (existingTimeSlots.list != null && existingTimeSlots.list.Count > 0)
                 {
                     foreach (var slot in existingTimeSlots.list)
                     {
@@ -94,7 +94,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         }
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllTimeSlotFromWeekday([FromQuery] string tutorId,int weekday)
+        public async Task<ActionResult<APIResponse>> GetAllTimeSlotFromWeekday([FromQuery] string tutorId, int weekday)
         {
             try
             {
@@ -122,7 +122,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var timeslot = await _availableTimeSlotRepository.GetAsync(x => x.Id == timeSlotId && x.TutorId == tutorId, true, null);
-                if(timeslot == null)
+                if (timeslot == null)
                 {
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;

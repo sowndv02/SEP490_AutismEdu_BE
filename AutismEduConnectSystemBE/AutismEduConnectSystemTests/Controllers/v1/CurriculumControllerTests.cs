@@ -24,8 +24,9 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using AutismEduConnectSystem.SignalR;
 using Microsoft.AspNetCore.SignalR;
 using AutismEduConnectSystem;
+using static AutismEduConnectSystem.SD;
 
-namespace AutismEduConnectSystemTests.Controllers.v1
+namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
     public class CurriculumControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {
@@ -170,5 +171,107 @@ namespace AutismEduConnectSystemTests.Controllers.v1
         //    var result = await client.DeleteAsync("/api/v1/certificate/3");
         //    result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
         //}
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsStaffWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5, 
+                    Description = "Curriculum Description",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1)
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1)
+                }
+                ,
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Reason reject",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1)
+                }
+            };
+
+            var pagedResult = (curricula.Count, curricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                    "Submitter",
+                    5, // PageSize
+                    1, // PageNumber
+                    It.IsAny<Expression<Func<Curriculum, object>>>(),
+                    false)) // Sort ascending
+                .ReturnsAsync(pagedResult);
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(
+                    It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                    "Submitter",
+                    null,
+                    It.IsAny<Expression<Func<Curriculum, object>>>(),
+                    true))
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync("searchCurriculum", SD.STATUS_ALL, 0, SD.AGE, SD.ORDER_DESC, 1);
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters
+            _curriculumRepositoryMock.Verify(repo => repo.GetAllNotPagingAsync(
+                It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter checks for APPROVE status and SubmitterId
+                "Submitter",
+                null,
+                It.IsAny<Expression<Func<Curriculum, object>>>(),
+                true), Times.Once); // Ensure sorting is ascending
+        }
     }
 }

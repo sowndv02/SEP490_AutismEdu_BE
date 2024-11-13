@@ -13,6 +13,7 @@ namespace AutismEduConnectSystem.Models.DTOs
         public ApplicationUserDTO? ApprovedBy { get; set; }
         public bool IsActive { get; set; } = false;
         public int VersionNumber { get; set; } = 1;
+        public TutorInfoDTO? Submitter { get; set; }
         public string OriginalDescription { get; set; }
         public int OriginalAgeFrom { get; set; }
         public int OriginalAgeEnd { get; set; }
