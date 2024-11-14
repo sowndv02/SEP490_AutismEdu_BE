@@ -320,7 +320,8 @@
             NoInappropriateAttitude = 2,
             NoGuaranteedClassSchedule = 3,
             LackOfCommunicationWithParents = 4,
-            ViolationOfProfessionalEthics = 5
+            ViolationOfProfessionalEthics = 5,
+            Other = 6
         }
 
         public const string IncompatibilityWithCurriculumMsg = "Không tương thích với chương trình giảng dạy";
