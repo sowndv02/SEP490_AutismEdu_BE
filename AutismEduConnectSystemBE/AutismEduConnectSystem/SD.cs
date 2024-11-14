@@ -314,6 +314,15 @@
             UNLOCKREQUEST = 0
         }
 
+        public enum ReportTutorType
+        {
+            IncompatibilityWithRequirement = 1,
+            NoInappropriateAttitude = 2,
+            NoGuaranteedClassSchedule = 3,
+            LackOfCommunicationWithParents = 4,
+            ViolationOfProfessionalEthics = 5
+        }
+
         public const string IncompatibilityWithCurriculumMsg = "Không tương thích với chương trình giảng dạy";
         public const string SchedulingConflictsMsg = "Xung đột lịch trình";
         public const string REQUEST_TIMEOUT_EXPIRED = "Thời gian yêu cầu hết hạn";

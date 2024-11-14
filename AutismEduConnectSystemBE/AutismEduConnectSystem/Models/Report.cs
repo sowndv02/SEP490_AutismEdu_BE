@@ -13,6 +13,7 @@ namespace AutismEduConnectSystem.Models
         public string Title { get; set; }
         public string? Email { get; set; }
         public ReportType ReportType { get; set; }
+        public ReportTutorType ReportTutorType { get; set; }
         public string Description { get; set; }
         public Status Status { get; set; } = SD.Status.PENDING;
         public string? Comments { get; set; }

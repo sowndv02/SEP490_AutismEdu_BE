@@ -1,5 +1,4 @@
 ﻿using static AutismEduConnectSystem.SD;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutismEduConnectSystem.Models.DTOs.CreateDTOs
 {
@@ -8,6 +7,7 @@ namespace AutismEduConnectSystem.Models.DTOs.CreateDTOs
         public string Title { get; set; }
         public string Description { get; set; }
         public string TutorId { get; set; }
+        public ReportTutorType ReportTutorType { get; set; }
         public List<IFormFile> ReportMedias { get; set; }
     }
 }

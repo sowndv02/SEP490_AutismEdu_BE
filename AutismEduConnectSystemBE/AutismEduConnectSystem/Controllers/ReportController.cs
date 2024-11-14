@@ -1,11 +1,11 @@
-﻿using AutoMapper;
-using AutismEduConnectSystem.Models;
+﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
@@ -159,7 +159,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPost("tutor")]
         [Authorize(Roles = SD.PARENT_ROLE)]
-        public async Task<ActionResult<APIResponse>> CreateReportTutorAsync([FromForm]ReportTutorCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateReportTutorAsync([FromForm] ReportTutorCreateDTO createDTO)
         {
             try
             {
@@ -236,7 +236,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, DateTime? startDate = null, DateTime? endDate = null, string? type = SD.TYPE_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, DateTime? startDate = null, DateTime? endDate = null, string? type = SD.TYPE_ALL, int? reportTutorType = 0, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -304,6 +304,7 @@ namespace AutismEduConnectSystem.Controllers
                             break;
                         case "tutor":
                             filter = filter.AndAlso(x => x.ReportType == ReportType.TUTOR);
+                            if (reportTutorType != 0) filter = filter.AndAlso(x => (int)x.ReportTutorType == reportTutorType);
                             break;
                         case "account":
                             filter = filter.AndAlso(x => x.ReportType == ReportType.UNLOCKREQUEST);

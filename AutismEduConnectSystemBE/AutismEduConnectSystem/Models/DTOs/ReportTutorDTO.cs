@@ -1,5 +1,4 @@
 ﻿using static AutismEduConnectSystem.SD;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutismEduConnectSystem.Models.DTOs
 {
@@ -8,6 +7,7 @@ namespace AutismEduConnectSystem.Models.DTOs
         public int Id { get; set; }
         public string Title { get; set; }
         public ReportType ReportType { get; set; }
+        public ReportTutorType ReportTutorType { get; set; }
         public string Description { get; set; }
         public Status Status { get; set; }
         public string? Comments { get; set; }
