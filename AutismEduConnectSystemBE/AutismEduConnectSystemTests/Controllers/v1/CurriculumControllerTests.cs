@@ -14122,10 +14122,49 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task CreateAsync_ShouldReturnCreated_WhenCurriculumCreatedSuccessfully()
+        public async Task CreateAsync_ShouldReturnCreated_WhenCurriculumCreatedSuccessfullyWithOriginalIdIsZero()
         {
             // Arrange
             var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10, OriginalCurriculumId = 0 };
+            var userId = "testTutorId";
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) })) }
+            };
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, It.IsAny<Expression<Func<Curriculum, object>>>(), false))
+                .ReturnsAsync((0, new List<Curriculum>()));
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetNextVersionNumberAsync(It.IsAny<int>()))
+                .ReturnsAsync(1);
+
+            var newCurriculum = new Curriculum { Id = 1, AgeFrom = 5, AgeEnd = 10, SubmitterId = userId, CreatedDate = DateTime.Now };
+            _curriculumRepositoryMock
+                .Setup(repo => repo.CreateAsync(It.IsAny<Curriculum>()))
+                .ReturnsAsync(newCurriculum);
+
+            // Act
+            var result = await _controller.CreateAsync(curriculumDto);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+            response.Result.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task CreateAsync_ShouldReturnCreated_WhenCurriculumCreatedSuccessfullyWithOriginalIdDifZero()
+        {
+            // Arrange
+            var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10, OriginalCurriculumId = 1 };
             var userId = "testTutorId";
             _controller.ControllerContext = new ControllerContext
             {
