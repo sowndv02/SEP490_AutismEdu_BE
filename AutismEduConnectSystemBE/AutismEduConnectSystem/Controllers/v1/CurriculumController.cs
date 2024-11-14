@@ -70,7 +70,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var model = await _curriculumRepository.GetAsync(x => x.Id == id && x.SubmitterId == userId, true, null);
+                var model = await _curriculumRepository.GetAsync(x => x.Id == id && x.SubmitterId == userId, true, null, null);
 
                 if (model == null)
                 {
@@ -195,7 +195,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive);
+                var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive, null, null, null, false);
                 foreach (var item in list)
                 {
                     if (item.AgeFrom == curriculumDto.AgeFrom || item.AgeEnd == curriculumDto.AgeEnd)
@@ -212,6 +212,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 newCurriculum.SubmitterId = userId;
                 newCurriculum.IsActive = false;
                 newCurriculum.VersionNumber = await _curriculumRepository.GetNextVersionNumberAsync(curriculumDto.OriginalCurriculumId);
+                await _curriculumRepository.DeactivatePreviousVersionsAsync(curriculumDto.OriginalCurriculumId);
                 if (curriculumDto.OriginalCurriculumId == 0)
                 {
                     newCurriculum.OriginalCurriculumId = null;
@@ -234,13 +235,13 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> UpdateStatusRequest(ChangeStatusDTO changeStatusDTO)
+        public async Task<IActionResult> UpdateStatusRequest(int id, ChangeStatusDTO changeStatusDTO)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 Curriculum model = await _curriculumRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
-                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId, false, null);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
                     _logger.LogWarning("Curriculum not found for ID: {CurriculumId}", changeStatusDTO.Id);
@@ -313,21 +314,25 @@ namespace AutismEduConnectSystem.Controllers.v1
                     await _curriculumRepository.UpdateAsync(model);
 
                     // Send mail
-                    var subject = "Yêu cập nhật khung chương trình của bạn đã bị từ chối!";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", tutor.FullName)
-                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật khung chương trình của bạn")
-                        .Replace("@Model.IsApproved", Status.REJECT.ToString())
-                        .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
-                    _messageBus.SendMessage(new EmailLogger()
+                    if (System.IO.File.Exists(templatePath))
                     {
-                        UserId = tutor.Id,
-                        Email = tutor.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                        var subject = "Yêu cập nhật khung chương trình của bạn đã bị từ chối!";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", tutor.FullName)
+                            .Replace("@Model.IssueName", $"Yêu cầu cập nhật khung chương trình của bạn")
+                            .Replace("@Model.IsApproved", Status.REJECT.ToString())
+                            .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = tutor.Id,
+                            Email = tutor.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
+                        
                     var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
                     var notfication = new Notification()
                     {
