@@ -17,6 +17,7 @@ namespace AutismEduConnectSystem.Models.DTOs
         public ExerciseDTO? Exercise { get; set; }
         public ExerciseTypeInfoDTO? ExerciseType { get; set; }
         public string Note { get; set; }
+        public bool IsUpdatedSchedule { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         public StudentProfileDTO? StudentProfile { get; set; }
