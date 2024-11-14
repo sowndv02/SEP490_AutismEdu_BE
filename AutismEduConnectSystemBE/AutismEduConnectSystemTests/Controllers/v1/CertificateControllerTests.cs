@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using AutismEduConnectSystem.Controllers.v1;
-using AutismEduConnectSystem.Mapper;
+﻿using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
@@ -9,6 +7,7 @@ using AutismEduConnectSystem.RabbitMQSender;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
+using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,14 +16,11 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Newtonsoft.Json;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using System.Text;
 using Xunit;
 using static AutismEduConnectSystem.SD;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -319,7 +315,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
 
             // Act
-            var result = await _controller.UpdateStatusRequest(certificateId,changeStatusDTO);
+            var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
             var badRequestResult = result as BadRequestObjectResult;
 
             // Assert
@@ -431,14 +427,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             _certificateRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, null, null))
                 .ReturnsAsync((Certificate)null);
-            _resourceServiceMock.Setup(r => r.GetString(BAD_REQUEST_MESSAGE, CERTIFICATE)).Returns("Certificate not found.");
+            _resourceServiceMock.Setup(r => r.GetString(NOT_FOUND_MESSAGE, CERTIFICATE)).Returns("Certificate not found.");
             // Act
             var result = await _controller.DeleteAsync(certificateId);
             var badRequestResult = result.Result as ObjectResult;
 
             // Assert
             badRequestResult.Should().NotBeNull();
-            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
             var apiResponse = badRequestResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();

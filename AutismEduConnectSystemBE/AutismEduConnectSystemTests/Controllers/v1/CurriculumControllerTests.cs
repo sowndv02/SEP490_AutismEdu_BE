@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Net;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using AutismEduConnectSystem;
-using AutismEduConnectSystem.Controllers.v1;
-using AutismEduConnectSystem.Mapper;
+﻿using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.RabbitMQSender;
 using AutismEduConnectSystem.Repository.IRepository;
@@ -23,8 +13,10 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Linq.Expressions;
+using System.Net;
+using System.Security.Claims;
 using Xunit;
-using static AutismEduConnectSystem.SD;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -123,10 +115,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.DeleteAsync(1);
-            var statusCodeResult = result.Result as BadRequestObjectResult;
+            var statusCodeResult = result.Result as NotFoundObjectResult;
 
             // Assert
-            statusCodeResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+            statusCodeResult.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
             var apiResponse = statusCodeResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
@@ -153,7 +145,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Id = 1,
                 SubmitterId = "testUserId",
-                IsActive = true,
+                IsActive = false,
                 IsDeleted = true,
             };
             _curriculumRepositoryMock
@@ -6747,6 +6739,6762 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     ),
                 Times.Once
             ); // Ensure sorting is ascending by CreatedDate
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_ALL, // All status
+                0, // PageSize is 0
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_ALL, // All status
+                0, // PageSize is 0
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        true // Sort descending by AgeEnd
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_ALL, // All status
+                0, // PageSize is 0
+                SD.AGE, // Order by Age
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeEnd
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        true // Ensure sorting is descending by AgeEnd
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 8,
+            AgeEnd = 12,
+            Description = "Curriculum for Ages 8-12",
+            RequestStatus = SD.Status.REJECT,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.Take(5).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        false // Sort ascending by AgeEnd
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_ALL, // All status
+                5, // PageSize is 5
+                SD.AGE, // Order by AgeEnd
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by AgeEnd
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        false // Ensure sorting is ascending by AgeEnd
+                    ),
+                Times.Once
+            );
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 8,
+            AgeEnd = 12,
+            Description = "Curriculum for Ages 8-12",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.AgeEnd).Take(5).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        true // Sort descending by AgeEnd
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_ALL, // All status
+                5, // PageSize is 5
+                SD.AGE, // Order by AgeEnd
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeEnd
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        true // Ensure sorting is descending by AgeEnd
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 8,
+            AgeEnd = 12,
+            Description = "Curriculum for Ages 8-12",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.CreatedDate).Take(5).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_ALL, // All status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 8,
+            AgeEnd = 12,
+            Description = "Curriculum for Ages 8-12",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderBy(c => c.CreatedDate).Take(5).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_ALL, // All status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateASCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 8,
+            AgeEnd = 12,
+            Description = "Curriculum for Ages 8-12",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter curricula to include only those with APPROVE status
+            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
+
+            var pagedResult = (approvedCurricula.Count, approvedCurricula.OrderBy(c => c.CreatedDate).Take(5).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_APPROVE, // Only APPROVE status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate and APPROVE status filter
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateDESCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 8,
+            AgeEnd = 12,
+            Description = "Curriculum for Ages 8-12",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.CreatedDate).Take(5).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_APPROVE, // Only APPROVE status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate and APPROVE status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 8,
+            AgeEnd = 12,
+            Description = "Curriculum for Ages 8-12",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.AgeFrom).Take(5).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort descending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_APPROVE, // Only APPROVE status
+                5, // PageSize is 5
+                SD.AGE, // Order by Age
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 8,
+            AgeEnd = 12,
+            Description = "Curriculum for Ages 8-12",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.AgeFrom).Take(5).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Sort ascending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_APPROVE, // Only APPROVE status
+                5, // PageSize is 5
+                SD.AGE, // Order by Age
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter curricula by APPROVE status
+            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
+            var pagedResult = (approvedCurricula.Count, approvedCurricula.OrderBy(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_APPROVE, // Only APPROVE status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber (doesn't affect because PageSize is 0)
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().BeNull(); // No pagination because PageSize is 0
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter curricula by APPROVE status
+            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
+            var pagedResult = (approvedCurricula.Count, approvedCurricula.OrderByDescending(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_APPROVE, // Only APPROVE status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber (doesn't affect because PageSize is 0)
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().BeNull(); // No pagination because PageSize is 0
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"APPROVE\"")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort descending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_APPROVE, // Only APPROVE status
+                0, // PageSize is 0
+                SD.AGE, // Order by Age
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"APPROVE\"")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter out curricula with status APPROVE
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"APPROVE\"")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Sort ascending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_APPROVE, // Only APPROVE status
+                0, // PageSize is 0
+                SD.AGE, // Order by Age
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"APPROVE\"")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.APPROVE,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter out curricula with status PENDING
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Sort ascending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_PENDING, // Only PENDING status
+                0, // PageSize is 0
+                SD.AGE, // Order by Age
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.APPROVE, // Not included in the results since status is not PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter out curricula with status PENDING
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort descending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_PENDING, // Only PENDING status
+                0, // PageSize is 0
+                SD.AGE, // Order by Age
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.APPROVE, // Not included in the results since status is not PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter out curricula with status PENDING
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_PENDING, // Only PENDING status
+                0, // PageSize is 0
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.APPROVE, // Not included in the results since status is not PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter out curricula with status PENDING
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_PENDING, // Only PENDING status
+                0, // PageSize is 0
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.APPROVE, // Not included as the status is not PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderBy(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_PENDING, // Only PENDING status
+                5, // PageSize = 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber = 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 4,
+            AgeFrom = 15,
+            AgeEnd = 20,
+            Description = "Curriculum for Ages 15-20",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-4),
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Sort descending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_PENDING, // Only PENDING status
+                5, // PageSize = 5
+                SD.AGE, // Order by AgeFrom
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber = 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.APPROVE, // Not included as the status is not PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_PENDING, // Only PENDING status
+                5, // PageSize = 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber = 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 4,
+            AgeFrom = 15,
+            AgeEnd = 20,
+            Description = "Curriculum for Ages 15-20",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-4),
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderBy(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Sort ascending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_PENDING, // Only PENDING status
+                5, // PageSize = 5
+                SD.AGE, // Order by AgeFrom
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber = 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsRejected()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 4,
+            AgeFrom = 15,
+            AgeEnd = 20,
+            Description = "Curriculum for Ages 15-20",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-4),
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderBy(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Sort ascending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_REJECT, // Only REJECTED status
+                5, // PageSize = 5
+                SD.AGE, // Order by AgeFrom
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber = 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsRejected()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 4,
+            AgeFrom = 15,
+            AgeEnd = 20,
+            Description = "Curriculum for Ages 15-20",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-4),
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort descending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_REJECT, // Only REJECTED status
+                5, // PageSize = 5
+                SD.AGE, // Order by AgeFrom
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber = 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateDESCAndStatusIsRejected()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 4,
+            AgeFrom = 15,
+            AgeEnd = 20,
+            Description = "Curriculum for Ages 15-20",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-4),
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Order by CreatedDate
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_REJECT, // Only REJECTED status
+                5, // PageSize = 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber = 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Ensure sorting is descending by CreatedDate
+                        true // Ensure sorting is descending
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateASCAndStatusIsRejected()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 4,
+            AgeFrom = 15,
+            AgeEnd = 20,
+            Description = "Curriculum for Ages 15-20",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-4),
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderBy(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Order by CreatedDate
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_REJECT, // Only REJECTED status
+                5, // PageSize = 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber = 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        "Submitter",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Ensure sorting is ascending by CreatedDate
+                        false // Ensure sorting is ascending
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECT
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECT
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Set status to REJECT
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 4,
+            AgeFrom = 15,
+            AgeEnd = 20,
+            Description = "Curriculum for Ages 15-20",
+            RequestStatus = SD.Status.PENDING, // Set status to PENDING (should not be included in result)
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-4),
+        }
+    };
+
+            // Simulate fetching all curricula with REJECT status, ordered by CreatedDate ascending
+            var pagedResult = (curricula.Count, curricula.Where(c => c.RequestStatus == SD.Status.REJECT).OrderBy(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECT\"")), // Filter by REJECT status
+                        "Submitter",
+                        null, // No page size (page size 0 implies no pagination)
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Order by CreatedDate
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_REJECT, // Only REJECT status
+                0, // PageSize = 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber = 1 (not relevant when PageSize is 0, but keeping for consistency)
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().BeNull(); // Since page size is 0, no pagination is included
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate and REJECT status filter
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECT\"")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.Where(c => c.RequestStatus == SD.Status.REJECT).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_REJECT, // Status set to REJECT
+                0, // PageSize is 0
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate and REJECT status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter curricula to only include REJECT status
+            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).ToList();
+            var pagedResult = (rejectedCurricula.Count, rejectedCurricula.OrderByDescending(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort descending by AgeFrom (Age)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_REJECT, // Status set to REJECT
+                0, // PageSize is 0
+                SD.AGE, // Order by Age (AgeFrom)
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by Age (AgeFrom)
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter curricula to only include REJECT status
+            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).ToList();
+            var pagedResult = (rejectedCurricula.Count, rejectedCurricula.OrderBy(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Sort ascending by Age (AgeFrom)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_REJECT, // Status set to REJECT
+                0, // PageSize is 0
+                SD.AGE, // Order by Age (AgeFrom)
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by Age (AgeFrom)
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderBy(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_ALL, // All status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.CreatedDate).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_ALL, // All status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort descending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_ALL, // All status
+                0, // PageSize is 0 (no pagination)
+                SD.AGE, // Order by Age
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var pagedResult = (curricula.Count, curricula.OrderBy(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort ascending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_ALL, // All status
+                0, // PageSize is 0 (no pagination)
+                SD.AGE, // Order by Age
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by AgeFrom
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter out only the REJECT status curricula
+            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).ToList();
+            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.AgeFrom).ToList());
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort ascending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_REJECT, // Only rejected status
+                0, // PageSize is 0 (no pagination)
+                SD.AGE, // Order by Age
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters:
+            // - Filtering for "REJECT" status
+            // - Sorting by AgeFrom in ascending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).OrderByDescending(c => c.AgeFrom).ToList();
+            var pagedResult = (rejectedCurricula.Count, rejectedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort descending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_REJECT, // Only REJECT status
+                0, // PageSize is 0 (no pagination)
+                SD.AGE, // Order by Age
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeFrom and filtering by REJECT status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by REJECT status and order by CreatedDate ASC
+            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).OrderBy(c => c.CreatedDate).ToList();
+            var pagedResult = (rejectedCurricula.Count, rejectedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_REJECT, // Only REJECT status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate and filtering by REJECT status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by REJECT status and order by CreatedDate DESC
+            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).OrderByDescending(c => c.CreatedDate).ToList();
+            var pagedResult = (rejectedCurricula.Count, rejectedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_REJECT, // Only REJECT status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate and filtering by REJECT status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by PENDING status and order by CreatedDate DESC
+            var pendingCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).OrderByDescending(c => c.CreatedDate).ToList();
+            var pagedResult = (pendingCurricula.Count, pendingCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_PENDING, // Only PENDING status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate and filtering by PENDING status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by PENDING status and order by CreatedDate ASC
+            var pendingCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).OrderBy(c => c.CreatedDate).ToList();
+            var pagedResult = (pendingCurricula.Count, pendingCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_PENDING, // Only PENDING status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate and filtering by PENDING status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 2,
+            AgeEnd = 7,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by PENDING status and order by AgeFrom ASC
+            var pendingCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).OrderBy(c => c.AgeFrom).ToList();
+            var pagedResult = (pendingCurricula.Count, pendingCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Sort ascending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_PENDING, // Only PENDING status
+                0, // PageSize is 0 (no pagination)
+                SD.AGE_FROM, // Order by AgeFrom
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by AgeFrom and filtering by PENDING status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by PENDING status and order by Age DESC
+            var pendingCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).OrderByDescending(c => c.AgeFrom).ToList();
+            var pagedResult = (pendingCurricula.Count, pendingCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort descending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_PENDING, // Only PENDING status
+                0, // PageSize is 0 (no pagination)
+                SD.AGE, // Order by Age
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by Age and filtering by PENDING status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDescAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by APPROVE status and order by Age DESC
+            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).OrderByDescending(c => c.AgeFrom).ToList();
+            var pagedResult = (approvedCurricula.Count, approvedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Order by Age
+                        true // Sort descending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_APPROVE, // Only APPROVE status
+                0, // PageSize is 0 (no pagination)
+                SD.AGE, // Order by Age
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by AgeFrom and filtering by APPROVE status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is descending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by APPROVE status and order by Age ASC
+            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE)
+                                             .OrderBy(c => c.AgeFrom) // Order by AgeFrom ASC
+                                             .ToList();
+            var pagedResult = (approvedCurricula.Count, approvedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Sort ascending by AgeFrom
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_APPROVE, // Only APPROVE status
+                0, // PageSize is 0 (no pagination)
+                SD.AGE, // Order by Age
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by AgeFrom and filtering by APPROVE status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        "Submitter",
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        true // Ensure sorting is ascending by AgeFrom
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.REJECT,
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by APPROVE status and order by CreatedDate ASC
+            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).OrderBy(c => c.CreatedDate).ToList();
+            var pagedResult = (approvedCurricula.Count, approvedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Sort ascending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_APPROVE, // Only APPROVE status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for ascending sort by CreatedDate and filtering by APPROVE status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false // Ensure sorting is ascending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateDESCAndStatusIsApprove()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum Description 1",
+            RequestStatus = SD.Status.PENDING,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3)
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 2",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2)
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum Description 3",
+            RequestStatus = SD.Status.APPROVE,
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1)
+        }
+    };
+
+            // Filter by APPROVE status and order by CreatedDate DESC
+            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).OrderByDescending(c => c.CreatedDate).ToList();
+            var pagedResult = (approvedCurricula.Count, approvedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Sort descending by CreatedDate
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_APPROVE, // Only APPROVE status
+                0, // PageSize is 0 (no pagination)
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for descending sort by CreatedDate and filtering by APPROVE status
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        "Submitter",
+                        null,
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true // Ensure sorting is descending by CreatedDate
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        }
+    };
+
+            // Order by Age in ascending order
+            var sortedCurricula = curricula.OrderBy(c => c.AgeFrom).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by Age
+                        false // Ascending order
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_ALL, // All status
+                5, // PageSize is 5
+                SD.AGE_FROM, // Order by AgeFrom
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by Age in ascending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by Age
+                        false // Ensure ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        }
+    };
+
+            // Order by Age in descending order
+            var sortedCurricula = curricula.OrderByDescending(c => c.AgeFrom).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by Age
+                        true // Descending order
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_ALL, // All status
+                5, // PageSize is 5
+                SD.AGE_FROM, // Order by AgeFrom
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by Age in descending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by Age
+                        true // Ensure descending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateDESCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        }
+    };
+
+            // Order by CreatedDate in descending order
+            var sortedCurricula = curricula.OrderByDescending(c => c.CreatedDate).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        true // Descending order
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_ALL, // All status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by CreatedDate in descending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        true // Ensure descending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateASCAndStatusIsAll()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        }
+    };
+
+            // Order by CreatedDate in ascending order
+            var sortedCurricula = curricula.OrderBy(c => c.CreatedDate).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        false // Ascending order
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_ALL, // All status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by CreatedDate in ascending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        false // Ensure ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateDESCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        }
+    };
+
+            // Order by CreatedDate in descending order
+            var sortedCurricula = curricula.OrderByDescending(c => c.CreatedDate).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        true // Descending order
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_REJECT, // Filter by REJECT status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by CreatedDate in descending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        true // Ensure descending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateASCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        }
+    };
+
+            // Order by CreatedDate in ascending order
+            var sortedCurricula = curricula.OrderBy(c => c.CreatedDate).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        false // Ascending order
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_REJECT, // Filter by REJECT status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by CreatedDate in ascending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        false // Ensure ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        }
+    };
+
+            // Order by Age in ascending order
+            var sortedCurricula = curricula.OrderBy(c => c.AgeFrom).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Ascending order
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_REJECT, // Filter by REJECT status
+                5, // PageSize is 5
+                SD.AGE, // Order by Age
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by Age in ascending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Ensure ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsReject()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.REJECT, // Status is REJECT
+            RejectionReason = "Rejected reason",
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        }
+    };
+
+            // Order curricula by AgeFrom in descending order
+            var sortedCurricula = curricula.OrderByDescending(c => c.AgeFrom).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Descending order (AgeFrom)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_REJECT, // Filter by REJECT status
+                5, // PageSize is 5
+                SD.AGE, // Order by Age (AgeFrom)
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by Age in descending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Ensure descending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        }
+    };
+
+            // Order curricula by AgeFrom in descending order
+            var sortedCurricula = curricula.OrderByDescending(c => c.AgeFrom).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Descending order (AgeFrom)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_PENDING, // Filter by PENDING status
+                5, // PageSize is 5
+                SD.AGE, // Order by Age (AgeFrom)
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by Age in descending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Ensure descending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1),
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2),
+        },
+        new Curriculum
+        {
+            Id = 3,
+            AgeFrom = 10,
+            AgeEnd = 15,
+            Description = "Curriculum for Ages 10-15",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-3),
+        }
+    };
+
+            // Order curricula by AgeFrom in ascending order
+            var sortedCurricula = curricula.OrderBy(c => c.AgeFrom).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Ascending order (AgeFrom)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_PENDING, // Filter by PENDING status
+                5, // PageSize is 5
+                SD.AGE, // Order by Age (AgeFrom)
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by Age in ascending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Ensure ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateASCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2), // Older than the second item
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1), // Newer than the first item
+        },
+    };
+
+            // Sort curricula by CreatedDate in ascending order
+            var sortedCurricula = curricula.OrderBy(c => c.CreatedDate).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        false // Ascending order (CreatedDate)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_PENDING, // Filter by PENDING status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by CreatedDate in ascending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        false // Ensure ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnPendingSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateDESCAndStatusIsPending()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2), // Older than the second item
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.PENDING, // Status is PENDING
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1), // Newer than the first item
+        },
+    };
+
+            // Sort curricula by CreatedDate in descending order
+            var sortedCurricula = curricula.OrderByDescending(c => c.CreatedDate).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        true // Descending order (CreatedDate)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_PENDING, // Filter by PENDING status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by CreatedDate in descending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        true // Ensure descending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateDESCAndStatusIsApproved()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2), // Older item
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1), // Newer item
+        },
+    };
+
+            // Sort curricula by CreatedDate in descending order
+            var sortedCurricula = curricula.OrderByDescending(c => c.CreatedDate).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        true // Descending order (CreatedDate)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_APPROVE, // Filter by APPROVED status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by CreatedDate in descending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        true // Ensure descending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByCreatedDateASCAndStatusIsApproved()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2), // Older item
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1), // Newer item
+        },
+    };
+
+            // Sort curricula by CreatedDate in ascending order
+            var sortedCurricula = curricula.OrderBy(c => c.CreatedDate).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        false // Ascending order (CreatedDate)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_APPROVE, // Filter by APPROVED status
+                5, // PageSize is 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by CreatedDate in ascending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        false // Ensure ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsApproved()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1), // Created recently
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2), // Created earlier
+        },
+    };
+
+            // Sort curricula by AgeFrom in ascending order
+            var sortedCurricula = curricula.OrderBy(c => c.AgeFrom).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Ascending order (AgeFrom)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_APPROVE, // Filter by APPROVED status
+                5, // PageSize is 5
+                SD.AGE, // Order by Age (AgeFrom)
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by AgeFrom in ascending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        false // Ensure ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsApproved()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+    };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var curricula = new List<Curriculum>
+    {
+        new Curriculum
+        {
+            Id = 1,
+            AgeFrom = 5,
+            AgeEnd = 10,
+            Description = "Curriculum for Ages 5-10",
+            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-1), // Created recently
+        },
+        new Curriculum
+        {
+            Id = 2,
+            AgeFrom = 0,
+            AgeEnd = 5,
+            Description = "Curriculum for Ages 0-5",
+            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+            VersionNumber = 1,
+            SubmitterId = "testTutorId",
+            IsDeleted = false,
+            CreatedDate = DateTime.Now.AddDays(-2), // Created earlier
+        },
+    };
+
+            // Sort curricula by AgeFrom in descending order
+            var sortedCurricula = curricula.OrderByDescending(c => c.AgeFrom).ToList();
+            var pagedResult = (sortedCurricula.Count, sortedCurricula);
+
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        true // Descending order (AgeFrom)
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "", // No search term
+                SD.STATUS_APPROVE, // Filter by APPROVED status
+                5, // PageSize is 5
+                SD.AGE, // Order by Age (AgeFrom)
+                SD.ORDER_DESC, // Descending order
+                1 // PageNumber is 1
+            );
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Pagination.Should().NotBeNull();
+
+            // Verify repository method was called with correct parameters for sorting by AgeFrom in descending order
+            _curriculumRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
+                        "Submitter",
+                        5, // PageSize is 5
+                        1, // PageNumber is 1
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
+                        true // Ensure descending order
+                    ),
+                Times.Once
+            );
         }
 
 
