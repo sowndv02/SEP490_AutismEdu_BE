@@ -213,14 +213,15 @@ namespace AutismEduConnectSystem.Mapper
                .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))
                .ForMember(dest => dest.isMale, opt => opt.MapFrom(src => src.Child.isMale))
                .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.Child.BirthDate))
+               .ForMember(dest => dest.ImageUrlPath, opt => opt.MapFrom(src => src.Child.ImageUrlPath))
                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
                .ForMember(dest => dest.Tutor, opt => opt.MapFrom(src => src.Tutor))
                .ForPath(dest => dest.InitialAssessmentResults.Condition, opt => opt.MapFrom(src => src.InitialCondition))
-               .ForPath(dest => dest.InitialAssessmentResults.AssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults.Where(x => x.Id == src.Id && x.isInitialAssessment)))
+               .ForPath(dest => dest.InitialAssessmentResults.AssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults.Where(x => x.StudentProfileId == src.Id && x.isInitialAssessment)))
                .ForPath(dest => dest.FinalAssessmentResults.Condition, opt => opt.MapFrom(src => src.FinalCondition))
-               .ForPath(dest => dest.FinalAssessmentResults.AssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults.Where(x => x.Id == src.Id && !x.isInitialAssessment)))
+               .ForPath(dest => dest.FinalAssessmentResults.AssessmentResults, opt => opt.MapFrom(src => src.InitialAndFinalAssessmentResults.Where(x => x.StudentProfileId == src.Id && !x.isInitialAssessment)))
                .ForMember(dest => dest.ScheduleTimeSlots, opt => opt.MapFrom(src => src.ScheduleTimeSlots))
                .ReverseMap();
 

@@ -60,8 +60,7 @@ namespace AutismEduConnectSystem.Services
                         .Include(x => x.StudentProfile)
                         .Where(x => x.StudentProfile != null 
                             && x.StudentProfile.Status == SD.StudentProfileStatus.Teaching
-                            && !x.IsDeleted
-                            && x.AppliedDate.Value.Date <= DateTime.Today)
+                            && !x.IsDeleted)
                         .ToList();
 
                     int totalGenerated = 0;
@@ -71,8 +70,8 @@ namespace AutismEduConnectSystem.Services
                         // Loop to generate schedules up to the three-week mark
                         DateTime nextDate = GetNextDayOfWeek((DayOfWeek)item.Weekday);
 
-                        // Adjust the initial nextDate if it's before startDate
-                        if (nextDate.Date < startDate.Date)
+                        // Adjust the initial nextDate if it's before startDate or AppliedDate
+                        if (nextDate.Date < startDate.Date || nextDate.Date < item.AppliedDate.Value.Date)
                         {
                             nextDate = nextDate.AddDays(7);
                         }
