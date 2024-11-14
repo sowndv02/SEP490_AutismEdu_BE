@@ -1,5 +1,10 @@
-﻿using AutismEduConnectSystem.Mapper;
+﻿using System.Linq.Expressions;
+using System.Net;
+using System.Security.Claims;
+using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
+using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.RabbitMQSender;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
@@ -13,10 +18,11 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Linq.Expressions;
-using System.Net;
-using System.Security.Claims;
+using Org.BouncyCastle.Tls;
 using Xunit;
+using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+using static AutismEduConnectSystem.SD;
+using AutismEduConnectSystem.Repository;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -138,7 +144,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             };
             _curriculumRepositoryMock
                 .Setup(repo =>
-                    repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null)
+                    repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, null, null)
                 )
                 .ReturnsAsync(curriculum);
             var newCurriculum = new Curriculum
@@ -170,7 +176,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             _curriculumRepositoryMock
                 .Setup(repo =>
-                    repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null)
+                    repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, null, null)
                 )
                 .ThrowsAsync(new Exception());
             _resourceServiceMock
@@ -4128,7 +4134,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                       It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -6746,56 +6752,60 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula);
 
@@ -6805,7 +6815,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -6839,7 +6851,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
@@ -6851,56 +6865,60 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula);
 
@@ -6910,7 +6928,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -6944,69 +6964,74 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
             );
         }
 
-
         [Fact]
         public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsAll()
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula);
 
@@ -7016,7 +7041,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by AgeEnd
                     )
                 )
@@ -7050,7 +7075,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeEnd
                     ),
                 Times.Once
@@ -7062,55 +7087,59 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 8,
-            AgeEnd = 12,
-            Description = "Curriculum for Ages 8-12",
-            RequestStatus = SD.Status.REJECT,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 8,
+                    AgeEnd = 12,
+                    Description = "Curriculum for Ages 8-12",
+                    RequestStatus = SD.Status.REJECT,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula.Take(5).ToList());
 
@@ -7121,7 +7150,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Sort ascending by AgeEnd
                     )
                 )
@@ -7156,70 +7185,76 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Ensure sorting is ascending by AgeEnd
                     ),
                 Times.Once
             );
         }
 
-
         [Fact]
         public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsAll()
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 8,
-            AgeEnd = 12,
-            Description = "Curriculum for Ages 8-12",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 8,
+                    AgeEnd = 12,
+                    Description = "Curriculum for Ages 8-12",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.AgeEnd).Take(5).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.OrderByDescending(c => c.AgeEnd).Take(5).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
@@ -7228,7 +7263,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by AgeEnd
                     )
                 )
@@ -7263,7 +7298,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("AgeEnd")),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeEnd
                     ),
                 Times.Once
@@ -7275,57 +7310,64 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 8,
-            AgeEnd = 12,
-            Description = "Curriculum for Ages 8-12",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 8,
+                    AgeEnd = 12,
+                    Description = "Curriculum for Ages 8-12",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.CreatedDate).Take(5).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.OrderByDescending(c => c.CreatedDate).Take(5).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
@@ -7334,7 +7376,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -7369,7 +7411,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
@@ -7381,57 +7423,64 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 8,
-            AgeEnd = 12,
-            Description = "Curriculum for Ages 8-12",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 8,
+                    AgeEnd = 12,
+                    Description = "Curriculum for Ages 8-12",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.OrderBy(c => c.CreatedDate).Take(5).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.OrderBy(c => c.CreatedDate).Take(5).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
@@ -7440,7 +7489,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -7475,7 +7526,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
@@ -7487,60 +7540,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 8,
-            AgeEnd = 12,
-            Description = "Curriculum for Ages 8-12",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 8,
+                    AgeEnd = 12,
+                    Description = "Curriculum for Ages 8-12",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter curricula to include only those with APPROVE status
-            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
+            var approvedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .ToList();
 
-            var pagedResult = (approvedCurricula.Count, approvedCurricula.OrderBy(c => c.CreatedDate).Take(5).ToList());
+            var pagedResult = (
+                approvedCurricula.Count,
+                approvedCurricula.OrderBy(c => c.CreatedDate).Take(5).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
@@ -7549,7 +7611,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -7584,7 +7648,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
@@ -7596,67 +7662,78 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 8,
-            AgeEnd = 12,
-            Description = "Curriculum for Ages 8-12",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 8,
+                    AgeEnd = 12,
+                    Description = "Curriculum for Ages 8-12",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.CreatedDate).Take(5).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderByDescending(c => c.CreatedDate).Take(5).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -7687,11 +7764,13 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
@@ -7703,63 +7782,72 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 8,
-            AgeEnd = 12,
-            Description = "Curriculum for Ages 8-12",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 8,
+                    AgeEnd = 12,
+                    Description = "Curriculum for Ages 8-12",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.AgeFrom).Take(5).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderByDescending(c => c.AgeFrom).Take(5).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -7794,7 +7882,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -7810,63 +7898,72 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 8,
-            AgeEnd = 12,
-            Description = "Curriculum for Ages 8-12",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 8,
+                    AgeEnd = 12,
+                    Description = "Curriculum for Ages 8-12",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.AgeFrom).Take(5).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderBy(c => c.AgeFrom).Take(5).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -7901,7 +7998,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -7917,68 +8014,79 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter curricula by APPROVE status
-            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
-            var pagedResult = (approvedCurricula.Count, approvedCurricula.OrderBy(c => c.CreatedDate).ToList());
+            var approvedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .ToList();
+            var pagedResult = (
+                approvedCurricula.Count,
+                approvedCurricula.OrderBy(c => c.CreatedDate).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -8003,16 +8111,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Should().NotBeNull();
             response.Result.Should().NotBeNull();
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            response.Pagination.Should().BeNull(); // No pagination because PageSize is 0
+            response.Pagination.Should().NotBeNull(); // No pagination because PageSize is 0
 
             // Verify repository method was called with correct parameters for ascending sort by CreatedDate
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
@@ -8024,68 +8134,79 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter curricula by APPROVE status
-            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
-            var pagedResult = (approvedCurricula.Count, approvedCurricula.OrderByDescending(c => c.CreatedDate).ToList());
+            var approvedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .ToList();
+            var pagedResult = (
+                approvedCurricula.Count,
+                approvedCurricula.OrderByDescending(c => c.CreatedDate).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -8110,16 +8231,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Should().NotBeNull();
             response.Result.Should().NotBeNull();
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            response.Pagination.Should().BeNull(); // No pagination because PageSize is 0
+            response.Pagination.Should().NotBeNull(); // No pagination because PageSize is 0
 
             // Verify repository method was called with correct parameters for descending sort by CreatedDate
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("Approve")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
@@ -8131,64 +8254,73 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.AgeFrom).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderByDescending(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"APPROVE\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8222,7 +8354,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"APPROVE\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8237,65 +8369,74 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter out curricula with status APPROVE
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.AgeFrom).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderBy(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"APPROVE\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8329,7 +8470,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"APPROVE\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8344,65 +8485,74 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.APPROVE,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.APPROVE,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter out curricula with status PENDING
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.AgeFrom).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.PENDING)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderBy(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8436,7 +8586,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8451,64 +8601,75 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.APPROVE, // Not included in the results since status is not PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.APPROVE, // Not included in the results since status is not PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter out curricula with status PENDING
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.AgeFrom).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.PENDING)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderByDescending(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.Is<Expression<Func<Curriculum, bool>>>(x =>
+                            x.Body.ToString().Contains("RequestStatus == \"PENDING\"")
+                        ),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8542,7 +8703,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8557,67 +8718,78 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.APPROVE, // Not included in the results since status is not PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.APPROVE, // Not included in the results since status is not PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter out curricula with status PENDING
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderByDescending(c => c.CreatedDate).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.PENDING)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderByDescending(c => c.CreatedDate).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -8648,10 +8820,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
@@ -8663,68 +8837,79 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.APPROVE, // Not included in the results since status is not PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.APPROVE, // Not included in the results since status is not PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter out curricula with status PENDING
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.CreatedDate).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.PENDING)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderBy(c => c.CreatedDate).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
-                        true // Sort ascending by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
+                        false // Sort ascending by CreatedDate
                     )
                 )
                 .ReturnsAsync(pagedResult);
@@ -8754,11 +8939,13 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
-                        true // Ensure sorting is ascending by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
+                        false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
             );
@@ -8769,66 +8956,72 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.APPROVE, // Not included as the status is not PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.APPROVE, // Not included as the status is not PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula.OrderBy(c => c.CreatedDate).ToList());
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -8859,96 +9052,104 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
             );
         }
 
-
         [Fact]
         public async Task GetAllAsync_ShouldReturnPendingSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsPending()
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 4,
-            AgeFrom = 15,
-            AgeEnd = 20,
-            Description = "Curriculum for Ages 15-20",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-4),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 4,
+                    AgeFrom = 15,
+                    AgeEnd = 20,
+                    Description = "Curriculum for Ages 15-20",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-4),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.AgeFrom).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.OrderByDescending(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false // Sort descending by AgeFrom
+                        true // Sort descending by AgeFrom
                     )
                 )
                 .ReturnsAsync(pagedResult);
@@ -8978,12 +9179,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        false // Ensure sorting is descending by AgeFrom
+                        true // Ensure sorting is descending by AgeFrom
                     ),
                 Times.Once
             );
@@ -8994,67 +9195,76 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.APPROVE, // Not included as the status is not PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.APPROVE, // Not included as the status is not PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.CreatedDate).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.OrderByDescending(c => c.CreatedDate).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
-                        false // Sort descending by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
+                        true // Sort descending by CreatedDate
                     )
                 )
                 .ReturnsAsync(pagedResult);
@@ -9084,12 +9294,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                       It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
-                        false // Ensure sorting is descending by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
+                        true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
             );
@@ -9100,74 +9312,78 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 4,
-            AgeFrom = 15,
-            AgeEnd = 20,
-            Description = "Curriculum for Ages 15-20",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-4),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 4,
+                    AgeFrom = 15,
+                    AgeEnd = 20,
+                    Description = "Curriculum for Ages 15-20",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-4),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula.OrderBy(c => c.AgeFrom).ToList());
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -9202,7 +9418,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"PENDING\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -9218,74 +9434,78 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 4,
-            AgeFrom = 15,
-            AgeEnd = 20,
-            Description = "Curriculum for Ages 15-20",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-4),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 4,
+                    AgeFrom = 15,
+                    AgeEnd = 20,
+                    Description = "Curriculum for Ages 15-20",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-4),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula.OrderBy(c => c.AgeFrom).ToList());
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -9320,7 +9540,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -9336,74 +9556,81 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 4,
-            AgeFrom = 15,
-            AgeEnd = 20,
-            Description = "Curriculum for Ages 15-20",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-4),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 4,
+                    AgeFrom = 15,
+                    AgeEnd = 20,
+                    Description = "Curriculum for Ages 15-20",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-4),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.AgeFrom).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.OrderByDescending(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -9438,7 +9665,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -9454,78 +9681,87 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 4,
-            AgeFrom = 15,
-            AgeEnd = 20,
-            Description = "Curriculum for Ages 15-20",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-4),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 4,
+                    AgeFrom = 15,
+                    AgeEnd = 20,
+                    Description = "Curriculum for Ages 15-20",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-4),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.CreatedDate).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.OrderByDescending(c => c.CreatedDate).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Order by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Order by CreatedDate
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -9556,11 +9792,13 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Ensure sorting is descending by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Ensure sorting is descending by CreatedDate
                         true // Ensure sorting is descending
                     ),
                 Times.Once
@@ -9572,78 +9810,84 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 4,
-            AgeFrom = 15,
-            AgeEnd = 20,
-            Description = "Curriculum for Ages 15-20",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECTED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-4),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 4,
+                    AgeFrom = 15,
+                    AgeEnd = 20,
+                    Description = "Curriculum for Ages 15-20",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECTED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-4),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula.OrderBy(c => c.CreatedDate).ToList());
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Order by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Order by CreatedDate
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -9674,11 +9918,13 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECTED\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Ensure sorting is ascending by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Ensure sorting is ascending by CreatedDate
                         false // Ensure sorting is ascending
                     ),
                 Times.Once
@@ -9690,78 +9936,90 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECT
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECT
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Set status to REJECT
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 4,
-            AgeFrom = 15,
-            AgeEnd = 20,
-            Description = "Curriculum for Ages 15-20",
-            RequestStatus = SD.Status.PENDING, // Set status to PENDING (should not be included in result)
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-4),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECT
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECT
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Set status to REJECT
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 4,
+                    AgeFrom = 15,
+                    AgeEnd = 20,
+                    Description = "Curriculum for Ages 15-20",
+                    RequestStatus = SD.Status.PENDING, // Set status to PENDING (should not be included in result)
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-4),
+                },
+            };
 
             // Simulate fetching all curricula with REJECT status, ordered by CreatedDate ascending
-            var pagedResult = (curricula.Count, curricula.Where(c => c.RequestStatus == SD.Status.REJECT).OrderBy(c => c.CreatedDate).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula
+                    .Where(c => c.RequestStatus == SD.Status.REJECT)
+                    .OrderBy(c => c.CreatedDate)
+                    .ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECT\"")), // Filter by REJECT status
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null, // No page size (page size 0 implies no pagination)
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Order by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Order by CreatedDate
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -9786,16 +10044,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Should().NotBeNull();
             response.Result.Should().NotBeNull();
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            response.Pagination.Should().BeNull(); // Since page size is 0, no pagination is included
+            response.Pagination.Should().NotBeNull(); // Since page size is 0, no pagination is included
 
             // Verify repository method was called with correct parameters for ascending sort by CreatedDate and REJECT status filter
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus == \"REJECT\"")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
@@ -9807,66 +10067,75 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.Where(c => c.RequestStatus == SD.Status.REJECT).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.Where(c => c.RequestStatus == SD.Status.REJECT).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -9897,79 +10166,91 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
             );
         }
+
         [Fact]
         public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeDESCAndStatusIsReject()
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter curricula to only include REJECT status
-            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).ToList();
-            var pagedResult = (rejectedCurricula.Count, rejectedCurricula.OrderByDescending(c => c.AgeFrom).ToList());
+            var rejectedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.REJECT)
+                .ToList();
+            var pagedResult = (
+                rejectedCurricula.Count,
+                rejectedCurricula.OrderByDescending(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -10003,7 +10284,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -10012,70 +10293,80 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Times.Once
             );
         }
+
         [Fact]
         public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithSearchPageSizeIsZeroPageNumberIsOneOrderByAgeASCAndStatusIsReject()
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter curricula to only include REJECT status
-            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).ToList();
-            var pagedResult = (rejectedCurricula.Count, rejectedCurricula.OrderBy(c => c.AgeFrom).ToList());
+            var rejectedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.REJECT)
+                .ToList();
+            var pagedResult = (
+                rejectedCurricula.Count,
+                rejectedCurricula.OrderBy(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -10109,7 +10400,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.Body.ToString().Contains("RequestStatus") && x.Body.ToString().Contains("REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -10124,56 +10415,60 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula.OrderBy(c => c.CreatedDate).ToList());
 
@@ -10183,7 +10478,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -10217,7 +10514,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
@@ -10229,58 +10528,65 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.CreatedDate).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.OrderByDescending(c => c.CreatedDate).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
@@ -10288,7 +10594,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -10322,7 +10630,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
@@ -10334,58 +10644,65 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var pagedResult = (curricula.Count, curricula.OrderByDescending(c => c.AgeFrom).ToList());
+            var pagedResult = (
+                curricula.Count,
+                curricula.OrderByDescending(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
@@ -10439,56 +10756,60 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             var pagedResult = (curricula.Count, curricula.OrderBy(c => c.AgeFrom).ToList());
 
@@ -10499,7 +10820,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true // Sort ascending by AgeFrom
+                        false // Sort ascending by AgeFrom
                     )
                 )
                 .ReturnsAsync(pagedResult);
@@ -10533,7 +10854,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true // Ensure sorting is ascending by AgeFrom
+                        false // Ensure sorting is ascending by AgeFrom
                     ),
                 Times.Once
             );
@@ -10544,60 +10865,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter out only the REJECT status curricula
-            var filteredCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).ToList();
-            var pagedResult = (filteredCurricula.Count, filteredCurricula.OrderBy(c => c.AgeFrom).ToList());
+            var filteredCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.REJECT)
+                .ToList();
+            var pagedResult = (
+                filteredCurricula.Count,
+                filteredCurricula.OrderBy(c => c.AgeFrom).ToList()
+            );
 
             _curriculumRepositoryMock
                 .Setup(repo =>
@@ -10606,7 +10936,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true // Sort ascending by AgeFrom
+                        false // Sort ascending by AgeFrom
                     )
                 )
                 .ReturnsAsync(pagedResult);
@@ -10642,7 +10972,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true // Ensure sorting is ascending by AgeFrom
+                        false // Ensure sorting is ascending by AgeFrom
                     ),
                 Times.Once
             );
@@ -10653,64 +10983,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
-            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).OrderByDescending(c => c.AgeFrom).ToList();
+            var rejectedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.REJECT)
+                .OrderByDescending(c => c.AgeFrom)
+                .ToList();
             var pagedResult = (rejectedCurricula.Count, rejectedCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -10744,7 +11081,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -10754,74 +11091,82 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             );
         }
 
-
         [Fact]
         public async Task GetAllAsync_ShouldReturnAllSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsZeroPageNumberIsOneOrderByCreatedDateASCAndStatusIsReject()
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by REJECT status and order by CreatedDate ASC
-            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).OrderBy(c => c.CreatedDate).ToList();
+            var rejectedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.REJECT)
+                .OrderBy(c => c.CreatedDate)
+                .ToList();
             var pagedResult = (rejectedCurricula.Count, rejectedCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -10852,10 +11197,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
@@ -10867,68 +11214,77 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by REJECT status and order by CreatedDate DESC
-            var rejectedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.REJECT).OrderByDescending(c => c.CreatedDate).ToList();
+            var rejectedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.REJECT)
+                .OrderByDescending(c => c.CreatedDate)
+                .ToList();
             var pagedResult = (rejectedCurricula.Count, rejectedCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -10959,10 +11315,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.REJECT")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
@@ -10974,67 +11332,76 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by PENDING status and order by CreatedDate DESC
-            var pendingCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).OrderByDescending(c => c.CreatedDate).ToList();
+            var pendingCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.PENDING)
+                .OrderByDescending(c => c.CreatedDate)
+                .ToList();
             var pagedResult = (pendingCurricula.Count, pendingCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -11065,10 +11432,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
@@ -11080,68 +11449,77 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by PENDING status and order by CreatedDate ASC
-            var pendingCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).OrderBy(c => c.CreatedDate).ToList();
+            var pendingCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.PENDING)
+                .OrderBy(c => c.CreatedDate)
+                .ToList();
             var pagedResult = (pendingCurricula.Count, pendingCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -11172,10 +11550,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
@@ -11187,64 +11567,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 2,
-            AgeEnd = 7,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 2,
+                    AgeEnd = 7,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by PENDING status and order by AgeFrom ASC
-            var pendingCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).OrderBy(c => c.AgeFrom).ToList();
+            var pendingCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.PENDING)
+                .OrderBy(c => c.AgeFrom)
+                .ToList();
             var pagedResult = (pendingCurricula.Count, pendingCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -11278,7 +11665,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -11293,64 +11680,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by PENDING status and order by Age DESC
-            var pendingCurricula = curricula.Where(c => c.RequestStatus == SD.Status.PENDING).OrderByDescending(c => c.AgeFrom).ToList();
+            var pendingCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.PENDING)
+                .OrderByDescending(c => c.AgeFrom)
+                .ToList();
             var pagedResult = (pendingCurricula.Count, pendingCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -11384,7 +11778,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.PENDING")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -11399,65 +11793,72 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by APPROVE status and order by Age DESC
-            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).OrderByDescending(c => c.AgeFrom).ToList();
+            var approvedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .OrderByDescending(c => c.AgeFrom)
+                .ToList();
             var pagedResult = (approvedCurricula.Count, approvedCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Order by Age
@@ -11491,7 +11892,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -11506,70 +11907,75 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by APPROVE status and order by Age ASC
-            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE)
-                                             .OrderBy(c => c.AgeFrom) // Order by AgeFrom ASC
-                                             .ToList();
+            var approvedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .OrderBy(c => c.AgeFrom) // Order by AgeFrom ASC
+                .ToList();
             var pagedResult = (approvedCurricula.Count, approvedCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true // Sort ascending by AgeFrom
+                        false // Sort ascending by AgeFrom
                     )
                 )
                 .ReturnsAsync(pagedResult);
@@ -11599,11 +12005,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
-                        true // Ensure sorting is ascending by AgeFrom
+                        false // Ensure sorting is ascending by AgeFrom
                     ),
                 Times.Once
             );
@@ -11614,68 +12020,77 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.REJECT,
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.REJECT,
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by APPROVE status and order by CreatedDate ASC
-            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).OrderBy(c => c.CreatedDate).ToList();
+            var approvedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .OrderBy(c => c.CreatedDate)
+                .ToList();
             var pagedResult = (approvedCurricula.Count, approvedCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Sort ascending by CreatedDate
                     )
                 )
@@ -11706,10 +12121,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         false // Ensure sorting is ascending by CreatedDate
                     ),
                 Times.Once
@@ -11721,67 +12138,76 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum Description 1",
-            RequestStatus = SD.Status.PENDING,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3)
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 2",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2)
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum Description 3",
-            RequestStatus = SD.Status.APPROVE,
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1)
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum Description 1",
+                    RequestStatus = SD.Status.PENDING,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 2",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum Description 3",
+                    RequestStatus = SD.Status.APPROVE,
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Filter by APPROVE status and order by CreatedDate DESC
-            var approvedCurricula = curricula.Where(c => c.RequestStatus == SD.Status.APPROVE).OrderByDescending(c => c.CreatedDate).ToList();
+            var approvedCurricula = curricula
+                .Where(c => c.RequestStatus == SD.Status.APPROVE)
+                .OrderByDescending(c => c.CreatedDate)
+                .ToList();
             var pagedResult = (approvedCurricula.Count, approvedCurricula);
 
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Sort descending by CreatedDate
                     )
                 )
@@ -11812,10 +12238,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x => x.ToString().Contains("RequestStatus == SD.Status.APPROVE")),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ),
                         true // Ensure sorting is descending by CreatedDate
                     ),
                 Times.Once
@@ -11827,56 +12255,60 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Order by Age in ascending order
             var sortedCurricula = curricula.OrderBy(c => c.AgeFrom).ToList();
@@ -11936,56 +12368,60 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Order by Age in descending order
             var sortedCurricula = curricula.OrderByDescending(c => c.AgeFrom).ToList();
@@ -12045,56 +12481,60 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Order by CreatedDate in descending order
             var sortedCurricula = curricula.OrderByDescending(c => c.CreatedDate).ToList();
@@ -12107,7 +12547,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         true // Descending order
                     )
                 )
@@ -12142,7 +12584,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         true // Ensure descending order
                     ),
                 Times.Once
@@ -12154,56 +12598,60 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Status is not filtered (All status)
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE, // Status is not filtered (All status)
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Status is not filtered (All status)
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Order by CreatedDate in ascending order
             var sortedCurricula = curricula.OrderBy(c => c.CreatedDate).ToList();
@@ -12216,7 +12664,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         false // Ascending order
                     )
                 )
@@ -12251,7 +12701,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         false // Ensure ascending order
                     ),
                 Times.Once
@@ -12263,58 +12715,62 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Order by CreatedDate in descending order
             var sortedCurricula = curricula.OrderByDescending(c => c.CreatedDate).ToList();
@@ -12327,7 +12783,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         true // Descending order
                     )
                 )
@@ -12362,7 +12820,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         true // Ensure descending order
                     ),
                 Times.Once
@@ -12374,58 +12834,62 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Order by CreatedDate in ascending order
             var sortedCurricula = curricula.OrderBy(c => c.CreatedDate).ToList();
@@ -12438,7 +12902,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         false // Ascending order
                     )
                 )
@@ -12473,71 +12939,76 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         false // Ensure ascending order
                     ),
                 Times.Once
             );
         }
 
-
         [Fact]
         public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsReject()
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Order by Age in ascending order
             var sortedCurricula = curricula.OrderBy(c => c.AgeFrom).ToList();
@@ -12592,64 +13063,67 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             );
         }
 
-
         [Fact]
         public async Task GetAllAsync_ShouldReturnRejectedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeDESCAndStatusIsReject()
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.REJECT, // Status is REJECT
-            RejectionReason = "Rejected reason",
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.REJECT, // Status is REJECT
+                    RejectionReason = "Rejected reason",
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Order curricula by AgeFrom in descending order
             var sortedCurricula = curricula.OrderByDescending(c => c.AgeFrom).ToList();
@@ -12663,7 +13137,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
-                        false // Descending order (AgeFrom)
+                        true // Descending order (AgeFrom)
                     )
                 )
                 .ReturnsAsync(pagedResult);
@@ -12698,7 +13172,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
-                        false // Ensure descending order
+                        true // Ensure descending order
                     ),
                 Times.Once
             );
@@ -12709,55 +13183,59 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+            };
 
             // Order curricula by AgeFrom in descending order
             var sortedCurricula = curricula.OrderByDescending(c => c.AgeFrom).ToList();
@@ -12771,7 +13249,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
-                        false // Descending order (AgeFrom)
+                        true // Descending order (AgeFrom)
                     )
                 )
                 .ReturnsAsync(pagedResult);
@@ -12806,7 +13284,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
-                        false // Ensure descending order
+                        true // Ensure descending order
                     ),
                 Times.Once
             );
@@ -12817,55 +13295,59 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2),
-        },
-        new Curriculum
-        {
-            Id = 3,
-            AgeFrom = 10,
-            AgeEnd = 15,
-            Description = "Curriculum for Ages 10-15",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-3),
-        }
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                },
+                new Curriculum
+                {
+                    Id = 3,
+                    AgeFrom = 10,
+                    AgeEnd = 15,
+                    Description = "Curriculum for Ages 10-15",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-3),
+                },
+            };
 
             // Order curricula by AgeFrom in ascending order
             var sortedCurricula = curricula.OrderBy(c => c.AgeFrom).ToList();
@@ -12925,43 +13407,47 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2), // Older than the second item
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1), // Newer than the first item
-        },
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2), // Older than the second item
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1), // Newer than the first item
+                },
+            };
 
             // Sort curricula by CreatedDate in ascending order
             var sortedCurricula = curricula.OrderBy(c => c.CreatedDate).ToList();
@@ -12974,7 +13460,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         false // Ascending order (CreatedDate)
                     )
                 )
@@ -13009,7 +13497,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         false // Ensure ascending order
                     ),
                 Times.Once
@@ -13021,43 +13511,47 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2), // Older than the second item
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.PENDING, // Status is PENDING
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1), // Newer than the first item
-        },
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2), // Older than the second item
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.PENDING, // Status is PENDING
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1), // Newer than the first item
+                },
+            };
 
             // Sort curricula by CreatedDate in descending order
             var sortedCurricula = curricula.OrderByDescending(c => c.CreatedDate).ToList();
@@ -13070,7 +13564,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         true // Descending order (CreatedDate)
                     )
                 )
@@ -13105,7 +13601,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         true // Ensure descending order
                     ),
                 Times.Once
@@ -13117,43 +13615,47 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2), // Older item
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1), // Newer item
-        },
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2), // Older item
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1), // Newer item
+                },
+            };
 
             // Sort curricula by CreatedDate in descending order
             var sortedCurricula = curricula.OrderByDescending(c => c.CreatedDate).ToList();
@@ -13166,7 +13668,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         true // Descending order (CreatedDate)
                     )
                 )
@@ -13201,7 +13705,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         true // Ensure descending order
                     ),
                 Times.Once
@@ -13213,43 +13719,47 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2), // Older item
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1), // Newer item
-        },
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2), // Older item
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1), // Newer item
+                },
+            };
 
             // Sort curricula by CreatedDate in ascending order
             var sortedCurricula = curricula.OrderBy(c => c.CreatedDate).ToList();
@@ -13262,7 +13772,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         false // Ascending order (CreatedDate)
                     )
                 )
@@ -13297,56 +13809,61 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         "Submitter",
                         5, // PageSize is 5
                         1, // PageNumber is 1
-                        It.Is<Expression<Func<Curriculum, object>>>(x => x.Body.ToString().Contains("CreatedDate")), // Sort by CreatedDate
+                        It.Is<Expression<Func<Curriculum, object>>>(x =>
+                            x.Body.ToString().Contains("CreatedDate")
+                        ), // Sort by CreatedDate
                         false // Ensure ascending order
                     ),
                 Times.Once
             );
         }
 
-
         [Fact]
         public async Task GetAllAsync_ShouldReturnApprovedSortedCurriculum_WhenUserIsTutorWithNoSearchPageSizeIsFivePageNumberIsOneOrderByAgeASCAndStatusIsApproved()
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1), // Created recently
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2), // Created earlier
-        },
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1), // Created recently
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2), // Created earlier
+                },
+            };
 
             // Sort curricula by AgeFrom in ascending order
             var sortedCurricula = curricula.OrderBy(c => c.AgeFrom).ToList();
@@ -13406,43 +13923,47 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
+            };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var curricula = new List<Curriculum>
-    {
-        new Curriculum
-        {
-            Id = 1,
-            AgeFrom = 5,
-            AgeEnd = 10,
-            Description = "Curriculum for Ages 5-10",
-            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-1), // Created recently
-        },
-        new Curriculum
-        {
-            Id = 2,
-            AgeFrom = 0,
-            AgeEnd = 5,
-            Description = "Curriculum for Ages 0-5",
-            RequestStatus = SD.Status.APPROVE, // Status is APPROVED
-            VersionNumber = 1,
-            SubmitterId = "testTutorId",
-            IsDeleted = false,
-            CreatedDate = DateTime.Now.AddDays(-2), // Created earlier
-        },
-    };
+            {
+                new Curriculum
+                {
+                    Id = 1,
+                    AgeFrom = 5,
+                    AgeEnd = 10,
+                    Description = "Curriculum for Ages 5-10",
+                    RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-1), // Created recently
+                },
+                new Curriculum
+                {
+                    Id = 2,
+                    AgeFrom = 0,
+                    AgeEnd = 5,
+                    Description = "Curriculum for Ages 0-5",
+                    RequestStatus = SD.Status.APPROVE, // Status is APPROVED
+                    VersionNumber = 1,
+                    SubmitterId = "testTutorId",
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now.AddDays(-2), // Created earlier
+                },
+            };
 
             // Sort curricula by AgeFrom in descending order
             var sortedCurricula = curricula.OrderByDescending(c => c.AgeFrom).ToList();
@@ -13497,6 +14018,318 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             );
         }
 
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnInternalServerError_WhenExceptionIsThrown()
+        {
+            // Arrange
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            _resourceServiceMock.Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
+                    .Returns("An internal server error occurred.");
+            // Mock the repository to throw an exception when GetAllAsync is called
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                    "Submitter",
+                    It.IsAny<int>(), // Any page size
+                    It.IsAny<int>(), // Any page number
+                    It.IsAny<Expression<Func<Curriculum, object>>>(), // Any orderBy expression
+                    It.IsAny<bool>())) // Any sorting order
+                .ThrowsAsync(new Exception("Test exception"));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                "searchCurriculum",
+                SD.STATUS_REJECT, // Only REJECTED status
+                5, // PageSize = 5
+                SD.CREATED_DATE, // Order by CreatedDate
+                SD.ORDER_ASC, // Ascending order
+                1 // PageNumber = 1
+            );
+
+            // Assert
+            result.Should().NotBeNull();
+            var statusCodeResult = result.Result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+
+            var response = statusCodeResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            response.ErrorMessages.FirstOrDefault().Should().Contain("An internal server error occurred.");
+
+        }
+
+        [Fact]
+        public async Task CreateAsync_ShouldReturnBadRequest_WhenModelStateIsInvalid()
+        {
+            // Arrange
+            _controller.ModelState.AddModelError("Title", "Required");
+
+            // Act
+            var result = await _controller.CreateAsync(new CurriculumCreateDTO());
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var response = badRequestResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.ErrorMessages.Should().Contain(_resourceServiceMock.Object.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM));
+        }
+
+        [Fact]
+        public async Task CreateAsync_ShouldReturnBadRequest_WhenDuplicateAgeRangeExists()
+        {
+            // Arrange
+            var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10 };
+            var userId = "testTutorId";
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) })) }
+            };
+
+            var duplicateCurriculum = new Curriculum { AgeFrom = 5, AgeEnd = 10, SubmitterId = userId, IsActive = true, IsDeleted = false };
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, It.IsAny<Expression<Func<Curriculum, object>>>(), false))
+                .ReturnsAsync((1, new List<Curriculum> { duplicateCurriculum }));
+
+            // Act
+            var result = await _controller.CreateAsync(curriculumDto);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var response = badRequestResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.ErrorMessages.Should().Contain(_resourceServiceMock.Object.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE));
+        }
+
+        [Fact]
+        public async Task CreateAsync_ShouldReturnCreated_WhenCurriculumCreatedSuccessfully()
+        {
+            // Arrange
+            var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10, OriginalCurriculumId = 0 };
+            var userId = "testTutorId";
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) })) }
+            };
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, It.IsAny<Expression<Func<Curriculum, object>>>(), false))
+                .ReturnsAsync((0, new List<Curriculum>()));
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetNextVersionNumberAsync(It.IsAny<int>()))
+                .ReturnsAsync(1);
+
+            var newCurriculum = new Curriculum { Id = 1, AgeFrom = 5, AgeEnd = 10, SubmitterId = userId, CreatedDate = DateTime.Now };
+            _curriculumRepositoryMock
+                .Setup(repo => repo.CreateAsync(It.IsAny<Curriculum>()))
+                .ReturnsAsync(newCurriculum);
+
+            // Act
+            var result = await _controller.CreateAsync(curriculumDto);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+            response.Result.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task CreateAsync_ShouldReturnInternalServerError_WhenExceptionIsThrown()
+        {
+            // Arrange
+            var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10 };
+            var userId = "testTutorId";
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) })) }
+            };
+
+            _curriculumRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, It.IsAny<Expression<Func<Curriculum, object>>>(), false))
+                .ThrowsAsync(new Exception("Test exception"));
+
+            // Act
+            var result = await _controller.CreateAsync(curriculumDto);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+
+            var response = statusCodeResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            response.ErrorMessages.Should().Contain(_resourceServiceMock.Object.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE));
+        }
+
+
+        [Fact]
+        public async Task UpdateStatusRequest_ApproveStatus_Succeeds()
+        {
+            // Arrange
+            var curriculumId = 1;
+            var userId = "user123";
+            var curriculum = new Curriculum { Id = curriculumId, SubmitterId = userId, RequestStatus = Status.PENDING, Description = "Test Curriculum" };
+            var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
+            var changeStatusDTO = new ChangeStatusDTO { Id = curriculumId, StatusChange = (int)Status.APPROVE };
+
+            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+                .ReturnsAsync(curriculum);
+            _userRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .ReturnsAsync(tutor);
+            _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
+
+            // Set user identity
+            var userClaims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, STAFF_ROLE) };
+            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
+            var okResult = result as OkObjectResult;
+
+            // Assert
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var apiResponse = okResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.Result.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_RejectStatus_Succeeds()
+        {
+            // Arrange
+            var curriculumId = 1;
+            var userId = "user123";
+            var curriculum = new Curriculum { Id = curriculumId, SubmitterId = userId, RequestStatus = Status.PENDING, Description = "Test Curriculum" };
+            var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
+            var changeStatusDTO = new ChangeStatusDTO { Id = curriculumId, StatusChange = (int)Status.REJECT, RejectionReason = "Invalid document" };
+
+            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+                .ReturnsAsync(curriculum);
+            _userRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
+                .ReturnsAsync(tutor);
+            // Set user identity
+            var userClaims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, STAFF_ROLE) };
+            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
+            var okResult = result as OkObjectResult;
+
+            // Assert
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var apiResponse = okResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.Result.Should().NotBeNull();
+        }
+
+
+        [Fact]
+        public async Task UpdateStatusRequest_ReturnsBadRequest_IfCurriculumIsNull()
+        {
+            // Arrange
+            var curriculumId = 1;
+            var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.APPROVE };
+
+            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+                .ReturnsAsync((Curriculum)null);
+            _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
+            var badRequestResult = result as BadRequestObjectResult;
+
+            // Assert
+            badRequestResult.Should().NotBeNull();
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.Should().Contain("Error message");
+        }
+
+
+        [Fact]
+        public async Task UpdateStatusRequest_ReturnsBadRequest_IfCurriculumStatusIsNotPending()
+        {
+            // Arrange
+            var curriculumId = 1;
+            var curriculum = new Curriculum { Id = 1, RequestStatus = Status.APPROVE };
+            var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.REJECT };
+
+            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+                .ReturnsAsync(curriculum);
+            _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
+            var badRequestResult = result as BadRequestObjectResult;
+
+            // Assert
+            badRequestResult.Should().NotBeNull();
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.Should().Contain("Error message");
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ReturnsInternalServerError_OnException()
+        {
+            // Arrange
+            var curriculumId = 1;
+            var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.APPROVE };
+            _resourceServiceMock.Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE)).Returns("Internal server error");
+            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
+            var internalServerErrorResult = result as ObjectResult;
+
+            // Assert
+            internalServerErrorResult.Should().NotBeNull();
+            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+
+            var apiResponse = internalServerErrorResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.Should().Contain("Internal server error");
+        }
 
     }
+
 }

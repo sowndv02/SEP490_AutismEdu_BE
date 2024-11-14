@@ -223,8 +223,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             var assessmentQuestions = new List<AssessmentQuestion>
             {
-                new AssessmentQuestion { Id = 1, Question = "Question 1" },
-                new AssessmentQuestion { Id = 2, Question = "Question 2" }
+                new AssessmentQuestion { Id = 1, Question = "Question 1", AssessmentOptions = new List<AssessmentOption>()
+                    {
+                        new AssessmentOption(){ Id = 1, OptionText = "Option 1 Question 1", Point = 3, QuestionId = 1 },
+                        new AssessmentOption(){ Id = 2, OptionText = "Option 2 Question 1", Point = 4, QuestionId = 1 },
+                        new AssessmentOption(){ Id = 3, OptionText = "Option 3 Question 1", Point = 5, QuestionId = 1 },
+                        new AssessmentOption(){ Id = 4, OptionText = "Option 4 Question 1", Point = 6, QuestionId = 1 },
+                    } 
+                },
+                new AssessmentQuestion { Id = 2, Question = "Question 2", AssessmentOptions = new List<AssessmentOption>()
+                    {
+                        new AssessmentOption(){ Id = 5, OptionText = "Option 1 Question 2", Point = 3, QuestionId = 2 },
+                        new AssessmentOption(){ Id = 6, OptionText = "Option 2 Question 2", Point = 4, QuestionId = 2 },
+                        new AssessmentOption(){ Id = 7, OptionText = "Option 3 Question 2", Point = 5, QuestionId = 2 },
+                        new AssessmentOption(){ Id = 8, OptionText = "Option 4 Question 2", Point = 6, QuestionId = 2 },
+                    }  
+                }
             };
 
             // Mock the repository to return a list of assessment questions
