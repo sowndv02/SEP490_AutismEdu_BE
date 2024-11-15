@@ -173,7 +173,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
                 var existReport = await _reportRepository.GetAllNotPagingAsync(x => x.ReportType == SD.ReportType.TUTOR && x.ReporterId == userId && x.Status == SD.Status.PENDING);
-                if (existReport.list != null && !existReport.list.Any())
+                if (existReport.list != null && existReport.list.Any())
                 {
                     _logger.LogWarning("Cannot spam report");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -182,22 +182,25 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
                 var child = await _childInformationRepository.GetAllNotPagingAsync(x => x.ParentId == userId);
+
                 if (child.list != null && !child.list.Any())
                 {
-                    foreach (var item in child.list)
+                    _logger.LogWarning("Cannot report tutor");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
+                    return BadRequest(_response);
+                }
+                foreach (var item in child.list)
+                {
+                    var studentProfiles = await _studentProfileRepository.GetAllNotPagingAsync(x => x.ChildId == item.Id);
+                    if (!studentProfiles.list.Any(x => x.TutorId == createDTO.TutorId))
                     {
-                        var studentProfiles = await _studentProfileRepository.GetAllNotPagingAsync(x => x.ChildId == item.Id);
-                        if (studentProfiles.list != null && !studentProfiles.list.Any())
-                        {
-                            if (studentProfiles.list.Any(x => x.TutorId == createDTO.TutorId))
-                            {
-                                _logger.LogWarning("Cannot report tutor");
-                                _response.StatusCode = HttpStatusCode.BadRequest;
-                                _response.IsSuccess = false;
-                                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
-                                return BadRequest(_response);
-                            }
-                        }
+                        _logger.LogWarning("Cannot report tutor");
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
+                        return BadRequest(_response);
                     }
                 }
 
