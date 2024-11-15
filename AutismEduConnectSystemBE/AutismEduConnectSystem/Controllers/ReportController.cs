@@ -88,7 +88,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (user != null) newModel.ReporterId = user.Id;
                 newModel.ReportType = SD.ReportType.UNLOCKREQUEST;
-                newModel.Title = SD.REPORT_UNLOCKREQUEST_TITLE;
+                //newModel.Title = SD.REPORT_UNLOCKREQUEST_TITLE;
 
                 var reportModel = await _reportRepository.CreateAsync(newModel);
                 var result = await _reportRepository.GetAsync(x => x.Id == reportModel.Id, false, "Reporter", null);
@@ -137,7 +137,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 newModel.ReporterId = userId;
                 newModel.ReportType = SD.ReportType.REVIEW;
-                newModel.Title = SD.REPORT_REVIEW_TITLE;
+                //newModel.Title = SD.REPORT_REVIEW_TITLE;
 
                 var reportModel = await _reportRepository.CreateAsync(newModel);
                 var result = await _reportRepository.GetAsync(x => x.Id == reportModel.Id, false, "Review,Reporter", null);
@@ -208,7 +208,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 newModel.ReporterId = userId;
                 newModel.ReportType = SD.ReportType.TUTOR;
-                newModel.Title = SD.REPORT_TUTOR_TITLE;
+                //newModel.Title = SD.REPORT_TUTOR_TITLE;
 
                 var reportModel = await _reportRepository.CreateAsync(newModel);
 
@@ -323,6 +323,11 @@ namespace AutismEduConnectSystem.Controllers
                     orderByQuery,
                     isDesc
                 );
+
+                foreach (var item in result)
+                {
+                    item.Tutor.User = await _userRepository.GetAsync(x => x.Id.Equals(item.TutorId));
+                }
 
                 list = result;
                 totalCount = count;
@@ -476,6 +481,7 @@ namespace AutismEduConnectSystem.Controllers
                     var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == report.ReviewId && x.Id != report.Id, "Handler,Reporter", null, x => x.CreatedDate, true);
                     reports = listReportReview;
                 }
+                report.Tutor.User = await _userRepository.GetAsync(x => x.Id.Equals(report.TutorId));
                 _response.Result = new { Result = _mapper.Map<ReportDTO>(report), ReportsRelated = _mapper.Map<List<ReportDTO>>(reports) };
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
