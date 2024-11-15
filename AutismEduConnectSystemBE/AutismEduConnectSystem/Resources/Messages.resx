@@ -249,4 +249,10 @@
   <data name="CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION" xml:space="preserve">
     <value>Thông tin của bạn đã {0}</value>
   </data>
+  <data name="UNAUTHORIZED_MESSAGE" xml:space="preserve">
+    <value>Người dùng phải đăng nhập</value>
+  </data>
+  <data name="FORBIDDEN_MESSAGE" xml:space="preserve">
+    <value>Không có quyền truy cập vào tài nguyên.</value>
+  </data>
 </root>

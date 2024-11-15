@@ -223,6 +223,15 @@ namespace AutismEduConnectSystem.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Không có quyền truy cập vào tài nguyên..
+        /// </summary>
+        public static string FORBIDDEN_MESSAGE {
+            get {
+                return ResourceManager.GetString("FORBIDDEN_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Người dùng Google không thể đối mật khẩu.
         /// </summary>
         public static string GG_CANNOT_CHANGE_PASSWORD {
@@ -390,6 +399,15 @@ namespace AutismEduConnectSystem.Resources {
         public static string TUTOR_UPDATE_STATUS_IS_PENDING {
             get {
                 return ResourceManager.GetString("TUTOR_UPDATE_STATUS_IS_PENDING", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Người dùng phải đăng nhập.
+        /// </summary>
+        public static string UNAUTHORIZED_MESSAGE {
+            get {
+                return ResourceManager.GetString("UNAUTHORIZED_MESSAGE", resourceCulture);
             }
         }
         

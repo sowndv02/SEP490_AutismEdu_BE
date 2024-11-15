@@ -67,7 +67,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
                 var existReport = await _reportRepository.GetAllNotPagingAsync(x => x.ReportType == SD.ReportType.UNLOCKREQUEST && x.Email == createDTO.Email && x.Status == SD.Status.PENDING);
-                if (existReport.list != null && !existReport.list.Any())
+                if (existReport.list != null && existReport.list.Any())
                 {
                     _logger.LogWarning("Cannot spam report");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -116,6 +116,14 @@ namespace AutismEduConnectSystem.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");
@@ -125,7 +133,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
                 var existReport = await _reportRepository.GetAllNotPagingAsync(x => x.ReportType == SD.ReportType.REVIEW && x.ReporterId == userId && x.Status == SD.Status.PENDING);
-                if (existReport.list != null && !existReport.list.Any())
+                if (existReport.list != null && existReport.list.Any())
                 {
                     _logger.LogWarning("Cannot spam report");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -163,7 +171,24 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.PARENT_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");
@@ -183,7 +208,7 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 var child = await _childInformationRepository.GetAllNotPagingAsync(x => x.ParentId == userId);
 
-                if (child.list != null && !child.list.Any())
+                if (child.list != null && child.list.Any())
                 {
                     _logger.LogWarning("Cannot report tutor");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -243,6 +268,15 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 int totalCount = 0;
                 List<Report> list = new();
                 Expression<Func<Report, bool>> filter = u => true;
@@ -251,7 +285,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (userRoles.Contains(SD.PARENT_ROLE) || userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
                     filter = u => !string.IsNullOrEmpty(u.ReporterId) && u.ReporterId == userId;
                 }
 
@@ -356,7 +390,24 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.STAFF_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");
@@ -430,7 +481,7 @@ namespace AutismEduConnectSystem.Controllers
                     }
                     foreach (var item in reports)
                     {
-                        item.Status = Status.APPROVE;
+                        item.Status = Status.REJECT;
                         item.UpdatedDate = DateTime.Now;
                         item.Comments = updateDTO.Comment;
                         item.HandlerId = userId;
@@ -462,6 +513,24 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.STAFF_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 Report report = await _reportRepository.GetAsync(x => x.Id == id, false, "Handler,Tutor,Review,Reporter,ReportMedias", null);
                 List<Report> reports = new();
                 if (report == null)

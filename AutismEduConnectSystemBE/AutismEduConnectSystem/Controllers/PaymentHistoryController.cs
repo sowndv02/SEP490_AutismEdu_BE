@@ -1,10 +1,10 @@
-﻿using AutoMapper;
-using AutismEduConnectSystem.Models;
+﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
@@ -55,6 +55,14 @@ namespace AutismEduConnectSystem.Controllers
                 }
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var newModel = _mapper.Map<PaymentHistory>(createDTO);
                 var packagePayment = await _packagePaymentRepository.GetAsync(x => x.Id == createDTO.PackagePaymentId);
                 newModel.SubmitterId = userId;
@@ -105,6 +113,14 @@ namespace AutismEduConnectSystem.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var result = await _paymentHistoryRepository.GetAllNotPagingAsync(x => x.SubmitterId == userId && x.ExpirationDate.Date >= DateTime.Now.Date, "PackagePayment,Submitter", null, x => x.CreatedDate, true);
                 if (result.list.FirstOrDefault() != null) _response.Result = _mapper.Map<PaymentHistoryDTO>(result.list.FirstOrDefault());
                 _response.IsSuccess = true;
@@ -129,7 +145,15 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
-
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 Expression<Func<PaymentHistory, bool>> filter = u => true;
                 Expression<Func<PaymentHistory, object>> orderByQuery = u => true;
@@ -174,7 +198,7 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 else if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
                     filter = filter.AndAlso(x => x.SubmitterId == userId);
                     var (count, list) = await _paymentHistoryRepository.GetAllAsync(filter, "Submitter,PackagePayment", pageSize, pageNumber, orderByQuery, isDesc);
                     result = list;

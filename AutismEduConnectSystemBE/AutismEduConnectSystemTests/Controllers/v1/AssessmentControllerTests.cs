@@ -1,12 +1,9 @@
-﻿using AutoMapper;
-using AutismEduConnectSystem;
-using AutismEduConnectSystem.Controllers.v1;
-using AutismEduConnectSystem.Mapper;
+﻿using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
+using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -206,15 +203,84 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
 
-        //[Fact]
-        //public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsNotInStaffRole()
-        //{
-        //    var client = _factory.CreateClient();
-        //    var dto = new AssessmentQuestionCreateDTO { Question = "New Question" };
-        //    var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
-        //    var result = await client.PostAsync("/api/v1/assessment", content);
-        //    result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
-        //}
+        [Fact]
+        public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+
+
+            var requestPayload = new AssessmentQuestionCreateDTO
+            {
+                Question = "Sample Question"
+            };
+
+
+            // Act
+            var result = await _controller.CreateAsync(requestPayload);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
+
+
+        [Fact]
+        public async Task CreateAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+
+
+            var requestPayload = new AssessmentQuestionCreateDTO
+            {
+                Question = "Sample Question"
+            };
+
+
+            // Act
+            var result = await _controller.CreateAsync(requestPayload);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
+
+
+
+
 
 
         [Fact]
@@ -229,7 +295,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         new AssessmentOption(){ Id = 2, OptionText = "Option 2 Question 1", Point = 4, QuestionId = 1 },
                         new AssessmentOption(){ Id = 3, OptionText = "Option 3 Question 1", Point = 5, QuestionId = 1 },
                         new AssessmentOption(){ Id = 4, OptionText = "Option 4 Question 1", Point = 6, QuestionId = 1 },
-                    } 
+                    }
                 },
                 new AssessmentQuestion { Id = 2, Question = "Question 2", AssessmentOptions = new List<AssessmentOption>()
                     {
@@ -237,7 +303,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         new AssessmentOption(){ Id = 6, OptionText = "Option 2 Question 2", Point = 4, QuestionId = 2 },
                         new AssessmentOption(){ Id = 7, OptionText = "Option 3 Question 2", Point = 5, QuestionId = 2 },
                         new AssessmentOption(){ Id = 8, OptionText = "Option 4 Question 2", Point = 6, QuestionId = 2 },
-                    }  
+                    }
                 }
             };
 

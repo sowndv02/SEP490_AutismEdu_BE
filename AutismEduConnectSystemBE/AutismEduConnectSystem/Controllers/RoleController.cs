@@ -1,14 +1,15 @@
-﻿using AutoMapper;
-using AutismEduConnectSystem.Models;
+﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Security.Claims;
 
 namespace AutismEduConnectSystem.Controllers
 {
@@ -26,7 +27,7 @@ namespace AutismEduConnectSystem.Controllers
         private readonly IMapper _mapper;
         protected int takeValue = 0;
         public RoleController(IRoleRepository roleRepository, IMapper mapper, IUserRepository userRepository,
-            IConfiguration configuration, FormatString formatString, ILogger<RoleController> logger, 
+            IConfiguration configuration, FormatString formatString, ILogger<RoleController> logger,
             IResourceService resourceService)
         {
             takeValue = configuration.GetValue<int>("APIConfig:TakeValue");
@@ -36,7 +37,7 @@ namespace AutismEduConnectSystem.Controllers
             _userRepository = userRepository;
             _formatString = formatString;
             _logger = logger;
-            _resourceService= resourceService;
+            _resourceService = resourceService;
         }
 
         [HttpGet]
@@ -113,6 +114,24 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.ADMIN_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (await _roleRepository.GetByNameAsync(roleDTO.Name.Trim()) != null)
                 {
                     _logger.LogWarning("Role with name {RoleName} already exists", roleDTO.Name);
@@ -153,6 +172,24 @@ namespace AutismEduConnectSystem.Controllers
 
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.ADMIN_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var role = await _roleRepository.GetByIdAsync(roleId);
                 if (role != null)
                 {
