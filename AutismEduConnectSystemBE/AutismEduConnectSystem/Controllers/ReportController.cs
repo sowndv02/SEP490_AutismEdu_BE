@@ -438,12 +438,12 @@ namespace AutismEduConnectSystem.Controllers
                     await _reportRepository.UpdateAsync(model);
                     if (!string.IsNullOrEmpty(model.TutorId))
                     {
-                        var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == model.TutorId && x.Id != model.Id, null, null, x => x.CreatedDate, true);
+                        var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == model.TutorId && x.Id != model.Id && x.Status == SD.Status.PENDING, null, null, x => x.CreatedDate, true);
                         reports = listReportTutor;
                     }
                     else if (model.ReviewId != null && model.ReviewId > 0)
                     {
-                        var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id, null, null, x => x.CreatedDate, true);
+                        var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id && x.Status == SD.Status.PENDING, null, null, x => x.CreatedDate, true);
                         reports = listReportReview;
                     }
                     foreach (var item in reports)
@@ -470,12 +470,12 @@ namespace AutismEduConnectSystem.Controllers
                     await _reportRepository.UpdateAsync(model);
                     if (!string.IsNullOrEmpty(model.TutorId))
                     {
-                        var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == model.TutorId && x.Id != model.Id, null, null, x => x.CreatedDate, true);
+                        var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == model.TutorId && x.Id != model.Id && x.Status == SD.Status.PENDING, null, null, x => x.CreatedDate, true);
                         reports = listReportTutor;
                     }
                     else if (model.ReviewId != null && model.ReviewId > 0)
                     {
-                        var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id, null, null, x => x.CreatedDate, true);
+                        var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id && x.Status == SD.Status.PENDING, null, null, x => x.CreatedDate, true);
                         reports = listReportReview;
                     }
                     foreach (var item in reports)
@@ -541,12 +541,12 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (!string.IsNullOrEmpty(report.TutorId))
                 {
-                    var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == report.TutorId && x.Id != report.Id, "Handler,Reporter,ReportMedias", null, x => x.CreatedDate, true);
+                    var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == report.TutorId && x.Id != report.Id && x.Status == SD.Status.PENDING, "Handler,Reporter,ReportMedias", null, x => x.CreatedDate, true);
                     reports = listReportTutor;
                 }
                 else if (report.ReviewId != null && report.ReviewId > 0)
                 {
-                    var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == report.ReviewId && x.Id != report.Id, "Handler,Reporter", null, x => x.CreatedDate, true);
+                    var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == report.ReviewId && x.Id != report.Id && x.Status == SD.Status.PENDING, "Handler,Reporter", null, x => x.CreatedDate, true);
                     reports = listReportReview;
                 }
                 report.Tutor.User = await _userRepository.GetAsync(x => x.Id.Equals(report.TutorId));
