@@ -351,7 +351,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 var (count, result) = await _reportRepository.GetAllWithIncludeAsync(
                     filter,
-                    "Handler,Tutor,Review,Reporter,ReportMedias",
+                    "Tutor,Review,Reporter",
                     pageSize: 10,
                     pageNumber: pageNumber,
                     orderByQuery,
