@@ -575,7 +575,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus")]
         [Authorize]
-        public async Task<IActionResult> ApproveOrRejectStudentProfile(ChangeStatusDTO changeStatusDTO)
+        public async Task<IActionResult> UpdateStatusStudentProfile(ChangeStatusDTO changeStatusDTO)
         {
             try
             {

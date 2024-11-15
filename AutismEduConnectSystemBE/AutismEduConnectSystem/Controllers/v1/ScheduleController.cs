@@ -85,7 +85,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("AssignExercises/{id}")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<ActionResult<APIResponse>> UpdateAsync(int id, [FromBody] AssignExerciseScheduleDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> AssignExercises(int id, [FromBody] AssignExerciseScheduleDTO updateDTO)
         {
             try
             {
@@ -196,7 +196,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<ActionResult<APIResponse>> UpdateAsync(int id, [FromBody] ScheduleUpdateDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateStatusAsync(int id, [FromBody] ScheduleUpdateDTO updateDTO)
         {
             try
             {

@@ -282,7 +282,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPut("{reviewId}")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> EditReview(int reviewId, ReviewUpdateDTO reviewUpdateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateReviewAsync(int reviewId, ReviewUpdateDTO reviewUpdateDTO)
         {
             try
             {

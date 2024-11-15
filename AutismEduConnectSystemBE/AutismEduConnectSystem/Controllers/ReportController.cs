@@ -26,9 +26,9 @@ namespace AutismEduConnectSystem.Controllers
         private readonly IStudentProfileRepository _studentProfileRepository;
         private readonly IChildInformationRepository _childInformationRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IReviewRepository _reviewRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
-        private object blog;
         private readonly ILogger<ReportController> _logger;
         private readonly IResourceService _resourceService;
         public ReportController(IReportRepository reportRepository,
@@ -38,7 +38,7 @@ namespace AutismEduConnectSystem.Controllers
             IStudentProfileRepository studentProfileRepository,
             IChildInformationRepository childInformationRepository,
             IBlobStorageRepository blobStorageRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository, IReviewRepository reviewRepository)
         {
             _userRepository = userRepository;
             _blobStorageRepository = blobStorageRepository;
@@ -50,6 +50,7 @@ namespace AutismEduConnectSystem.Controllers
             _reportRepository = reportRepository;
             _resourceService = resourceService;
             _logger = logger;
+            _reviewRepository = reviewRepository;
         }
 
 
@@ -385,7 +386,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> ApproveOrRejectRequest(ReportUpdateDTO updateDTO)
+        public async Task<IActionResult> UpdateStatusRequest(ReportUpdateDTO updateDTO)
         {
             try
             {
@@ -435,6 +436,7 @@ namespace AutismEduConnectSystem.Controllers
                     model.UpdatedDate = DateTime.Now;
                     model.Comments = updateDTO.Comment;
                     model.HandlerId = userId;
+
                     await _reportRepository.UpdateAsync(model);
                     if (!string.IsNullOrEmpty(model.TutorId))
                     {
