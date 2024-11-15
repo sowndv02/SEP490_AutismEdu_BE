@@ -208,7 +208,7 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 var child = await _childInformationRepository.GetAllNotPagingAsync(x => x.ParentId == userId);
 
-                if (child.list != null && child.list.Any())
+                if (child.list != null && !child.list.Any())
                 {
                     _logger.LogWarning("Cannot report tutor");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -219,7 +219,7 @@ namespace AutismEduConnectSystem.Controllers
                 foreach (var item in child.list)
                 {
                     var studentProfiles = await _studentProfileRepository.GetAllNotPagingAsync(x => x.ChildId == item.Id);
-                    if (studentProfiles.list.Any(x => x.TutorId == createDTO.TutorId))
+                    if (!studentProfiles.list.Any(x => x.TutorId == createDTO.TutorId))
                     {
                         _logger.LogWarning("Cannot report tutor");
                         _response.StatusCode = HttpStatusCode.BadRequest;
@@ -233,7 +233,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 newModel.ReporterId = userId;
                 newModel.ReportType = SD.ReportType.TUTOR;
-                //newModel.Title = SD.REPORT_TUTOR_TITLE;
 
                 var reportModel = await _reportRepository.CreateAsync(newModel);
 
