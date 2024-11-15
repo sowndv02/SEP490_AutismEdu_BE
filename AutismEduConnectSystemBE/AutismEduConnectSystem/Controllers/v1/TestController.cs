@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
+using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 
 namespace AutismEduConnectSystem.Controllers.v1
 {
@@ -67,6 +68,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 Test model = _mapper.Map<Test>(createDTO);
+                if (createDTO.OriginalId == null || createDTO.OriginalId == 0)
+                {
+                    model.OriginalId = null;
+                }
+                model.VersionNumber = await _testRepository.GetNextVersionNumberAsync(model.OriginalId);
+                await _testRepository.DeactivatePreviousVersionsAsync(createDTO.OriginalId);
+                model.IsHidden = true;
                 model.CreatedBy = userId;
                 model.CreatedDate = DateTime.Now;
 
@@ -175,6 +183,50 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
-        }      
+        }
+
+        [HttpPut("hideShowTest")]
+        [Authorize(Roles = SD.MANAGER_ROLE)]
+        public async Task<IActionResult> HideShow(HideShowDTO updateDTO)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
+
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TEST) };
+                    return BadRequest(_response);
+                }
+
+                var model = await _testRepository.GetAsync(x => x.Id == updateDTO.Id);
+                if (model == null)
+                {
+                    _logger.LogWarning("Test with ID: {Id} is not found.", updateDTO.Id);
+
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TEST) };
+                    return BadRequest(_response);
+                }
+                model.IsHidden = updateDTO.IsHidden;
+                model.UpdatedDate = DateTime.Now;
+                await _testRepository.UpdateAsync(model);
+                _response.Result = _mapper.Map<PackagePaymentDTO>(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An error occurred while processing the status change for package payment ID: {Id}. Error: {Error}", updateDTO.Id, ex.Message);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
     }
 }

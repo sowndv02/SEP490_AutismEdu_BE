@@ -8,5 +8,6 @@ namespace AutismEduConnectSystem.Models.DTOs.CreateDTOs
         public string TestName { get; set; }
         [Required(ErrorMessage = SD.DESCRIPTION_REQUIRED)]
         public string TestDescription { get; set; }
+        public int? OriginalId { get; set; }
     }
 }

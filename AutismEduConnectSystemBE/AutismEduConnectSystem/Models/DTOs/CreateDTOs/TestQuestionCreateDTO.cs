@@ -10,5 +10,6 @@ namespace AutismEduConnectSystem.Models.DTOs.CreateDTOs
         public string Question {  get; set; }
         [Required(ErrorMessage = SD.OPTION_TEXT_REQUIRED)]
         public List<AssessmentOptionCreateDTO> Options { get; set; }
+        public int? OriginalId { get; set; }
     }
 }

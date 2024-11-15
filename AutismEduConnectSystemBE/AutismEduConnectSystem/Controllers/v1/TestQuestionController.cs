@@ -62,6 +62,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 AssessmentQuestion model = _mapper.Map<AssessmentQuestion>(createDTO);
+                if (createDTO.OriginalId == null || createDTO.OriginalId == 0)
+                {
+                    model.OriginalId = null;
+                }
+                model.VersionNumber = await _assessmentQuestionRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
+                await _assessmentQuestionRepository.DeactivatePreviousVersionsAsync(createDTO.OriginalId);
                 model.SubmitterId = userId;
                 model.IsHidden = false;
                 model.TestId = createDTO.TestId;
@@ -108,5 +114,40 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
         }
 
+        [HttpDelete("{id}")]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        public async Task<IActionResult> DeleteAsync(int id)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var question = await _assessmentQuestionRepository.GetAsync(x => x.Id == id 
+                                                                                   && x.IsActive 
+                                                                                   && !x.IsHidden, true, "AssessmentOptions");
+                if (question == null)
+                {
+                    _logger.LogWarning("Test question with ID {QuestionId} not found for user: {UserId}", id, userId);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.EXERCISE) };
+                    return NotFound(_response);
+                }
+
+                question.IsHidden = true;
+                var model = await _assessmentQuestionRepository.UpdateAsync(question);
+                _response.Result = _mapper.Map<AssessmentQuestionDTO>(model);
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while deleting exercise with ID {ExerciseId} for user: {UserId}", id, User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
     }
 }
