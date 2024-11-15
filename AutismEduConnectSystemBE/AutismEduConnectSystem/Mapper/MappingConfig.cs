@@ -298,7 +298,9 @@ namespace AutismEduConnectSystem.Mapper
             CreateMap<BlogUpdateDTO, Blog>().ReverseMap();
             CreateMap<Report, ReportReviewCreateDTO>();
             CreateMap<Report, ReportReviewDTO>();
-            CreateMap<Report, ReportTutorCreateDTO>();
+            CreateMap<ReportTutorCreateDTO, Report>()
+                .ForMember(dest => dest.ReportMedias, opt => opt.Ignore())
+                .ReverseMap(); ;
             CreateMap<Report, ReportTutorDTO>();
             CreateMap<Report, ReportAppealBanCreateDTO>();
             CreateMap<Report, ReportAppealBanDTO>();
