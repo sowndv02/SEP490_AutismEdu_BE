@@ -1,16 +1,15 @@
-﻿using AutoMapper;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models;
+using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using System.Security.Claims;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using AutismEduConnectSystem.Repository;
+using System.Net;
+using System.Security.Claims;
 
 namespace AutismEduConnectSystem.Controllers
 {
@@ -30,11 +29,11 @@ namespace AutismEduConnectSystem.Controllers
         private readonly IAttachmentRepository _attachmentRepository;
         private readonly IHubContext<NotificationHub> _hubContext;
         protected int pageSize = 0;
-        
+
 
         public MessageController(IConversationRepository conversationRepository,
             IMapper mapper, IResourceService resourceService,
-            ILogger<MessageController> logger, IUserRepository userRepository, 
+            ILogger<MessageController> logger, IUserRepository userRepository,
             IMessageRepository messageRepository, IHubContext<NotificationHub> hubContext,
             IConfiguration configuration, IAttachmentRepository attachmentRepository)
         {
@@ -56,7 +55,24 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE) && !userRoles.Contains(SD.PARENT_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 Message model = await _messageRepository.GetAsync(x => x.Id == id, true, null, null);
                 if (model == null)
                 {
@@ -71,7 +87,7 @@ namespace AutismEduConnectSystem.Controllers
                 var result = await _messageRepository.UpdateAsync(model);
                 var (count, list) = await _messageRepository.GetAllNotPagingAsync(x => x.ConversationId == model.ConversationId && x.CreatedDate <= model.CreatedDate && !x.IsRead, null, null, x => x.CreatedDate, true);
 
-                foreach (var message in list) 
+                foreach (var message in list)
                 {
                     message.IsRead = true;
                     message.UpdatedDate = DateTime.Now;
@@ -99,7 +115,23 @@ namespace AutismEduConnectSystem.Controllers
             try
             {
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE) && !userRoles.Contains(SD.PARENT_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 Conversation conversation = null;
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
@@ -109,7 +141,7 @@ namespace AutismEduConnectSystem.Controllers
                 {
                     conversation = await _conversationRepository.GetAsync(x => x.Id == conversationId && x.ParentId == userId, false, null, null);
                 }
-                if(conversation == null)
+                if (conversation == null)
                 {
                     _logger.LogWarning("Cannot access to message. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -150,8 +182,24 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.MESSAGE) };
                     return BadRequest(_response);
                 }
-
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE) && !userRoles.Contains(SD.PARENT_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var newMessage = new Message()
                 {
                     ConversationId = createDTO.ConversationId,
@@ -160,16 +208,16 @@ namespace AutismEduConnectSystem.Controllers
                     SenderId = userId,
                     CreatedDate = DateTime.Now
                 };
-                
+
 
                 var result = await _messageRepository.CreateAsync(newMessage);
 
                 var conversation = await _conversationRepository.GetAsync(x => x.Id == createDTO.ConversationId, false, null, null);
                 var receiverId = string.Empty;
                 var returnModel = await _messageRepository.GetAsync(x => x.Id == result.Id, false, "Sender,Conversation", null);
-                if (conversation != null) 
+                if (conversation != null)
                 {
-                    if (conversation.TutorId.Equals(userId)) 
+                    if (conversation.TutorId.Equals(userId))
                         receiverId = conversation.ParentId;
                     else receiverId = conversation.TutorId;
 

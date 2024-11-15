@@ -191,6 +191,8 @@
         public const string REGISTER_FAILED_MESSAGE = "REGISTER_FAILED_MESSAGE";
         public const string REFRESH_TOKEN_ERROR_MESSAGE = "REFRESH_TOKEN_ERROR_MESSAGE";
         public const string TOKEN_EXPIRED_MESSAGE = "TOKEN_EXPIRED_MESSAGE";
+        public const string UNAUTHORIZED_MESSAGE = "UNAUTHORIZED_MESSAGE";
+        public const string FORBIDDEN_MESSAGE = "FORBIDDEN_MESSAGE";
 
         // const notification
         public const string CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION = "CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION";

@@ -1,22 +1,18 @@
-﻿using AutoMapper;
-using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Repository;
+using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
-using Microsoft.AspNetCore.Http;
+using AutismEduConnectSystem.Services.IServices;
+using AutismEduConnectSystem.SignalR;
+using AutismEduConnectSystem.Utils;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using System.Linq.Expressions;
-using AutismEduConnectSystem.Utils;
-using MailKit.Search;
-using AutismEduConnectSystem.Services.IServices;
-using Microsoft.AspNetCore.Authorization;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.SignalR;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace AutismEduConnectSystem.Controllers.v1
 {
@@ -40,8 +36,8 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly IHubContext<NotificationHub> _hubContext;
         public ProgressReportController(IMapper mapper, IConfiguration configuration,
             IProgressReportRepository progressReportRepository, IAssessmentResultRepository assessmentResultRepository,
-            IInitialAssessmentResultRepository initialAssessmentResultRepository, IResourceService resourceService, ILogger<ProgressReportController> logger, 
-            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext, IStudentProfileRepository studentProfileRepository, 
+            IInitialAssessmentResultRepository initialAssessmentResultRepository, IResourceService resourceService, ILogger<ProgressReportController> logger,
+            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext, IStudentProfileRepository studentProfileRepository,
             IChildInformationRepository childInformationRepository, IUserRepository userRepository)
         {
             _response = new APIResponse();
@@ -56,7 +52,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             _hubContext = hubContext;
             _studentProfileRepository = studentProfileRepository;
             _childInformationRepository = childInformationRepository;
-            _userRepository = userRepository;   
+            _userRepository = userRepository;
         }
 
         [HttpPost]
@@ -65,8 +61,24 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+                if (string.IsNullOrEmpty(tutorId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (createDTO == null)
                 {
                     _logger.LogWarning("Received null ProgressReportCreateDTO. Bad request.");
@@ -128,6 +140,15 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 int totalCount = 0;
                 List<ProgressReport> list = new();
                 Expression<Func<ProgressReport, bool>> filter = u => true;
@@ -169,7 +190,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                                 "StudentProfile,AssessmentResults", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                 list = result;
                 totalCount = count;
-                
+
                 foreach (var item in list)
                 {
                     List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
@@ -217,7 +238,16 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                var progressReport = await _progressReportRepository.GetAsync(x => x.Id == Id,true, "AssessmentResults");
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                var progressReport = await _progressReportRepository.GetAsync(x => x.Id == Id, true, "AssessmentResults");
 
                 if (progressReport == null)
                 {
@@ -256,8 +286,24 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+                if (string.IsNullOrEmpty(tutorId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (updateDTO == null)
                 {
                     _logger.LogWarning("Received null updateDTO for ProgressReport update.");
@@ -278,7 +324,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                if(model.CreatedDate.AddHours(48) <= DateTime.Now)
+                if (model.CreatedDate.AddHours(48) <= DateTime.Now)
                 {
                     _logger.LogWarning("Attempt to modify ProgressReportId: {ProgressReportId} after 48 hours.", updateDTO.Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;

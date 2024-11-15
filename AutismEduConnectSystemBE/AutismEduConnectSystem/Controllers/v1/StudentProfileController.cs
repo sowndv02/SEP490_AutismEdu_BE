@@ -1,14 +1,13 @@
-﻿using AutoMapper;
-using AutismEduConnectSystem.Models;
+﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.RabbitMQSender;
-using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
 using AutismEduConnectSystem.Utils;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -51,7 +50,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository,
             IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IRabbitMQMessageSender messageBus,
             IUserRepository userRepository, IRoleRepository roleRepository, IBlobStorageRepository blobStorageRepository
-            , IScheduleRepository scheduleRepository, IResourceService resourceService, ILogger<StudentProfileController> logger, 
+            , IScheduleRepository scheduleRepository, IResourceService resourceService, ILogger<StudentProfileController> logger,
             INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
         {
             _studentProfileRepository = studentProfileRepository;
@@ -82,8 +81,24 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+                if (string.IsNullOrEmpty(tutorId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (createDTO == null)
                 {
                     _logger.LogWarning("Received empty createDTO from tutor {TutorId}", tutorId);
@@ -395,7 +410,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
 
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+                if (string.IsNullOrEmpty(tutorId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 filter = filter.AndAlso(x => x.TutorId.Equals(tutorId));
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
@@ -451,7 +473,14 @@ namespace AutismEduConnectSystem.Controllers.v1
             try
             {
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+                if (string.IsNullOrEmpty(tutorId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var scheduleTimeSlots = await _studentProfileRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId)
                 && (x.Status == SD.StudentProfileStatus.Teaching || x.Status == SD.StudentProfileStatus.Teaching), "ScheduleTimeSlots,Child");
 
@@ -477,7 +506,14 @@ namespace AutismEduConnectSystem.Controllers.v1
             try
             {
                 var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+                if (string.IsNullOrEmpty(parentId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var childs = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId));
 
                 if (childs.list == null || !childs.list.Any())
@@ -543,6 +579,15 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (changeStatusDTO == null)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -600,10 +645,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                     initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id && x.isInitialAssessment == true, true, "Question,Option"));
                 }
                 studentProfile.InitialAndFinalAssessmentResults = initialAssessmentResults;
-                if(changeStatusDTO.StatusChange == (int)StudentProfileStatus.Teaching)
+                if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Teaching)
                 {
                     var connectionId = NotificationHub.GetConnectionIdByUserId(studentProfile.TutorId);
-                    var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false,"Parent", null);
+                    var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, "Parent", null);
                     var notfication = new Notification()
                     {
                         ReceiverId = studentProfile.TutorId,
@@ -637,7 +682,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
                     }
                 }
-                
+
 
                 await _studentProfileRepository.UpdateAsync(studentProfile);
 
@@ -699,7 +744,14 @@ namespace AutismEduConnectSystem.Controllers.v1
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var roles = User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList();
 
                 var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == id, true, "InitialAndFinalAssessmentResults,ScheduleTimeSlots");
@@ -745,8 +797,24 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+                if (string.IsNullOrEmpty(tutorId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (closeDTO == null)
                 {
                     _logger.LogWarning($"CloseTutoringCreateDTO is null");
@@ -811,7 +879,14 @@ namespace AutismEduConnectSystem.Controllers.v1
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 var scheduleTimeSlots = await _studentProfileRepository.GetAsync(x => x.Id == studentProfileId, true, "ScheduleTimeSlots,Child");
 
                 if (scheduleTimeSlots == null)

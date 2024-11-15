@@ -1,18 +1,15 @@
-﻿using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
-using AutismEduConnectSystem.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using System.Security.Claims;
-using AutoMapper;
+﻿using AutismEduConnectSystem.Models;
+using AutismEduConnectSystem.Models.DTOs;
+using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Repository;
-using System.Linq.Expressions;
 using AutismEduConnectSystem.Utils;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
+using System.Net;
+using System.Security.Claims;
 
 namespace AutismEduConnectSystem.Controllers.v1
 {
@@ -30,8 +27,8 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly IResourceService _resourceService;
         protected int pageSize = 0;
 
-        public TestResultController(ITestResultRepository testResultRepository, 
-            ITestResultDetailRepository testResultDetailRepository, IMapper mapper, ILogger<TestController> logger, 
+        public TestResultController(ITestResultRepository testResultRepository,
+            ITestResultDetailRepository testResultDetailRepository, IMapper mapper, ILogger<TestController> logger,
             IResourceService resourceService, IAssessmentQuestionRepository assessmentQuestionRepository, IConfiguration configuration)
         {
             _testResultRepository = testResultRepository;
@@ -51,6 +48,14 @@ namespace AutismEduConnectSystem.Controllers.v1
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (createDTO == null)
                 {
                     _logger.LogWarning("Received null TestResultCreateDTO object.");
@@ -86,6 +91,14 @@ namespace AutismEduConnectSystem.Controllers.v1
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 int totalCount = 0;
                 List<TestResult> list = new();
                 Expression<Func<TestResult, bool>> filter = u => true;
@@ -127,7 +140,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 _response.Result = _mapper.Map<List<TestResultDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
-                _response.Pagination = pagination;            
+                _response.Pagination = pagination;
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
@@ -148,6 +161,14 @@ namespace AutismEduConnectSystem.Controllers.v1
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
 
                 var model = await _testResultRepository.GetAsync(x => x.Id == testResultId && x.ParentId.Equals(userId), true, "Test");
                 var testResult = await _testResultDetailRepository.GetAllNotPagingAsync(x => x.TestResultId == testResultId, "Question,Option");
