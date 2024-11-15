@@ -406,7 +406,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> ApproveOrRejectRequest(int id, ChangeStatusTutorRequestDTO changeStatusDTO)
+        public async Task<IActionResult> UpdateStatusRequest(int id, ChangeStatusTutorRequestDTO changeStatusDTO)
         {
             try
             {

@@ -274,7 +274,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("{id}")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> UpdateAsync(TutorProfileUpdateRequestCreateDTO updateDTO)
+        public async Task<IActionResult> UpdateProfileAsync(TutorProfileUpdateRequestCreateDTO updateDTO)
         {
             try
             {
@@ -369,7 +369,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> ApproveOrRejectRequest(ChangeStatusDTO changeStatusDTO)
+        public async Task<IActionResult> UpdateStatusRequest(ChangeStatusDTO changeStatusDTO)
         {
             var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
             if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))

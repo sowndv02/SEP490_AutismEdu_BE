@@ -309,7 +309,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> ApproveOrRejectExerciseCreateRequest(int id)
+        public async Task<IActionResult> UpdateStatusRequest(int id)
         {
             try
             {
