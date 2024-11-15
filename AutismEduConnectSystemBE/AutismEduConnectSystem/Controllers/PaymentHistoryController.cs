@@ -67,7 +67,7 @@ namespace AutismEduConnectSystem.Controllers
                 var packagePayment = await _packagePaymentRepository.GetAsync(x => x.Id == createDTO.PackagePaymentId);
                 newModel.SubmitterId = userId;
                 var latestPaymentHistoryResult = await _paymentHistoryRepository.GetAllAsync(
-                    x => x.SubmitterId == userId,
+                    x => x.SubmitterId == userId && x.ExpirationDate.Date >= DateTime.Now.Date,
                     includeProperties: null,
                     pageSize: 1,
                     pageNumber: 1,
