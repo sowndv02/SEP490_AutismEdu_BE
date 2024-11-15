@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
+using static AutismEduConnectSystem.SD;
 
 namespace AutismEduConnectSystem.Controllers.v1
 {
@@ -98,7 +99,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 Expression<Func<ExerciseType, object>> orderByQuery = u => true;
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive);
+                    filter = filter.AndAlso(e => e.IsHide);
                 }
                 if (!string.IsNullOrEmpty(search))
                 {
@@ -159,7 +160,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive);
+                    filter = filter.AndAlso(e => e.IsHide);
                 }
                 if (!string.IsNullOrEmpty(search))
                 {
@@ -247,7 +248,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while retrieving Exercises for ExerciseTypeId: {Id}. Search: {Search}, PageNumber: {PageNumber}, OrderBy: {OrderBy}, Sort: {Sort}",
-            id, search, pageNumber, orderBy, sort);
+                    id, search, pageNumber, orderBy, sort);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -290,12 +291,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 var newExerciseType = _mapper.Map<ExerciseType>(exerciseTypeCreateDTO);
                 newExerciseType.SubmitterId = userId;
-                if (exerciseTypeCreateDTO.OriginalId == null || exerciseTypeCreateDTO.OriginalId == 0)
-                {
-                    newExerciseType = null;
-                }
-                newExerciseType.VersionNumber = await _exerciseTypeRepository.GetNextVersionNumberAsync(exerciseTypeCreateDTO.OriginalId);
-                await _exerciseRepository.DeactivatePreviousVersionsAsync(newExerciseType.OriginalId);
                 await _exerciseTypeRepository.CreateAsync(newExerciseType);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<ExerciseTypeDTO>(newExerciseType);
@@ -312,59 +307,9 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
         }
 
-        //[HttpPut("changeStatus/{id}")]
-        //public async Task<IActionResult> ApproveOrRejectExerciseCreateRequest(ChangeStatusDTO changeStatusDTO)
-        //{
-        //    try
-        //    {
-        //        ExerciseType exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
-        //        if (exerciseType == null || exerciseType.RequestStatus != Status.PENDING)
-        //        {
-        //            _response.StatusCode = HttpStatusCode.BadRequest;
-        //            _response.IsSuccess = false;
-        //            _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-        //            return BadRequest(_response);
-        //        }
-
-        //        if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
-        //        {
-        //            exerciseType.RequestStatus = Status.APPROVE;
-
-        //            await _exerciseTypeRepository.UpdateAsync(exerciseType);
-
-        //            _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
-        //            _response.StatusCode = HttpStatusCode.OK;
-        //            _response.IsSuccess = true;
-        //            return Ok(_response);
-        //        }
-        //        else if (changeStatusDTO.StatusChange == (int)Status.REJECT)
-        //        {
-        //            exerciseType.RequestStatus = Status.REJECT;
-
-        //            await _exerciseTypeRepository.UpdateAsync(exerciseType);
-
-        //            _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
-        //            _response.StatusCode = HttpStatusCode.OK;
-        //            _response.IsSuccess = true;
-        //            return Ok(_response);
-        //        }
-
-        //        _response.StatusCode = HttpStatusCode.NoContent;
-        //        _response.IsSuccess = true;
-        //        return Ok(_response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _response.IsSuccess = false;
-        //        _response.StatusCode = HttpStatusCode.InternalServerError;
-        //        _response.ErrorMessages = new List<string> { ex.Message };
-        //        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-        //    }
-        //}
-
-        [HttpDelete("{id}")]
+        [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> DeleteExerciseTypeByIdAsync(int id)
+        public async Task<IActionResult> ApproveOrRejectExerciseCreateRequest(int id)
         {
             try
             {
@@ -386,29 +331,42 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                var exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == id && !x.IsDeleted);
+                if(id <= 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
+                ExerciseType exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == id, true, "Submitter", null);
                 if (exerciseType == null)
                 {
-                    _logger.LogWarning("ExerciseType with Id {Id} not found or already deleted.", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
                     return NotFound(_response);
                 }
+                if (!exerciseType.IsHide)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
+                    return BadRequest(_response);
+                }
 
-                exerciseType.IsDeleted = true;
+                exerciseType.IsHide = false;
+
                 await _exerciseTypeRepository.UpdateAsync(exerciseType);
-
-                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
+                _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while deleting ExerciseType with Id {Id}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                _response.ErrorMessages = new List<string> { ex.Message };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
