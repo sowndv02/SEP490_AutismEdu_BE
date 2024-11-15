@@ -219,7 +219,7 @@ namespace AutismEduConnectSystem.Controllers
                 foreach (var item in child.list)
                 {
                     var studentProfiles = await _studentProfileRepository.GetAllNotPagingAsync(x => x.ChildId == item.Id);
-                    if (!studentProfiles.list.Any(x => x.TutorId == createDTO.TutorId))
+                    if (studentProfiles.list.Any(x => x.TutorId == createDTO.TutorId))
                     {
                         _logger.LogWarning("Cannot report tutor");
                         _response.StatusCode = HttpStatusCode.BadRequest;
