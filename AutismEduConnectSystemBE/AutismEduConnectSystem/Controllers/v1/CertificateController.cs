@@ -68,7 +68,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet("{id}")]
         [Authorize(Roles = $"{SD.MANAGER_ROLE},{SD.TUTOR_ROLE},{SD.STAFF_ROLE}")]
-        public async Task<IActionResult> GetByIdAsync(int id)
+        public async Task<ActionResult<APIResponse>> GetByIdAsync(int id)
         {
             try
             {
@@ -88,7 +88,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (id == 0)
                 {
@@ -98,7 +98,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var result = new Certificate();
+                Certificate result = null;
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     result = await _certificateRepository.GetAsync(x => x.Id == id && !x.IsDeleted, false, "CertificateMedias", null);
@@ -133,17 +133,8 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPost]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> CreateAsync([FromForm] CertificateCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] CertificateCreateDTO createDTO)
         {
-            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-            if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-            {
-                _logger.LogWarning("Forbidden access attempt detected.");
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.Forbidden;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-            }
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
@@ -153,6 +144,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Unauthorized, _response);
             }
+            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+            {
+                _logger.LogWarning("Forbidden access attempt detected.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.Forbidden;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.Forbidden, _response);
+            }
+            
             try
             {
                 if (!ModelState.IsValid)
@@ -192,17 +193,8 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> UpdateStatusRequest(int id, ChangeStatusDTO changeStatusDTO)
+        public async Task<ActionResult<APIResponse>> UpdateStatusRequest(int id, ChangeStatusDTO changeStatusDTO)
         {
-            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-            if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
-            {
-                _logger.LogWarning("Forbidden access attempt detected.");
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.Forbidden;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-            }
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
@@ -212,6 +204,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Unauthorized, _response);
             }
+            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
+            {
+                _logger.LogWarning("Forbidden access attempt detected.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.Forbidden;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.Forbidden, _response);
+            }
+            
             try
             {
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
@@ -337,19 +339,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                int totalCount = 0;
-                List<Certificate> list = new();
-                Expression<Func<Certificate, bool>> filter = u => true;
-                Expression<Func<Certificate, object>> orderByQuery = u => true;
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.TUTOR_ROLE) && !userRoles.Contains(SD.STAFF_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
+
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -359,6 +349,21 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.TUTOR_ROLE) && !userRoles.Contains(SD.STAFF_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+
+                int totalCount = 0;
+                List<Certificate> list = new();
+                Expression<Func<Certificate, bool>> filter = u => true;
+                Expression<Func<Certificate, object>> orderByQuery = u => true;
+                
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     filter = u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted;
@@ -439,15 +444,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
-            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-            if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-            {
-                _logger.LogWarning("Forbidden access attempt detected.");
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.Forbidden;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-            }
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
@@ -457,6 +453,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Unauthorized, _response);
             }
+            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+            {
+                _logger.LogWarning("Forbidden access attempt detected.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.Forbidden;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.Forbidden, _response);
+            }
+            
             try
             {
                 if (id == 0)

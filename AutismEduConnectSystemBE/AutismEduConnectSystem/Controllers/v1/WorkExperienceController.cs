@@ -50,15 +50,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
-            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-            if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-            {
-                _logger.LogWarning("Forbidden access attempt detected.");
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.Forbidden;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-            }
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
@@ -68,6 +59,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Unauthorized, _response);
             }
+
+            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+            {
+                _logger.LogWarning("Forbidden access attempt detected.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.Forbidden;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.Forbidden, _response);
+            }
+            
             try
             {
 
@@ -195,10 +197,19 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPost]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> CreateAsync(WorkExperienceCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync(WorkExperienceCreateDTO createDTO)
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
 
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
@@ -207,7 +218,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (!ModelState.IsValid)
                 {
@@ -218,15 +229,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
+                
                 var newModel = _mapper.Map<WorkExperience>(createDTO);
 
                 newModel.SubmitterId = userId;
@@ -254,19 +257,11 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> UpdateStatusRequest(ChangeStatusDTO changeStatusDTO)
+        public async Task<ActionResult<APIResponse>> UpdateStatusRequest(ChangeStatusDTO changeStatusDTO)
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
+
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -276,6 +271,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");

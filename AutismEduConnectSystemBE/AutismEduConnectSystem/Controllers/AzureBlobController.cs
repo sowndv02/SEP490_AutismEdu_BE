@@ -25,7 +25,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadImg(IFormFile file, bool isPrivate = false)
+        public async Task<ActionResult<APIResponse>> UploadImg(IFormFile file, bool isPrivate = false)
         {
             try
             {

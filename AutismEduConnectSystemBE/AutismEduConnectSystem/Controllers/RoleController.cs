@@ -130,7 +130,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (await _roleRepository.GetByNameAsync(roleDTO.Name.Trim()) != null)
                 {
@@ -167,7 +167,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpDelete("{roleId}")]
         [Authorize(Roles = SD.ADMIN_ROLE)]
-        public async Task<IActionResult> DeleteRoleAsync(string roleId)
+        public async Task<ActionResult<APIResponse>> DeleteRoleAsync(string roleId)
         {
 
             try
@@ -188,7 +188,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 var role = await _roleRepository.GetByIdAsync(roleId);
                 if (role != null)

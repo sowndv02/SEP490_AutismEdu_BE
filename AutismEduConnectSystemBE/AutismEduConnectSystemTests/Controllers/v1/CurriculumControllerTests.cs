@@ -23,6 +23,7 @@ using Xunit;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using static AutismEduConnectSystem.SD;
 using AutismEduConnectSystem.Repository;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -71,17 +72,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 _hubContextMock.Object
             );
 
-            _controller.ControllerContext = new ControllerContext
+            var claims = new List<Claim>
             {
-                HttpContext = new DefaultHttpContext
-                {
-                    User = new ClaimsPrincipal(
-                        new ClaimsIdentity(
-                            new Claim[] { new Claim(ClaimTypes.NameIdentifier, "testUserId") }
-                        )
-                    ),
-                },
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
             };
+            var identity = new ClaimsIdentity(claims, "test");
+            var user = new ClaimsPrincipal(identity);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
         }
 
         public Mock<IResourceService> ResourceServiceMock => _resourceServiceMock;
@@ -14079,7 +14077,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var result = await _controller.CreateAsync(new CurriculumCreateDTO());
 
             // Assert
-            var badRequestResult = result as BadRequestObjectResult;
+            var badRequestResult = result.Result as BadRequestObjectResult;
             badRequestResult.Should().NotBeNull();
             badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
 
@@ -14110,7 +14108,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var result = await _controller.CreateAsync(curriculumDto);
 
             // Assert
-            var badRequestResult = result as BadRequestObjectResult;
+            var badRequestResult = result.Result as BadRequestObjectResult;
             badRequestResult.Should().NotBeNull();
             badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
 
@@ -14149,7 +14147,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var result = await _controller.CreateAsync(curriculumDto);
 
             // Assert
-            var okResult = result as OkObjectResult;
+            var okResult = result.Result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
 
@@ -14188,7 +14186,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var result = await _controller.CreateAsync(curriculumDto);
 
             // Assert
-            var okResult = result as OkObjectResult;
+            var okResult = result.Result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
 
@@ -14218,7 +14216,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var result = await _controller.CreateAsync(curriculumDto);
 
             // Assert
-            var statusCodeResult = result as ObjectResult;
+            var statusCodeResult = result.Result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
 
@@ -14252,7 +14250,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
-            var okResult = result as OkObjectResult;
+            var okResult = result.Result as OkObjectResult;
 
             // Assert
             okResult.Should().NotBeNull();
@@ -14284,7 +14282,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
-            var okResult = result as OkObjectResult;
+            var okResult = result.Result as OkObjectResult;
 
             // Assert
             okResult.Should().NotBeNull();
@@ -14310,7 +14308,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
-            var badRequestResult = result as BadRequestObjectResult;
+            var badRequestResult = result.Result as BadRequestObjectResult;
 
             // Assert
             badRequestResult.Should().NotBeNull();
@@ -14335,7 +14333,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
-            var badRequestResult = result as BadRequestObjectResult;
+            var badRequestResult = result.Result as BadRequestObjectResult;
 
             // Assert
             badRequestResult.Should().NotBeNull();
@@ -14357,7 +14355,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
-            var internalServerErrorResult = result as ObjectResult;
+            var internalServerErrorResult = result.Result as ObjectResult;
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();

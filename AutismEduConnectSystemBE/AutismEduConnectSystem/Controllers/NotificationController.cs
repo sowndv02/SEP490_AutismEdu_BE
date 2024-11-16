@@ -33,7 +33,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPut("read/{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdateStatus(int id)
+        public async Task<ActionResult<APIResponse>> UpdateStatus(int id)
         {
             try
             {
@@ -76,7 +76,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPut("ReadAll")]
         [Authorize]
-        public async Task<IActionResult> ReadAllNotification()
+        public async Task<ActionResult<APIResponse>> ReadAllNotification()
         {
             try
             {
