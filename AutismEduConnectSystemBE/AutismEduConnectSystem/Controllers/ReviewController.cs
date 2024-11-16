@@ -191,15 +191,6 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.PARENT_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -209,6 +200,16 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.PARENT_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
                 if (reviewCreateDTO == null)
                 {
                     _logger.LogWarning("Received null ReviewCreateDTO");

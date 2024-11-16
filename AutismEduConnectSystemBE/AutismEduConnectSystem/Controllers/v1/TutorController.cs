@@ -83,7 +83,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 int totalCount = 0;
                 List<TutorProfileUpdateRequest> list = new();
@@ -151,15 +151,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -169,6 +160,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
                 var (total, list) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, null, null);
                 TutorProfileUpdateRequest model = null;
                 model = list.OrderByDescending(x => x.CreatedDate).ToList().FirstOrDefault();
@@ -274,19 +276,10 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("{id}")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> UpdateProfileAsync(TutorProfileUpdateRequestCreateDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateProfileAsync(TutorProfileUpdateRequestCreateDTO updateDTO)
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -296,6 +289,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
                 TutorProfileUpdateRequest model = _mapper.Map<TutorProfileUpdateRequest>(updateDTO);
                 model.TutorId = userId;
                 var result = await _tutorProfileUpdateRequestRepository.CreateAsync(model);
@@ -369,17 +372,8 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> UpdateStatusRequest(ChangeStatusDTO changeStatusDTO)
+        public async Task<ActionResult<APIResponse>> UpdateStatusRequest(ChangeStatusDTO changeStatusDTO)
         {
-            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-            if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
-            {
-                _logger.LogWarning("Forbidden access attempt detected.");
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.Forbidden;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-            }
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
@@ -389,6 +383,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Unauthorized, _response);
             }
+
+            var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
+            {
+                _logger.LogWarning("Forbidden access attempt detected.");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.Forbidden;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.Forbidden, _response);
+            }
+            
             try
             {
                 TutorProfileUpdateRequest model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);

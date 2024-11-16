@@ -17,7 +17,7 @@ using Xunit;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
-    public class AssessmentControllerTests : IClassFixture<WebApplicationFactory<Program>>
+    public class AssessmentControllerTests
     {
         private readonly WebApplicationFactory<Program> _factory;
         private readonly AssessmentController _controller;
@@ -27,9 +27,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly Mock<ILogger<AssessmentController>> _loggerMock;
         private readonly Mock<IResourceService> _resourceServiceMock;
 
-        public AssessmentControllerTests(WebApplicationFactory<Program> factory)
+        public AssessmentControllerTests()
         {
-            _factory = factory;
             _assessmentQuestionRepositoryMock = new Mock<IAssessmentQuestionRepository>();
             _assessmentScoreRangeRepositoryMock = new Mock<IAssessmentScoreRangeRepository>();
             var config = new MapperConfiguration(cfg =>
@@ -237,12 +236,53 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var apiResponse = unauthorizedResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
 
 
         [Fact]
         public async Task CreateAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbiden access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId")
+            };
+            var identity = new ClaimsIdentity(claims, "test");
+            var user = new ClaimsPrincipal(identity);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
+
+            var requestPayload = new AssessmentQuestionCreateDTO
+            {
+                Question = "Sample Question"
+            };
+
+
+            // Act
+            var result = await _controller.CreateAsync(requestPayload);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            apiResponse.ErrorMessages.First().Should().Be("Forbiden access.");
+        }
+
+
+
+        [Fact]
+        public async Task GetAllAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
         {
             // Arrange
             _resourceServiceMock
@@ -265,7 +305,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
 
             // Act
-            var result = await _controller.CreateAsync(requestPayload);
+            var result = await _controller.GetAllAsync();
             var unauthorizedResult = result.Result as ObjectResult;
 
             // Assert
@@ -275,12 +315,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var apiResponse = unauthorizedResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
-
-
-
-
 
 
         [Fact]
@@ -323,6 +360,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var apiResponse = statusCodeResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             apiResponse.Result.Should().NotBeNull();
         }
 
@@ -350,17 +388,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             var apiResponse = statusCodeResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.ErrorMessages.FirstOrDefault().Should().Be("Lỗi hệ thống. Vui lòng thử lại sau!");
         }
 
 
-        //[Fact]
-        //public async Task GetAsync_ReturnsUnauthorized_WhenUserIsNotAuthentication()
-        //{
-        //    var client = _factory.CreateClient();
-        //    var result = await client.GetAsync("/api/v1/assessment");
-        //    result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
-        //}
     }
 }

@@ -55,7 +55,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPost("resend-confirm-email")]
         [AllowAnonymous]
-        public async Task<IActionResult> ResendConfirmEmail(ResendConfirmEmailDTO model)
+        public async Task<ActionResult<APIResponse>> ResendConfirmEmail(ResendConfirmEmailDTO model)
         {
 
             try
@@ -97,7 +97,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPost("confirm-email")]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmEmail(ConfirmEmailDTO model)
+        public async Task<ActionResult<APIResponse>> ConfirmEmail(ConfirmEmailDTO model)
         {
 
             try
@@ -153,7 +153,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPost("reset-password")]
         [AllowAnonymous]
-        public async Task<IActionResult> ResetPassword(ResetPasswordDTO model)
+        public async Task<ActionResult<APIResponse>> ResetPassword(ResetPasswordDTO model)
         {
 
             try
@@ -217,7 +217,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPost("forgot-password")]
         [AllowAnonymous]
-        public async Task<IActionResult> ForgotPassword(ForgotPasswordDTO forgotPasswordDTO)
+        public async Task<ActionResult<APIResponse>> ForgotPassword(ForgotPasswordDTO forgotPasswordDTO)
         {
 
             try
@@ -274,7 +274,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginRequestDTO model)
+        public async Task<ActionResult<APIResponse>> Login(LoginRequestDTO model)
         {
             try
             {
@@ -329,7 +329,7 @@ namespace AutismEduConnectSystem.Controllers
 
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterationRequestDTO model)
+        public async Task<ActionResult<APIResponse>> Register([FromBody] RegisterationRequestDTO model)
         {
             try
             {
@@ -382,7 +382,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> GetNewTokenFromRefreshToken([FromBody] TokenDTO model, [FromRoute] bool isRequiredGoogle = false)
+        public async Task<ActionResult<APIResponse>> GetNewTokenFromRefreshToken([FromBody] TokenDTO model, [FromRoute] bool isRequiredGoogle = false)
         {
             try
             {
@@ -463,7 +463,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost("revoke")]
-        public async Task<IActionResult> RevokeRefreshToken([FromBody] TokenDTO model)
+        public async Task<ActionResult<APIResponse>> RevokeRefreshToken([FromBody] TokenDTO model)
         {
             try
             {
@@ -491,7 +491,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPost("external-login")]
         [AllowAnonymous]
-        public async Task<IActionResult> ExternalLogin([FromBody] ExternalLoginRequestDTO model)
+        public async Task<ActionResult<APIResponse>> ExternalLogin([FromBody] ExternalLoginRequestDTO model)
         {
             try
             {
@@ -587,7 +587,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost("get-token-external")]
-        public async Task<IActionResult> GetToken([FromBody] ExternalLoginRequestDTO model)
+        public async Task<ActionResult<APIResponse>> GetToken([FromBody] ExternalLoginRequestDTO model)
         {
 
             try
@@ -702,7 +702,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost("get-new-access-token-external")]
-        public async Task<IActionResult> GetNewAccessTokenGoogle([FromBody] string accessTokenGoogle)
+        public async Task<ActionResult<APIResponse>> GetNewAccessTokenGoogle([FromBody] string accessTokenGoogle)
         {
             try
             {
