@@ -251,6 +251,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
+                var isExistedCurriculum = await _curriculumRepository.GetAllNotPagingAsync(x => x.OriginalCurriculumId == curriculumDto.OriginalCurriculumId && x.RequestStatus == SD.Status.PENDING, null, null, null, true);
+                if (isExistedCurriculum.TotalCount > 0) 
+                {
+                    _logger.LogWarning("Cannot spam update curriculum");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CURRICULUM) };
+                    return BadRequest(_response);
+                }
 
                 if (curriculumDto.OriginalCurriculumId == 0)
                 {

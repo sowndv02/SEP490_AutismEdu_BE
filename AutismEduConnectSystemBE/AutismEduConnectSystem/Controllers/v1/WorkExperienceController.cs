@@ -3,6 +3,7 @@ using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.RabbitMQSender;
+using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
@@ -228,8 +229,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
                     return BadRequest(_response);
                 }
+                var isExisted = await _workExperienceRepository.GetAllNotPagingAsync(x => x.OriginalId == createDTO.OriginalId && x.RequestStatus == SD.Status.PENDING, null, null, null, true);
+                if (isExisted.TotalCount > 0)
+                {
+                    _logger.LogWarning("Cannot spam update workex");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.WORK_EXPERIENCE) };
+                    return BadRequest(_response);
+                }
 
-                
+
                 var newModel = _mapper.Map<WorkExperience>(createDTO);
 
                 newModel.SubmitterId = userId;
