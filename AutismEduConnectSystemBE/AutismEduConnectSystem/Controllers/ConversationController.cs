@@ -26,7 +26,6 @@ namespace AutismEduConnectSystem.Controllers
         protected APIResponse _response;
         private readonly ILogger<ConversationController> _logger;
         private readonly IResourceService _resourceService;
-        protected int pageSize = 0;
 
         public ConversationController(IConversationRepository conversationRepository,
             IMapper mapper, IResourceService resourceService,
@@ -34,7 +33,6 @@ namespace AutismEduConnectSystem.Controllers
             IMessageRepository messageRepository, IHubContext<NotificationHub> hubContext,
             IConfiguration configuration)
         {
-            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _hubContext = hubContext;
             _messageRepository = messageRepository;
             _userRepository = userRepository;
@@ -128,7 +126,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpGet]
         [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.PARENT_ROLE}")]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int pageNumber = 1, int pageSize = 10)
         {
             try
             {

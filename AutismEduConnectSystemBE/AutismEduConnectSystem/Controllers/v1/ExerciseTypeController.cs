@@ -75,7 +75,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
         }
 
-
         [HttpGet]
         [Authorize(Roles = $"{SD.TUTOR_ROLE},${SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageSize = 0,int pageNumber = 1)
