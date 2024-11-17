@@ -19,7 +19,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
     public class AssessmentControllerTests
     {
-        private readonly WebApplicationFactory<Program> _factory;
         private readonly AssessmentController _controller;
         private readonly Mock<IAssessmentQuestionRepository> _assessmentQuestionRepositoryMock;
         private readonly Mock<IAssessmentScoreRangeRepository> _assessmentScoreRangeRepositoryMock;

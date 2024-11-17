@@ -27,7 +27,7 @@ using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
-    public class CurriculumControllerTests : IClassFixture<WebApplicationFactory<Program>>
+    public class CurriculumControllerTests
     {
         private readonly Mock<IUserRepository> _userRepositoryMock = new Mock<IUserRepository>();
         private readonly Mock<ITutorRepository> _tutorRepositoryMock = new Mock<ITutorRepository>();
@@ -43,11 +43,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly CurriculumController _controller;
         private readonly Mock<INotificationRepository> _notificationRepositoryMock;
         private readonly Mock<IHubContext<NotificationHub>> _hubContextMock;
-        private readonly WebApplicationFactory<Program> _factory;
 
-        public CurriculumControllerTests(WebApplicationFactory<Program> factory)
+        public CurriculumControllerTests()
         {
-            _factory = factory;
             _configurationMock.Setup(config => config["APIConfig:PageSize"]).Returns("10");
             _configurationMock
                 .Setup(config => config["RabbitMQSettings:QueueName"])
@@ -83,6 +81,92 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         public Mock<IResourceService> ResourceServiceMock => _resourceServiceMock;
+
+        [Fact]
+        public async Task CreateAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbidden access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claims = new List<Claim>
+             {
+                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
+             };
+            var identity = new ClaimsIdentity(claims, "test");
+            var user = new ClaimsPrincipal(identity);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
+
+
+
+            var requestPayload = new CurriculumCreateDTO
+            {
+                AgeFrom = 3,
+                AgeEnd = 10,
+                Description = "Description",
+                OriginalCurriculumId = 0
+            };
+
+
+            // Act
+            var result = await _controller.CreateAsync(requestPayload);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            apiResponse.ErrorMessages.First().Should().Be("Forbidden access.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+
+
+            var requestPayload = new CurriculumCreateDTO
+            {
+                AgeFrom = 3,
+                AgeEnd = 10,
+                Description = "Description",
+                OriginalCurriculumId = 0
+            };
+
+
+            // Act
+            var result = await _controller.CreateAsync(requestPayload);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
+
+
 
         [Fact]
         public async Task DeleteAsync_ReturnsBadRequest_WhenIdIsZero()
@@ -14093,10 +14177,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10 };
-            var userId = "testTutorId";
+            string userId = "testId";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                )
+                ,
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) })) }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var duplicateCurriculum = new Curriculum { AgeFrom = 5, AgeEnd = 10, SubmitterId = userId, IsActive = true, IsDeleted = false };
@@ -14124,10 +14218,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10, OriginalCurriculumId = 0 };
-            var userId = "testTutorId";
+            string userId = "testId";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                )
+                ,
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) })) }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             _curriculumRepositoryMock
@@ -14163,10 +14267,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10, OriginalCurriculumId = 1 };
-            var userId = "testTutorId";
+            string userId = "testId";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                )
+                ,
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) })) }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             _curriculumRepositoryMock
@@ -14202,10 +14316,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10 };
-            var userId = "testTutorId";
+            string userId = "testId";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                )
+                ,
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) })) }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             _curriculumRepositoryMock

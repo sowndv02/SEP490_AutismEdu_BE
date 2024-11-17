@@ -24,7 +24,7 @@ using static AutismEduConnectSystem.SD;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
-    public class CertificateControllerTests : IClassFixture<WebApplicationFactory<Program>>
+    public class CertificateControllerTests
     {
 
         private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -42,11 +42,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly Mock<IHubContext<NotificationHub>> _hubContextMock;
 
         private CertificateController _controller;
-        private readonly WebApplicationFactory<Program> _factory;
 
-        public CertificateControllerTests(WebApplicationFactory<Program> factory)
+        public CertificateControllerTests()
         {
-            _factory = factory;
             _userRepositoryMock = new Mock<IUserRepository>();
             _certificateRepositoryMock = new Mock<ICertificateRepository>();
             _certificateMediaRepositoryMock = new Mock<ICertificateMediaRepository>();

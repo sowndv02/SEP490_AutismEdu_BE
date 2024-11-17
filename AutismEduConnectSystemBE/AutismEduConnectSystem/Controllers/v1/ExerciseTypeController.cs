@@ -23,14 +23,12 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly IExerciseTypeRepository _exerciseTypeRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
-        protected int pageSize = 0;
         private readonly IResourceService _resourceService;
         private readonly ILogger<ExerciseTypeController> _logger;
 
         public ExerciseTypeController(IExerciseRepository exerciseRepository, IExerciseTypeRepository exerciseTypeRepository,
-            IConfiguration configuration, IMapper mapper, IResourceService resourceService, ILogger<ExerciseTypeController> logger)
+            IMapper mapper, IResourceService resourceService, ILogger<ExerciseTypeController> logger)
         {
-            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
             _mapper = mapper;
             _exerciseRepository = exerciseRepository;
@@ -77,9 +75,10 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
         }
 
-        [HttpGet("getAllNoPaging")]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
+
+        [HttpGet]
+        [Authorize(Roles = $"{SD.TUTOR_ROLE},${SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageSize = 0,int pageNumber = 1)
         {
             try
             {
@@ -92,20 +91,20 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE) && !userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+
                 int totalCount = 0;
                 List<ExerciseType> list = new();
                 Expression<Func<ExerciseType, bool>> filter = e => true;
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                Expression<Func<ExerciseType, object>> orderByQuery = u => true;
-                if (userRoles.Contains(SD.TUTOR_ROLE))
-                {
-                    filter = filter.AndAlso(e => e.IsHide);
-                }
-                if (!string.IsNullOrEmpty(search))
-                {
-                    filter = filter.AndAlso(e => e.ExerciseTypeName.Contains(search));
-                }
-                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+                Expression<Func<ExerciseType, object>> orderByQuery = x => true;
 
                 if (orderBy != null)
                 {
@@ -119,58 +118,36 @@ namespace AutismEduConnectSystem.Controllers.v1
                             break;
                     }
                 }
-                var (count, result) = await _exerciseTypeRepository.GetAllNotPagingAsync(filter, includeProperties: null, orderBy: orderByQuery, isDesc: isDesc);
-                list = result;
-                totalCount = count;
-                _response.Result = _mapper.Map<List<ExerciseTypeDTO>>(list);
-                _response.StatusCode = HttpStatusCode.OK;
-                _response.Pagination = null;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while retrieving ExerciseTypes with search: {Search}, OrderBy: {OrderBy}, Sort: {Sort}", search, orderBy, sort);
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
-        [HttpGet]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, int pageNumber = 1)
-        {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
+                else
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    orderByQuery = x => x.CreatedDate;
                 }
-                int totalCount = 0;
-                List<ExerciseType> list = new();
-                Expression<Func<ExerciseType, bool>> filter = e => true;
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    filter = filter.AndAlso(e => e.IsHide);
+                    filter = filter.AndAlso(e => !e.IsHide);
                 }
+
                 if (!string.IsNullOrEmpty(search))
                 {
                     filter = filter.AndAlso(e => e.ExerciseTypeName.Contains(search));
                 }
-                var (count, result) = await _exerciseTypeRepository.GetAllAsync(filter, pageSize: 9, pageNumber: pageNumber);
-                list = result;
-                totalCount = count;
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+                if (pageSize != 0)
+                {
+                    var (countPaging, resultPaging) = await _exerciseTypeRepository.GetAllAsync(filter, null, pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                    list = resultPaging;
+                    totalCount = countPaging;
+                }
+                else if (totalCount != 0) 
+                {
+                    var (count, result) = await _exerciseTypeRepository.GetAllNotPagingAsync(filter, includeProperties: null, null,orderBy: orderByQuery, isDesc: isDesc);
+                    list = result;
+                    totalCount = count;
+                }
 
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 9, Total = totalCount };
+
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
 
                 _response.Result = _mapper.Map<List<ExerciseTypeDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -232,12 +209,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
 
-                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: pageSize, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
+                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: 10, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
 
                 list = result;
                 totalCount = count;
 
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 10, Total = totalCount };
 
                 _response.Result = _mapper.Map<List<ExerciseDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;

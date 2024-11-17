@@ -90,7 +90,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                if (id == 0)
+                if (id <= 0)
                 {
                     _logger.LogWarning("Invalid certificate ID: {certificateId}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -465,7 +465,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             
             try
             {
-                if (id == 0)
+                if (id <= 0)
                 {
                     _logger.LogWarning("Invalid certificate ID: {certificateId}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;

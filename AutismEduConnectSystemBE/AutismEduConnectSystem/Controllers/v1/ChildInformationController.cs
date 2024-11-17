@@ -65,7 +65,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                if (childInformationCreateDTO == null)
+                if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Received null ChildInformationCreateDTO. UserId: {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -75,7 +75,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
 
-                var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(childInformationCreateDTO.Name) && x.ParentId.Equals(userId));
+                var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(childInformationCreateDTO.Name) && x.ParentId.Equals(userId), false, null, null);
                 if (isChildExist != null)
                 {
                     _logger.LogWarning("Duplicate child information found for Name: {ChildName}, ParentId: {ParentId}", childInformationCreateDTO.Name, userId);
@@ -174,9 +174,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                 {
                     _logger.LogWarning("Child information not found for ParentId: {ParentId}, ChildId: {ChildId}", userId, updateDTO.ChildId);
                     _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO) };
-                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                    return StatusCode((int)HttpStatusCode.NotFound, _response);
                 }
 
                 var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(updateDTO.Name) && !x.Name.Equals(model.Name) && x.ParentId.Equals(model.ParentId));
