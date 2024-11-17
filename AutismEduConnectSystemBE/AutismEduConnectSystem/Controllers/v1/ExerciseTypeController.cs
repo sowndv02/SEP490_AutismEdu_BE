@@ -37,44 +37,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             _logger = logger;
         }
 
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<APIResponse>> GetById(int id)
-        {
-            try
-            {
-                if (id <= 0)
-                {
-                    _logger.LogWarning("Invalid ExerciseTypeId: {ExerciseTypeId}. Must be greater than zero.", id);
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
-                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-                }
-
-                var exercise = await _exerciseTypeRepository.GetAsync(x => x.Id == id, false, null, null);
-                if (exercise == null)
-                {
-                    _logger.LogWarning("ExerciseType with ID {ExerciseTypeId} not found", id);
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.EXERCISE_TYPE) };
-                    return NotFound(_response);
-                }
-                _response.Result = _mapper.Map<ExerciseTypeDTO>(exercise);
-                _response.StatusCode = HttpStatusCode.OK;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while retrieving ExerciseType with ID {ExerciseTypeId}", id);
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
-
         [HttpGet]
         [Authorize(Roles = $"{SD.TUTOR_ROLE},${SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageSize = 0,int pageNumber = 1)
@@ -138,7 +100,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     list = resultPaging;
                     totalCount = countPaging;
                 }
-                else if (totalCount != 0) 
+                else if (pageSize == 0) 
                 {
                     var (count, result) = await _exerciseTypeRepository.GetAllNotPagingAsync(filter, includeProperties: null, null,orderBy: orderByQuery, isDesc: isDesc);
                     list = result;

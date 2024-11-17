@@ -588,5 +588,438 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
 
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnBadRequest_WhenIdIsInvalid()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "1"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            };
+            var identity = new ClaimsIdentity(claims, "TestAuth");
+            var user = new ClaimsPrincipal(identity);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
+            _resourceServiceMock
+                .Setup(service => service.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID))
+                .Returns("Id không hợp lệ");
+            // Act
+            var result = await _controller.GetExercisesByTypeAsync(0, "Exercise", SD.CREATED_DATE, SD.ORDER_DESC);
+
+            // Assert
+            var badRequestResult = result.Result as ObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var response = badRequestResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response!.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.ErrorMessages.First().Should().Be("Id không hợp lệ");
+        }
+
+        [Fact]
+        public async Task GetExercisesByTypeAsync_ShouldReturnExercises_WhenUserIsTutorWithSearchAndOrderByCreatedDateAsc()
+        {
+            // Arrange
+            var userId = "testTutorId";
+            var exerciseTypeId = 1;
+            var searchTerm = "Math";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Assign TUTOR_ROLE
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var exercises = new List<Exercise>
+            {
+                new Exercise
+                {
+                    Id = 1,
+                    ExerciseTypeId = exerciseTypeId,
+                    ExerciseName = "Math Basics",
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    IsActive = true,
+                    IsDeleted = false
+                },
+                new Exercise
+                {
+                    Id = 2,
+                    ExerciseTypeId = exerciseTypeId,
+                    ExerciseName = "Advanced Math",
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    IsActive = true,
+                    IsDeleted = false
+                }
+            };
+
+            _exerciseRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Exercise, bool>>>(),
+                        null,
+                        null,
+                        It.Is<Expression<Func<Exercise, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false
+                    )
+                )
+                .ReturnsAsync((exercises.Count, exercises.OrderBy(e => e.CreatedDate).ToList()));
+
+            // Act
+            var result = await _controller.GetExercisesByTypeAsync(
+                exerciseTypeId,
+                searchTerm,
+                SD.CREATED_DATE,
+                SD.ORDER_ASC
+            );
+
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.IsSuccess.Should().BeTrue();
+
+            var responseResult = response.Result as List<ExerciseDTO>;
+            responseResult.Should().NotBeNull();
+            responseResult.Count.Should().Be(2);
+
+            // Verify repository call with expected parameters
+            _exerciseRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Exercise, bool>>>(filter =>
+                            filter.Compile().Invoke(new Exercise
+                            {
+                                ExerciseTypeId = exerciseTypeId,
+                                ExerciseName = "Math Basics",
+                                TutorId = userId,
+                                IsActive = true,
+                                IsDeleted = false
+                            })
+                        ),
+                        null,
+                        null,
+                        It.Is<Expression<Func<Exercise, object>>>(orderBy => orderBy.Body.ToString().Contains("CreatedDate")),
+                        false // Ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+
+        [Fact]
+        public async Task GetExercisesByTypeAsync_ShouldReturnExercises_WhenUserIsTutorWithSearchAndOrderByCreatedDateDesc()
+        {
+            // Arrange
+            var userId = "testTutorId";
+            var exerciseTypeId = 1;
+            var searchTerm = "Math";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Assign TUTOR_ROLE
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var exercises = new List<Exercise>
+            {
+                new Exercise
+                {
+                    Id = 1,
+                    ExerciseTypeId = exerciseTypeId,
+                    ExerciseName = "Math Basics",
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    IsActive = true,
+                    IsDeleted = false
+                },
+                new Exercise
+                {
+                    Id = 2,
+                    ExerciseTypeId = exerciseTypeId,
+                    ExerciseName = "Advanced Math",
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    IsActive = true,
+                    IsDeleted = false
+                }
+            };
+
+            _exerciseRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Exercise, bool>>>(),
+                        null,
+                        null,
+                        It.Is<Expression<Func<Exercise, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true
+                    )
+                )
+                .ReturnsAsync((exercises.Count, exercises.OrderBy(e => e.CreatedDate).ToList()));
+
+            // Act
+            var result = await _controller.GetExercisesByTypeAsync(
+                exerciseTypeId,
+                searchTerm,
+                SD.CREATED_DATE,
+                SD.ORDER_DESC
+            );
+
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.IsSuccess.Should().BeTrue();
+
+            var responseResult = response.Result as List<ExerciseDTO>;
+            responseResult.Should().NotBeNull();
+            responseResult.Count.Should().Be(2);
+
+            // Verify repository call with expected parameters
+            _exerciseRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Exercise, bool>>>(filter =>
+                            filter.Compile().Invoke(new Exercise
+                            {
+                                ExerciseTypeId = exerciseTypeId,
+                                ExerciseName = "Math Basics",
+                                TutorId = userId,
+                                IsActive = true,
+                                IsDeleted = false
+                            })
+                        ),
+                        null,
+                        null,
+                        It.Is<Expression<Func<Exercise, object>>>(orderBy => orderBy.Body.ToString().Contains("CreatedDate")),
+                        true // Ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetExercisesByTypeAsync_ShouldReturnExercises_WhenUserIsTutorWithoutSearchAndOrderByCreatedDateAsc()
+        {
+            // Arrange
+            var userId = "testTutorId";
+            var exerciseTypeId = 1;
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Assign TUTOR_ROLE
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var exercises = new List<Exercise>
+            {
+                new Exercise
+                {
+                    Id = 1,
+                    ExerciseTypeId = exerciseTypeId,
+                    ExerciseName = "Math Basics",
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    IsActive = true,
+                    IsDeleted = false
+                },
+                new Exercise
+                {
+                    Id = 2,
+                    ExerciseTypeId = exerciseTypeId,
+                    ExerciseName = "Advanced Math",
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    IsActive = true,
+                    IsDeleted = false
+                }
+            };
+
+            _exerciseRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Exercise, bool>>>(),
+                        null,
+                        null,
+                        It.Is<Expression<Func<Exercise, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        false
+                    )
+                )
+                .ReturnsAsync((exercises.Count, exercises.OrderBy(e => e.CreatedDate).ToList()));
+
+            // Act
+            var result = await _controller.GetExercisesByTypeAsync(
+                exerciseTypeId,
+                null, // No search term
+                SD.CREATED_DATE,
+                SD.ORDER_ASC
+            );
+
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.IsSuccess.Should().BeTrue();
+
+            var responseResult = response.Result as List<ExerciseDTO>;
+            responseResult.Should().NotBeNull();
+            responseResult.Count.Should().Be(2);
+
+            // Verify repository call with expected parameters
+            _exerciseRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Exercise, bool>>>(filter =>
+                            filter.Compile().Invoke(new Exercise
+                            {
+                                ExerciseTypeId = exerciseTypeId,
+                                TutorId = userId,
+                                IsActive = true,
+                                IsDeleted = false
+                            })
+                        ),
+                        null,
+                        null,
+                        It.Is<Expression<Func<Exercise, object>>>(orderBy => orderBy.Body.ToString().Contains("CreatedDate")),
+                        false // Ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetExercisesByTypeAsync_ShouldReturnExercises_WhenUserIsTutorWithoutSearchAndOrderByCreatedDateDesc()
+        {
+            // Arrange
+            var userId = "testTutorId";
+            var exerciseTypeId = 1;
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Assign TUTOR_ROLE
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var exercises = new List<Exercise>
+            {
+                new Exercise
+                {
+                    Id = 1,
+                    ExerciseTypeId = exerciseTypeId,
+                    ExerciseName = "Math Basics",
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-2),
+                    IsActive = true,
+                    IsDeleted = false
+                },
+                new Exercise
+                {
+                    Id = 2,
+                    ExerciseTypeId = exerciseTypeId,
+                    ExerciseName = "Advanced Math",
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                    IsActive = true,
+                    IsDeleted = false
+                }
+            };
+
+            _exerciseRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Exercise, bool>>>(),
+                        null,
+                        null,
+                        It.Is<Expression<Func<Exercise, object>>>(x => x.Body.ToString().Contains("CreatedDate")),
+                        true
+                    )
+                )
+                .ReturnsAsync((exercises.Count, exercises.OrderBy(e => e.CreatedDate).ToList()));
+
+            // Act
+            var result = await _controller.GetExercisesByTypeAsync(
+                exerciseTypeId,
+                null, // No search term
+                SD.CREATED_DATE,
+                SD.ORDER_DESC
+            );
+
+            var okObjectResult = result.Result as OkObjectResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            okObjectResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okObjectResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().NotBeNull();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.IsSuccess.Should().BeTrue();
+
+            var responseResult = response.Result as List<ExerciseDTO>;
+            responseResult.Should().NotBeNull();
+            responseResult.Count.Should().Be(2);
+
+            // Verify repository call with expected parameters
+            _exerciseRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.Is<Expression<Func<Exercise, bool>>>(filter =>
+                            filter.Compile().Invoke(new Exercise
+                            {
+                                ExerciseTypeId = exerciseTypeId,
+                                TutorId = userId,
+                                IsActive = true,
+                                IsDeleted = false
+                            })
+                        ),
+                        null,
+                        null,
+                        It.Is<Expression<Func<Exercise, object>>>(orderBy => orderBy.Body.ToString().Contains("CreatedDate")),
+                        true // Ascending order
+                    ),
+                Times.Once
+            );
+        }
+
+
+
     }
 }
