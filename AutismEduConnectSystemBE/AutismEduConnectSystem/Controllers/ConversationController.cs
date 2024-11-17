@@ -100,7 +100,12 @@ namespace AutismEduConnectSystem.Controllers
                 });
                 var returnModel = await _messageRepository.GetAsync(x => x.Id == message.Id, false, "Sender,Conversation", null);
 
-
+                returnModel.Conversation.Parent = await _userRepository.GetAsync(x => x.Id == returnModel.Conversation.ParentId);
+                if(returnModel.Conversation.Tutor == null)
+                {
+                    returnModel.Conversation.Tutor = new Tutor();
+                }
+                returnModel.Conversation.Tutor.User = await _userRepository.GetAsync(x => x.Id == returnModel.Conversation.TutorId);
                 //SignalR
                 var connectionId = NotificationHub.GetConnectionIdByUserId(createDTO.ReceiverId);
                 if (!string.IsNullOrEmpty(connectionId))
@@ -155,13 +160,13 @@ namespace AutismEduConnectSystem.Controllers
                 
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    var (countTutorConversation, listTutorConversation) = await _conversationRepository.GetAllAsync(x => x.TutorId == userId, "Parent,Tutor", pageSize, pageNumber, null, false);
+                    var (countTutorConversation, listTutorConversation) = await _conversationRepository.GetAllAsync(x => x.TutorId == userId, "Parent", pageSize, pageNumber, null, false);
                     totalCount = countTutorConversation;
                     result = listTutorConversation;
                 }
                 else if (userRoles != null && userRoles.Contains(SD.PARENT_ROLE))
                 {
-                    var (countParentConversation, listParentConversation) = await _conversationRepository.GetAllAsync(x => x.ParentId == userId, "Parent,Tutor", pageSize, pageNumber, null, false);
+                    var (countParentConversation, listParentConversation) = await _conversationRepository.GetAllAsync(x => x.ParentId == userId, "Tutor", pageSize, pageNumber, null, false);
                     totalCount = countParentConversation;
                     result = listParentConversation;
                 }
