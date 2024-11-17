@@ -294,7 +294,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task GetParentChildInfo_SuccessfulRetrieval_ReturnsOkResponse()
+        public async Task GetChildInfo_SuccessfulRetrieval_ReturnsOkResponse()
         {
             // Arrange
             var parentId = "test-parent-id";
@@ -317,7 +317,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
 
             // Act
-            var result = await _controller.GetParentChildInfo(parentId);
+            var result = await _controller.GetChildInfo(parentId);
 
             // Assert
             var okResult = result.Result as OkObjectResult;
@@ -331,13 +331,13 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task GetParentChildInfo_UnauthorizedAccess_ReturnsUnauthorizedResponse()
+        public async Task GetChildInfo_UnauthorizedAccess_ReturnsUnauthorizedResponse()
         {
             // Arrange
             _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(); // No user claims
 
             // Act
-            var result = await _controller.GetParentChildInfo("test-parent-id");
+            var result = await _controller.GetChildInfo("test-parent-id");
 
             // Assert
             var unauthorizedResult = result.Result as ObjectResult;
@@ -351,7 +351,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task GetParentChildInfo_ExceptionThrown_ReturnsInternalServerError()
+        public async Task GetChildInfo_ExceptionThrown_ReturnsInternalServerError()
         {
             // Arrange
             var parentId = "test-parent-id";
@@ -363,7 +363,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
-            var result = await _controller.GetParentChildInfo(parentId);
+            var result = await _controller.GetChildInfo(parentId);
 
             // Assert
             var internalServerErrorResult = result.Result as ObjectResult;
@@ -377,7 +377,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Fact]
-        public async Task GetParentChildInfo_ParentIdIsEmpty_ReturnsBadRequest()
+        public async Task GetChildInfo_ParentIdIsEmpty_ReturnsBadRequest()
         {
             // Arrange
             var parentId = "test-parent-id";
@@ -400,7 +400,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
 
             // Act
-            var result = await _controller.GetParentChildInfo(string.Empty);
+            var result = await _controller.GetChildInfo(string.Empty);
 
             // Assert
             var badRequestResult = result.Result as ObjectResult;
