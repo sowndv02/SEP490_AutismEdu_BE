@@ -193,14 +193,16 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 isMale = true,
                 BirthDate = DateTime.Parse("2002/04/04")
             };
-            var childInfo = new ChildInformation { 
+            var childInfo = new ChildInformation
+            {
                 Id = 1,
                 Name = "Dao Van Son",
                 isMale = true,
                 ParentId = "testUserId",
                 BirthDate = DateTime.Parse("2002/04/04")
             };
-            var childInfoDto = new ChildInformationDTO {
+            var childInfoDto = new ChildInformationDTO
+            {
                 Id = 1,
                 Name = "Dao Van Son",
                 Gender = "Male",
@@ -227,7 +229,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.IsSuccess.Should().BeTrue();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.Created);
             apiResponse.Result.Should().NotBeNull();
-            
+
         }
 
         [Fact]
@@ -258,6 +260,45 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Tên trẻ đã tồn tại.");
         }
 
+        [Fact]
+        public async Task GetParentChildInfo_SuccessfulRetrieval_ReturnsOkResponse()
+        {
+            // Arrange
+            var parentId = "test-parent-id";
+            var childInfoList = new List<ChildInformation>
+            {
+                new ChildInformation { Id = 1, Name = "Child 1", ParentId = parentId },
+                new ChildInformation { Id = 2, Name = "Child 2", ParentId = parentId }
+            };
+            var childInfoDTOList = new List<ChildInformationDTO>
+            {
+                new ChildInformationDTO { Id = 1, Name = "Child 1" },
+                new ChildInformationDTO { Id = 2, Name = "Child 2" }
+            };
 
+            _childInfoRepositoryMock
+                .Setup(repo => repo.GetAllNotPagingAsync(
+                    It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                    "Parent", null, null, true))
+                .ReturnsAsync((childInfoList, null)); // Mocking method result
+
+            _mapperMock
+                .Setup(mapper => mapper.Map<List<ChildInformationDTO>>(childInfoList))
+                .Returns(childInfoDTOList);
+
+            // Act
+            var result = await _controller.GetParentChildInfo(parentId);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var apiResponse = okResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().BeEquivalentTo(childInfoDTOList);
+        }
     }
 }
