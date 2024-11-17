@@ -271,18 +271,6 @@ namespace AutismEduConnectSystem.Repository
                     RefreshToken = ""
                 };
             }
-            // Check if the user's email is confirmed
-            if (!user.EmailConfirmed)
-            {
-                throw new MissingMemberException(_resourceService.GetString(SD.EMAIL_NOT_CONFIRM));
-            }
-
-            // Check if the user is locked out
-            if (user.LockoutEnd != null && user.LockoutEnd.Value > DateTime.Now)
-            {
-                throw new InvalidOperationException(_resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE));
-            }
-
             bool isValid = false;
             if (checkPassword)
                 isValid = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
@@ -296,6 +284,18 @@ namespace AutismEduConnectSystem.Repository
                     AccessToken = ""
                 };
             }
+            // Check if the user's email is confirmed
+            if (!user.EmailConfirmed)
+            {
+                throw new MissingMemberException(_resourceService.GetString(SD.EMAIL_NOT_CONFIRM));
+            }
+
+            // Check if the user is locked out
+            if (user.LockoutEnd != null && user.LockoutEnd.Value > DateTime.Now)
+            {
+                throw new InvalidOperationException(_resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE));
+            }
+            
             var listRoles = await _userManager.GetRolesAsync(user);
             if (listRoles != null && listRoles.Count > 0)
             {

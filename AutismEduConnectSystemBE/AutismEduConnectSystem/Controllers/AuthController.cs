@@ -280,20 +280,20 @@ namespace AutismEduConnectSystem.Controllers
             {
                 model.AuthenticationRole = _formatString.FormatStringUpperCaseFirstChar(model.AuthenticationRole);
                 var tokenDto = await _userRepository.Login(model);
+                if (tokenDto != null && string.IsNullOrEmpty(tokenDto.AccessToken))
+                {
+                    _logger.LogWarning("Login failed for user: {Email}. Incorrect username or password.", model.Email);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.USERNAME_PASSWORD_INVALID_MESSAGE) };
+                    return BadRequest(_response);
+                }
                 if (tokenDto == null)
                 {
                     _logger.LogWarning("Login failed for user: {Email}. User is locked out.", model.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE) };
-                    return BadRequest(_response);
-                }
-                if (string.IsNullOrEmpty(tokenDto.AccessToken))
-                {
-                    _logger.LogWarning("Login failed for user: {Email}. Incorrect username or password.", model.Email);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.USERNAME_PASSWORD_INVALID_MESSAGE) };
                     return BadRequest(_response);
                 }
                 _response.StatusCode = HttpStatusCode.OK;
