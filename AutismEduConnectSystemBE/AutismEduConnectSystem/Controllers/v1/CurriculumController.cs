@@ -78,10 +78,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                if (id == 0)
+                if (id <= 0)
                 {
                     _logger.LogWarning("Invalid curriculum ID: {CurriculumId}. Returning BadRequest.", id);
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
@@ -147,6 +147,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted);
+                }
+                if(search != null)
+                {
+                    filter = filter.AndAlso(u => u.Description.Contains(search));
                 }
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 Expression<Func<Curriculum, object>>? orderByQuery = null;
@@ -219,14 +223,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for CreateAsync method. Model state errors: {@ModelState}", ModelState);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
-                    return BadRequest(_response);
-                }
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -237,6 +233,25 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for CreateAsync method. Model state errors: {@ModelState}", ModelState);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
+                    return BadRequest(_response);
+                }
+
+                
                 var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive, null, null, null, false);
                 foreach (var item in list)
                 {

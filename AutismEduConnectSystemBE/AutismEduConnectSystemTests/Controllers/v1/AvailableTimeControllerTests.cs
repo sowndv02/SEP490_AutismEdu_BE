@@ -22,10 +22,9 @@ using AutismEduConnectSystem.Controllers;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
-    public class AvailableTimeControllerTests : IClassFixture<WebApplicationFactory<Program>>
+    public class AvailableTimeControllerTests
     {
 
-        private readonly WebApplicationFactory<Program> _factory;
         private readonly Mock<IAvailableTimeSlotRepository> _availableTimeSlotRepositoryMock;
         private readonly IMapper _mapper;
         private readonly Mock<IResourceService> _resourceServiceMock;
@@ -33,9 +32,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly AvailableTimeController _controller;
         private readonly APIResponse _response;
 
-        public AvailableTimeControllerTests(WebApplicationFactory<Program> factory)
+        public AvailableTimeControllerTests()
         {
-            _factory = factory;
             _availableTimeSlotRepositoryMock = new Mock<IAvailableTimeSlotRepository>();
 
             var config = new MapperConfiguration(cfg =>

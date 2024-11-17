@@ -63,7 +63,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("Received null createDTO for AssessmentScoreRange creation.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_QUESTION) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_SCORE_RANGE) };
                     return BadRequest(_response);
                 }
 
@@ -102,7 +102,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                var result = await _assessmentScoreRangeRepository.GetAllNotPagingAsync();
+                var result = await _assessmentScoreRangeRepository.GetAllNotPagingAsync(null, null, null, null, true);
                 _response.Result = _mapper.Map<List<AssessmentScoreRangeDTO>>(result.list);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
@@ -153,7 +153,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var model = await _assessmentScoreRangeRepository.GetAsync(x => x.Id == updateDTO.Id);
+                var model = await _assessmentScoreRangeRepository.GetAsync(x => x.Id == updateDTO.Id, true, null, null);
 
                 if (model == null)
                 {
@@ -229,19 +229,19 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var model = await _assessmentScoreRangeRepository.GetAsync(x => x.Id == id);
+                var model = await _assessmentScoreRangeRepository.GetAsync(x => x.Id == id, true, null, null);
 
                 if (model == null)
                 {
                     _logger.LogWarning("Assessment score range with ID: {AssessmentScoreRangeId} not found for deletion.", id);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ASSESSMENT_SCORE_RANGE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 await _assessmentScoreRangeRepository.RemoveAsync(model);
-                _response.StatusCode = HttpStatusCode.OK;
+                _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
