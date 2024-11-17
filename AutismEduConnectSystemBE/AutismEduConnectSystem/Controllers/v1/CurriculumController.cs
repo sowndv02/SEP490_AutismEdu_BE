@@ -146,7 +146,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted && u.IsActive);
+                    filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted);
                 }
                 if(search != null)
                 {
