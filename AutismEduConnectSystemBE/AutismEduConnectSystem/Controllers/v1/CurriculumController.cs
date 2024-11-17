@@ -273,7 +273,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 newCurriculum.SubmitterId = userId;
                 newCurriculum.IsActive = false;
                 newCurriculum.VersionNumber = await _curriculumRepository.GetNextVersionNumberAsync(curriculumDto.OriginalCurriculumId);
-                await _curriculumRepository.DeactivatePreviousVersionsAsync(curriculumDto.OriginalCurriculumId);
                 if (curriculumDto.OriginalCurriculumId == 0)
                 {
                     newCurriculum.OriginalCurriculumId = null;
