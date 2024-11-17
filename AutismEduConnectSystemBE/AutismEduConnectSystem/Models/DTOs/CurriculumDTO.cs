@@ -11,13 +11,14 @@ namespace AutismEduConnectSystem.Models.DTOs
         public Status RequestStatus { get; set; }
         public string? RejectionReason { get; set; }
         public ApplicationUserDTO? ApprovedBy { get; set; }
-        public bool IsActive { get; set; } = false;
+        public bool IsActive { get; set; }
+        public bool IsDeleted { get; set; }
         public int VersionNumber { get; set; } = 1;
         public TutorUserInfo? Submitter { get; set; }
         public string OriginalDescription { get; set; }
         public int OriginalAgeFrom { get; set; }
         public int OriginalAgeEnd { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
     }
 }

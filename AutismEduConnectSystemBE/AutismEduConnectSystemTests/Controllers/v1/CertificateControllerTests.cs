@@ -89,7 +89,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
         }
 
-
         [Fact]
         public async Task GetByIdAsync_ReturnsOk_WhenCertificateExistsAndUserIsTutorRole()
         {

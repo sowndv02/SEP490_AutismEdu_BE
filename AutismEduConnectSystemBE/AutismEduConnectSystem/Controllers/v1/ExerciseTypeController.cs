@@ -96,13 +96,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 if (pageSize != 0)
                 {
-                    var (countPaging, resultPaging) = await _exerciseTypeRepository.GetAllAsync(filter, null, pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                    var (countPaging, resultPaging) = await _exerciseTypeRepository.GetAllAsync(filter, "Exercises", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                     list = resultPaging;
                     totalCount = countPaging;
                 }
                 else if (pageSize == 0) 
                 {
-                    var (count, result) = await _exerciseTypeRepository.GetAllNotPagingAsync(filter, includeProperties: null, null,orderBy: orderByQuery, isDesc: isDesc);
+                    var (count, result) = await _exerciseTypeRepository.GetAllNotPagingAsync(filter, includeProperties: "Exercises", null,orderBy: orderByQuery, isDesc: isDesc);
                     list = result;
                     totalCount = count;
                 }

@@ -129,6 +129,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                if (string.IsNullOrEmpty(parentId))
+                {
+                    _logger.LogWarning("parentId invalid.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return StatusCode((int)HttpStatusCode.BadRequest, _response);
+                }
                 var childInfos = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId), "Parent", null, null, true);
                 _response.Result = _mapper.Map<List<ChildInformationDTO>>(childInfos.list);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -168,8 +176,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for ExerciseTypeCreateDTO. Returning BadRequest.");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
+                    return BadRequest(_response);
+                }
                 
-                var model = await _childInfoRepository.GetAsync(x => x.Id == updateDTO.ChildId && x.ParentId == userId);
+                var model = await _childInfoRepository.GetAsync(x => x.Id == updateDTO.ChildId && x.ParentId == userId, true, null, null);
                 if (model == null)
                 {
                     _logger.LogWarning("Child information not found for ParentId: {ParentId}, ChildId: {ChildId}", userId, updateDTO.ChildId);
@@ -179,7 +195,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.NotFound, _response);
                 }
 
-                var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(updateDTO.Name) && !x.Name.Equals(model.Name) && x.ParentId.Equals(model.ParentId));
+                var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(updateDTO.Name) && !x.Name.Equals(model.Name) && x.ParentId.Equals(model.ParentId), false, null, null);
                 if (isChildExist != null)
                 {
                     _logger.LogWarning("Child name already exists for ParentId: {ParentId}, Name: {ChildName}", userId, updateDTO.Name);
@@ -193,7 +209,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 {
                     model.Name = updateDTO.Name;
 
-                    var studentProfile = await _studentProfileRepository.GetAsync(x => x.ChildId == model.Id);
+                    var studentProfile = await _studentProfileRepository.GetAsync(x => x.ChildId == model.Id, true, null, null);
 
                     if (studentProfile != null)
                     {
@@ -217,7 +233,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (updateDTO.Media != null)
                 {
                     using var mediaStream = updateDTO.Media.OpenReadStream();
-                    string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(updateDTO.Media.FileName)));
+                    string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(updateDTO.Media.FileName)), false);
 
                     model.ImageUrlPath = mediaUrl;
                 }

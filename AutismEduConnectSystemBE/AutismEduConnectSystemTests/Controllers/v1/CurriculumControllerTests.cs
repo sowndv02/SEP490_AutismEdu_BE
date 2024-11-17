@@ -24,6 +24,7 @@ using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using static AutismEduConnectSystem.SD;
 using AutismEduConnectSystem.Repository;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -81,6 +82,45 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         public Mock<IResourceService> ResourceServiceMock => _resourceServiceMock;
+
+
+        [Fact]
+        public async Task CreateAsync_ShouldReturnBadRequest_WhenDuplicateCurriculumExists()
+        {
+            // Arrange
+            var existingCurriculums = new List<Curriculum>
+            {
+                new Curriculum { OriginalCurriculumId = 1, RequestStatus = SD.Status.PENDING }
+            };
+            var pagedResult = (existingCurriculums.Count, existingCurriculums);
+            _curriculumRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(), 
+                        null, null, null, true
+                    )
+                )
+                .ReturnsAsync(pagedResult);
+
+            _resourceServiceMock
+                .Setup(service => service.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CURRICULUM))
+                .Returns("Duplicate curriculum exists");
+
+            var curriculumDto = new CurriculumCreateDTO { OriginalCurriculumId = 1, AgeEnd = 5, AgeFrom = 1, Description = "Update curriculum" };
+
+            // Act
+            var result = await _controller.CreateAsync(curriculumDto);
+            var badRequestResult = result.Result as BadRequestObjectResult;
+
+            // Assert
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.First().Should().Be("Duplicate curriculum exists");
+        }
 
         [Fact]
         public async Task CreateAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
@@ -14176,7 +14216,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         public async Task CreateAsync_ShouldReturnBadRequest_WhenDuplicateAgeRangeExists()
         {
             // Arrange
-            var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10 };
+            var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10, OriginalCurriculumId = 0 };
             string userId = "testId";
             var userClaims = new List<Claim>
             {
@@ -14193,7 +14233,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 HttpContext = new DefaultHttpContext { User = user },
             };
 
-            var duplicateCurriculum = new Curriculum { AgeFrom = 5, AgeEnd = 10, SubmitterId = userId, IsActive = true, IsDeleted = false };
+            var duplicateCurriculum = new Curriculum { AgeFrom = 5, AgeEnd = 10, SubmitterId = userId, IsActive = true, IsDeleted = false, OriginalCurriculumId = 1 };
             _curriculumRepositoryMock
                 .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, It.IsAny<Expression<Func<Curriculum, object>>>(), false))
                 .ReturnsAsync((1, new List<Curriculum> { duplicateCurriculum }));
