@@ -44,7 +44,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -54,7 +53,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.PARENT_ROLE)))
                 {
@@ -64,7 +62,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Received null ChildInformationCreateDTO. UserId: {UserId}", userId);
@@ -73,8 +70,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CHILD_INFO) };
                     return BadRequest(_response);
                 }
-
-
                 var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(childInformationCreateDTO.Name) && x.ParentId.Equals(userId), false, null, null);
                 if (isChildExist != null)
                 {
@@ -84,21 +79,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME) };
                     return BadRequest(_response);
                 }
-
                 ChildInformation model = _mapper.Map<ChildInformation>(childInformationCreateDTO);
                 model.ParentId = userId;
                 model.CreatedDate = DateTime.Now;
-
-                // Handle child media uploads
                 if (childInformationCreateDTO.Media != null)
                 {
                     using var mediaStream = childInformationCreateDTO.Media.OpenReadStream();
                     string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(childInformationCreateDTO.Media.FileName)));
                     model.ImageUrlPath = mediaUrl;
                 }
-
                 var childInfo = await _childInfoRepository.CreateAsync(model);
-
                 _response.Result = _mapper.Map<ChildInformationDTO>(childInfo);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.IsSuccess = true;
@@ -116,7 +106,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet("{parentId}")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetParentChildInfo(string parentId)
+        public async Task<ActionResult<APIResponse>> GetChildInfo(string parentId)
         {
             try
             {
