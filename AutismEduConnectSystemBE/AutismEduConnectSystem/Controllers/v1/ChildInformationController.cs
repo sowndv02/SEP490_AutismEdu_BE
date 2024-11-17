@@ -129,7 +129,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                var childInfos = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId), "Parent");
+                var childInfos = await _childInfoRepository.GetAllNotPagingAsync(x => x.ParentId.Equals(parentId), "Parent", null, null, true);
                 _response.Result = _mapper.Map<List<ChildInformationDTO>>(childInfos.list);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);

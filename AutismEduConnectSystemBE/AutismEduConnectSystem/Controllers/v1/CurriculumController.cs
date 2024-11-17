@@ -255,7 +255,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive, null, null, null, false);
                 foreach (var item in list)
                 {
-                    if (item.AgeFrom == curriculumDto.AgeFrom || item.AgeEnd == curriculumDto.AgeEnd)
+                    if (item.AgeFrom == curriculumDto.AgeFrom && item.AgeEnd == curriculumDto.AgeEnd)
                     {
                         _logger.LogWarning("Duplicate age range found for AgeFrom: {AgeFrom} and AgeEnd: {AgeEnd}", curriculumDto.AgeFrom, curriculumDto.AgeEnd);
                         _response.StatusCode = HttpStatusCode.BadRequest;
