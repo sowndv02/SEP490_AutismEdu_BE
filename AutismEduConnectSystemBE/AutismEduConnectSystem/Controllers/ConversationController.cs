@@ -172,8 +172,11 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 foreach (var conversation in result)
                 {
-                    conversation.Tutor.User = await _userRepository.GetAsync(x => x.Id == conversation.TutorId, false, null);
-                    var (countMessages, listMessages) = await _messageRepository.GetAllAsync(x => x.ConversationId == conversation.Id, null, pageSize, 1, x => x.CreatedDate, true);
+                    if (conversation.Tutor != null)
+                    {
+                        conversation.Tutor.User = await _userRepository.GetAsync(x => x.Id == conversation.TutorId, false, null);
+                    }
+                    var (countMessages, listMessages) = await _messageRepository.GetAllAsync(x => x.ConversationId == conversation.Id, "Sender", pageSize, 1, x => x.CreatedDate, true);
                     conversation.Messages = listMessages;
                 }
 

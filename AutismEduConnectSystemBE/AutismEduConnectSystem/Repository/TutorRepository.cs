@@ -72,7 +72,7 @@ namespace AutismEduConnectSystem.Repository
                 .Where(x => x.AvgScore >= filterScore && x.AvgScore < filterScore + 1);
 
             var filteredQuery = query
-                .Where(t => reviews.Any(r => r.TutorId == t.TutorId));
+                .Where(t => reviews.Any(r => r.TutorId == t.TutorId)).ToList();
             foreach (var item in filteredQuery)
             {
                 var review = reviews.FirstOrDefault(x => x.TutorId == item.TutorId);
@@ -82,7 +82,7 @@ namespace AutismEduConnectSystem.Repository
                     item.ReviewScore = review.AvgScore == 0 ? 5 : review.AvgScore;
                 }
             }
-            return filteredQuery;
+            return filteredQuery.AsQueryable();
         }
 
 
