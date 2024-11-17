@@ -96,6 +96,9 @@ builder.Services.AddScoped<ITestResultDetailRepository, TestResultDetailReposito
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IReportMediaRepository, ReportMediaRepository>();
+builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
 
 
 // Add DI requirement authorization handler

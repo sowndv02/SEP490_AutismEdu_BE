@@ -14373,7 +14373,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             };
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, It.IsAny<Expression<Func<Curriculum, object>>>(), false))
+                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, null, true))
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act

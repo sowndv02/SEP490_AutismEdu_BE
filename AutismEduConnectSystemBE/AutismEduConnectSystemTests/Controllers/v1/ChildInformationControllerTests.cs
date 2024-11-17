@@ -21,6 +21,8 @@ using FluentAssertions;
 using AutismEduConnectSystem.Models.DTOs;
 using System.Linq.Expressions;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+using Google.Apis.Util;
+using Azure;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -259,6 +261,36 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             apiResponse.ErrorMessages.First().Should().Be("Tên trẻ đã tồn tại.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_ModelStateInValid_ReturnsBadRequestResponse()
+        {
+            // Arrange
+            var dto = new ChildInformationCreateDTO { Name = "Test Child" };
+            var existingChild = new ChildInformation { Id = 1, Name = "Test Child", ParentId = "test-user-id" };
+
+            _childInfoRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), false, null, null))
+                .ReturnsAsync((ChildInformation)null);
+
+            _controller.ModelState.AddModelError("Name", "Required");
+
+            _resourceServiceMock
+               .Setup(r => r.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME))
+               .Returns("Tên trẻ đã tồn tại.");
+            // Act
+            var result = await _controller.CreateAsync(dto);
+
+            // Assert
+            var badRequestResult = result.Result as ObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            apiResponse.ErrorMessages.Should().Contain(_resourceServiceMock.Object.GetString(SD.BAD_REQUEST_MESSAGE, SD.CHILD_INFO));
         }
 
         [Fact]
