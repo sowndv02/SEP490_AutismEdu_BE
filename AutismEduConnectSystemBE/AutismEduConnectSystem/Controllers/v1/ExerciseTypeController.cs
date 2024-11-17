@@ -39,7 +39,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet]
         [Authorize(Roles = $"{SD.TUTOR_ROLE},${SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageSize = 0,int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? isHide = SD.STATUS_ALL,string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageSize = 0,int pageNumber = 1)
         {
             try
             {
@@ -87,6 +87,19 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     filter = filter.AndAlso(e => !e.IsHide);
+                }
+
+                if (!string.IsNullOrEmpty(isHide) && isHide != SD.STATUS_ALL)
+                {
+                    switch (isHide.ToLower())
+                    {
+                        case "true":
+                            filter = filter.AndAlso(x => x.IsHide);
+                            break;
+                        case "false":
+                            filter = filter.AndAlso(x => !x.IsHide);
+                            break;
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(search))
