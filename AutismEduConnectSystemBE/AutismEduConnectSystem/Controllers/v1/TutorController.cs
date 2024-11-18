@@ -433,6 +433,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     await _tutorRepository.UpdateAsync(tutorProfile);
                     await _userRepository.UpdateAsync(tutor);
                     tutorProfile.User = tutor;
+                    model.Tutor = tutorProfile;
                     // Send mail
                     var subject = "Yêu cập nhật thông tin của bạn đã được chấp nhận!";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
@@ -466,7 +467,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     {
                         await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
                     }
-                    _response.Result = _mapper.Map<TutorDTO>(tutorProfile);
+                    _response.Result = _mapper.Map<TutorProfileUpdateRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
@@ -479,7 +480,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _tutorProfileUpdateRequestRepository.UpdateAsync(model);
-
+                    tutorProfile.User = tutor;
+                    model.Tutor = tutorProfile;
                     //Send mail
                     var subject = "Yêu cập nhật thông tin của bạn đã bị từ chối!";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
