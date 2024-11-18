@@ -15,7 +15,6 @@ namespace AutismEduConnectSystem.Models
         public bool IsHidden { get; set; }
         public int? TestId { get; set; }
         [ForeignKey(nameof(TestId))]
-        public Test Test { get; set; }
         public List<AssessmentOption> AssessmentOptions { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }

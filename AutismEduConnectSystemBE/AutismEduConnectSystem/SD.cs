@@ -233,6 +233,8 @@
         public const string POSITION_REQUIRED = "Chưa nhập vị trí";
         public const string TEST_RESULT_REQUIRED = "Chưa nhập kết quả bài test";
         public const string TOTAL_POINT_REQUIRED = "Chưa nhập tổng điểm";
+        public const string EXERCISETYPENAME_REQUIRED = "Chưa nhập tên loại bài tập";
+        public const string EXERCISENAME_REQUIRED = "Chưa nhập tên bài tập";
 
         // const exercise type
         public const string DEFAULT_EXERCISE_TYPE_1 = "Tập phát âm thuở ban đầu - nhưng âm thanh của trẻ nhỏ";
