@@ -77,7 +77,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 if (id <= 0)
                 {
                     _logger.LogWarning("Invalid curriculum ID: {CurriculumId}. Returning BadRequest.", id);
@@ -143,12 +143,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                 int totalCount = 0;
                 List<Curriculum> list = new();
                 Expression<Func<Curriculum, bool>> filter = u => true;
-                
+
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted);
                 }
-                if(search != null)
+                if (search != null)
                 {
                     filter = filter.AndAlso(u => u.Description.Contains(search));
                 }
@@ -200,7 +200,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     list = result;
                     totalCount = count;
                 }
-
+                list.ForEach(x => x.Submitter.User = _userRepository.GetAsync(u => u.Id == x.SubmitterId).GetAwaiter().GetResult());
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<CurriculumDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -252,7 +252,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var isExistedCurriculum = await _curriculumRepository.GetAllNotPagingAsync(x => x.OriginalCurriculumId == curriculumDto.OriginalCurriculumId && x.RequestStatus == SD.Status.PENDING, null, null, null, true);
-                if (isExistedCurriculum.TotalCount > 0) 
+                if (isExistedCurriculum.TotalCount > 0)
                 {
                     _logger.LogWarning("Cannot spam update curriculum");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -263,7 +263,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (curriculumDto.OriginalCurriculumId == 0)
                 {
-                    var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom &&  curriculumDto.AgeEnd >= x.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive, null, null, null, false);
+                    var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && curriculumDto.AgeEnd >= x.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive, null, null, null, false);
                     foreach (var item in list)
                     {
                         if (item.AgeFrom == curriculumDto.AgeFrom && item.AgeEnd == curriculumDto.AgeEnd)
@@ -326,8 +326,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
-                Curriculum model = await _curriculumRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+
+                Curriculum model = await _curriculumRepository.GetAsync(x => x.Id == changeStatusDTO.Id, true, "Submitter", null);
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId, false, null);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
@@ -353,7 +353,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     model.ApprovedId = userId;
                     await _curriculumRepository.DeactivatePreviousVersionsAsync(model.OriginalCurriculumId);
                     await _curriculumRepository.UpdateAsync(model);
-
+                    model.Submitter.User = tutor;
                     // Send mail
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
                     if (System.IO.File.Exists(templatePath))
@@ -399,7 +399,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _curriculumRepository.UpdateAsync(model);
-
+                    model.Submitter.User = tutor;
                     // Send mail
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
                     if (System.IO.File.Exists(templatePath))
