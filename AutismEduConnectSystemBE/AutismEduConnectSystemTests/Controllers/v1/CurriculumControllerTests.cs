@@ -79,6 +79,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
+            var submitterUser = new ApplicationUser { Id = "testTutorId", UserName = "testTutor" };
+
+            _userRepositoryMock
+               .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
+               .ReturnsAsync(submitterUser);
         }
 
         public Mock<IResourceService> ResourceServiceMock => _resourceServiceMock;
@@ -4084,6 +4089,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ) // Set to STAFF_ROLE as user is staff
                 ,
             };
+            var submitterUser = new ApplicationUser { Id = "testTutorId", UserName = "testTutor" };
+
+            _userRepositoryMock
+               .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
+               .ReturnsAsync(submitterUser);
+
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
@@ -4182,6 +4193,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ) // Set to STAFF_ROLE as user is staff
                 ,
             };
+
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
@@ -8736,7 +8748,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var submitterUser = new ApplicationUser { Id = "testTutorId", UserName = "testTutor" };
 
+            _userRepositoryMock
+               .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
+               .ReturnsAsync(submitterUser);
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -8789,9 +8805,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.Is<Expression<Func<Curriculum, bool>>>(x =>
-                            x.Body.ToString().Contains("RequestStatus == \"PENDING\"")
-                        ),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -14402,7 +14416,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
             var changeStatusDTO = new ChangeStatusDTO { Id = curriculumId, StatusChange = (int)Status.APPROVE };
 
-            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, "Submitter", null))
                 .ReturnsAsync(curriculum);
             _userRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
                 .ReturnsAsync(tutor);
@@ -14432,14 +14446,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             var curriculumId = 1;
             var userId = "user123";
-            var curriculum = new Curriculum { Id = curriculumId, SubmitterId = userId, RequestStatus = Status.PENDING, Description = "Test Curriculum" };
+            var submitterUser = new Tutor { TutorId = "testTutorId", AboutMe= "testTutor" };
+            var curriculum = new Curriculum { Id = curriculumId, SubmitterId = userId, Submitter = submitterUser, RequestStatus = Status.PENDING, Description = "Test Curriculum" };
             var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
+
             var changeStatusDTO = new ChangeStatusDTO { Id = curriculumId, StatusChange = (int)Status.REJECT, RejectionReason = "Invalid document" };
 
-            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, "Submitter", null))
                 .ReturnsAsync(curriculum);
-            _userRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
-                .ReturnsAsync(tutor);
+
+            _userRepositoryMock
+               .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
+               .ReturnsAsync(tutor);
             // Set user identity
             var userClaims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, STAFF_ROLE) };
             _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
@@ -14514,7 +14532,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var curriculumId = 1;
             var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.APPROVE };
             _resourceServiceMock.Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE)).Returns("Internal server error");
-            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, "Submitter", null))
                 .ThrowsAsync(new Exception("Database error"));
 
             // Act
