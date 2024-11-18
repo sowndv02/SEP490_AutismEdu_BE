@@ -216,7 +216,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 var result = await _messageRepository.CreateAsync(newMessage);
 
-                var conversation = await _conversationRepository.GetAsync(x => x.Id == createDTO.ConversationId, false, null, null);
+                var conversation = await _conversationRepository.GetAsync(x => x.Id == createDTO.ConversationId, true, null, null);
                 var receiverId = string.Empty;
                 var returnModel = await _messageRepository.GetAsync(x => x.Id == result.Id, false, "Sender,Conversation", null);
                 if (conversation != null)
@@ -225,7 +225,10 @@ namespace AutismEduConnectSystem.Controllers
                         receiverId = conversation.ParentId;
                     else receiverId = conversation.TutorId;
 
+                    conversation.UpdatedDate = DateTime.Now;
+                    await _conversationRepository.UpdateAsync(conversation);
                 }
+
 
                 //SignalR
                 var connectionId = NotificationHub.GetConnectionIdByUserId(receiverId);

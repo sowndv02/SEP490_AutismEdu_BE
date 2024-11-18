@@ -97,6 +97,7 @@ namespace AutismEduConnectSystem.Controllers
                     IsRead = false,
                     ConversationId = result.Id,
                     CreatedDate = DateTime.Now,
+                    UpdatedDate = DateTime.Now
                 });
                 var returnModel = await _messageRepository.GetAsync(x => x.Id == message.Id, false, "Sender,Conversation", null);
 
@@ -160,13 +161,13 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    var (countTutorConversation, listTutorConversation) = await _conversationRepository.GetAllAsync(x => x.TutorId == userId, "Parent", pageSize, pageNumber, null, false);
+                    var (countTutorConversation, listTutorConversation) = await _conversationRepository.GetAllAsync(x => x.TutorId == userId, "Parent", pageSize, pageNumber, x => x.UpdatedDate, true);
                     totalCount = countTutorConversation;
                     result = listTutorConversation;
                 }
                 else if (userRoles != null && userRoles.Contains(SD.PARENT_ROLE))
                 {
-                    var (countParentConversation, listParentConversation) = await _conversationRepository.GetAllAsync(x => x.ParentId == userId, "Tutor", pageSize, pageNumber, null, false);
+                    var (countParentConversation, listParentConversation) = await _conversationRepository.GetAllAsync(x => x.ParentId == userId, "Tutor", pageSize, pageNumber, x => x.UpdatedDate, true);
                     totalCount = countParentConversation;
                     result = listParentConversation;
                 }
@@ -180,10 +181,6 @@ namespace AutismEduConnectSystem.Controllers
                     conversation.Messages = listMessages;
                 }
 
-                var sortedConversations = result
-                    .OrderByDescending(conversation => conversation.Messages
-                        .OrderByDescending(message => message.CreatedDate))
-                    .ToList();
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.IsSuccess = true;
                 var resultResponse = _mapper.Map<List<ConversationDTO>>(result);
