@@ -161,13 +161,13 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    var (countTutorConversation, listTutorConversation) = await _conversationRepository.GetAllAsync(x => x.TutorId == userId, "Parent", pageSize, pageNumber, x => x.UpdatedDate, true);
+                    var (countTutorConversation, listTutorConversation) = await _conversationRepository.GetAllNotPagingAsync(x => x.TutorId == userId, "Parent", null, x => x.UpdatedDate, true);
                     totalCount = countTutorConversation;
                     result = listTutorConversation;
                 }
                 else if (userRoles != null && userRoles.Contains(SD.PARENT_ROLE))
                 {
-                    var (countParentConversation, listParentConversation) = await _conversationRepository.GetAllAsync(x => x.ParentId == userId, "Tutor", pageSize, pageNumber, x => x.UpdatedDate, true);
+                    var (countParentConversation, listParentConversation) = await _conversationRepository.GetAllNotPagingAsync(x => x.ParentId == userId, "Tutor", null, x => x.UpdatedDate, true);
                     totalCount = countParentConversation;
                     result = listParentConversation;
                 }
@@ -183,6 +183,11 @@ namespace AutismEduConnectSystem.Controllers
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.IsSuccess = true;
+                var sortedConversations = result
+                .OrderByDescending(conversation => conversation.Messages
+                    .Max(message => (DateTime?)message.CreatedDate) ?? DateTime.MinValue)
+                .ToList();
+                result = sortedConversations.ToList();
                 var resultResponse = _mapper.Map<List<ConversationDTO>>(result);
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
@@ -198,6 +203,7 @@ namespace AutismEduConnectSystem.Controllers
                         item.User = _mapper.Map<ApplicationUserDTO>(result.FirstOrDefault(u => u.Id == item.Id).Tutor.User);
                     }
                 }
+
                 _response.Result = resultResponse;
                 _response.Pagination = pagination;
                 _response.StatusCode = HttpStatusCode.OK;
