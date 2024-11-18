@@ -24,7 +24,7 @@ using static AutismEduConnectSystem.SD;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
-    public class CertificateControllerTests : IClassFixture<WebApplicationFactory<Program>>
+    public class CertificateControllerTests
     {
 
         private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -42,11 +42,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly Mock<IHubContext<NotificationHub>> _hubContextMock;
 
         private CertificateController _controller;
-        private readonly WebApplicationFactory<Program> _factory;
 
-        public CertificateControllerTests(WebApplicationFactory<Program> factory)
+        public CertificateControllerTests()
         {
-            _factory = factory;
             _userRepositoryMock = new Mock<IUserRepository>();
             _certificateRepositoryMock = new Mock<ICertificateRepository>();
             _certificateMediaRepositoryMock = new Mock<ICertificateMediaRepository>();
@@ -91,16 +89,487 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
         }
 
+        [Fact]
+        public async Task GetByIdAsync_ReturnsOk_WhenCertificateExistsAndUserIsTutorRole()
+        {
+            // Arrange
+            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                    new Claim(ClaimTypes.NameIdentifier, "12345"),
+                    new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            }));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+            var certificate = new Certificate { Id = 1, IsDeleted = false };
+            _certificateRepositoryMock
+                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+                .ReturnsAsync(certificate);
+            // Act
+            var result = await _controller.GetByIdAsync(1);
+            var okResult = result.Result as OkObjectResult;
 
-        //[Fact]
-        //public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsNotInStaffRole()
-        //{
-        //    var client = _factory.CreateClient();
-        //    var dto = new CertificateCreateDTO { CertificateName = "FPT University", IssuingInstitution = "FPTU", IssuingDate = DateTime.Now, Medias = new List<IFormFile>() };
-        //    var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
-        //    var result = await client.PostAsync("/api/v1/certificate", content);
-        //    result.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
-        //}
+            // Assert
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var apiResponse = okResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.Result.Should().BeOfType<CertificateDTO>();
+            ((CertificateDTO)apiResponse.Result).Id.Should().Be(1);
+        }
+
+
+        [Fact]
+        public async Task GetByIdAsync_ReturnsOk_WhenCertificateExistsAndUserIsStaff()
+        {
+            // Arrange
+            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "12345"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            }));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+            var certificate = new Certificate { Id = 1, IsDeleted = false };
+            _certificateRepositoryMock
+                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+                .ReturnsAsync(certificate);
+            
+            // Act
+            var result = await _controller.GetByIdAsync(1);
+            var okResult = result.Result as OkObjectResult;
+
+            // Assert
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var apiResponse = okResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.Result.Should().BeOfType<CertificateDTO>();
+            ((CertificateDTO)apiResponse.Result).Id.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_ReturnsNotFound_WhenCertificateDoesNotExist_UserIsTutorRole()
+        {
+            // Arrange
+            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "12345"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            }));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+            _certificateRepositoryMock
+                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+                .ReturnsAsync((Certificate)null);
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE))
+                .Returns("Certificate not found.");
+
+            // Act
+            var result = await _controller.GetByIdAsync(9999);
+            var notFoundResult = result.Result as NotFoundObjectResult;
+
+            // Assert
+            notFoundResult.Should().NotBeNull();
+            notFoundResult.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
+
+            var apiResponse = notFoundResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.First().Should().Be("Certificate not found.");
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_ReturnsNotFound_WhenCertificateDoesNotExist_UserIsStaffRole()
+        {
+            // Arrange
+            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "12345"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+            }));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+            _certificateRepositoryMock
+                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+                .ReturnsAsync((Certificate)null);
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE))
+                .Returns("Certificate not found.");
+
+            // Act
+            var result = await _controller.GetByIdAsync(9999);
+            var notFoundResult = result.Result as NotFoundObjectResult;
+
+            // Assert
+            notFoundResult.Should().NotBeNull();
+            notFoundResult.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
+
+            var apiResponse = notFoundResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.First().Should().Be("Certificate not found.");
+        }
+
+
+        [Fact]
+        public async Task GetByIdAsync_ReturnsBadRequest_WhenIdIsZero_UserIsTutor()
+        {
+            // Arrange
+            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "12345"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+            }));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID))
+                .Returns("Invalid request data.");
+
+            // Act
+            var result = await _controller.GetByIdAsync(0);
+            var badRequestResult = result.Result as BadRequestObjectResult;
+
+            // Assert
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.ErrorMessages.First().Should().Be("Invalid request data.");
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbidden access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claims = new List<Claim>
+             {
+                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
+             };
+            var identity = new ClaimsIdentity(claims, "test");
+            var user = new ClaimsPrincipal(identity);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
+
+
+            // Act
+            var result = await _controller.GetByIdAsync(1);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            apiResponse.ErrorMessages.First().Should().Be("Forbidden access.");
+        }
+
+
+        [Fact]
+        public async Task GetByIdAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+
+            // Act
+            var result = await _controller.GetByIdAsync(1);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
+
+
+        [Fact]
+        public async Task UpdateStatusRequest_ReturnsUnauthorized_WhenUserIsUnauthorized()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+            var certificateId = 1;
+            var changeStatusDTO = new ChangeStatusDTO { Id = certificateId, StatusChange = (int)Status.REJECT, RejectionReason = "Invalid document" };
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
+
+
+        [Fact]
+        public async Task DeleteAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbidden access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claims = new List<Claim>
+             {
+                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
+             };
+            var identity = new ClaimsIdentity(claims, "test");
+            var user = new ClaimsPrincipal(identity);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
+            var certificateId = 1;
+
+            // Act
+            var result = await _controller.DeleteAsync(certificateId);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            apiResponse.ErrorMessages.First().Should().Be("Forbidden access.");
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+            var certificateId = 1;
+
+            // Act
+            var result = await _controller.DeleteAsync(certificateId);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
+
+
+        [Fact]
+        public async Task UpdateStatusRequest_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbidden access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claims = new List<Claim>
+             {
+                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
+             };
+            var identity = new ClaimsIdentity(claims, "test");
+            var user = new ClaimsPrincipal(identity);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
+            var certificateId = 1;
+            var changeStatusDTO = new ChangeStatusDTO { Id = certificateId, StatusChange = (int)Status.REJECT, RejectionReason = "Invalid document" };
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO); 
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            apiResponse.ErrorMessages.First().Should().Be("Forbidden access.");
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+
+            // Act
+            var result = await _controller.GetAllAsync("", STATUS_ALL, CREATED_DATE, ORDER_DESC, 1);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
+
+
+        [Fact]
+        public async Task CreateAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbidden access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claims = new List<Claim>
+             {
+                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
+             };
+            var identity = new ClaimsIdentity(claims, "test");
+            var user = new ClaimsPrincipal(identity);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
+
+
+
+            var requestPayload = new CertificateCreateDTO
+            {
+                CertificateName = "FPT University",
+                IssuingInstitution = "FPTU",
+                IssuingDate = DateTime.Now,
+                Medias = new List<IFormFile>()
+            };
+
+
+            // Act
+            var result = await _controller.CreateAsync(requestPayload);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            apiResponse.ErrorMessages.First().Should().Be("Forbidden access.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+
+
+            var requestPayload = new CertificateCreateDTO 
+            { 
+                CertificateName = "FPT University", 
+                IssuingInstitution = "FPTU", 
+                IssuingDate = DateTime.Now, 
+                Medias = new List<IFormFile>() 
+            };
+
+
+            // Act
+            var result = await _controller.CreateAsync(requestPayload);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
 
         [Fact]
         public async Task CreateAsync_ReturnsCreated_WhenValidRequest()
@@ -148,7 +617,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.CreateAsync(createDTO);
-            var okResult = result as OkObjectResult;
+            var okResult = result.Result as OkObjectResult;
 
             // Assert
             okResult.Should().NotBeNull();
@@ -167,6 +636,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         [Fact]
         public async Task CreateAsync_ReturnsBadRequest_WhenModelStateIsInvalid()
         {
+            var userId = "testUserId";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
             // Arrange
             var createDTO = new CertificateCreateDTO();
             _controller.ModelState.AddModelError("From", "Required");
@@ -174,7 +655,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     .Returns("Your expected error message here");
             // Act
             var result = await _controller.CreateAsync(createDTO);
-            var badRequestResult = result as BadRequestObjectResult;
+            var badRequestResult = result.Result as BadRequestObjectResult;
 
             // Assert
             badRequestResult.Should().NotBeNull();
@@ -222,7 +703,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.CreateAsync(createDTO);
-            var internalServerErrorResult = result as ObjectResult;
+            var internalServerErrorResult = result.Result as ObjectResult;
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();
@@ -256,7 +737,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
-            var okResult = result as OkObjectResult;
+            var okResult = result.Result as OkObjectResult;
 
             // Assert
             okResult.Should().NotBeNull();
@@ -288,7 +769,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
-            var okResult = result as OkObjectResult;
+            var okResult = result.Result as OkObjectResult;
 
             // Assert
             okResult.Should().NotBeNull();
@@ -314,7 +795,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
-            var badRequestResult = result as BadRequestObjectResult;
+            var badRequestResult = result.Result as BadRequestObjectResult;
 
             // Assert
             badRequestResult.Should().NotBeNull();
@@ -339,7 +820,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
-            var badRequestResult = result as BadRequestObjectResult;
+            var badRequestResult = result.Result as BadRequestObjectResult;
 
             // Assert
             badRequestResult.Should().NotBeNull();
@@ -361,7 +842,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
-            var internalServerErrorResult = result as ObjectResult;
+            var internalServerErrorResult = result.Result as ObjectResult;
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();
@@ -373,28 +854,23 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.Should().Contain("Internal server error");
         }
 
-        private void SetUpUser(string userId)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId)
-            };
-            var user = new ClaimsPrincipal(new ClaimsIdentity(claims));
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
-        }
-
 
         [Fact]
         public async Task DeleteAsync_ReturnsNoContent_WhenCertificateIsDeletedSuccessfully()
         {
+            var userId = "testUserId";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
             // Arrange
             int certificateId = 1;
-            string userId = "test-user-id";
-            SetUpUser(userId);
-
             var certificate = new Certificate { Id = certificateId, SubmitterId = userId, IsDeleted = false };
             var newCertificate = new Certificate { Id = certificateId, SubmitterId = userId, IsDeleted = true };
             _certificateRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, null, null))
@@ -418,10 +894,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         [Fact]
         public async Task DeleteAsync_ReturnsBadRequest_WhenCertificateNotFound()
         {
+
+            var userId = "testUserId";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
             // Arrange
             int certificateId = 1;
-            string userId = "test-user-id";
-            SetUpUser(userId);
 
             _certificateRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, null, null))
                 .ReturnsAsync((Certificate)null);
@@ -442,11 +929,19 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         [Fact]
         public async Task DeleteAsync_ReturnsInternalServerError_OnException()
         {
+            var userId = "testUserId";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
             // Arrange
             int certificateId = 1;
-            string userId = "test-user-id";
-            SetUpUser(userId);
-
             _certificateRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, null, null))
                 .ThrowsAsync(new Exception("Database error"));
             _resourceServiceMock.Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE)).Returns("Internal server error");
@@ -467,6 +962,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         [Fact]
         public async Task DeleteAsync_ReturnsBadRequest_WhenIdIsZero()
         {
+            var userId = "testUserId";
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+            };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
             // Arrange
             _resourceServiceMock.Setup(r => r.GetString(BAD_REQUEST_MESSAGE, ID)).Returns("Invalid ID.");
 

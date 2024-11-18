@@ -301,14 +301,20 @@ namespace AutismEduConnectSystem.Mapper
             CreateMap<ReportTutorCreateDTO, Report>()
                 .ForMember(dest => dest.ReportMedias, opt => opt.Ignore())
                 .ReverseMap(); ;
-            CreateMap<Report, ReportTutorDTO>();
-            CreateMap<Report, ReportAppealBanCreateDTO>();
-            CreateMap<Report, ReportAppealBanDTO>();
-            CreateMap<Report, ReportDTO>();
-            CreateMap<ReportMedia, ReportMediaDTO>();
+            CreateMap<Report, ReportTutorDTO>().ReverseMap();
+            CreateMap<Report, ReportAppealBanCreateDTO>().ReverseMap();
+            CreateMap<Report, ReportAppealBanDTO>().ReverseMap();
+            CreateMap<Report, ReportDTO>().ReverseMap();
+            CreateMap<ReportMedia, ReportMediaDTO>().ReverseMap();
 
-            CreateMap<Conversation, ConversationDTO>();
-            CreateMap<MessageDTO, Message>();
+            CreateMap<Conversation, ConversationDTO>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.Parent != null ? src.Parent : src.Tutor.User))
+                .ReverseMap();
+            CreateMap<MessageDTO, Message>().ReverseMap();
+            CreateMap<MessageDetailDTO, Message>().ReverseMap();
+            CreateMap<Conversation, ConversationDetailDTO>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.Parent != null ? src.Parent : src.Tutor.User))
+                .ReverseMap();
         }
     }
 }

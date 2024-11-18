@@ -102,7 +102,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (!userId.Equals(userRoleDTO.UserId))
                 {
@@ -160,7 +160,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (!userId.Equals(userRoleDTO.UserId))
                 {
@@ -256,7 +256,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (!userId.Equals(userClaimDTO.UserId))
                 {
@@ -314,7 +314,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (!userId.Equals(userClaimDTO.UserId))
                 {
@@ -666,7 +666,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (string.IsNullOrEmpty(email))
                 {
@@ -713,7 +713,7 @@ namespace AutismEduConnectSystem.Controllers
 
 
         [HttpGet("lock/{userId}")]
-        public async Task<IActionResult> LockoutUser(string userId)
+        public async Task<ActionResult<APIResponse>> LockoutUser(string userId)
         {
             try
             {
@@ -749,7 +749,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpGet("unlock/{userId}")]
-        public async Task<IActionResult> UnLockoutUser(string userId)
+        public async Task<ActionResult<APIResponse>> UnLockoutUser(string userId)
         {
             try
             {

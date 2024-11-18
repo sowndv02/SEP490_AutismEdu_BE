@@ -41,6 +41,15 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");
@@ -56,17 +65,9 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
+                
                 var newModel = _mapper.Map<PackagePayment>(createDTO);
 
                 newModel.SubmitterId = userId;
@@ -144,7 +145,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = SD.MANAGER_ROLE)]
-        public async Task<IActionResult> UpdateStatus(int id, UpdateActiveDTO updateActiveDTO)
+        public async Task<ActionResult<APIResponse>> UpdateStatus(int id, UpdateActiveDTO updateActiveDTO)
         {
             try
             {
@@ -165,7 +166,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
 
                 if (!ModelState.IsValid)

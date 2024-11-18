@@ -26,9 +26,9 @@ namespace AutismEduConnectSystem.Controllers
         private readonly IStudentProfileRepository _studentProfileRepository;
         private readonly IChildInformationRepository _childInformationRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IReviewRepository _reviewRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
-        private object blog;
         private readonly ILogger<ReportController> _logger;
         private readonly IResourceService _resourceService;
         public ReportController(IReportRepository reportRepository,
@@ -38,7 +38,7 @@ namespace AutismEduConnectSystem.Controllers
             IStudentProfileRepository studentProfileRepository,
             IChildInformationRepository childInformationRepository,
             IBlobStorageRepository blobStorageRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository, IReviewRepository reviewRepository)
         {
             _userRepository = userRepository;
             _blobStorageRepository = blobStorageRepository;
@@ -50,6 +50,7 @@ namespace AutismEduConnectSystem.Controllers
             _reportRepository = reportRepository;
             _resourceService = resourceService;
             _logger = logger;
+            _reviewRepository = reviewRepository;
         }
 
 
@@ -171,15 +172,6 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.PARENT_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -189,6 +181,16 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.PARENT_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");
@@ -208,7 +210,7 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 var child = await _childInformationRepository.GetAllNotPagingAsync(x => x.ParentId == userId);
 
-                if (child.list != null && child.list.Any())
+                if (child.list != null && !child.list.Any())
                 {
                     _logger.LogWarning("Cannot report tutor");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -233,7 +235,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 newModel.ReporterId = userId;
                 newModel.ReportType = SD.ReportType.TUTOR;
-                //newModel.Title = SD.REPORT_TUTOR_TITLE;
 
                 var reportModel = await _reportRepository.CreateAsync(newModel);
 
@@ -351,7 +352,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 var (count, result) = await _reportRepository.GetAllWithIncludeAsync(
                     filter,
-                    "Handler,Tutor,Review,Reporter,ReportMedias",
+                    "Tutor,Review,Reporter",
                     pageSize: 10,
                     pageNumber: pageNumber,
                     orderByQuery,
@@ -386,19 +387,10 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> ApproveOrRejectRequest(ReportUpdateDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateStatusRequest(ReportUpdateDTO updateDTO)
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.STAFF_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -408,6 +400,16 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.STAFF_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");
@@ -436,15 +438,16 @@ namespace AutismEduConnectSystem.Controllers
                     model.UpdatedDate = DateTime.Now;
                     model.Comments = updateDTO.Comment;
                     model.HandlerId = userId;
+
                     await _reportRepository.UpdateAsync(model);
                     if (!string.IsNullOrEmpty(model.TutorId))
                     {
-                        var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == model.TutorId && x.Id != model.Id, null, null, x => x.CreatedDate, true);
+                        var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == model.TutorId && x.Id != model.Id && x.Status == SD.Status.PENDING, null, null, x => x.CreatedDate, true);
                         reports = listReportTutor;
                     }
                     else if (model.ReviewId != null && model.ReviewId > 0)
                     {
-                        var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id, null, null, x => x.CreatedDate, true);
+                        var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id && x.Status == SD.Status.PENDING, null, null, x => x.CreatedDate, true);
                         reports = listReportReview;
                     }
                     foreach (var item in reports)
@@ -471,12 +474,12 @@ namespace AutismEduConnectSystem.Controllers
                     await _reportRepository.UpdateAsync(model);
                     if (!string.IsNullOrEmpty(model.TutorId))
                     {
-                        var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == model.TutorId && x.Id != model.Id, null, null, x => x.CreatedDate, true);
+                        var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == model.TutorId && x.Id != model.Id && x.Status == SD.Status.PENDING, null, null, x => x.CreatedDate, true);
                         reports = listReportTutor;
                     }
                     else if (model.ReviewId != null && model.ReviewId > 0)
                     {
-                        var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id, null, null, x => x.CreatedDate, true);
+                        var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id && x.Status == SD.Status.PENDING, null, null, x => x.CreatedDate, true);
                         reports = listReportReview;
                     }
                     foreach (var item in reports)
@@ -529,7 +532,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 Report report = await _reportRepository.GetAsync(x => x.Id == id, false, "Handler,Tutor,Review,Reporter,ReportMedias", null);
                 List<Report> reports = new();
@@ -542,12 +545,12 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (!string.IsNullOrEmpty(report.TutorId))
                 {
-                    var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == report.TutorId && x.Id != report.Id, "Handler,Reporter,ReportMedias", null, x => x.CreatedDate, true);
+                    var (countReportTutor, listReportTutor) = await _reportRepository.GetAllNotPagingAsync(x => x.TutorId == report.TutorId && x.Id != report.Id && x.Status == SD.Status.PENDING, "Handler,Reporter,ReportMedias", null, x => x.CreatedDate, true);
                     reports = listReportTutor;
                 }
                 else if (report.ReviewId != null && report.ReviewId > 0)
                 {
-                    var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == report.ReviewId && x.Id != report.Id, "Handler,Reporter", null, x => x.CreatedDate, true);
+                    var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == report.ReviewId && x.Id != report.Id && x.Status == SD.Status.PENDING, "Handler,Reporter", null, x => x.CreatedDate, true);
                     reports = listReportReview;
                 }
                 report.Tutor.User = await _userRepository.GetAsync(x => x.Id.Equals(report.TutorId));

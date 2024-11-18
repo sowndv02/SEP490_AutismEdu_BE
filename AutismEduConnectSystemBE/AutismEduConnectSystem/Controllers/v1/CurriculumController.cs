@@ -59,15 +59,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -77,10 +68,20 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                if (id == 0)
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
+                if (id <= 0)
                 {
                     _logger.LogWarning("Invalid curriculum ID: {CurriculumId}. Returning BadRequest.", id);
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
@@ -120,9 +121,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                int totalCount = 0;
-                List<Curriculum> list = new();
-                Expression<Func<Curriculum, bool>> filter = u => true;
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -139,11 +137,20 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
+
+                int totalCount = 0;
+                List<Curriculum> list = new();
+                Expression<Func<Curriculum, bool>> filter = u => true;
+                
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted);
+                }
+                if(search != null)
+                {
+                    filter = filter.AndAlso(u => u.Description.Contains(search));
                 }
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 Expression<Func<Curriculum, object>>? orderByQuery = null;
@@ -212,18 +219,10 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPost]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> CreateAsync(CurriculumCreateDTO curriculumDto)
+        public async Task<ActionResult<APIResponse>> CreateAsync(CurriculumCreateDTO curriculumDto)
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for CreateAsync method. Model state errors: {@ModelState}", ModelState);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
-                    return BadRequest(_response);
-                }
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -234,24 +233,55 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && x.AgeEnd >= curriculumDto.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive, null, null, null, false);
-                foreach (var item in list)
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                    if (item.AgeFrom == curriculumDto.AgeFrom || item.AgeEnd == curriculumDto.AgeEnd)
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for CreateAsync method. Model state errors: {@ModelState}", ModelState);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
+                    return BadRequest(_response);
+                }
+
+                var isExistedCurriculum = await _curriculumRepository.GetAllNotPagingAsync(x => x.OriginalCurriculumId == curriculumDto.OriginalCurriculumId && x.RequestStatus == SD.Status.PENDING, null, null, null, true);
+                if (isExistedCurriculum.TotalCount > 0) 
+                {
+                    _logger.LogWarning("Cannot spam update curriculum");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CURRICULUM) };
+                    return BadRequest(_response);
+                }
+
+                if (curriculumDto.OriginalCurriculumId == 0)
+                {
+                    var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom &&  curriculumDto.AgeEnd >= x.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive, null, null, null, false);
+                    foreach (var item in list)
                     {
-                        _logger.LogWarning("Duplicate age range found for AgeFrom: {AgeFrom} and AgeEnd: {AgeEnd}", curriculumDto.AgeFrom, curriculumDto.AgeEnd);
-                        _response.StatusCode = HttpStatusCode.BadRequest;
-                        _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
-                        return BadRequest(_response);
+                        if (item.AgeFrom == curriculumDto.AgeFrom && item.AgeEnd == curriculumDto.AgeEnd)
+                        {
+                            _logger.LogWarning("Duplicate age range found for AgeFrom: {AgeFrom} and AgeEnd: {AgeEnd}", curriculumDto.AgeFrom, curriculumDto.AgeEnd);
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            _response.IsSuccess = false;
+                            _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
+                            return BadRequest(_response);
+                        }
                     }
                 }
+
                 var newCurriculum = _mapper.Map<Curriculum>(curriculumDto);
 
                 newCurriculum.SubmitterId = userId;
                 newCurriculum.IsActive = false;
                 newCurriculum.VersionNumber = await _curriculumRepository.GetNextVersionNumberAsync(curriculumDto.OriginalCurriculumId);
-                await _curriculumRepository.DeactivatePreviousVersionsAsync(curriculumDto.OriginalCurriculumId);
                 if (curriculumDto.OriginalCurriculumId == 0)
                 {
                     newCurriculum.OriginalCurriculumId = null;
@@ -274,19 +304,10 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("changeStatus/{id}")]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<IActionResult> UpdateStatusRequest(int id, ChangeStatusDTO changeStatusDTO)
+        public async Task<ActionResult<APIResponse>> UpdateStatusRequest(int id, ChangeStatusDTO changeStatusDTO)
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.TUTOR_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -296,6 +317,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
                 Curriculum model = await _curriculumRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId, false, null);
                 if (model == null || model.RequestStatus != Status.PENDING)

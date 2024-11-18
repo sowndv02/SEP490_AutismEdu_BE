@@ -49,15 +49,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -67,6 +58,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
                 if (id == 0)
                 {
                     _logger.LogWarning($"Invalid syllabus ID: {id} provided by User: {userId}");
@@ -107,15 +108,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -125,6 +117,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
                 int totalCount = 0;
                 List<Syllabus> list = new();
                 Expression<Func<Syllabus, bool>> filter = u => !string.IsNullOrEmpty(u.TutorId) && u.TutorId == userId && !u.IsDeleted;
@@ -186,7 +189,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetActive(int id)
+        public async Task<ActionResult<APIResponse>> GetActive(int id)
         {
             try
             {
@@ -220,7 +223,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPut("{id}")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> UpdateAsync(int id, [FromBody] SyllabusUpdateDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateAsync(int id, [FromBody] SyllabusUpdateDTO updateDTO)
         {
             try
             {
@@ -240,7 +243,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (!ModelState.IsValid || id != updateDTO.Id)
                 {
@@ -260,7 +263,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SYLLABUS) };
                     return BadRequest(_response);
                 }
-                var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= updateDTO.AgeFrom && x.AgeEnd >= updateDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted && x.Id != updateDTO.Id);
+                var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => updateDTO.AgeFrom >= x.AgeFrom && updateDTO.AgeEnd >= x.AgeEnd && x.TutorId == userId && !x.IsDeleted && x.Id != updateDTO.Id);
                 foreach (var item in list)
                 {
                     if (item.AgeFrom == updateDTO.AgeFrom && item.AgeEnd == updateDTO.AgeEnd)
@@ -338,7 +341,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPost]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> CreateAsync(SyllabusCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync(SyllabusCreateDTO createDTO)
         {
             try
             {
@@ -358,7 +361,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 if (!ModelState.IsValid)
                 {
@@ -369,7 +372,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => x.AgeFrom <= createDTO.AgeFrom && x.AgeEnd >= createDTO.AgeEnd && x.TutorId == userId && !x.IsDeleted);
+                var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => createDTO.AgeFrom >= x.AgeFrom && createDTO.AgeEnd >= x.AgeEnd && x.TutorId == userId && !x.IsDeleted);
                 foreach (var item in list)
                 {
                     if (item.AgeFrom == createDTO.AgeFrom && item.AgeEnd == createDTO.AgeEnd)

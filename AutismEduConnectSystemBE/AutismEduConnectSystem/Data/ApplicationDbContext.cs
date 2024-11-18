@@ -454,211 +454,181 @@ namespace AutismEduConnectSystem.Data
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_1,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_2,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_3,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_4,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_5,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_6,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_7,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_8,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_9,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_10,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_11,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_12,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_13,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_14,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_15,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_16,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_17,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_18,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_19,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_20,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_21,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_22,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_23,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_24,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_25,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_26,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_27,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_28,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_29,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     },
                     new ExerciseType
                     {
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_30,
                         SubmitterId = adminUser.Id,
-                        IsActive = true,
-                        IsDeleted = false
+                        IsHide = false
                     }
                 );
 

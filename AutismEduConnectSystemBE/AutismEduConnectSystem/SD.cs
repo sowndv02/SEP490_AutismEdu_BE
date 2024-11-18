@@ -337,6 +337,9 @@
         public const string STATUS_APPROVE = "approve";
         public const string STATUS_REJECT = "reject";
         public const string STATUS_ALL = "all";
+        public const string STATUS_TRUE = "true";
+        public const string STATUS_FALSE = "false";
+
 
         // type string
         public const string TYPE_REVIEW = "review";

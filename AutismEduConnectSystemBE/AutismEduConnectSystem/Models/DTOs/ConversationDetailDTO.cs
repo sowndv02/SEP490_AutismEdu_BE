@@ -1,10 +1,9 @@
 ﻿namespace AutismEduConnectSystem.Models.DTOs
 {
-    public class ConversationDTO
+    public class ConversationDetailDTO
     {
         public int Id { get; set; }
         public ApplicationUserDTO User { get; set; }
-        public List<MessageDetailDTO> Messages { get; set; }
         public DateTime CreatedDate { get; set; }
     }
 }

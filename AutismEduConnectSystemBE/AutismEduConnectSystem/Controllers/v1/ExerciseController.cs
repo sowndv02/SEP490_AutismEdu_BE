@@ -38,26 +38,42 @@ namespace AutismEduConnectSystem.Controllers.v1
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = $"{SD.TUTOR_ROLE}")]
         public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute] int id, [FromQuery] string? search, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
             {
-                int totalCount = 0;
-                List<Exercise> list = new();
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == id;
                 Expression<Func<Exercise, object>> orderByQuery = u => true;
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles.Contains(SD.TUTOR_ROLE))
+                
+                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    if (string.IsNullOrEmpty(userId))
-                    {
-                        _logger.LogWarning("Unauthorized access attempt detected.");
-                        _response.IsSuccess = false;
-                        _response.StatusCode = HttpStatusCode.Unauthorized;
-                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
-                        return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                    }
                     filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive && e.TutorId == userId);
                 }
                 if (!string.IsNullOrEmpty(search))
@@ -79,14 +95,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                             break;
                     }
                 }
+                else
+                {
+                    orderByQuery = x => x.CreatedDate;
+                }
 
                 var (count, result) = await _exerciseRepository.GetAllNotPagingAsync(filter: filter, includeProperties: null, orderBy: orderByQuery, isDesc: isDesc);
 
-                list = result;
-                totalCount = count;
-
-
-                _response.Result = _mapper.Map<List<ExerciseDTO>>(list);
+                _response.Result = _mapper.Map<List<ExerciseDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = null;
                 _response.IsSuccess = true;
@@ -104,19 +120,11 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPost]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<ActionResult<APIResponse>> CreateExerciseAsync(ExerciseCreateDTO exerciseCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync(ExerciseCreateDTO exerciseCreateDTO)
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
+
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -126,7 +134,18 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                if (exerciseCreateDTO == null)
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                
+                if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Received null ExerciseCreateDTO from user: {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -136,7 +155,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var exerciseModel = _mapper.Map<Exercise>(exerciseCreateDTO);
-                if (exerciseCreateDTO.OriginalId == null || exerciseCreateDTO.OriginalId == 0)
+                if (exerciseCreateDTO.OriginalId == 0)
                 {
                     exerciseModel.OriginalId = null;
                 }
@@ -160,71 +179,12 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
         }
 
-        //[HttpPut("changeStatus/{id}")]
-        //public async Task<IActionResult> ApproveOrRejectExerciseCreateRequest(ChangeStatusDTO changeStatusDTO)
-        //{
-        //    try
-        //    {
-        //        ExerciseType exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
-
-        //        if (exerciseType == null || exerciseType.RequestStatus != Status.PENDING)
-        //        {
-        //            _response.StatusCode = HttpStatusCode.BadRequest;
-        //            _response.IsSuccess = false;
-        //            _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
-        //            return BadRequest(_response);
-        //        }
-
-        //        if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
-        //        {
-        //            exerciseType.RequestStatus = Status.APPROVE;
-        //            await _exerciseTypeRepository.UpdateAsync(exerciseType);
-
-        //            _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
-        //            _response.StatusCode = HttpStatusCode.OK;
-        //            _response.IsSuccess = true;
-        //            return Ok(_response);
-        //        }
-        //        else if (changeStatusDTO.StatusChange == (int)Status.REJECT)
-        //        {
-        //            exerciseType.RequestStatus = Status.REJECT;
-
-        //            await _exerciseTypeRepository.UpdateAsync(exerciseType);
-
-        //            _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
-        //            _response.StatusCode = HttpStatusCode.OK;
-        //            _response.IsSuccess = true;
-        //            return Ok(_response);
-        //        }
-
-        //        _response.StatusCode = HttpStatusCode.NoContent;
-        //        _response.IsSuccess = true;
-        //        return Ok(_response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _response.IsSuccess = false;
-        //        _response.StatusCode = HttpStatusCode.InternalServerError;
-        //        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-        //        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-        //    }
-        //}
-
         [HttpDelete("{id}")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<IActionResult> DeleteExerciseAsync(int id)
+        public async Task<ActionResult<APIResponse>> DeleteAsync(int id)
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -234,7 +194,26 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                var exercise = await _exerciseRepository.GetAsync(x => x.Id == id && !x.IsDeleted && x.IsActive && x.TutorId == userId, false, null);
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
+
+                var exercise = await _exerciseRepository.GetAsync(x => x.Id == id && !x.IsDeleted && x.IsActive && x.TutorId == userId, true, null, null);
                 if (exercise == null)
                 {
                     _logger.LogWarning("Exercise with ID {ExerciseId} not found for user: {UserId}", id, userId);
