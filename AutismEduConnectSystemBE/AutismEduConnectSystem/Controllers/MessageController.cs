@@ -74,7 +74,7 @@ namespace AutismEduConnectSystem.Controllers
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
 
-                Message model = await _messageRepository.GetAsync(x => x.Id == id, true, null, null);
+                Conversation model = await _conversationRepository.GetAsync(x => x.Id == id, true, null, null);
                 if (model == null)
                 {
                     _logger.LogWarning("Message with ID: {Id} is either not found.", id);
@@ -83,10 +83,8 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.MESSAGE) };
                     return BadRequest(_response);
                 }
-                model.IsRead = true;
-                model.UpdatedDate = DateTime.Now;
-                var result = await _messageRepository.UpdateAsync(model);
-                var (count, list) = await _messageRepository.GetAllNotPagingAsync(x => x.ConversationId == model.ConversationId && !x.IsRead, null, null, x => x.CreatedDate, true);
+
+                var (count, list) = await _messageRepository.GetAllNotPagingAsync(x => x.ConversationId == model.Id && !x.IsRead, null, null, x => x.CreatedDate, true);
 
                 foreach (var message in list)
                 {
@@ -97,7 +95,6 @@ namespace AutismEduConnectSystem.Controllers
                         await _messageRepository.UpdateAsync(message);
                     }
                 }
-                _response.Result = _mapper.Map<MessageDTO>(result);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
