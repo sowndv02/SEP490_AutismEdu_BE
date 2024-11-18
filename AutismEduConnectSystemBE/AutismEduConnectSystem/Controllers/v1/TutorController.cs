@@ -129,6 +129,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var (count, result) = await _tutorProfileUpdateRequestRepository.GetAllAsync(filter: filter, includeProperties: "Tutor", pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
                 list = result;
                 totalCount = count;
+                list.ForEach(x => x.Tutor.User = _userRepository.GetAsync(u => u.Id == x.TutorId).GetAwaiter().GetResult());
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
                 _response.Result = _mapper.Map<List<TutorProfileUpdateRequestDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
