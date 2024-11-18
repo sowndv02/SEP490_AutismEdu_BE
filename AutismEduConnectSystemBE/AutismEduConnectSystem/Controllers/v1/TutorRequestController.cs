@@ -450,13 +450,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 TutorRequest model = await _tutorRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "Parent,Tutor", null);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId, false, null);
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
                 {
                     model.RequestStatus = Status.APPROVE;
                     model.UpdatedDate = DateTime.Now;
                     model.RejectType = RejectType.Approved;
                     await _tutorRequestRepository.UpdateAsync(model);
-                    var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId);
                     // Send mail
                     var subject = $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã được chấp nhận";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
@@ -501,7 +501,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     model.RejectType = changeStatusDTO.RejectType;
                     model.UpdatedDate = DateTime.Now;
                     var returnObject = await _tutorRequestRepository.UpdateAsync(model);
-                    var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId);
                     // Send mail
                     var reason = string.Empty;
                     switch (changeStatusDTO.RejectType)
@@ -554,7 +553,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
-
                 }
 
                 _response.StatusCode = HttpStatusCode.NoContent;
