@@ -98,7 +98,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (!string.IsNullOrEmpty(search))
                 {
-                    filterName = x => x.Tutor.User != null && !string.IsNullOrEmpty(x.Tutor.User.FullName) && string.IsNullOrEmpty(x.Tutor.User.Email)
+                    filterName = x => x.Tutor.User != null && !string.IsNullOrEmpty(x.Tutor.User.FullName) && !string.IsNullOrEmpty(x.Tutor.User.Email)
                     && (x.Tutor.User.FullName.ToLower().Contains(search.ToLower()) || x.Tutor.User.Email.ToLower().Contains(search.ToLower()));
                 }
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
