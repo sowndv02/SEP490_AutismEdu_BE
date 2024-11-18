@@ -200,7 +200,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                     list = result;
                     totalCount = count;
                 }
-                list.ForEach(async x => x.Submitter.User = await _userRepository.GetAsync(u => u.Id == x.SubmitterId, false, null));
+                foreach (var item in result)
+                {
+                    item.Submitter.User = await _userRepository.GetAsync(u => u.Id == item.SubmitterId, false, null);
+                }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<CurriculumDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;

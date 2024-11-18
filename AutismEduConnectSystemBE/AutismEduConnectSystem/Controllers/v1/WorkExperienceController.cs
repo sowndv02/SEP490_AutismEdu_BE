@@ -166,7 +166,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 var (count, result) = await _workExperienceRepository.GetAllAsync(filter,
                                 "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
-                result.ForEach(async x => x.Submitter.User = await _userRepository.GetAsync(u => u.Id == x.SubmitterId));
+                foreach (var item in result) 
+                {
+                    item.Submitter.User = await _userRepository.GetAsync(u => u.Id == item.SubmitterId, false, null);
+                } 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = count };
                 _response.Result = _mapper.Map<List<WorkExperienceDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
