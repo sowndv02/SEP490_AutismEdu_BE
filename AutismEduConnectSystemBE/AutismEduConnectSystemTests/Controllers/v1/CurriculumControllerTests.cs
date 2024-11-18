@@ -343,6 +343,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -356,6 +357,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -368,6 +370,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -381,6 +384,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -465,6 +469,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -478,6 +483,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -490,6 +496,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -503,6 +510,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -574,6 +582,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -587,6 +596,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -602,6 +612,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -618,6 +629,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -3
                     ) // Oldest date
@@ -694,6 +706,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -707,6 +720,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -3
                     ) // Oldest date
@@ -722,6 +736,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Middle date
@@ -738,6 +753,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newest date
@@ -814,6 +830,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -827,6 +844,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -839,6 +857,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -852,6 +871,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
             };
@@ -925,6 +945,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -938,6 +959,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -950,6 +972,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -963,6 +986,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
             };
@@ -1036,6 +1060,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -1049,6 +1074,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -3
                     ) // Oldest date
@@ -1064,6 +1090,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -1080,6 +1107,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -1160,6 +1188,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -1173,6 +1202,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Middle date
@@ -1188,6 +1218,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -3
                     ) // Oldest date
@@ -1204,6 +1235,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newest date
@@ -1284,6 +1316,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -1297,6 +1330,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -1309,6 +1343,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -1382,6 +1417,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -1395,6 +1431,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -1407,6 +1444,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -1480,6 +1518,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -1493,6 +1532,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -1505,6 +1545,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -1578,6 +1619,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -1591,6 +1633,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -1603,6 +1646,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -1676,6 +1720,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -1689,6 +1734,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -1704,6 +1750,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -1782,6 +1829,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -1795,6 +1843,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -1810,6 +1859,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -1888,6 +1938,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -1901,6 +1952,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -1916,6 +1968,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -1990,6 +2043,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2003,6 +2057,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -2018,6 +2073,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -2092,6 +2148,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2105,6 +2162,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -2120,6 +2178,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -2194,6 +2253,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2207,6 +2267,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -2222,6 +2283,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -2296,6 +2358,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2309,6 +2372,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -2324,6 +2388,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -2398,6 +2463,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2411,6 +2477,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -2426,6 +2493,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -2500,6 +2568,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2513,6 +2582,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -2525,6 +2595,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -2598,6 +2669,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2611,6 +2683,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -2623,6 +2696,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -2696,6 +2770,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2709,6 +2784,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -2721,6 +2797,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -2794,6 +2871,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2807,6 +2885,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -2819,6 +2898,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -2892,6 +2972,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -2905,6 +2986,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -2917,6 +2999,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -2990,6 +3073,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3003,6 +3087,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -3015,6 +3100,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -3088,6 +3174,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3101,6 +3188,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -3113,6 +3201,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -3186,6 +3275,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3199,6 +3289,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -3211,6 +3302,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -3284,6 +3376,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3297,6 +3390,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -3309,6 +3403,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -3380,6 +3475,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3393,6 +3489,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -3408,6 +3505,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -3482,6 +3580,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3495,6 +3594,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -3510,6 +3610,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -3584,6 +3685,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3597,6 +3699,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -3612,6 +3715,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -3686,6 +3790,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3699,6 +3804,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -3714,6 +3820,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -3788,6 +3895,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3801,6 +3909,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -3816,6 +3925,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -3890,6 +4000,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -3903,6 +4014,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -3918,6 +4030,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -3992,6 +4105,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -4005,6 +4119,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -4020,6 +4135,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -4090,10 +4206,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ,
             };
             var submitterUser = new ApplicationUser { Id = "testTutorId", UserName = "testTutor" };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             _userRepositoryMock
                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
-               .ReturnsAsync(submitterUser);
+               .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
@@ -4113,6 +4229,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -4125,6 +4242,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -4193,7 +4311,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ) // Set to STAFF_ROLE as user is staff
                 ,
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
@@ -4212,6 +4330,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -4224,6 +4343,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -4292,6 +4412,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ) // Set to STAFF_ROLE as user is staff
                 ,
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
@@ -4310,6 +4431,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -4322,6 +4444,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -4390,6 +4513,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ) // Set to STAFF_ROLE as user is staff
                 ,
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
@@ -4408,6 +4532,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -4420,6 +4545,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -4488,6 +4614,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ) // Set to STAFF_ROLE as user is staff
                 ,
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
@@ -4506,6 +4633,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -4518,6 +4646,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -4587,11 +4716,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ,
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             _controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -4604,6 +4733,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -4616,6 +4746,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -4689,7 +4820,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -4702,6 +4833,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -4714,6 +4846,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -4787,7 +4920,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -4800,6 +4933,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -4812,6 +4946,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -4885,7 +5020,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -4898,6 +5033,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -4913,6 +5049,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -4987,7 +5124,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5000,6 +5137,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -5015,6 +5153,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -5089,7 +5228,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5102,6 +5241,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -5117,6 +5257,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -5192,7 +5333,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5205,6 +5346,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -5218,6 +5360,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     Description = "Curriculum Description",
                     RequestStatus = SD.Status.REJECT, // Set status to REJECT
                     VersionNumber = 1,
+                    Submitter = tutor,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
                     CreatedDate = DateTime.Now.AddDays(
@@ -5295,7 +5438,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5308,6 +5451,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -5323,6 +5467,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -5398,7 +5543,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5411,6 +5556,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -5426,6 +5572,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -5501,7 +5648,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5514,6 +5661,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -5529,6 +5677,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -5604,7 +5753,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5617,6 +5766,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -5632,6 +5782,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -5707,7 +5858,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5720,6 +5871,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -5732,6 +5884,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -5806,7 +5959,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5819,6 +5972,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -5831,6 +5985,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -5905,7 +6060,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -5918,6 +6073,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -5930,6 +6086,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -6004,7 +6161,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -6017,6 +6174,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -6029,6 +6187,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -6103,7 +6262,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -6116,6 +6275,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -6128,6 +6288,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -6202,7 +6363,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -6215,6 +6376,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -6227,6 +6389,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -6301,7 +6464,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -6313,6 +6476,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = SD.Status.APPROVE, // Set status to APPROVE
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
+                    Submitter = tutor,
                     IsDeleted = false,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
@@ -6324,6 +6488,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     Description = "Curriculum for Ages 5-10",
                     RequestStatus = SD.Status.APPROVE, // Set status to APPROVE
                     VersionNumber = 1,
+                    Submitter = tutor,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
                     CreatedDate = DateTime.Now.AddDays(-2),
@@ -6400,7 +6565,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -6413,6 +6578,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -6425,6 +6591,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
             };
@@ -6499,7 +6666,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -6512,6 +6679,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -6524,6 +6692,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -6596,7 +6765,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -6609,6 +6778,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -6621,6 +6791,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -6693,7 +6864,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
-
+            var tutor = new Tutor() { TutorId = "testTutorId" };
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -6706,6 +6877,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -6721,6 +6893,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -6796,6 +6969,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -6809,6 +6983,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -2
                     ) // Older date
@@ -6824,6 +6999,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(
                         -1
                     ) // Newer date
@@ -6899,6 +7075,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -6912,6 +7089,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -6924,6 +7102,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -6937,6 +7116,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -7012,6 +7192,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -7026,6 +7207,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -7038,6 +7220,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -7050,6 +7233,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
             };
@@ -7125,6 +7309,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -7139,6 +7324,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -7151,6 +7337,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -7163,6 +7350,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
             };
@@ -7234,6 +7422,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -7247,6 +7436,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -7259,6 +7449,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -7271,6 +7462,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -7344,6 +7536,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -7357,6 +7550,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -7369,6 +7563,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -7381,6 +7576,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
             };
@@ -7457,6 +7653,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -7470,6 +7667,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -7482,6 +7680,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -7494,6 +7693,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -7570,6 +7770,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -7583,6 +7784,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -7595,6 +7797,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -7607,6 +7810,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -7687,6 +7891,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -7700,6 +7905,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -7712,6 +7918,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -7724,6 +7931,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -7809,6 +8017,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -7822,6 +8031,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -7834,6 +8044,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -7846,6 +8057,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -7929,6 +8141,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -7942,6 +8155,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -7954,6 +8168,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -7966,6 +8181,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -8045,6 +8261,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -8058,6 +8275,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -8070,6 +8288,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -8082,6 +8301,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -8161,6 +8381,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -8174,6 +8395,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -8186,6 +8408,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -8199,6 +8422,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -8281,6 +8505,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -8294,6 +8519,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -8306,6 +8532,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -8319,6 +8546,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -8401,6 +8629,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -8414,6 +8643,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -8426,6 +8656,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -8439,6 +8670,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -8516,6 +8748,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -8529,6 +8762,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -8541,6 +8775,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -8554,6 +8789,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -8632,6 +8868,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -8645,6 +8882,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -8657,6 +8895,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -8670,6 +8909,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -8749,6 +8989,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 HttpContext = new DefaultHttpContext { User = user },
             };
             var submitterUser = new ApplicationUser { Id = "testTutorId", UserName = "testTutor" };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             _userRepositoryMock
                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
@@ -8765,6 +9006,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -8777,6 +9019,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -8789,6 +9032,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -8867,6 +9111,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -8880,6 +9125,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -8892,6 +9138,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -8904,6 +9151,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -8986,6 +9234,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -8999,6 +9248,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -9011,6 +9261,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -9023,6 +9274,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -9105,6 +9357,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -9118,6 +9371,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -9130,6 +9384,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -9142,6 +9397,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
             };
@@ -9219,6 +9475,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -9232,6 +9489,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -9244,6 +9502,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -9256,6 +9515,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -9268,6 +9528,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-4),
                 },
             };
@@ -9344,6 +9605,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -9357,6 +9619,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -9369,6 +9632,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -9381,6 +9645,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
             };
@@ -9461,6 +9726,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -9474,6 +9740,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -9486,6 +9753,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -9498,6 +9766,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -9510,6 +9779,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-4),
                 },
             };
@@ -9583,6 +9853,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -9596,6 +9867,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -9608,6 +9880,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -9620,6 +9893,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -9632,6 +9906,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-4),
                 },
             };
@@ -9705,6 +9980,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -9718,6 +9994,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -9730,6 +10007,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -9742,6 +10020,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -9754,6 +10033,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-4),
                 },
             };
@@ -9830,6 +10110,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -9843,6 +10124,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -9855,6 +10137,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -9867,6 +10150,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -9879,6 +10163,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-4),
                 },
             };
@@ -9959,6 +10244,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -9972,6 +10258,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -9984,6 +10271,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -9996,6 +10284,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -10008,6 +10297,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-4),
                 },
             };
@@ -10085,6 +10375,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -10098,6 +10389,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -10110,6 +10402,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -10122,6 +10415,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -10134,6 +10428,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-4),
                 },
             };
@@ -10216,6 +10511,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -10229,6 +10525,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -10241,6 +10538,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -10254,6 +10552,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -10332,6 +10631,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -10345,6 +10645,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -10357,6 +10658,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -10370,6 +10672,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -10448,6 +10751,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -10461,6 +10765,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -10473,6 +10778,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -10486,6 +10792,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -10564,6 +10871,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -10577,6 +10885,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -10589,6 +10898,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -10602,6 +10912,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -10677,6 +10988,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -10690,6 +11002,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -10702,6 +11015,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -10715,6 +11029,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -10793,6 +11108,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -10806,6 +11122,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -10818,6 +11135,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -10831,6 +11149,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -10905,6 +11224,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -10918,6 +11238,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -10930,6 +11251,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -10943,6 +11265,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -11014,6 +11337,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -11027,6 +11351,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -11039,6 +11364,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -11052,6 +11378,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -11132,6 +11459,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -11145,6 +11473,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -11157,6 +11486,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -11170,6 +11500,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -11245,6 +11576,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -11258,6 +11590,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -11270,6 +11603,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -11283,6 +11617,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -11363,6 +11698,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -11376,6 +11712,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -11388,6 +11725,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -11401,6 +11739,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -11481,6 +11820,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -11494,6 +11834,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -11506,6 +11847,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -11518,6 +11860,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -11598,6 +11941,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -11611,6 +11955,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -11623,6 +11968,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -11636,6 +11982,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -11716,6 +12063,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -11729,6 +12077,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -11741,6 +12090,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -11753,6 +12103,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -11829,6 +12180,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -11842,6 +12194,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -11854,6 +12207,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -11866,6 +12220,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -11942,6 +12297,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -11955,6 +12311,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -11967,6 +12324,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -11980,6 +12338,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -12056,6 +12415,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -12069,6 +12429,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -12081,6 +12442,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -12093,6 +12455,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -12169,6 +12532,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -12182,6 +12546,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -12194,6 +12559,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -12207,6 +12573,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -12287,6 +12654,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -12300,6 +12668,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -12312,6 +12681,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -12324,6 +12694,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -12404,6 +12775,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -12417,6 +12789,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -12429,6 +12802,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -12442,6 +12816,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -12517,6 +12892,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -12530,6 +12906,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -12542,6 +12919,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -12555,6 +12933,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -12630,6 +13009,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -12643,6 +13023,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -12655,6 +13036,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -12668,6 +13050,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -12747,6 +13130,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -12760,6 +13144,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -12772,6 +13157,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -12785,6 +13171,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -12864,6 +13251,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -12878,6 +13266,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -12891,6 +13280,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -12904,6 +13294,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -12983,6 +13374,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -12997,6 +13389,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -13010,6 +13403,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -13023,6 +13417,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -13102,6 +13497,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -13116,6 +13512,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -13129,6 +13526,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -13142,6 +13540,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -13217,6 +13616,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -13231,6 +13631,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -13244,6 +13645,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -13257,6 +13659,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -13332,6 +13735,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -13345,6 +13749,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
                 new Curriculum
@@ -13357,6 +13762,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -13369,6 +13775,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
             };
@@ -13444,6 +13851,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -13457,6 +13865,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1),
                 },
                 new Curriculum
@@ -13469,6 +13878,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2),
                 },
                 new Curriculum
@@ -13481,6 +13891,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-3),
                 },
             };
@@ -13556,6 +13967,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -13569,6 +13981,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2), // Older than the second item
                 },
                 new Curriculum
@@ -13581,6 +13994,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1), // Newer than the first item
                 },
             };
@@ -13660,6 +14074,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -13673,6 +14088,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2), // Older than the second item
                 },
                 new Curriculum
@@ -13685,6 +14101,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1), // Newer than the first item
                 },
             };
@@ -13764,6 +14181,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -13777,6 +14195,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2), // Older item
                 },
                 new Curriculum
@@ -13789,6 +14208,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1), // Newer item
                 },
             };
@@ -13868,6 +14288,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -13881,6 +14302,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2), // Older item
                 },
                 new Curriculum
@@ -13893,6 +14315,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1), // Newer item
                 },
             };
@@ -13972,6 +14395,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -13985,6 +14409,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1), // Created recently
                 },
                 new Curriculum
@@ -13997,6 +14422,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2), // Created earlier
                 },
             };
@@ -14072,6 +14498,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
+            var tutor = new Tutor() { TutorId = "testTutorId" };
 
             var curricula = new List<Curriculum>
             {
@@ -14085,6 +14512,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-1), // Created recently
                 },
                 new Curriculum
@@ -14097,6 +14525,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     VersionNumber = 1,
                     SubmitterId = "testTutorId",
                     IsDeleted = false,
+                    Submitter = tutor,
                     CreatedDate = DateTime.Now.AddDays(-2), // Created earlier
                 },
             };

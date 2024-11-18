@@ -245,7 +245,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 
                 var newExerciseType = _mapper.Map<ExerciseType>(exerciseTypeCreateDTO);
                 newExerciseType.SubmitterId = userId;
-                newExerciseType = await _exerciseTypeRepository.CreateAsync(newExerciseType);
+                await _exerciseTypeRepository.CreateAsync(newExerciseType);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<ExerciseTypeDTO>(newExerciseType);
                 _response.IsSuccess = true;

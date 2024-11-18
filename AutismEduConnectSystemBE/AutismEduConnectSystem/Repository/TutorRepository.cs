@@ -26,21 +26,7 @@ namespace AutismEduConnectSystem.Repository
                 query = query.Include(x => x.User).Where(filterAddress);
             if (filterAge != null)
                 query = query.Where(filterAge);
-
             IQueryable<Tutor> storageQuery = query;
-            if (filterScore != null)
-            {
-                query = await GetTutorsWithReviews(query, (int)filterScore);
-
-                if (!query.Any() && filterScore == 5)
-                {
-                    query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
-                }
-            }
-            int totalCount = query.Count();
-
-            if (pageSize > 0)
-                query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
             if (includeProperties != null)
             {
                 var includeProps = includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -49,6 +35,29 @@ namespace AutismEduConnectSystem.Repository
                     query = query.Include(includeProp);
                 }
             }
+            int defaultFilterScore = 5;
+            if (filterScore != null)
+            {
+                query = await GetTutorsWithReviews(query, (int)filterScore);
+                if (!query.Any() && filterScore == defaultFilterScore)
+                {
+                    query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
+                }
+                for (int i = 4; i >= 1; i--)
+                {
+                    if (!query.Any())
+                    {
+                        query = storageQuery;
+                        query = await GetTutorsWithReviews(query, i);
+                    }
+                    else break;
+                }
+            }
+            int totalCount = query.Count();
+
+            if (pageSize > 0)
+                query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
+            
             if (orderBy != null)
                 if (isDesc)
                     query = query.OrderByDescending(orderBy);

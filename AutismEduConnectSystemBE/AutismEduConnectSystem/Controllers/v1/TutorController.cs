@@ -356,7 +356,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var (count, result) = await _tutorRepository.GetAllTutorAsync(filterName: searchNameFilter, filterAddress: searchAddressFilter, filterScore: reviewScore,
-                    filterAge: filterAge, includeProperties: "User", pageSize: 9, pageNumber: pageNumber);
+                    filterAge: filterAge, includeProperties: "User", pageSize: 9, pageNumber: pageNumber, orderBy: x => x.ReviewScore, isDesc: true);
                 list = result;
                 totalCount = count;
                 List<TutorDTO> tutorDTOList = _mapper.Map<List<TutorDTO>>(list);
