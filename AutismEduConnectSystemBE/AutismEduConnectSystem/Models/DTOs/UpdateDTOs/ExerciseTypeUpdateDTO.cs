@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace AutismEduConnectSystem.Models.DTOs.CreateDTOs
+namespace AutismEduConnectSystem.Models.DTOs.UpdateDTOs
 {
-    public class ExerciseTypeCreateDTO
+    public class ExerciseTypeUpdateDTO
     {
+        public int Id { get; set; }
         [Required(ErrorMessage = SD.EXERCISETYPENAME_REQUIRED)]
         public string ExerciseTypeName { get; set; }
-        public bool IsHide { get; set; }
     }
 }

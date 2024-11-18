@@ -54,9 +54,6 @@ namespace AutismEduConnectSystem.Data
         public DbSet<Syllabus> Syllabuses { get; set; }
         public DbSet<SyllabusExercise> SyllabusExercises { get; set; }
         public DbSet<AssessmentScoreRange> AssessmentScoreRanges { get; set; }
-        public DbSet<Test> Tests { get; set; }
-        public DbSet<TestResult> TestResults { get; set; }
-        public DbSet<TestResultDetail> TestResultDetails { get; set; }
         public DbSet<PackagePayment> PackagePayments { get; set; }
         public DbSet<PaymentHistory> PaymentHistories { get; set; }
         public DbSet<Notification> Notifications { get; set; }
@@ -200,18 +197,6 @@ namespace AutismEduConnectSystem.Data
                 .HasOne(pr => pr.Question)
                 .WithMany()
                 .HasForeignKey(pr => pr.QuestionId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<TestResultDetail>()
-                .HasOne(pr => pr.Question)
-                .WithMany()
-                .HasForeignKey(pr => pr.QuestionId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<TestResult>()
-                .HasOne(tr => tr.Parent)
-                .WithMany()
-                .HasForeignKey(tr => tr.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             foreach (var entityType in builder.Model.GetEntityTypes())

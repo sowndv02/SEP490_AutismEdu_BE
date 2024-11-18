@@ -272,27 +272,11 @@ namespace AutismEduConnectSystem.Mapper
 
             CreateMap<AssessmentScoreRange, AssessmentScoreRangeDTO>().ReverseMap();
             CreateMap<AssessmentScoreRange, AssessmentScoreRangeCreateDTO>().ReverseMap();
-
-            CreateMap<Test, TestCreateDTO>().ReverseMap();
-            CreateMap<AssessmentQuestion, TestQuestionCreateDTO>()
-                .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.AssessmentOptions))
-                .ReverseMap();
             CreateMap<PackagePayment, PackagePaymentCreateDTO>().ReverseMap();
             CreateMap<PackagePayment, PackagePaymentDTO>().ReverseMap();
             CreateMap<PaymentHistory, PaymentHistoryCreateDTO>().ReverseMap();
             CreateMap<PaymentHistory, PaymentHistoryDTO>().ReverseMap();
 
-            CreateMap<Test, TestDTO>().ReverseMap();
-            CreateMap<TestResult, TestResultCreateDTO>()
-                .ForMember(dest => dest.TestResults, opt => opt.MapFrom(src => src.Results))
-                .ReverseMap();
-            CreateMap<TestResultDetail, TestResultDetailCreateDTO>().ReverseMap();
-            CreateMap<TestResult, TestResultDTO>()
-                .ForMember(dest => dest.TestName, opt => opt.MapFrom(src => src.Test.TestName))
-                .ForMember(dest => dest.TestDescription, opt => opt.MapFrom(src => src.Test.TestDescription))
-                .ForMember(dest => dest.Results, opt => opt.MapFrom(src => src.Results))
-                .ReverseMap();
-            CreateMap<TestResultDetail, TestResultDetailDTO>().ReverseMap();
             CreateMap<NotificationDTO, Notification>().ReverseMap();
             CreateMap<BlogDTO, Blog>().ReverseMap();
             CreateMap<BlogUpdateDTO, Blog>().ReverseMap();
@@ -306,6 +290,7 @@ namespace AutismEduConnectSystem.Mapper
             CreateMap<Report, ReportAppealBanDTO>().ReverseMap();
             CreateMap<Report, ReportDTO>().ReverseMap();
             CreateMap<ReportMedia, ReportMediaDTO>().ReverseMap();
+            CreateMap<ExerciseTypeDetailDTO, ExerciseType>().ReverseMap();
 
             CreateMap<Conversation, ConversationDTO>()
                 .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.Parent != null ? src.Parent : src.Tutor.User))

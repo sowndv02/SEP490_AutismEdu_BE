@@ -14,6 +14,18 @@ namespace AutismEduConnectSystem.Repository
             _context = context;
         }
 
+        public async Task<int> CountByExerciseType(int exerciseTypeId)
+        {
+            try
+            {
+                return await _context.Exercisese.Where(x => x.ExerciseTypeId == exerciseTypeId).CountAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task DeactivatePreviousVersionsAsync(int? originalId)
         {
             if (originalId == 0 || originalId == null) return;
