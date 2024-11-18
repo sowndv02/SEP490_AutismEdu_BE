@@ -17,6 +17,6 @@ namespace AutismEduConnectSystem.Models
         public bool IsDeleted { get; set; } = false;
         public List<Message> Messages { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public DateTime? UpdatedDate { get; set; }
+        public DateTime? UpdatedDate { get; set; } = DateTime.Now;
     }
 }
