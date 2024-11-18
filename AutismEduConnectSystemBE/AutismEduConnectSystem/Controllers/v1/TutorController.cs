@@ -63,7 +63,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet("updateRequest")]
         [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<ActionResult<APIResponse>> GetAllUpdateRequestProfileAsync([FromQuery] string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllUpdateRequestProfileAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -88,6 +88,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 int totalCount = 0;
                 List<TutorProfileUpdateRequest> list = new();
                 Expression<Func<TutorProfileUpdateRequest, bool>> filter = u => true;
+                Expression<Func<TutorProfileUpdateRequest, bool>> filterName = null;
                 Expression<Func<TutorProfileUpdateRequest, object>> orderByQuery = u => true;
 
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
@@ -95,7 +96,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                     filter = filter.AndAlso(u => u.TutorId == userId);
                 }
 
-
+                if (!string.IsNullOrEmpty(search))
+                {
+                    filterName = x => x.Tutor.User != null && !string.IsNullOrEmpty(x.Tutor.User.FullName) && string.IsNullOrEmpty(x.Tutor.User.Email)
+                    && (x.Tutor.User.FullName.ToLower().Contains(search.ToLower()) || x.Tutor.User.Email.ToLower().Contains(search.ToLower()));
+                }
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
 
                 if (orderBy != null)
@@ -126,10 +131,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                             break;
                     }
                 }
-                var (count, result) = await _tutorProfileUpdateRequestRepository.GetAllAsync(filter: filter, includeProperties: "Tutor", pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
+                var (count, result) = await _tutorProfileUpdateRequestRepository.GetAllTutorUpdateRequestAsync
+                    (filterName: filterName, filterOther: filter, includeProperties: null, pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
                 list = result;
                 totalCount = count;
-                list.ForEach(x => x.Tutor.User = _userRepository.GetAsync(u => u.Id == x.TutorId).GetAwaiter().GetResult());
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
                 _response.Result = _mapper.Map<List<TutorProfileUpdateRequestDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -171,7 +176,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 var (total, list) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, null, null);
                 TutorProfileUpdateRequest model = null;
                 model = list.OrderByDescending(x => x.CreatedDate).ToList().FirstOrDefault();
@@ -394,7 +399,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Forbidden, _response);
             }
-            
+
             try
             {
                 TutorProfileUpdateRequest model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
