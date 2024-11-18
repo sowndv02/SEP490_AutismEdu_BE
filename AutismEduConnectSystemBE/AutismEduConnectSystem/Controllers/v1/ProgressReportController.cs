@@ -79,7 +79,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 if (createDTO == null)
                 {
                     _logger.LogWarning("Received null ProgressReportCreateDTO. Bad request.");
@@ -103,23 +103,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                 progressReport.AssessmentResults = assessmentResults;
 
                 // Notification
-                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == createDTO.StudentProfileId);
-                var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
-                var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
-                var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
-                var notfication = new Notification()
-                {
-                    ReceiverId = child.ParentId,
-                    Message = _resourceService.GetString(SD.CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName),
-                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, progressReport.Id),
-                    IsRead = false,
-                    CreatedDate = DateTime.Now
-                };
-                var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                if (!string.IsNullOrEmpty(connectionId))
-                {
-                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
-                }
+                await SendNotificationWhenCreateProgressReport(createDTO.StudentProfileId, progressReport.Id);
+
                 _response.Result = _mapper.Map<ProgressReportDTO>(progressReport);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.IsSuccess = true;
@@ -132,6 +117,26 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+        private async Task SendNotificationWhenCreateProgressReport(int studentProfileId, int progressReportId)
+        {
+            var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == studentProfileId);
+            var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
+            var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
+            var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+            var notfication = new Notification()
+            {
+                ReceiverId = child.ParentId,
+                Message = _resourceService.GetString(SD.CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName),
+                UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, progressReportId),
+                IsRead = false,
+                CreatedDate = DateTime.Now
+            };
+            var notificationResult = await _notificationRepository.CreateAsync(notfication);
+            if (!string.IsNullOrEmpty(connectionId))
+            {
+                await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
             }
         }
 
@@ -305,7 +310,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                
+
                 if (updateDTO == null)
                 {
                     _logger.LogWarning("Received null updateDTO for ProgressReport update.");
@@ -357,23 +362,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
                 // Notification
-                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId);
-                var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
-                var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
-                var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
-                var notfication = new Notification()
-                {
-                    ReceiverId = child.ParentId,
-                    Message = _resourceService.GetString(SD.UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName, model.From.ToString("dd/mm/yyyy"), model.To.ToString("dd/mm/yyyy")),
-                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_REVIEW_LIST),
-                    IsRead = false,
-                    CreatedDate = DateTime.Now
-                };
-                var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                if (!string.IsNullOrEmpty(connectionId))
-                {
-                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
-                }
+                await SendNotificationWhenUpdateProgressReport(model);
 
                 _response.Result = _mapper.Map<ProgressReportDTO>(model);
                 _response.StatusCode = HttpStatusCode.Created;
@@ -387,6 +376,27 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        private async Task SendNotificationWhenUpdateProgressReport(ProgressReport model)
+        {
+            var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId);
+            var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
+            var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
+            var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+            var notfication = new Notification()
+            {
+                ReceiverId = child.ParentId,
+                Message = _resourceService.GetString(SD.UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName, model.From.ToString("dd/mm/yyyy"), model.To.ToString("dd/mm/yyyy")),
+                UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_REVIEW_LIST),
+                IsRead = false,
+                CreatedDate = DateTime.Now
+            };
+            var notificationResult = await _notificationRepository.CreateAsync(notfication);
+            if (!string.IsNullOrEmpty(connectionId))
+            {
+                await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
             }
         }
     }
