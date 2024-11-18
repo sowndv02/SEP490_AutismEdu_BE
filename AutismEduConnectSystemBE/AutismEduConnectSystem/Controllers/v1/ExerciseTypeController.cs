@@ -287,6 +287,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if(id <= 0)
                 {
+                    _logger.LogWarning("id invalid.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -295,6 +296,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 ExerciseType exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == id, true, "Submitter", null);
                 if (exerciseType == null)
                 {
+                    _logger.LogWarning("Not found exercise Type with Id: {@id}.", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
@@ -302,6 +304,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!exerciseType.IsHide)
                 {
+                    _logger.LogWarning("exercise Type not hide cannot update hide or show with Id: {@id}.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
@@ -318,9 +321,10 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating ExerciseType with id: {@id}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string> { ex.Message };
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
