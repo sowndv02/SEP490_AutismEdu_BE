@@ -75,7 +75,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 var newConversation = new Conversation();
 
                 if (userRoles != null && (userRoles.Contains(SD.TUTOR_ROLE)))
@@ -101,7 +101,7 @@ namespace AutismEduConnectSystem.Controllers
                 var returnModel = await _messageRepository.GetAsync(x => x.Id == message.Id, false, "Sender,Conversation", null);
 
                 returnModel.Conversation.Parent = await _userRepository.GetAsync(x => x.Id == returnModel.Conversation.ParentId);
-                if(returnModel.Conversation.Tutor == null)
+                if (returnModel.Conversation.Tutor == null)
                 {
                     returnModel.Conversation.Tutor = new Tutor();
                 }
@@ -154,10 +154,10 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 int totalCount = 0;
                 List<Conversation> result = new();
-                
+
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     var (countTutorConversation, listTutorConversation) = await _conversationRepository.GetAllAsync(x => x.TutorId == userId, "Parent", pageSize, pageNumber, null, false);
@@ -176,7 +176,7 @@ namespace AutismEduConnectSystem.Controllers
                     {
                         conversation.Tutor.User = await _userRepository.GetAsync(x => x.Id == conversation.TutorId, false, null);
                     }
-                    var (countMessages, listMessages) = await _messageRepository.GetAllAsync(x => x.ConversationId == conversation.Id, "Sender", pageSize, 1, x => x.CreatedDate, true);
+                    var (countMessages, listMessages) = await _messageRepository.GetAllAsync(x => x.ConversationId == conversation.Id, "Sender", pageSize: 1, pageNumber: 1, x => x.CreatedDate, true);
                     conversation.Messages = listMessages;
                 }
 
@@ -187,7 +187,22 @@ namespace AutismEduConnectSystem.Controllers
                     .ToList();
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.IsSuccess = true;
-                _response.Result = _mapper.Map<List<ConversationDTO>>(result);
+                var resultResponse = _mapper.Map<List<ConversationDTO>>(result);
+                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    foreach (var item in resultResponse)
+                    {
+                        item.User = _mapper.Map<ApplicationUserDTO>(result.FirstOrDefault(u => u.Id == item.Id).Parent);
+                    }
+                }
+                else if (userRoles != null && userRoles.Contains(SD.PARENT_ROLE))
+                {
+                    foreach (var item in resultResponse)
+                    {
+                        item.User = _mapper.Map<ApplicationUserDTO>(result.FirstOrDefault(u => u.Id == item.Id).Tutor.User);
+                    }
+                }
+                _response.Result = resultResponse;
                 _response.Pagination = pagination;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
