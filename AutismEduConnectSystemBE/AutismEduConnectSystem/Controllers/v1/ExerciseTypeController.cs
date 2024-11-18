@@ -209,7 +209,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPost]
         [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
-        public async Task<ActionResult<APIResponse>> CreateExerciseTypeAsync(ExerciseTypeCreateDTO exerciseTypeCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync(ExerciseTypeCreateDTO exerciseTypeCreateDTO)
         {
             try
             {
@@ -245,7 +245,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 
                 var newExerciseType = _mapper.Map<ExerciseType>(exerciseTypeCreateDTO);
                 newExerciseType.SubmitterId = userId;
-                await _exerciseTypeRepository.CreateAsync(newExerciseType);
+                newExerciseType = await _exerciseTypeRepository.CreateAsync(newExerciseType);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<ExerciseTypeDTO>(newExerciseType);
                 _response.IsSuccess = true;
