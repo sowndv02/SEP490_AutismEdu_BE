@@ -30,14 +30,14 @@ namespace AutismEduConnectSystem.Repository
             IQueryable<Tutor> storageQuery = query;
             if (filterScore != null)
             {
-                query = GetTutorsWithReviews(query, (int)filterScore);
+                query = await GetTutorsWithReviews(query, (int)filterScore);
 
                 if (!query.Any() && filterScore == 5)
                 {
                     query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
                 }
             }
-            int totalCount = await query.CountAsync();
+            int totalCount = query.Count();
 
             if (pageSize > 0)
                 query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
@@ -55,24 +55,33 @@ namespace AutismEduConnectSystem.Repository
                 else
                     query = query.OrderBy(orderBy);
 
-            var tutorList = await query.ToListAsync();
+            var tutorList =  query.ToList();
             return (totalCount, tutorList);
         }
-        public IQueryable<Tutor> GetTutorsWithReviews(IQueryable<Tutor> query, int filterScore)
+        public async Task<IQueryable<Tutor>> GetTutorsWithReviews(IQueryable<Tutor> query, int filterScore)
         {
-            var reviews = _context.Reviews
+            // Get reviews from the database and perform the filtering
+            var reviews = await _context.Reviews
                 .AsNoTracking()
                 .GroupBy(r => r.TutorId)
                 .Select(g => new
                 {
                     TutorId = g.Key,
                     AvgScore = g.Average(r => r.RateScore),
-                    TotalReview = g.Key.Count()
+                    TotalReview = g.Count() // Use g.Count() to get the total review count
                 })
-                .Where(x => x.AvgScore >= filterScore && x.AvgScore < filterScore + 1);
+                .Where(x => x.AvgScore >= filterScore && x.AvgScore < filterScore + 1)
+                .ToListAsync();  // Execute and bring data into memory
 
-            var filteredQuery = query
-                .Where(t => reviews.Any(r => r.TutorId == t.TutorId)).ToList();
+            // Now filter the tutors based on the reviews in memory
+            var tutorIdsWithReviews = reviews.Select(r => r.TutorId).ToList();
+
+            // Filter tutors based on the tutor IDs in the reviews
+            var filteredQuery = await query
+                .Where(t => tutorIdsWithReviews.Contains(t.TutorId))  // Filter on TutorId
+                .ToListAsync();  // Execute the query and bring tutors into memory
+
+            // Populate the review data for the tutors
             foreach (var item in filteredQuery)
             {
                 var review = reviews.FirstOrDefault(x => x.TutorId == item.TutorId);
@@ -82,8 +91,11 @@ namespace AutismEduConnectSystem.Repository
                     item.ReviewScore = review.AvgScore == 0 ? 5 : review.AvgScore;
                 }
             }
+
+            // Return the modified list as IQueryable
             return filteredQuery.AsQueryable();
         }
+
 
 
 

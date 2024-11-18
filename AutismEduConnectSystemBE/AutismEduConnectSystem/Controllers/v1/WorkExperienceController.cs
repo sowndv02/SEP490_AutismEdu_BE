@@ -125,20 +125,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                int totalCount = 0;
-                List<WorkExperience> list = new();
                 Expression<Func<WorkExperience, bool>> filter = u => true;
                 Expression<Func<WorkExperience, object>> orderByQuery = u => true;
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    Expression<Func<WorkExperience, bool>> searchByTutor = u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted;
-
-                    var combinedFilter = Expression.Lambda<Func<WorkExperience, bool>>(
-                        Expression.AndAlso(filter.Body, Expression.Invoke(searchByTutor, filter.Parameters)),
-                        filter.Parameters
-                    );
-                    filter = combinedFilter;
+                    filter = filter.AndAlso(x => !string.IsNullOrEmpty(x.SubmitterId) && x.SubmitterId == userId && !x.IsDeleted);
                 }
                 if (!string.IsNullOrEmpty(search))
                 {
@@ -174,14 +166,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 var (count, result) = await _workExperienceRepository.GetAllAsync(filter,
                                 "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
-                list = result;
-                totalCount = count;
-                foreach (var item in list)
-                {
-                    item.Submitter.User = await _userRepository.GetAsync(x => x.Id == item.SubmitterId);
-                }
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-                _response.Result = _mapper.Map<List<WorkExperienceDTO>>(list);
+                result.ForEach(async x => x.Submitter.User = await _userRepository.GetAsync(u => u.Id == x.SubmitterId));
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = count };
+                _response.Result = _mapper.Map<List<WorkExperienceDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);
