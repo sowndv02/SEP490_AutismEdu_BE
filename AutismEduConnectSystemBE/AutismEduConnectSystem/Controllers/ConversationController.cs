@@ -182,8 +182,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 var sortedConversations = result
                     .OrderByDescending(conversation => conversation.Messages
-                        .OrderByDescending(message => message.CreatedDate)
-                        .FirstOrDefault()?.CreatedDate)
+                        .OrderByDescending(message => message.CreatedDate))
                     .ToList();
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.IsSuccess = true;
