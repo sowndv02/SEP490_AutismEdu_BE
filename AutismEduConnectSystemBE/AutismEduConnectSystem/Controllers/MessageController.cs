@@ -73,7 +73,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 Message model = await _messageRepository.GetAsync(x => x.Id == id, true, null, null);
                 if (model == null)
                 {
@@ -86,13 +86,16 @@ namespace AutismEduConnectSystem.Controllers
                 model.IsRead = true;
                 model.UpdatedDate = DateTime.Now;
                 var result = await _messageRepository.UpdateAsync(model);
-                var (count, list) = await _messageRepository.GetAllNotPagingAsync(x => x.ConversationId == model.ConversationId && x.CreatedDate <= model.CreatedDate && !x.IsRead, null, null, x => x.CreatedDate, true);
+                var (count, list) = await _messageRepository.GetAllNotPagingAsync(x => x.ConversationId == model.ConversationId && !x.IsRead, null, null, x => x.CreatedDate, true);
 
                 foreach (var message in list)
                 {
-                    message.IsRead = true;
-                    message.UpdatedDate = DateTime.Now;
-                    await _messageRepository.UpdateAsync(message);
+                    if (message.SenderId != userId)
+                    {
+                        message.IsRead = true;
+                        message.UpdatedDate = DateTime.Now;
+                        await _messageRepository.UpdateAsync(message);
+                    }
                 }
                 _response.Result = _mapper.Map<MessageDTO>(result);
                 _response.StatusCode = HttpStatusCode.NoContent;
@@ -134,7 +137,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 Conversation conversation = null;
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
@@ -203,7 +206,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 var newMessage = new Message()
                 {
                     ConversationId = createDTO.ConversationId,
