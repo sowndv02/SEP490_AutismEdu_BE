@@ -200,7 +200,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     list = result;
                     totalCount = count;
                 }
-                foreach (var item in result)
+                foreach (var item in list)
                 {
                     item.Submitter.User = await _userRepository.GetAsync(u => u.Id == item.SubmitterId, false, null);
                 }
