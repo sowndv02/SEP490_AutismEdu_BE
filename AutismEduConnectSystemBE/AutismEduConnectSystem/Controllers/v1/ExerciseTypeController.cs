@@ -398,7 +398,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 await _exerciseTypeRepository.UpdateAsync(exerciseType);
                 _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
-                _response.StatusCode = HttpStatusCode.OK;
+                _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
             }

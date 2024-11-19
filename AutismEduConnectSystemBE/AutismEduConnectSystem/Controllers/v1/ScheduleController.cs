@@ -59,14 +59,23 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 var model = await _scheduleRepository.GetAsync(x => x.Id == id, false, "Exercise,ExerciseType");
                 if (model == null)
                 {
                     _logger.LogWarning("Schedule with ID: {ScheduleId} not found.", id);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 model.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId, true, "Child");
                 _response.StatusCode = HttpStatusCode.OK;
@@ -109,6 +118,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
                 }
                 if (updateDTO == null || updateDTO.Id != id)
                 {
@@ -163,6 +180,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                if (studentProfileId <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", studentProfileId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
                 }
                 List<Schedule> list = new();
 
@@ -221,7 +246,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 if (updateDTO == null || updateDTO.Id != id)
                 {
                     _logger.LogWarning("Invalid update request: Schedule ID mismatch or empty request body for Schedule ID: {ScheduleId}", id);
@@ -366,7 +398,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+                if (updateDTO.Id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", updateDTO.Id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 if (updateDTO == null)
                 {
                     _logger.LogWarning("Received null ScheduleDateTimeUpdateDTO");
