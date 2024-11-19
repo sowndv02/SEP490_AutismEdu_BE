@@ -300,6 +300,8 @@ namespace AutismEduConnectSystem.Mapper
             CreateMap<Conversation, ConversationDetailDTO>()
                 .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.Parent != null ? src.Parent : src.Tutor.User))
                 .ReverseMap();
+
+            CreateMap<AssessmentOptionUpdateDTO, AssessmentOption>().ReverseMap();
         }
     }
 }
