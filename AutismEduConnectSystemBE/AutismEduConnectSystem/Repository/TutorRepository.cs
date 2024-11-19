@@ -54,17 +54,12 @@ namespace AutismEduConnectSystem.Repository
                 }
             }
             int totalCount = query.Count();
-
+            var tutorList = query.ToList();
+            tutorList = tutorList.OrderByDescending(x => x.ReviewScore).ToList();
             if (pageSize > 0)
-                query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
+                tutorList = tutorList.Skip(pageSize * (pageNumber - 1)).Take(pageSize).ToList();
 
-            if (orderBy != null)
-                if (isDesc)
-                    query = query.OrderByDescending(orderBy);
-                else
-                    query = query.OrderBy(orderBy);
-
-            return (totalCount, await query.ToListAsync());
+            return (totalCount, tutorList);
         }
         public async Task<IQueryable<Tutor>> GetTutorsWithReviews(IQueryable<Tutor> query, int filterScore)
         {
