@@ -516,12 +516,12 @@ namespace AutismEduConnectSystem.Controllers
             {
                 int totalCount = 0;
                 List<ApplicationUser> list = new();
-                bool isAdmin = true;
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles.Contains(SD.STAFF_ROLE) || userRoles.Contains(SD.MANAGER_ROLE))
-                {
-                    isAdmin = false;
-                }
+                bool isAdmin = false;
+                //var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                //if (userRoles.Contains(SD.STAFF_ROLE) || userRoles.Contains(SD.MANAGER_ROLE))
+                //{
+                //    isAdmin = false;
+                //}
                 if (!string.IsNullOrEmpty(searchType))
                 {
                     switch (searchType.ToLower().Trim())
@@ -557,12 +557,12 @@ namespace AutismEduConnectSystem.Controllers
                             }
                             break;
                         case "parent":
-                            var (totalParent, resultParent) = await _userRepository.GetAllAsync(x => x.Role.Contains(SD.PARENT_ROLE), pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
+                            var (totalParent, resultParent) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin, byRole: SD.PARENT_ROLE);
                             totalCount = totalParent;
                             list = resultParent;
                             break;
                         case "tutor":
-                            var (totalTutor, resultTutor) = await _userRepository.GetAllAsync(x => x.Role.Contains(SD.TUTOR_ROLE), pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
+                            var (totalTutor, resultTutor) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin, byRole: SD.TUTOR_ROLE);
                             totalCount = totalTutor;
                             list = resultTutor;
                             break;
