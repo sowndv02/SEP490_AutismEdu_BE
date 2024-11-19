@@ -1,6 +1,7 @@
 ﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutoMapper;
@@ -137,6 +138,82 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.IsSuccess = false;
                 _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
+        [HttpPut]
+        [Authorize(Roles = $"{SD.STAFF_ROLE}, {SD.MANAGER_ROLE}")]
+        public async Task<ActionResult<APIResponse>> UpdateAsync([FromBody] AssessmentQuestionUpdateDTO updateDTO)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+
+                if (updateDTO == null)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _logger.LogWarning("Attempted to update an assessment question with a null request payload.");
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_QUESTION) };
+                    return BadRequest(_response);
+                }
+
+                var model = await _assessmentQuestionRepository.GetAsync(x => x.Id == updateDTO.Id, true, "AssessmentOptions");
+                if (model == null)
+                {
+                    _logger.LogWarning($"Question id not found: {updateDTO.Id}");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
+
+                var assessmentExist = await _assessmentQuestionRepository.GetAsync(x => x.Id != updateDTO.Id && x.Question.Equals(updateDTO.Question));
+                if (assessmentExist != null)
+                {
+                    _logger.LogWarning($"Duplicate question attempted: {updateDTO.Question}");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, updateDTO.Question) };
+                    return BadRequest(_response);
+                }
+
+                model.Question = updateDTO.Question;
+                model.UpdatedDate = DateTime.Now;
+                model.AssessmentOptions = _mapper.Map<List<AssessmentOption>>(updateDTO.AssessmentOptions);
+                var assessmentQuestion = await _assessmentQuestionRepository.UpdateAsync(model);
+
+                _response.Result = _mapper.Map<AssessmentQuestionDTO>(assessmentQuestion);
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.Created;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
