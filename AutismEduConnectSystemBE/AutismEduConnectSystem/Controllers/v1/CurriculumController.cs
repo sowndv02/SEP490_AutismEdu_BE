@@ -358,7 +358,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     await _curriculumRepository.UpdateAsync(model);
                     // Send mail
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    if (System.IO.File.Exists(templatePath))
+                    if (System.IO.File.Exists(templatePath) && tutor != null)
                     {
                         var subject = "Yêu cập nhật khung chương trình của bạn đã được chấp nhận!";
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
@@ -373,21 +373,22 @@ namespace AutismEduConnectSystem.Controllers.v1
                             Message = htmlMessage,
                             Subject = subject
                         }, queueName);
+                        var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                        var notfication = new Notification()
+                        {
+                            ReceiverId = tutor.Id,
+                            Message = _resourceService.GetString(SD.CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION, SD.STATUS_APPROVE_VIE),
+                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_SETTING),
+                            IsRead = false,
+                            CreatedDate = DateTime.Now
+                        };
+                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                        if (!string.IsNullOrEmpty(connectionId))
+                        {
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                        }
                     }
-                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
-                    var notfication = new Notification()
-                    {
-                        ReceiverId = tutor.Id,
-                        Message = _resourceService.GetString(SD.CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION, SD.STATUS_APPROVE_VIE),
-                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_SETTING),
-                        IsRead = false,
-                        CreatedDate = DateTime.Now
-                    };
-                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                    if (!string.IsNullOrEmpty(connectionId))
-                    {
-                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
-                    }
+                    
                     _response.Result = _mapper.Map<CurriculumDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -403,7 +404,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     await _curriculumRepository.UpdateAsync(model);
                     // Send mail
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    if (System.IO.File.Exists(templatePath))
+                    if (System.IO.File.Exists(templatePath) && tutor != null)
                     {
                         var subject = "Yêu cập nhật khung chương trình của bạn đã bị từ chối!";
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
@@ -419,23 +420,22 @@ namespace AutismEduConnectSystem.Controllers.v1
                             Subject = subject,
                             Message = htmlMessage
                         }, queueName);
+                        var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                        var notfication = new Notification()
+                        {
+                            ReceiverId = tutor.Id,
+                            Message = _resourceService.GetString(SD.CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION, SD.STATUS_REJECT_VIE),
+                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_SETTING),
+                            IsRead = false,
+                            CreatedDate = DateTime.Now
+                        };
+                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                        if (!string.IsNullOrEmpty(connectionId))
+                        {
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                        }
+                        model.Submitter.User = tutor;
                     }
-
-                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
-                    var notfication = new Notification()
-                    {
-                        ReceiverId = tutor.Id,
-                        Message = _resourceService.GetString(SD.CHANGE_STATUS_CURRICULUM_TUTOR_NOTIFICATION, SD.STATUS_REJECT_VIE),
-                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_SETTING),
-                        IsRead = false,
-                        CreatedDate = DateTime.Now
-                    };
-                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                    if (!string.IsNullOrEmpty(connectionId))
-                    {
-                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
-                    }
-                    model.Submitter.User = tutor;
                     _response.Result = _mapper.Map<CurriculumDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;

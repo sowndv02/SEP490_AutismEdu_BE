@@ -319,22 +319,24 @@ namespace AutismEduConnectSystem.Controllers.v1
                     await _workExperienceRepository.DeactivatePreviousVersionsAsync(model.OriginalId);
                     await _workExperienceRepository.UpdateAsync(model);
 
-                    // Send mail
-                    var subject = "Yêu cập nhật kinh nghiệm làm việc của bạn đã được chấp nhận!";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", tutor.FullName)
-                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
-                        .Replace("@Model.IsApproved", Status.APPROVE.ToString());
-                    _messageBus.SendMessage(new EmailLogger()
+                    if (System.IO.File.Exists(templatePath) && tutor != null)
                     {
-                        UserId = tutor.Id,
-                        Email = tutor.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
-
+                        // Send mail
+                        var subject = "Yêu cập nhật kinh nghiệm làm việc của bạn đã được chấp nhận!";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", tutor.FullName)
+                            .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
+                            .Replace("@Model.IsApproved", Status.APPROVE.ToString());
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = tutor.Id,
+                            Email = tutor.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
 
                     _response.Result = _mapper.Map<WorkExperienceDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -350,22 +352,26 @@ namespace AutismEduConnectSystem.Controllers.v1
                     model.ApprovedId = userId;
                     await _workExperienceRepository.UpdateAsync(model);
 
-                    //Send mail
-                    var subject = "Yêu cập nhật kinh nghiệm làm việc của bạn đã bị từ chối!";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", tutor.FullName)
-                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
-                        .Replace("@Model.IsApproved", Status.REJECT.ToString())
-                        .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
-                    _messageBus.SendMessage(new EmailLogger()
+                    if (System.IO.File.Exists(templatePath) && tutor != null)
                     {
-                        UserId = tutor.Id,
-                        Email = tutor.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                        //Send mail
+                        var subject = "Yêu cập nhật kinh nghiệm làm việc của bạn đã bị từ chối!";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", tutor.FullName)
+                            .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
+                            .Replace("@Model.IsApproved", Status.REJECT.ToString())
+                            .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = tutor.Id,
+                            Email = tutor.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
+                        
 
                     _response.Result = _mapper.Map<WorkExperienceDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
