@@ -102,7 +102,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 model.ExerciseTypeName = updateDTO.ExerciseTypeName;
                 model.UpdatedDate = DateTime.Now;
                 var exerciseType = await _exerciseTypeRepository.UpdateAsync(model);
-                exerciseType.Exercises = await _exerciseRepository.GetAllNotPagingAsync(x => x.ExerciseTypeId == )
                 _response.Result = _mapper.Map<ExerciseTypeDTO>(exerciseType);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
@@ -110,7 +109,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating Child information for ParentId: {ParentId}, ChildId: {ChildId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value, updateDTO.ChildId);
+                _logger.LogError(ex, "Error occurred while updating Child information for ParentId: {ParentId}, ChildId: {ChildId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value, updateDTO.Id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -203,11 +202,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-                var responseResult = _mapper.Map<List<ExerciseTypeDetailDTO>>(list);
-                foreach (var item in responseResult)
-                {
-                    item.TotalExercises = await _exerciseRepository.CountByExerciseType(item.Id);
-                }
+                var responseResult = _mapper.Map<List<ExerciseTypeDTO>>(list);
                 _response.Result = responseResult;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
