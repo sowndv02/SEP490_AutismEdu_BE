@@ -2,7 +2,6 @@
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
@@ -12,7 +11,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
-using static AutismEduConnectSystem.SD;
 
 namespace AutismEduConnectSystem.Controllers.v1
 {
@@ -121,7 +119,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         }
 
         [HttpGet]
-        [Authorize(Roles = $"{SD.TUTOR_ROLE},${SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> GetAllExerciseTypesAsync([FromQuery] string? search, string? isHide = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageSize = 0, int pageNumber = 1)
         {
             try
@@ -196,9 +194,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                     list = resultPaging;
                     totalCount = countPaging;
                 }
-                else if (pageSize == 0) 
+                else if (pageSize == 0)
                 {
-                    var (count, result) = await _exerciseTypeRepository.GetAllNotPagingAsync(filter, includeProperties: null, null,orderBy: orderByQuery, isDesc: isDesc);
+                    var (count, result) = await _exerciseTypeRepository.GetAllNotPagingAsync(filter, includeProperties: null, null, orderBy: orderByQuery, isDesc: isDesc);
                     list = result;
                     totalCount = count;
                 }
@@ -206,7 +204,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 var responseResult = _mapper.Map<List<ExerciseTypeDetailDTO>>(list);
-                foreach (var item in responseResult) 
+                foreach (var item in responseResult)
                 {
                     item.TotalExercises = await _exerciseRepository.CountByExerciseType(item.Id);
                 }
@@ -329,7 +327,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                
+
                 var newExerciseType = _mapper.Map<ExerciseType>(exerciseTypeCreateDTO);
                 newExerciseType.SubmitterId = userId;
                 await _exerciseTypeRepository.CreateAsync(newExerciseType);
@@ -372,7 +370,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                if(id <= 0)
+                if (id <= 0)
                 {
                     _logger.LogWarning("id invalid.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
