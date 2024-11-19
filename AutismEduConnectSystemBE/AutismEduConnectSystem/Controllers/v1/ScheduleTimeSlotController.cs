@@ -61,15 +61,23 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
+                if (timeSlotId <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", timeSlotId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 var model = await _scheduleTimeSlotRepository.GetAsync(x => x.Id == timeSlotId);
 
                 if (model == null)
                 {
                     _logger.LogWarning("Schedule time slot with Id: {TimeSlotId} not found", timeSlotId);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 model.UpdatedDate = DateTime.Now;
                 model.IsDeleted = true;
@@ -125,7 +133,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+                if (studentProfileId <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", studentProfileId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTOs);
                 List<ScheduleTimeSlot> createdTimeSlots = new();
                 foreach (var slot in scheduleTimeSlot)
@@ -238,7 +253,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+                if (updateDTO.TimeSlotId <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", updateDTO.TimeSlotId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 var oldTimeSlot = await _scheduleTimeSlotRepository.GetAsync(x => x.Id == updateDTO.TimeSlotId);
                 if (oldTimeSlot == null)
                 {

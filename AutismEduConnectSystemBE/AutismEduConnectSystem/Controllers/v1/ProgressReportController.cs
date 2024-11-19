@@ -80,7 +80,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
 
-                if (createDTO == null)
+                if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Received null ProgressReportCreateDTO. Bad request.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -253,15 +253,23 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 var progressReport = await _progressReportRepository.GetAsync(x => x.Id == Id, true, "AssessmentResults");
 
                 if (progressReport == null)
                 {
                     _logger.LogWarning("Progress report with Id: {ProgressReportId} not found.", Id);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.PROGRESS_REPORT) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
@@ -310,7 +318,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-
+                if (updateDTO.Id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", updateDTO.Id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 if (updateDTO == null)
                 {
                     _logger.LogWarning("Received null updateDTO for ProgressReport update.");
@@ -325,10 +340,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (model == null)
                 {
                     _logger.LogWarning("Progress report with Id: {ProgressReportId} not found.", updateDTO.Id);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.PROGRESS_REPORT) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 if (model.CreatedDate.AddHours(48) <= DateTime.Now)
