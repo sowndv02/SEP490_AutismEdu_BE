@@ -434,7 +434,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                         {
                             await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
                         }
-                        model.Submitter.User = tutor;
                     }
                     _response.Result = _mapper.Map<CurriculumDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;

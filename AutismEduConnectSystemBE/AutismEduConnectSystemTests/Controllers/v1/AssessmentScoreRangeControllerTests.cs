@@ -1,23 +1,23 @@
-﻿using AutismEduConnectSystem.Mapper;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+﻿using System.Linq.Expressions;
+using System.Net;
+using System.Security.Claims;
+using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
+using AutismEduConnectSystem.Models.DTOs;
+using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutoMapper;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Net;
-using System.Security.Claims;
 using Xunit;
-using FluentAssertions;
-using AutismEduConnectSystem.Models.DTOs;
-using Microsoft.AspNetCore.Http.HttpResults;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
-using System.Linq.Expressions;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -44,18 +44,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 _assessmentScoreRangeRepositoryMock.Object,
                 _mapper,
                 _loggerMock.Object,
-                _resourceServiceMock.Object);
+                _resourceServiceMock.Object
+            );
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
             };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
         }
-
 
         [Fact]
         public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
@@ -70,17 +70,15 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
-
 
             var requestPayload = new AssessmentScoreRangeCreateDTO
             {
                 Description = "Sample Description",
-                MinScore = 10, 
-                MaxScore = 20
+                MinScore = 10,
+                MaxScore = 20,
             };
-
 
             // Act
             var result = await _controller.CreateAsync(requestPayload);
@@ -97,7 +95,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
 
-
         [Fact]
         public async Task CreateAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
         {
@@ -107,10 +104,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Returns("Forbiden access.");
 
             // Simulate a user with no valid claims (unauthorized)
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, "testUserId")
-            };
+            var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, "testUserId") };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
@@ -119,9 +113,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Description = "Sample Description",
                 MinScore = 10,
-                MaxScore = 20
+                MaxScore = 20,
             };
-
 
             // Act
             var result = await _controller.CreateAsync(requestPayload);
@@ -146,7 +139,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 MinScore = 10,
                 MaxScore = 20,
-                Description = "Valid Range"
+                Description = "Valid Range",
             };
             var model = new AssessmentScoreRange
             {
@@ -155,7 +148,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 MaxScore = 20,
                 Description = "Valid Range",
                 CreateBy = "testUserId",
-                CreateDate = DateTime.Now
+                CreateDate = DateTime.Now,
             };
             _assessmentScoreRangeRepositoryMock
                 .Setup(repo => repo.CreateAsync(It.IsAny<AssessmentScoreRange>()))
@@ -172,7 +165,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeTrue();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-            _assessmentScoreRangeRepositoryMock.Verify(repo => repo.CreateAsync(It.IsAny<AssessmentScoreRange>()), Times.Once);
+            _assessmentScoreRangeRepositoryMock.Verify(
+                repo => repo.CreateAsync(It.IsAny<AssessmentScoreRange>()),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -195,19 +191,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Khoảng điểm đánh giá không hợp lệ.");
         }
 
-
         [Fact]
         public async Task CreateAsync_MinScoreGreaterThanMaxScore_ReturnsBadRequest()
         {
             // Arrange
             _resourceServiceMock
-               .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCORE_RANGE))
-               .Returns("Khoảng điểm không hợp lệ.");
+                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCORE_RANGE))
+                .Returns("Khoảng điểm không hợp lệ.");
             var createDTO = new AssessmentScoreRangeCreateDTO
             {
                 MinScore = 30,
                 MaxScore = 20,
-                Description = "Invalid Range"
+                Description = "Invalid Range",
             };
 
             // Act
@@ -224,7 +219,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Khoảng điểm không hợp lệ.");
         }
 
-
         [Fact]
         public async Task CreateAsync_ExceptionThrown_ReturnsInternalServerError()
         {
@@ -234,7 +228,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 MinScore = 10,
                 MaxScore = 20,
-                Description = "Valid Range"
+                Description = "Valid Range",
             };
             _assessmentScoreRangeRepositoryMock
                 .Setup(repo => repo.CreateAsync(It.IsAny<AssessmentScoreRange>()))
@@ -243,13 +237,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
                 .Returns("Lỗi hệ thống. Vui lòng thử lại sau!");
 
-
             var result = await _controller.CreateAsync(createDTO);
             var internalServerErrorResult = result.Result as ObjectResult;
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var apiResponse = internalServerErrorResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
@@ -262,15 +257,39 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var scoreRanges = new List<AssessmentScoreRange>
-        {
-            new AssessmentScoreRange { Id = 1, Description = "Range 1", MinScore = 10, MaxScore = 20 },
-            new AssessmentScoreRange { Id = 2, Description = "Range 2", MinScore = 21, MaxScore = 30 }
-        };
+            {
+                new AssessmentScoreRange
+                {
+                    Id = 1,
+                    Description = "Range 1",
+                    MinScore = 10,
+                    MaxScore = 20,
+                },
+                new AssessmentScoreRange
+                {
+                    Id = 2,
+                    Description = "Range 2",
+                    MinScore = 21,
+                    MaxScore = 30,
+                },
+            };
             var scoreRangeDTOs = new List<AssessmentScoreRangeDTO>
-        {
-            new AssessmentScoreRangeDTO { Id = 1, Description = "Range 1", MinScore = 10, MaxScore = 20 },
-            new AssessmentScoreRangeDTO { Id = 2, Description = "Range 2", MinScore = 21, MaxScore = 30 }
-        };
+            {
+                new AssessmentScoreRangeDTO
+                {
+                    Id = 1,
+                    Description = "Range 1",
+                    MinScore = 10,
+                    MaxScore = 20,
+                },
+                new AssessmentScoreRangeDTO
+                {
+                    Id = 2,
+                    Description = "Range 2",
+                    MinScore = 21,
+                    MaxScore = 30,
+                },
+            };
 
             var resultMock = (totalCount: scoreRanges.Count, list: scoreRanges);
 
@@ -290,7 +309,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.IsSuccess.Should().BeTrue();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             // Assert
-            _assessmentScoreRangeRepositoryMock.Verify(repo => repo.GetAllNotPagingAsync(null, null, null, null, true), Times.Once);
+            _assessmentScoreRangeRepositoryMock.Verify(
+                repo => repo.GetAllNotPagingAsync(null, null, null, null, true),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -313,14 +335,19 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var apiResponse = internalServerErrorResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.ErrorMessages.First().Should().Be("Lỗi hệ thống. Vui lòng thử lại sau!");
             // Assert
-            _assessmentScoreRangeRepositoryMock.Verify(repo => repo.GetAllNotPagingAsync(null, null, null, null, true), Times.Once);
+            _assessmentScoreRangeRepositoryMock.Verify(
+                repo => repo.GetAllNotPagingAsync(null, null, null, null, true),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -332,7 +359,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = 1,
                 MinScore = 10,
                 MaxScore = 20,
-                Description = "Updated Description"
+                Description = "Updated Description",
             };
 
             var existingModel = new AssessmentScoreRange
@@ -340,7 +367,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = 1,
                 MinScore = 5,
                 MaxScore = 15,
-                Description = "Old Description"
+                Description = "Old Description",
             };
 
             var updatedModel = new AssessmentScoreRange
@@ -348,7 +375,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = 1,
                 MinScore = 10,
                 MaxScore = 20,
-                Description = "Updated Description"
+                Description = "Updated Description",
             };
 
             var updatedDTO = new AssessmentScoreRangeDTO
@@ -356,13 +383,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = 1,
                 MinScore = 10,
                 MaxScore = 20,
-                Description = "Updated Description"
+                Description = "Updated Description",
             };
 
-            _assessmentScoreRangeRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(), true, null, null))
+            _assessmentScoreRangeRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(existingModel);
 
-            _assessmentScoreRangeRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<AssessmentScoreRange>()))
+            _assessmentScoreRangeRepositoryMock
+                .Setup(repo => repo.UpdateAsync(It.IsAny<AssessmentScoreRange>()))
                 .ReturnsAsync(updatedModel);
 
             // Act
@@ -376,11 +412,15 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var response = okResult.Value as APIResponse;
             response.Should().NotBeNull();
             response!.IsSuccess.Should().BeTrue();
-            response.Result.Should().BeEquivalentTo(updatedDTO, options => options.Excluding(r => r.CreateDate));
+            response
+                .Result.Should()
+                .BeEquivalentTo(updatedDTO, options => options.Excluding(r => r.CreateDate));
 
-            _assessmentScoreRangeRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<AssessmentScoreRange>()), Times.Once);
+            _assessmentScoreRangeRepositoryMock.Verify(
+                repo => repo.UpdateAsync(It.IsAny<AssessmentScoreRange>()),
+                Times.Once
+            );
         }
-
 
         [Fact]
         public async Task UpdateAsync_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
@@ -392,7 +432,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Id = 1,
                 MinScore = 10,
-                MaxScore = 20
+                MaxScore = 20,
             };
 
             // Act
@@ -428,7 +468,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
-
         [Fact]
         public async Task UpdateAsync_ShouldReturnBadRequest_WhenAssessmentScoreRangeNotFound()
         {
@@ -438,10 +477,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Id = 1,
                 MinScore = 10,
-                MaxScore = 20
+                MaxScore = 20,
             };
 
-            _assessmentScoreRangeRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(), true, null, null))
+            _assessmentScoreRangeRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync((AssessmentScoreRange)null);
 
             // Act
@@ -457,9 +504,17 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response!.IsSuccess.Should().BeFalse();
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-            _assessmentScoreRangeRepositoryMock.Verify(repo => repo.GetAsync(It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(), true, null, null), Times.Once);
+            _assessmentScoreRangeRepositoryMock.Verify(
+                repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(),
+                        true,
+                        null,
+                        null
+                    ),
+                Times.Once
+            );
         }
-
 
         [Fact]
         public async Task UpdateAsync_ShouldReturnForbidden_WhenUserIsNotInRequiredRole()
@@ -469,7 +524,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "1"),
-                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // A role that is neither STAFF_ROLE nor MANAGER_ROLE
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // A role that is neither STAFF_ROLE nor MANAGER_ROLE
+                ,
             };
             var identity = new ClaimsIdentity(claims, "TestAuth");
             var user = new ClaimsPrincipal(identity);
@@ -483,7 +542,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = 1,
                 MinScore = 10,
                 MaxScore = 20,
-                Description = "Updated Description"
+                Description = "Updated Description",
             };
 
             // Act
@@ -501,7 +560,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.ErrorMessages.First().Should().Be("Không có quyền truy cập vào tài nguyên!");
         }
 
-
         [Fact]
         public async Task DeleteAsync_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
         {
@@ -509,7 +567,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _resourceServiceMock
                 .Setup(service => service.GetString(SD.UNAUTHORIZED_MESSAGE))
                 .Returns("Người dùng cần đăng nhập!");
-            _controller.ControllerContext.HttpContext = new DefaultHttpContext(); 
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
 
             // Act
             var result = await _controller.DeleteAsync(1);
@@ -526,7 +584,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.ErrorMessages.First().Should().Be("Người dùng cần đăng nhập!");
         }
 
-
         [Fact]
         public async Task DeleteAsync_ShouldReturnForbidden_WhenUserIsNotInRequiredRole()
         {
@@ -534,7 +591,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "1"),
-                new Claim(ClaimTypes.Role, "OTHER_ROLE") // Not STAFF_ROLE or MANAGER_ROLE
+                new Claim(
+                    ClaimTypes.Role,
+                    "OTHER_ROLE"
+                ) // Not STAFF_ROLE or MANAGER_ROLE
+                ,
             };
             var identity = new ClaimsIdentity(claims, "TestAuth");
             var user = new ClaimsPrincipal(identity);
@@ -564,7 +625,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "1"),
-                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
             };
             var identity = new ClaimsIdentity(claims, "TestAuth");
             var user = new ClaimsPrincipal(identity);
@@ -594,15 +655,25 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "1"),
-                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
             };
             var identity = new ClaimsIdentity(claims, "TestAuth");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
             _resourceServiceMock
-                .Setup(service => service.GetString(SD.NOT_FOUND_MESSAGE, SD.ASSESSMENT_SCORE_RANGE))
+                .Setup(service =>
+                    service.GetString(SD.NOT_FOUND_MESSAGE, SD.ASSESSMENT_SCORE_RANGE)
+                )
                 .Returns("Không tìm thấy Khoảng điểm đánh giá");
-            _assessmentScoreRangeRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(), true, null, null))
+            _assessmentScoreRangeRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync((AssessmentScoreRange)null);
 
             // Act
@@ -627,7 +698,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "1"),
-                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
             };
             var identity = new ClaimsIdentity(claims, "TestAuth");
             var user = new ClaimsPrincipal(identity);
@@ -635,10 +706,19 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             var assessmentScoreRange = new AssessmentScoreRange { Id = 1 };
 
-            _assessmentScoreRangeRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(), true, null, null))
+            _assessmentScoreRangeRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(assessmentScoreRange);
 
-            _assessmentScoreRangeRepositoryMock.Setup(repo => repo.RemoveAsync(It.IsAny<AssessmentScoreRange>()))
+            _assessmentScoreRangeRepositoryMock
+                .Setup(repo => repo.RemoveAsync(It.IsAny<AssessmentScoreRange>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -662,7 +742,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "1"),
-                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
             };
             var identity = new ClaimsIdentity(claims, "TestAuth");
             var user = new ClaimsPrincipal(identity);
@@ -670,7 +750,15 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _resourceServiceMock
                 .Setup(service => service.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
                 .Returns("Lỗi hệ thống. Vui lòng thử lại sau!");
-            _assessmentScoreRangeRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(), true, null, null))
+            _assessmentScoreRangeRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<AssessmentScoreRange, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ThrowsAsync(new Exception("Database error"));
 
             // Act
@@ -687,7 +775,5 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
             response.ErrorMessages.First().Should().Be("Lỗi hệ thống. Vui lòng thử lại sau!");
         }
-
-
     }
 }

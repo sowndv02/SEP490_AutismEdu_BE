@@ -1,4 +1,7 @@
-﻿using AutismEduConnectSystem.Mapper;
+﻿using System.Linq.Expressions;
+using System.Net;
+using System.Security.Claims;
+using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
@@ -16,9 +19,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Linq.Expressions;
-using System.Net;
-using System.Security.Claims;
 using Xunit;
 using static AutismEduConnectSystem.SD;
 
@@ -26,7 +26,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
     public class CertificateControllerTests
     {
-
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<ICertificateRepository> _certificateRepositoryMock;
         private readonly Mock<ICertificateMediaRepository> _certificateMediaRepositoryMock;
@@ -65,24 +64,24 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             });
             _mapper = config.CreateMapper();
             _controller = new CertificateController(
-               _userRepositoryMock.Object,
-               _certificateRepositoryMock.Object,
-               _loggerMock.Object,
-               _blobStorageRepositoryMock.Object,
-               _mapper,
-               _configurationMock.Object,
-               _certificateMediaRepositoryMock.Object,
-               _curriculumRepositoryMock.Object,
-               _workExperienceRepositoryMock.Object,
-               _messageBusMock.Object,
-               _resourceServiceMock.Object,
-               _hubContextMock.Object,
-               _notificationRepositoryMock.Object
-           );
+                _userRepositoryMock.Object,
+                _certificateRepositoryMock.Object,
+                _loggerMock.Object,
+                _blobStorageRepositoryMock.Object,
+                _mapper,
+                _configurationMock.Object,
+                _certificateMediaRepositoryMock.Object,
+                _curriculumRepositoryMock.Object,
+                _workExperienceRepositoryMock.Object,
+                _messageBusMock.Object,
+                _resourceServiceMock.Object,
+                _hubContextMock.Object,
+                _notificationRepositoryMock.Object
+            );
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
@@ -93,18 +92,29 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         public async Task GetByIdAsync_ReturnsOk_WhenCertificateExistsAndUserIsTutorRole()
         {
             // Arrange
-            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-            {
-                    new Claim(ClaimTypes.NameIdentifier, "12345"),
-                    new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
-            }));
+            var claimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(
+                    new Claim[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, "12345"),
+                        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+                    }
+                )
+            );
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
             var certificate = new Certificate { Id = 1, IsDeleted = false };
             _certificateRepositoryMock
-                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        "CertificateMedias",
+                        null
+                    )
+                )
                 .ReturnsAsync(certificate);
             // Act
             var result = await _controller.GetByIdAsync(1);
@@ -121,25 +131,35 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             ((CertificateDTO)apiResponse.Result).Id.Should().Be(1);
         }
 
-
         [Fact]
         public async Task GetByIdAsync_ReturnsOk_WhenCertificateExistsAndUserIsStaff()
         {
             // Arrange
-            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, "12345"),
-                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
-            }));
+            var claimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(
+                    new Claim[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, "12345"),
+                        new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+                    }
+                )
+            );
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
             var certificate = new Certificate { Id = 1, IsDeleted = false };
             _certificateRepositoryMock
-                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        "CertificateMedias",
+                        null
+                    )
+                )
                 .ReturnsAsync(certificate);
-            
+
             // Act
             var result = await _controller.GetByIdAsync(1);
             var okResult = result.Result as OkObjectResult;
@@ -159,17 +179,28 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         public async Task GetByIdAsync_ReturnsNotFound_WhenCertificateDoesNotExist_UserIsTutorRole()
         {
             // Arrange
-            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, "12345"),
-                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
-            }));
+            var claimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(
+                    new Claim[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, "12345"),
+                        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+                    }
+                )
+            );
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
             _certificateRepositoryMock
-                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        "CertificateMedias",
+                        null
+                    )
+                )
                 .ReturnsAsync((Certificate)null);
             _resourceServiceMock
                 .Setup(r => r.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE))
@@ -193,17 +224,28 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         public async Task GetByIdAsync_ReturnsNotFound_WhenCertificateDoesNotExist_UserIsStaffRole()
         {
             // Arrange
-            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, "12345"),
-                new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
-            }));
+            var claimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(
+                    new Claim[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, "12345"),
+                        new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+                    }
+                )
+            );
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
             _certificateRepositoryMock
-                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        "CertificateMedias",
+                        null
+                    )
+                )
                 .ReturnsAsync((Certificate)null);
             _resourceServiceMock
                 .Setup(r => r.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE))
@@ -223,19 +265,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Certificate not found.");
         }
 
-
         [Fact]
         public async Task GetByIdAsync_ReturnsBadRequest_WhenIdIsZero_UserIsTutor()
         {
             // Arrange
-            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, "12345"),
-                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
-            }));
+            var claimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(
+                    new Claim[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, "12345"),
+                        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+                    }
+                )
+            );
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
             _resourceServiceMock
                 .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID))
@@ -264,14 +309,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Returns("Forbidden access.");
 
             // Simulate a user with no valid claims (unauthorized)
-            var claims = new List<Claim>
-             {
-                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
-             };
+            var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, "testUserId") };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
-
 
             // Act
             var result = await _controller.GetByIdAsync(1);
@@ -288,7 +329,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Forbidden access.");
         }
 
-
         [Fact]
         public async Task GetByIdAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
         {
@@ -302,7 +342,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
 
             // Act
@@ -320,7 +360,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
 
-
         [Fact]
         public async Task UpdateStatusRequest_ReturnsUnauthorized_WhenUserIsUnauthorized()
         {
@@ -334,10 +373,15 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
             var certificateId = 1;
-            var changeStatusDTO = new ChangeStatusDTO { Id = certificateId, StatusChange = (int)Status.REJECT, RejectionReason = "Invalid document" };
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = certificateId,
+                StatusChange = (int)Status.REJECT,
+                RejectionReason = "Invalid document",
+            };
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
@@ -354,7 +398,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
 
-
         [Fact]
         public async Task DeleteAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
         {
@@ -364,10 +407,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Returns("Forbidden access.");
 
             // Simulate a user with no valid claims (unauthorized)
-            var claims = new List<Claim>
-             {
-                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
-             };
+            var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, "testUserId") };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
@@ -401,7 +441,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
             var certificateId = 1;
 
@@ -420,7 +460,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
 
-
         [Fact]
         public async Task UpdateStatusRequest_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
         {
@@ -430,18 +469,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Returns("Forbidden access.");
 
             // Simulate a user with no valid claims (unauthorized)
-            var claims = new List<Claim>
-             {
-                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
-             };
+            var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, "testUserId") };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
             var certificateId = 1;
-            var changeStatusDTO = new ChangeStatusDTO { Id = certificateId, StatusChange = (int)Status.REJECT, RejectionReason = "Invalid document" };
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = certificateId,
+                StatusChange = (int)Status.REJECT,
+                RejectionReason = "Invalid document",
+            };
 
             // Act
-            var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO); 
+            var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
             var unauthorizedResult = result.Result as ObjectResult;
 
             // Assert
@@ -468,7 +509,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
 
             // Act
@@ -486,7 +527,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
 
-
         [Fact]
         public async Task CreateAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
         {
@@ -496,24 +536,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Returns("Forbidden access.");
 
             // Simulate a user with no valid claims (unauthorized)
-            var claims = new List<Claim>
-             {
-                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
-             };
+            var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, "testUserId") };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
-
-
 
             var requestPayload = new CertificateCreateDTO
             {
                 CertificateName = "FPT University",
                 IssuingInstitution = "FPTU",
                 IssuingDate = DateTime.Now,
-                Medias = new List<IFormFile>()
+                Medias = new List<IFormFile>(),
             };
-
 
             // Act
             var result = await _controller.CreateAsync(requestPayload);
@@ -543,18 +577,16 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
 
-
-            var requestPayload = new CertificateCreateDTO 
-            { 
-                CertificateName = "FPT University", 
-                IssuingInstitution = "FPTU", 
-                IssuingDate = DateTime.Now, 
-                Medias = new List<IFormFile>() 
+            var requestPayload = new CertificateCreateDTO
+            {
+                CertificateName = "FPT University",
+                IssuingInstitution = "FPTU",
+                IssuingDate = DateTime.Now,
+                Medias = new List<IFormFile>(),
             };
-
 
             // Act
             var result = await _controller.CreateAsync(requestPayload);
@@ -579,37 +611,33 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var certificateId = 1;
             var createDTO = new CertificateCreateDTO
             {
-                Medias = new List<IFormFile> { Mock.Of<IFormFile>() }
+                Medias = new List<IFormFile> { Mock.Of<IFormFile>() },
             };
 
-            var newCertificate = new Certificate
-            {
-                Id = certificateId,
-                SubmitterId = userId
-            };
+            var newCertificate = new Certificate { Id = certificateId, SubmitterId = userId };
 
-            var certificateDTO = new CertificateDTO
-            {
-                Id = certificateId
-            };
+            var certificateDTO = new CertificateDTO { Id = certificateId };
 
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
 
             // Mocking required dependencies
-            _certificateRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<Certificate>())).ReturnsAsync(newCertificate);
-            _blobStorageRepositoryMock.Setup(b => b.Upload(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<bool>()))
+            _certificateRepositoryMock
+                .Setup(r => r.CreateAsync(It.IsAny<Certificate>()))
+                .ReturnsAsync(newCertificate);
+            _blobStorageRepositoryMock
+                .Setup(b => b.Upload(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<bool>()))
                 .ReturnsAsync("http://blobstorage.url/path/to/media");
             _certificateMediaRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<CertificateMedia>()));
 
             // Setting up the User property in the ControllerContext
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Setting up ModelState as valid
@@ -629,8 +657,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.Result.Should().NotBeNull();
 
             // Verify that media files were uploaded and saved
-            _blobStorageRepositoryMock.Verify(b => b.Upload(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Once);
-            _certificateMediaRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<CertificateMedia>()), Times.Once);
+            _blobStorageRepositoryMock.Verify(
+                b => b.Upload(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<bool>()),
+                Times.Once
+            );
+            _certificateMediaRepositoryMock.Verify(
+                r => r.CreateAsync(It.IsAny<CertificateMedia>()),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -640,19 +674,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Arrange
             var createDTO = new CertificateCreateDTO();
             _controller.ModelState.AddModelError("From", "Required");
-            _resourceServiceMock.Setup(r => r.GetString(BAD_REQUEST_MESSAGE, CERTIFICATE))
-                    .Returns("Your expected error message here");
+            _resourceServiceMock
+                .Setup(r => r.GetString(BAD_REQUEST_MESSAGE, CERTIFICATE))
+                .Returns("Your expected error message here");
             // Act
             var result = await _controller.CreateAsync(createDTO);
             var badRequestResult = result.Result as BadRequestObjectResult;
@@ -665,11 +700,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.ErrorMessages.First().Should().Be("Your expected error message here");
-
         }
-
-
-
 
         [Fact]
         public async Task CreateAsync_ReturnsInternalServerError_WhenExceptionThrown()
@@ -678,13 +709,13 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userId = "testUserId";
             var createDTO = new CertificateCreateDTO
             {
-                Medias = new List<IFormFile> { Mock.Of<IFormFile>() }
+                Medias = new List<IFormFile> { Mock.Of<IFormFile>() },
             };
 
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
 
@@ -694,7 +725,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             _resourceServiceMock
@@ -707,7 +738,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var apiResponse = internalServerErrorResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
@@ -715,25 +748,62 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Lỗi hệ thống. Vui lòng thử lại sau!");
         }
 
-
         [Fact]
         public async Task UpdateStatusRequest_ApproveStatus_Succeeds()
         {
             // Arrange
             var certificateId = 1;
             var userId = "user123";
-            var certificate = new Certificate { Id = certificateId, SubmitterId = userId, RequestStatus = Status.PENDING, CertificateName = "Test Certificate" };
-            var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
-            var changeStatusDTO = new ChangeStatusDTO { Id = certificateId, StatusChange = (int)Status.APPROVE };
+            var certificate = new Certificate
+            {
+                Id = certificateId,
+                SubmitterId = userId,
+                RequestStatus = Status.PENDING,
+                CertificateName = "Test Certificate",
+            };
+            var tutor = new ApplicationUser
+            {
+                Id = userId,
+                FullName = "Tutor Name",
+                Email = "tutor@example.com",
+            };
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = certificateId,
+                StatusChange = (int)Status.APPROVE,
+            };
 
-            _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+            _certificateRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        "CertificateMedias",
+                        null
+                    )
+                )
                 .ReturnsAsync(certificate);
-            _userRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+            _userRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(tutor);
-            _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
+            _resourceServiceMock
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Error message");
             // Set user identity
-            var userClaims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, STAFF_ROLE) };
-            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
+            };
+            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
+                new ClaimsIdentity(userClaims, "mock")
+            );
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
@@ -755,17 +825,50 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             var certificateId = 1;
             var userId = "user123";
-            var certificate = new Certificate { Id = certificateId, SubmitterId = userId, RequestStatus = Status.PENDING, CertificateName = "Test Certificate" };
-            var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
-            var changeStatusDTO = new ChangeStatusDTO { Id = certificateId, StatusChange = (int)Status.REJECT, RejectionReason = "Invalid document" };
+            var certificate = new Certificate
+            {
+                Id = certificateId,
+                SubmitterId = userId,
+                RequestStatus = Status.PENDING,
+                CertificateName = "Test Certificate",
+            };
+            var tutor = new ApplicationUser
+            {
+                Id = userId,
+                FullName = "Tutor Name",
+                Email = "tutor@example.com",
+            };
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = certificateId,
+                StatusChange = (int)Status.REJECT,
+                RejectionReason = "Invalid document",
+            };
 
-            _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+            _certificateRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        "CertificateMedias",
+                        null
+                    )
+                )
                 .ReturnsAsync(certificate);
-            _userRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
+            _userRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
                 .ReturnsAsync(tutor);
             // Set user identity
-            var userClaims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, STAFF_ROLE) };
-            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
+            };
+            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
+                new ClaimsIdentity(userClaims, "mock")
+            );
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
@@ -781,17 +884,30 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.Result.Should().NotBeNull();
         }
 
-
         [Fact]
         public async Task UpdateStatusRequest_ReturnsBadRequest_IfCertificateIsNull()
         {
             // Arrange
             var certificateId = 1;
-            var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.APPROVE };
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = 1,
+                StatusChange = (int)Status.APPROVE,
+            };
 
-            _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+            _certificateRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        "CertificateMedias",
+                        null
+                    )
+                )
                 .ReturnsAsync((Certificate)null);
-            _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
+            _resourceServiceMock
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Error message");
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
@@ -805,7 +921,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.Should().Contain("Error message");
         }
 
-
         [Fact]
         public async Task UpdateStatusRequest_ReturnsBadRequest_IfCertificateStatusIsNotPending()
         {
@@ -814,9 +929,19 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var certificate = new Certificate { Id = 1, RequestStatus = Status.APPROVE };
             var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.REJECT };
 
-            _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+            _certificateRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        "CertificateMedias",
+                        null
+                    )
+                )
                 .ReturnsAsync(certificate);
-            _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
+            _resourceServiceMock
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Error message");
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
@@ -835,9 +960,23 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var certificateId = 1;
-            var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.APPROVE };
-            _resourceServiceMock.Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE)).Returns("Internal server error");
-            _certificateRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, "CertificateMedias", null))
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = 1,
+                StatusChange = (int)Status.APPROVE,
+            };
+            _resourceServiceMock
+                .Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("Internal server error");
+            _certificateRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        "CertificateMedias",
+                        null
+                    )
+                )
                 .ThrowsAsync(new Exception("Database error"));
 
             // Act
@@ -846,14 +985,15 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var apiResponse = internalServerErrorResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.ErrorMessages.Should().Contain("Internal server error");
         }
-
 
         [Fact]
         public async Task DeleteAsync_ReturnsNoContent_WhenCertificateIsDeletedSuccessfully()
@@ -862,20 +1002,40 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
             // Arrange
             int certificateId = 1;
-            var certificate = new Certificate { Id = certificateId, SubmitterId = userId, IsDeleted = false };
-            var newCertificate = new Certificate { Id = certificateId, SubmitterId = userId, IsDeleted = true };
-            _certificateRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, null, null))
+            var certificate = new Certificate
+            {
+                Id = certificateId,
+                SubmitterId = userId,
+                IsDeleted = false,
+            };
+            var newCertificate = new Certificate
+            {
+                Id = certificateId,
+                SubmitterId = userId,
+                IsDeleted = true,
+            };
+            _certificateRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(certificate);
-            _certificateRepositoryMock.Setup(repo => repo.UpdateAsync(certificate)).ReturnsAsync(newCertificate);
+            _certificateRepositoryMock
+                .Setup(repo => repo.UpdateAsync(certificate))
+                .ReturnsAsync(newCertificate);
 
             // Act
             var result = await _controller.DeleteAsync(certificateId);
@@ -890,29 +1050,37 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
 
-
         [Fact]
         public async Task DeleteAsync_ReturnsBadRequest_WhenCertificateNotFound()
         {
-
             var userId = "testUserId";
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Arrange
             int certificateId = 1;
 
-            _certificateRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, null, null))
+            _certificateRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync((Certificate)null);
-            _resourceServiceMock.Setup(r => r.GetString(NOT_FOUND_MESSAGE, CERTIFICATE)).Returns("Certificate not found.");
+            _resourceServiceMock
+                .Setup(r => r.GetString(NOT_FOUND_MESSAGE, CERTIFICATE))
+                .Returns("Certificate not found.");
             // Act
             var result = await _controller.DeleteAsync(certificateId);
             var badRequestResult = result.Result as ObjectResult;
@@ -933,18 +1101,28 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
             // Arrange
             int certificateId = 1;
-            _certificateRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Certificate, bool>>>(), false, null, null))
+            _certificateRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ThrowsAsync(new Exception("Database error"));
-            _resourceServiceMock.Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE)).Returns("Internal server error");
+            _resourceServiceMock
+                .Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("Internal server error");
 
             // Act
             var result = await _controller.DeleteAsync(certificateId);
@@ -952,7 +1130,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
             var apiResponse = internalServerErrorResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
@@ -966,16 +1146,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Arrange
-            _resourceServiceMock.Setup(r => r.GetString(BAD_REQUEST_MESSAGE, ID)).Returns("Invalid ID.");
+            _resourceServiceMock
+                .Setup(r => r.GetString(BAD_REQUEST_MESSAGE, ID))
+                .Returns("Invalid ID.");
 
             // Act
             var result = await _controller.DeleteAsync(0);
@@ -997,12 +1179,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
             var certificates = new List<Certificate>
             {
@@ -1014,37 +1196,68 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     IsDeleted = false,
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now,
-                    Submitter = new Tutor() {TutorId = "testUserId"},
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (1, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Sample", STATUS_PENDING, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "Sample",
+                STATUS_PENDING,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1057,15 +1270,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Pending"
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once);
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Pending"
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -1075,12 +1293,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
             var certificates = new List<Certificate>
             {
@@ -1092,37 +1310,68 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     IsDeleted = false,
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-1),
-                    Submitter = new Tutor() {TutorId = "testUserId"},
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    Submitter = new Tutor() { TutorId = "testUserId" },
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (1, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Sample", STATUS_REJECT, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "Sample",
+                STATUS_REJECT,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1135,17 +1384,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Reject"
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once);
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Reject"
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            );
         }
-
 
         [Fact]
         public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderDESCAndStatusIsAll()
@@ -1154,12 +1407,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -1173,7 +1426,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor() { TutorId = "testUserId" },
-                    CertificateMedias = new List<CertificateMedia>() // Initialize as empty list
+                    CertificateMedias =
+                        new List<CertificateMedia>() // Initialize as empty list
+                    ,
                 },
                 new Certificate
                 {
@@ -1184,49 +1439,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor() { TutorId = "testUserId" },
-                    CertificateMedias = new List<CertificateMedia>() // Initialize as empty list
-                }
+                    CertificateMedias =
+                        new List<CertificateMedia>() // Initialize as empty list
+                    ,
+                },
             };
 
             var pagedResult = (2, certificates); // Assuming 2 items for the test
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(
-                    It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(
-                    It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<Expression<Func<Curriculum, object>>>(),
-                    It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(
-                    It.IsAny<Expression<Func<WorkExperience, bool>>>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<Expression<Func<WorkExperience, object>>>(),
-                    It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Sample", STATUS_ALL, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "Sample",
+                STATUS_ALL,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1242,17 +1517,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Total.Should().Be(2);
 
             // Verify that the repository was called with the correct parameters
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    // Since status is "All", we expect the filter to only include IsDeleted = false and match the search term
-                    filter.Compile().Invoke(certificates[0]) &&
-                    filter.Compile().Invoke(certificates[1])
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once);
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            // Since status is "All", we expect the filter to only include IsDeleted = false and match the search term
+                            filter.Compile().Invoke(certificates[0])
+                            && filter.Compile().Invoke(certificates[1])
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -1262,12 +1542,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
             var certificates = new List<Certificate>
             {
@@ -1280,36 +1560,67 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-3),
                     Submitter = new Tutor() { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (1, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Approved", STATUS_APPROVE, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "Approved",
+                STATUS_APPROVE,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1322,17 +1633,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Approve"
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once);
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Approve"
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            );
         }
-
 
         [Fact]
         public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithSearchOrderASCAndStatusIsReject()
@@ -1341,12 +1656,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
             var certificates = new List<Certificate>
             {
@@ -1359,36 +1674,67 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-5),
                     Submitter = new Tutor() { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (1, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Rejected", STATUS_REJECT, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "Rejected",
+                STATUS_REJECT,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1401,15 +1747,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Reject"
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Reject"
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending
         }
 
         [Fact]
@@ -1419,12 +1770,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
             var certificates = new List<Certificate>
             {
@@ -1437,36 +1788,67 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-7),
                     Submitter = new Tutor() { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (1, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Approved", STATUS_APPROVE, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "Approved",
+                STATUS_APPROVE,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1479,15 +1861,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Approve"
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Approve"
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending
         }
 
         [Fact]
@@ -1497,12 +1884,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
             var certificates = new List<Certificate>
             {
@@ -1515,36 +1902,67 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-5),
                     Submitter = new Tutor() { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (1, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Pending", STATUS_PENDING, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "Pending",
+                STATUS_PENDING,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1557,15 +1975,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Pending"
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Pending"
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending
         }
 
         [Fact]
@@ -1575,12 +1998,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -1594,7 +2017,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-10),
                     Submitter = new Tutor() { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -1605,36 +2028,67 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-5),
                     Submitter = new Tutor() { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (2, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("All", STATUS_ALL, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "All",
+                STATUS_ALL,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1647,17 +2101,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) // Applies the filter to check it includes "testUserId" and no specific status
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Applies the filter to check it includes "testUserId" and no specific status
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending
         }
-
 
         [Fact]
         public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsTutorWithNoSearchOrderDESCAndStatusIsPending()
@@ -1666,12 +2124,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -1685,7 +2143,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -1696,36 +2154,67 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (2, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync(null, STATUS_PENDING, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                null,
+                STATUS_PENDING,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1738,14 +2227,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First())), // Filter should include only certificates with "testUserId" and status "Pending"
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter should include only certificates with "testUserId" and status "Pending"
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending
         }
 
         [Fact]
@@ -1755,12 +2250,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -1774,7 +2269,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -1785,7 +2280,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -1796,36 +2291,67 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-3),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync(null, STATUS_ALL, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                null,
+                STATUS_ALL,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1838,13 +2364,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter => filter == null || filter.Compile().Invoke(certificates.First())), // Ensures no specific filtering is applied
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter == null || filter.Compile().Invoke(certificates.First())
+                        ), // Ensures no specific filtering is applied
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending
         }
 
         [Fact]
@@ -1854,12 +2387,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -1873,7 +2406,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -1884,37 +2417,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First())), // Filter for REJECT status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter for REJECT status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync(null, STATUS_REJECT, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                null,
+                STATUS_REJECT,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -1927,14 +2492,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First())), // Filter checks for REJECT status only
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter checks for REJECT status only
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending
         }
 
         [Fact]
@@ -1944,12 +2515,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -1963,7 +2534,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -1974,37 +2545,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First())), // Filter for APPROVE status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter for APPROVE status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync(null, STATUS_APPROVE, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                null,
+                STATUS_APPROVE,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2017,16 +2620,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First())), // Filter checks for APPROVE status only
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter checks for APPROVE status only
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending
         }
-
 
         [Fact]
         public async Task GetAllAsync_ShouldReturnRejectedSortedResults_WhenUserIsTutorWithNoSearchOrderASCAndStatusIsReject()
@@ -2035,12 +2643,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -2054,7 +2662,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(1), // Newer certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2065,37 +2673,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(2), // Older certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First())), // Filter for REJECT status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter for REJECT status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync(null, STATUS_REJECT, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                null,
+                STATUS_REJECT,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2108,14 +2748,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First())), // Filter checks for REJECT status only
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter checks for REJECT status only
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
 
         [Fact]
@@ -2125,12 +2771,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -2144,7 +2790,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(1), // Newer certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2155,37 +2801,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(2), // Older certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First())), // Filter for PENDING status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter for PENDING status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync(null, STATUS_PENDING, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                null,
+                STATUS_PENDING,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2198,16 +2876,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First())), // Filter checks for PENDING status only
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter checks for PENDING status only
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
-
 
         [Fact]
         public async Task GetAllAsync_ShouldReturnAllSortedResults_WhenUserIsTutorWithNoSearchOrderASCAndStatusIsAll()
@@ -2216,12 +2899,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -2235,7 +2918,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(1), // Newer certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2246,37 +2929,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(2), // Older certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First())), // No specific status filter for "All"
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // No specific status filter for "All"
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync(null, STATUS_ALL, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                null,
+                STATUS_ALL,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2289,16 +3004,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First())), // No filter, for all statuses
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // No filter, for all statuses
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
-
 
         [Fact]
         public async Task GetAllAsync_ShouldReturnApprovedSortedResults_WhenUserIsTutorWithNoSearchOrderASCAndStatusIsApprove()
@@ -2307,12 +3027,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             var certificates = new List<Certificate>
@@ -2326,7 +3046,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(1), // Newer approved certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2337,37 +3057,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(2), // Older approved certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First())), // Filter by APPROVE status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter by APPROVE status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync(null, STATUS_APPROVE, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                null,
+                STATUS_APPROVE,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2380,15 +3132,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are approved
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are approved
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
 
         [Fact]
@@ -2398,12 +3156,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data
@@ -2418,7 +3176,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(2), // Older rejected certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2429,40 +3187,72 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(1), // Newer rejected certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return the filtered and sorted data
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Filter by REJECT status
-                    ),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last()) // Filter by REJECT status
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Rejected", STATUS_REJECT, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "Rejected",
+                STATUS_REJECT,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2475,17 +3265,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are rejected
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are rejected
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
-
 
         [Fact]
         public async Task GetAllAsync_ShouldReturnPendingSortedResults_WhenUserIsStaffWithSearchOrderASCAndStatusIsPending()
@@ -2494,12 +3289,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data
@@ -2514,7 +3309,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(2), // Older pending certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2525,40 +3320,72 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(1), // Newer pending certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return the filtered and sorted data
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Filter by PENDING status
-                    ),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last()) // Filter by PENDING status
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Pending", STATUS_PENDING, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "Pending",
+                STATUS_PENDING,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2571,15 +3398,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are pending
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are pending
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
 
         [Fact]
@@ -2589,12 +3422,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data
@@ -2609,7 +3442,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(2), // Older approved certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2620,40 +3453,72 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(1), // Newer approved certificate
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return the filtered and sorted data
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Filter by APPROVE status
-                    ),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last()) // Filter by APPROVE status
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Approved", STATUS_APPROVE, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "Approved",
+                STATUS_APPROVE,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2666,15 +3531,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are approved
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are approved
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
 
         [Fact]
@@ -2684,12 +3555,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for All status (no filter on status)
@@ -2704,7 +3575,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE, // Approved status
                     CreatedDate = DateTime.Now.AddDays(2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2715,38 +3586,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING, // Pending status
                     CreatedDate = DateTime.Now.AddDays(1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return the data for 'All' status (no filtering on status)
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(), // No status filter
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(), // No status filter
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Certificate", STATUS_ALL, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "Certificate",
+                STATUS_ALL,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2759,14 +3661,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.IsAny<Expression<Func<Certificate, bool>>>(), // Ensure no status filter
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(), // Ensure no status filter
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
+
         [Fact]
         public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsStaffWithSearchOrderDESCAndStatusIsPending()
         {
@@ -2774,12 +3682,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for PENDING status
@@ -2794,7 +3702,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING, // Pending status
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2805,41 +3713,72 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING, // Pending status
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return the data for 'PENDING' status
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First()) &&
-                        filter.Compile().Invoke(certificates.Last()) // Ensure filtering by PENDING status
-                    ),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last()) // Ensure filtering by PENDING status
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Pending", STATUS_PENDING, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "Pending",
+                STATUS_PENDING,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2852,16 +3791,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) &&
-                    filter.Compile().Invoke(certificates.Last()) // Ensure filtering by PENDING status
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last()) // Ensure filtering by PENDING status
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending (CreatedDate)
         }
 
         [Fact]
@@ -2871,12 +3815,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for ALL status (no filtering on status)
@@ -2891,7 +3835,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING, // Any status
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2902,7 +3846,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE, // Any status
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -2913,38 +3857,69 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT, // Any status
                     CreatedDate = DateTime.Now.AddDays(-3),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return the data for ALL status
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter on status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter on status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Certificate", STATUS_ALL, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "Certificate",
+                STATUS_ALL,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -2957,14 +3932,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.Pagination.Should().NotBeNull();
 
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter on status (All)
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter on status (All)
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending (CreatedDate)
         }
+
         [Fact]
         public async Task GetAllAsync_ShouldReturnFilteredAndSortedResults_WhenUserIsStaffWithSearchOrderDESCAndStatusIsReject()
         {
@@ -2972,12 +3953,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for REJECT status
@@ -2992,7 +3973,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3003,40 +3984,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return the data for REJECT status
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First()) // Ensures filter applies status REJECT
-                    ),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Ensures filter applies status REJECT
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Rejected", STATUS_REJECT, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "Rejected",
+                STATUS_REJECT,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -3050,15 +4062,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with correct filter for REJECT status
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) // Ensure filter applies status REJECT
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Ensure filter applies status REJECT
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending (CreatedDate)
         }
 
         [Fact]
@@ -3068,12 +4085,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for APPROVE status
@@ -3088,7 +4105,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3099,40 +4116,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return the data for APPROVE status
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                        filter.Compile().Invoke(certificates.First()) // Ensures filter applies status APPROVE
-                    ),
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending (CreatedDate)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Ensures filter applies status APPROVE
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending (CreatedDate)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("Approved", STATUS_APPROVE, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "Approved",
+                STATUS_APPROVE,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -3146,15 +4194,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with correct filter for APPROVE status
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) // Ensure filter applies status APPROVE
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First()) // Ensure filter applies status APPROVE
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending (CreatedDate)
         }
 
         [Fact]
@@ -3164,12 +4217,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for All status (No filtering on status)
@@ -3184,7 +4237,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3195,34 +4248,59 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return all certificates without filtering on status (All status)
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Certificate, bool>>>(), // No filtering on status (All status)
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending by CreatedDate (ASC)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(), // No filtering on status (All status)
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending by CreatedDate (ASC)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
@@ -3240,13 +4318,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with no filter (All status) and sorted by CreatedDate ASC
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter applied for status
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter applied for status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
 
         [Fact]
@@ -3256,12 +4339,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for APPROVE status (filtering only certificates with status APPROVE)
@@ -3276,7 +4359,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3287,38 +4370,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return only APPROVE status certificates and sorted by CreatedDate in ascending order
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for APPROVE status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending by CreatedDate (ASC)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter for APPROVE status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending by CreatedDate (ASC)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("", STATUS_APPROVE, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "",
+                STATUS_APPROVE,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -3332,16 +4448,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with APPROVE status filter and sorted by CreatedDate ASC
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only APPROVE status certificates
-                    filter.Compile().Invoke(certificates.Last())
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && // Apply filter to check it includes only APPROVE status certificates
+                            filter.Compile().Invoke(certificates.Last())
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
 
         [Fact]
@@ -3351,12 +4473,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for REJECT status (filtering only certificates with status REJECT)
@@ -3371,7 +4493,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3382,38 +4504,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return only REJECT status certificates and sorted by CreatedDate in ascending order
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for REJECT status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending by CreatedDate (ASC)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter for REJECT status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending by CreatedDate (ASC)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("", STATUS_REJECT, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "",
+                STATUS_REJECT,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -3427,17 +4582,24 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with REJECT status filter and sorted by CreatedDate ASC
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only REJECT status certificates
-                    filter.Compile().Invoke(certificates.Last())
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && // Apply filter to check it includes only REJECT status certificates
+                            filter.Compile().Invoke(certificates.Last())
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
+
         [Fact]
         public async Task GetAllAsync_ShouldReturnPendingCertificatesSortedByCreatedDateASC_WhenUserIsStaffWithNoSearchAndStatusIsPending()
         {
@@ -3445,12 +4607,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for PENDING status (filtering only certificates with status PENDING)
@@ -3465,7 +4627,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3476,38 +4638,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return only PENDING status certificates and sorted by CreatedDate in ascending order
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for PENDING status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    false)) // Sort ascending by CreatedDate (ASC)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter for PENDING status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    )
+                ) // Sort ascending by CreatedDate (ASC)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("", STATUS_PENDING, CREATED_DATE, ORDER_ASC, 1);
+            var result = await _controller.GetAllAsync(
+                "",
+                STATUS_PENDING,
+                CREATED_DATE,
+                ORDER_ASC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -3521,16 +4716,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with PENDING status filter and sorted by CreatedDate ASC
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only PENDING status certificates
-                    filter.Compile().Invoke(certificates.Last())
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                false), Times.Once); // Ensure sorting is ascending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && // Apply filter to check it includes only PENDING status certificates
+                            filter.Compile().Invoke(certificates.Last())
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        false
+                    ),
+                Times.Once
+            ); // Ensure sorting is ascending (CreatedDate)
         }
 
         [Fact]
@@ -3540,12 +4741,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for REJECTED status (filtering only certificates with status REJECT)
@@ -3560,7 +4761,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3571,38 +4772,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.REJECT,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return only REJECT status certificates and sorted by CreatedDate in descending order
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for REJECT status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending by CreatedDate (DESC)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter for REJECT status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending by CreatedDate (DESC)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("", STATUS_REJECT, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "",
+                STATUS_REJECT,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -3616,16 +4850,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with REJECT status filter and sorted by CreatedDate DESC
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only REJECT status certificates
-                    filter.Compile().Invoke(certificates.Last())
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && // Apply filter to check it includes only REJECT status certificates
+                            filter.Compile().Invoke(certificates.Last())
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending (CreatedDate)
         }
 
         [Fact]
@@ -3635,12 +4875,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for PENDING status (filtering only certificates with status PENDING)
@@ -3655,7 +4895,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3666,38 +4906,71 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return only PENDING status certificates and sorted by CreatedDate in descending order
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First())), // Filter for PENDING status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending by CreatedDate (DESC)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                        ), // Filter for PENDING status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending by CreatedDate (DESC)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("", STATUS_PENDING, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "",
+                STATUS_PENDING,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -3711,16 +4984,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with PENDING status filter and sorted by CreatedDate DESC
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && // Apply filter to check it includes only PENDING status certificates
-                    filter.Compile().Invoke(certificates.Last())
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && // Apply filter to check it includes only PENDING status certificates
+                            filter.Compile().Invoke(certificates.Last())
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending (CreatedDate)
         }
 
         [Fact]
@@ -3730,12 +5009,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for ALL status (no filter applied)
@@ -3750,7 +5029,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.PENDING, // This status could vary as we are fetching "All"
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId1" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3761,34 +5040,62 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE, // This status could vary as we are fetching "All"
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId2" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return all certificates sorted by CreatedDate in descending order
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last())), // No specific filter as status is ALL
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending by CreatedDate (DESC)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last())
+                        ), // No specific filter as status is ALL
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending by CreatedDate (DESC)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
@@ -3806,18 +5113,23 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with no specific filter (All status) and sorted by CreatedDate DESC
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && // No specific status filter as status is All
-                    filter.Compile().Invoke(certificates.Last())
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && // No specific status filter as status is All
+                            filter.Compile().Invoke(certificates.Last())
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending (CreatedDate)
         }
-
 
         [Fact]
         public async Task GetAllAsync_ShouldReturnApprovedCertificatesSortedByCreatedDateDESC_WhenUserIsStaffWithNoSearchAndStatusIsApprove()
@@ -3826,12 +5138,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testStaffId"),
-                new Claim(ClaimTypes.Role, STAFF_ROLE)
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
 
             // Sample data for APPROVE status (only fetching APPROVE status)
@@ -3846,7 +5158,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-2),
                     Submitter = new Tutor { TutorId = "testUserId1" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
                 },
                 new Certificate
                 {
@@ -3857,38 +5169,72 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     RequestStatus = Status.APPROVE,
                     CreatedDate = DateTime.Now.AddDays(-1),
                     Submitter = new Tutor { TutorId = "testUserId2" },
-                    CertificateMedias = It.IsAny<List<CertificateMedia>>()
-                }
+                    CertificateMedias = It.IsAny<List<CertificateMedia>>(),
+                },
             };
 
             var pagedResult = (certificates.Count, certificates);
 
             // Mock repository to return certificates with APPROVE status sorted by CreatedDate in descending order
             _certificateRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.Is<Expression<Func<Certificate, bool>>>(filter => filter.Compile().Invoke(certificates.First()) && filter.Compile().Invoke(certificates.Last())), // Filter for APPROVE status
-                    "Submitter,CertificateMedias",
-                    5, // PageSize
-                    1, // PageNumber
-                    It.IsAny<Expression<Func<Certificate, object>>>(),
-                    true)) // Sort descending by CreatedDate (DESC)
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && filter.Compile().Invoke(certificates.Last())
+                        ), // Filter for APPROVE status
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    )
+                ) // Sort descending by CreatedDate (DESC)
                 .ReturnsAsync(pagedResult);
 
             // Mock user repository to return a staff user
             _userRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Curriculum, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum>()));
 
             _workExperienceRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<WorkExperience, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<WorkExperience, object>>>(), It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((1, new List<WorkExperience>()));
 
             // Act
-            var result = await _controller.GetAllAsync("", STATUS_APPROVE, CREATED_DATE, ORDER_DESC, 1);
+            var result = await _controller.GetAllAsync(
+                "",
+                STATUS_APPROVE,
+                CREATED_DATE,
+                ORDER_DESC,
+                1
+            );
             var okObjectResult = result.Result as OkObjectResult;
 
             // Assert
@@ -3902,19 +5248,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Pagination.Should().NotBeNull();
 
             // Verify that the GetAllAsync method was called with APPROVE status and sorted by CreatedDate DESC
-            _certificateRepositoryMock.Verify(repo => repo.GetAllAsync(
-                It.Is<Expression<Func<Certificate, bool>>>(filter =>
-                    filter.Compile().Invoke(certificates.First()) && // Only APPROVE status certificates
-                    filter.Compile().Invoke(certificates.Last())
-                ),
-                "Submitter,CertificateMedias",
-                5, // PageSize
-                1, // PageNumber
-                It.IsAny<Expression<Func<Certificate, object>>>(),
-                true), Times.Once); // Ensure sorting is descending (CreatedDate)
+            _certificateRepositoryMock.Verify(
+                repo =>
+                    repo.GetAllAsync(
+                        It.Is<Expression<Func<Certificate, bool>>>(filter =>
+                            filter.Compile().Invoke(certificates.First())
+                            && // Only APPROVE status certificates
+                            filter.Compile().Invoke(certificates.Last())
+                        ),
+                        "Submitter,CertificateMedias",
+                        5, // PageSize
+                        1, // PageNumber
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        true
+                    ),
+                Times.Once
+            ); // Ensure sorting is descending (CreatedDate)
         }
-
-
     }
-
 }

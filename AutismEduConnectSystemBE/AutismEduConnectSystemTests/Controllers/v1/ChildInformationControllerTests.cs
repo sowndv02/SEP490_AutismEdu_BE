@@ -1,28 +1,28 @@
-﻿using Xunit;
-using AutismEduConnectSystem.Controllers.v1;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Net;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using AutismEduConnectSystem.Repository.IRepository;
-using AutoMapper;
-using Moq;
-using Microsoft.Extensions.Logging;
-using AutismEduConnectSystem.Services.IServices;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
+using AutismEduConnectSystem.Controllers.v1;
 using AutismEduConnectSystem.Mapper;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using FluentAssertions;
 using AutismEduConnectSystem.Models.DTOs;
-using System.Linq.Expressions;
+using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using Google.Apis.Util;
+using AutismEduConnectSystem.Repository.IRepository;
+using AutismEduConnectSystem.Services.IServices;
+using AutoMapper;
 using Azure;
+using FluentAssertions;
+using Google.Apis.Util;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -64,13 +64,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, SD.PARENT_ROLE)
+                new Claim(ClaimTypes.Role, SD.PARENT_ROLE),
             };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
-
-
         }
 
         [Fact]
@@ -82,7 +80,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Name = "Dao Van Son",
                 isMale = true,
-                BirthDate = DateTime.Parse("2002/04/04")
+                BirthDate = DateTime.Parse("2002/04/04"),
             };
 
             _childInfoRepositoryMock
@@ -92,13 +90,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
                 .Returns("Lỗi hệ thống. Vui lòng thử lại sau!");
 
-
             var result = await _controller.CreateAsync(createDTO);
             var internalServerErrorResult = result.Result as ObjectResult;
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var apiResponse = internalServerErrorResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
@@ -115,10 +114,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Returns("Forbiden access.");
 
             // Simulate a user with no valid claims (unauthorized)
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, "testUserId")
-            };
+            var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, "testUserId") };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
@@ -127,9 +123,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Name = "Dao Van Son",
                 isMale = true,
-                BirthDate = DateTime.Parse("2002/04/04")
+                BirthDate = DateTime.Parse("2002/04/04"),
             };
-
 
             // Act
             var result = await _controller.CreateAsync(requestPayload);
@@ -159,17 +154,15 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
-
 
             var requestPayload = new ChildInformationCreateDTO
             {
                 Name = "Dao Van Son",
                 isMale = true,
-                BirthDate = DateTime.Parse("2002/04/04")
+                BirthDate = DateTime.Parse("2002/04/04"),
             };
-
 
             // Act
             var result = await _controller.CreateAsync(requestPayload);
@@ -194,7 +187,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Name = "Dao Van Son",
                 isMale = true,
-                BirthDate = DateTime.Parse("2002/04/04")
+                BirthDate = DateTime.Parse("2002/04/04"),
             };
             var childInfo = new ChildInformation
             {
@@ -202,21 +195,29 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Name = "Dao Van Son",
                 isMale = true,
                 ParentId = "testUserId",
-                BirthDate = DateTime.Parse("2002/04/04")
+                BirthDate = DateTime.Parse("2002/04/04"),
             };
             var childInfoDto = new ChildInformationDTO
             {
                 Id = 1,
                 Name = "Dao Van Son",
                 Gender = "Male",
-                BirthDate = DateTime.Parse("2002/04/04")
+                BirthDate = DateTime.Parse("2002/04/04"),
             };
 
-
-            _childInfoRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), false, null, null))
+            _childInfoRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync((ChildInformation)null);
 
-            _childInfoRepositoryMock.Setup(repo => repo.CreateAsync(It.IsAny<ChildInformation>()))
+            _childInfoRepositoryMock
+                .Setup(repo => repo.CreateAsync(It.IsAny<ChildInformation>()))
                 .ReturnsAsync(childInfo);
 
             // Act
@@ -232,7 +233,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.IsSuccess.Should().BeTrue();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.Created);
             apiResponse.Result.Should().NotBeNull();
-
         }
 
         [Fact]
@@ -240,14 +240,27 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var dto = new ChildInformationCreateDTO { Name = "Test Child" };
-            var existingChild = new ChildInformation { Id = 1, Name = "Test Child", ParentId = "test-user-id" };
+            var existingChild = new ChildInformation
+            {
+                Id = 1,
+                Name = "Test Child",
+                ParentId = "test-user-id",
+            };
 
-            _childInfoRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), false, null, null))
+            _childInfoRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(existingChild);
 
             _resourceServiceMock
-               .Setup(r => r.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME))
-               .Returns("Tên trẻ đã tồn tại.");
+                .Setup(r => r.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME))
+                .Returns("Tên trẻ đã tồn tại.");
             // Act
             var result = await _controller.CreateAsync(dto);
 
@@ -268,16 +281,29 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var dto = new ChildInformationCreateDTO { Name = "Test Child" };
-            var existingChild = new ChildInformation { Id = 1, Name = "Test Child", ParentId = "test-user-id" };
+            var existingChild = new ChildInformation
+            {
+                Id = 1,
+                Name = "Test Child",
+                ParentId = "test-user-id",
+            };
 
-            _childInfoRepositoryMock.Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), false, null, null))
+            _childInfoRepositoryMock
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync((ChildInformation)null);
 
             _controller.ModelState.AddModelError("Name", "Required");
 
             _resourceServiceMock
-               .Setup(r => r.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME))
-               .Returns("Tên trẻ đã tồn tại.");
+                .Setup(r => r.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME))
+                .Returns("Tên trẻ đã tồn tại.");
             // Act
             var result = await _controller.CreateAsync(dto);
 
@@ -290,7 +316,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            apiResponse.ErrorMessages.Should().Contain(_resourceServiceMock.Object.GetString(SD.BAD_REQUEST_MESSAGE, SD.CHILD_INFO));
+            apiResponse
+                .ErrorMessages.Should()
+                .Contain(
+                    _resourceServiceMock.Object.GetString(SD.BAD_REQUEST_MESSAGE, SD.CHILD_INFO)
+                );
         }
 
         [Fact]
@@ -300,21 +330,46 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var parentId = "test-parent-id";
             var childInfoList = new List<ChildInformation>
             {
-                new ChildInformation { Id = 1, Name = "Child 1", ParentId = parentId },
-                new ChildInformation { Id = 2, Name = "Child 2", ParentId = parentId }
+                new ChildInformation
+                {
+                    Id = 1,
+                    Name = "Child 1",
+                    ParentId = parentId,
+                },
+                new ChildInformation
+                {
+                    Id = 2,
+                    Name = "Child 2",
+                    ParentId = parentId,
+                },
             };
             var childInfoDTOList = new List<ChildInformationDTO>
             {
-                new ChildInformationDTO { Id = 1, Name = "Child 1", Gender = "Female" },
-                new ChildInformationDTO { Id = 2, Name = "Child 2", Gender = "Female" }
+                new ChildInformationDTO
+                {
+                    Id = 1,
+                    Name = "Child 1",
+                    Gender = "Female",
+                },
+                new ChildInformationDTO
+                {
+                    Id = 2,
+                    Name = "Child 2",
+                    Gender = "Female",
+                },
             };
 
             _childInfoRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(
-                    It.IsAny<Expression<Func<ChildInformation, bool>>>(),
-                    "Parent", null, null, true))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        "Parent",
+                        null,
+                        null,
+                        true
+                    )
+                )
                 .ReturnsAsync((2, childInfoList)); // Mocking method result
-
 
             // Act
             var result = await _controller.GetChildInfo(parentId);
@@ -357,9 +412,15 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var parentId = "test-parent-id";
 
             _childInfoRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(
-                    It.IsAny<Expression<Func<ChildInformation, bool>>>(),
-                    "Parent", null, null, true))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        "Parent",
+                        null,
+                        null,
+                        true
+                    )
+                )
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
@@ -368,7 +429,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Assert
             var internalServerErrorResult = result.Result as ObjectResult;
             internalServerErrorResult.Should().NotBeNull();
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var apiResponse = internalServerErrorResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
@@ -383,21 +446,46 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var parentId = "test-parent-id";
             var childInfoList = new List<ChildInformation>
             {
-                new ChildInformation { Id = 1, Name = "Child 1", ParentId = parentId },
-                new ChildInformation { Id = 2, Name = "Child 2", ParentId = parentId }
+                new ChildInformation
+                {
+                    Id = 1,
+                    Name = "Child 1",
+                    ParentId = parentId,
+                },
+                new ChildInformation
+                {
+                    Id = 2,
+                    Name = "Child 2",
+                    ParentId = parentId,
+                },
             };
             var childInfoDTOList = new List<ChildInformationDTO>
             {
-                new ChildInformationDTO { Id = 1, Name = "Child 1", Gender = "Female" },
-                new ChildInformationDTO { Id = 2, Name = "Child 2", Gender = "Female" }
+                new ChildInformationDTO
+                {
+                    Id = 1,
+                    Name = "Child 1",
+                    Gender = "Female",
+                },
+                new ChildInformationDTO
+                {
+                    Id = 2,
+                    Name = "Child 2",
+                    Gender = "Female",
+                },
             };
 
             _childInfoRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(
-                    It.IsAny<Expression<Func<ChildInformation, bool>>>(),
-                    "Parent", null, null, true))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        "Parent",
+                        null,
+                        null,
+                        true
+                    )
+                )
                 .ReturnsAsync((2, childInfoList)); // Mocking method result
-
 
             // Act
             var result = await _controller.GetChildInfo(string.Empty);
@@ -437,7 +525,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
-                new Claim(ClaimTypes.Role, "SomeOtherRole") // No Parent Role
+                new Claim(
+                    ClaimTypes.Role,
+                    "SomeOtherRole"
+                ) // No Parent Role
+                ,
             };
             var identity = new ClaimsIdentity(userClaims);
             var principal = new ClaimsPrincipal(identity);
@@ -470,7 +562,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         }
 
-
         [Fact]
         public async Task UpdateAsync_ChildNotFound_ReturnsNotFound()
         {
@@ -478,7 +569,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var updateDTO = new ChildInformationUpdateDTO { ChildId = 1 };
 
             _childInfoRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync((ChildInformation)null); // Mock no child found
 
             // Act
@@ -494,16 +592,45 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         public async Task UpdateAsync_ChildNameDuplicated_ReturnsBadRequest()
         {
             // Arrange
-            var updateDTO = new ChildInformationUpdateDTO { Name = "ExistingChildName", ChildId = 1 };
+            var updateDTO = new ChildInformationUpdateDTO
+            {
+                Name = "ExistingChildName",
+                ChildId = 1,
+            };
 
-            var existingChild = new ChildInformation { Name = "ExistingChildName", ParentId = "test-user-id" };
+            var existingChild = new ChildInformation
+            {
+                Name = "ExistingChildName",
+                ParentId = "test-user-id",
+            };
 
             _childInfoRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
-                .ReturnsAsync(new ChildInformation { Id = 1, ParentId = "test-user-id", Name = "OldName" }); // Existing child
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
+                .ReturnsAsync(
+                    new ChildInformation
+                    {
+                        Id = 1,
+                        ParentId = "test-user-id",
+                        Name = "OldName",
+                    }
+                ); // Existing child
 
             _childInfoRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), false, null, null))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(existingChild); // Duplicate name
 
             // Act
@@ -522,7 +649,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var updateDTO = new ChildInformationUpdateDTO { ChildId = 1 };
 
             _childInfoRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
@@ -531,31 +665,55 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Assert
             var internalServerErrorResult = result.Result as ObjectResult;
             internalServerErrorResult.Should().NotBeNull();
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
         }
-
 
         [Fact]
         public async Task UpdateAsync_Case1_NameProvided_StudentProfileExists_BirthDateNotProvided_MediaNotProvided()
         {
             // Arrange
             var updateDTO = new ChildInformationUpdateDTO { Name = "John Doe", ChildId = 1 };
-            var child = new ChildInformation { Id = updateDTO.ChildId, ParentId = "parent123", Name = "Old Name" };
+            var child = new ChildInformation
+            {
+                Id = updateDTO.ChildId,
+                ParentId = "parent123",
+                Name = "Old Name",
+            };
             var studentProfile = new StudentProfile { ChildId = child.Id };
 
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync(studentProfile);
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert
-            _studentProfileRepositoryMock.Verify(x => x.UpdateAsync(It.Is<StudentProfile>(
-                sp => sp.StudentCode == "JD" + studentProfile.ChildId
-            )), Times.Once);
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<ChildInformation>()), Times.Once);
-            
+            _studentProfileRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<StudentProfile>(sp => sp.StudentCode == "JD" + studentProfile.ChildId)
+                    ),
+                Times.Once
+            );
+            _childInfoRepositoryMock.Verify(
+                x => x.UpdateAsync(It.IsAny<ChildInformation>()),
+                Times.Once
+            );
+
             // Assert
             var okResult = result.Result as ObjectResult;
             okResult.Should().NotBeNull();
@@ -575,35 +733,66 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Name = "John Doe",
                 ChildId = 1,
-                Media = Mock.Of<IFormFile>() // Mocking the media file
+                Media =
+                    Mock.Of<IFormFile>() // Mocking the media file
+                ,
             };
-            var child = new ChildInformation { Id = updateDTO.ChildId, ParentId = "parent123", Name = "Old Name" };
+            var child = new ChildInformation
+            {
+                Id = updateDTO.ChildId,
+                ParentId = "parent123",
+                Name = "Old Name",
+            };
             var studentProfile = new StudentProfile { ChildId = child.Id };
 
             // Mocking the repository calls
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync(studentProfile);
 
             // Mocking the Blob Storage upload
-            _blobStorageRepositoryMock.Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false)).ReturnsAsync("http://image.url/test.jpg");
+            _blobStorageRepositoryMock
+                .Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false))
+                .ReturnsAsync("http://image.url/test.jpg");
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that media is uploaded
-            _blobStorageRepositoryMock.Verify(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false), Times.Once);
+            _blobStorageRepositoryMock.Verify(
+                x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false),
+                Times.Once
+            );
 
             // Assert the child information is updated with the media URL
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(
-                c => c.ImageUrlPath == "http://image.url/test.jpg"
-            )), Times.Once);
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c => c.ImageUrlPath == "http://image.url/test.jpg")
+                    ),
+                Times.Once
+            );
 
             // Assert the Student Profile is updated with the correct StudentCode
-            _studentProfileRepositoryMock.Verify(x => x.UpdateAsync(It.Is<StudentProfile>(
-                sp => sp.StudentCode == "JD" + studentProfile.ChildId
-            )), Times.Once);
+            _studentProfileRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<StudentProfile>(sp => sp.StudentCode == "JD" + studentProfile.ChildId)
+                    ),
+                Times.Once
+            );
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -615,7 +804,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.IsSuccess.Should().BeTrue();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
-
 
         [Fact]
         public async Task UpdateAsync_Case4_NameProvided_StudentProfileExists_BirthDateProvided_MediaProvided()
@@ -626,7 +814,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Name = "John Doe",
                 ChildId = 1,
                 BirthDate = new DateTime(2010, 5, 1), // Example BirthDate
-                Media = Mock.Of<IFormFile>() // Mocking the media file
+                Media =
+                    Mock.Of<IFormFile>() // Mocking the media file
+                ,
             };
 
             var child = new ChildInformation
@@ -634,39 +824,68 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = updateDTO.ChildId,
                 ParentId = "parent123",
                 Name = "Old Name",
-                BirthDate = new DateTime(2005, 5, 5) // Existing BirthDate
+                BirthDate = new DateTime(
+                    2005,
+                    5,
+                    5
+                ) // Existing BirthDate
+                ,
             };
 
-            var studentProfile = new StudentProfile
-            {
-                ChildId = child.Id
-            };
+            var studentProfile = new StudentProfile { ChildId = child.Id };
 
             // Mocking the repository calls
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync(studentProfile);
 
             // Mocking the Blob Storage upload
-            _blobStorageRepositoryMock.Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false)).ReturnsAsync("http://image.url/test.jpg");
+            _blobStorageRepositoryMock
+                .Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false))
+                .ReturnsAsync("http://image.url/test.jpg");
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that media is uploaded
-            _blobStorageRepositoryMock.Verify(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false), Times.Once);
+            _blobStorageRepositoryMock.Verify(
+                x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false),
+                Times.Once
+            );
 
             // Assert the child information is updated with the media URL and birthdate
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(
-                c => c.ImageUrlPath == "http://image.url/test.jpg" && c.BirthDate == updateDTO.BirthDate
-            )), Times.Once);
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.ImageUrlPath == "http://image.url/test.jpg"
+                            && c.BirthDate == updateDTO.BirthDate
+                        )
+                    ),
+                Times.Once
+            );
 
             // Assert the Student Profile is updated with the correct StudentCode
-            _studentProfileRepositoryMock.Verify(x => x.UpdateAsync(It.Is<StudentProfile>(
-                sp => sp.StudentCode == "JD" + studentProfile.ChildId
-            )), Times.Once);
+            _studentProfileRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<StudentProfile>(sp => sp.StudentCode == "JD" + studentProfile.ChildId)
+                    ),
+                Times.Once
+            );
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -679,7 +898,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
 
-
         [Fact]
         public async Task UpdateAsync_Case3_NameProvided_StudentProfileExists_BirthDateProvided_MediaNotProvided()
         {
@@ -688,7 +906,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Name = "John Doe",
                 ChildId = 1,
-                BirthDate = new DateTime(2010, 5, 1) // Example BirthDate
+                BirthDate = new DateTime(
+                    2010,
+                    5,
+                    1
+                ) // Example BirthDate
+                ,
             };
 
             var child = new ChildInformation
@@ -696,36 +919,62 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = updateDTO.ChildId,
                 ParentId = "parent123",
                 Name = "Old Name",
-                BirthDate = new DateTime(2005, 5, 5) // Existing BirthDate
+                BirthDate = new DateTime(
+                    2005,
+                    5,
+                    5
+                ) // Existing BirthDate
+                ,
             };
 
-            var studentProfile = new StudentProfile
-            {
-                ChildId = child.Id
-            };
+            var studentProfile = new StudentProfile { ChildId = child.Id };
 
             // Mocking the repository calls
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync(studentProfile);
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that media is not uploaded
-            _blobStorageRepositoryMock.Verify(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(),false), Times.Never);
+            _blobStorageRepositoryMock.Verify(
+                x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false),
+                Times.Never
+            );
 
             // Assert the child information is updated with the correct birthdate and no media URL change
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(
-                c => c.BirthDate == updateDTO.BirthDate && c.ImageUrlPath == null // No media, so ImageUrlPath should remain null
-            )), Times.Once);
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.BirthDate == updateDTO.BirthDate && c.ImageUrlPath == null // No media, so ImageUrlPath should remain null
+                        )
+                    ),
+                Times.Once
+            );
 
             // Assert the Student Profile is updated with the correct StudentCode
-            _studentProfileRepositoryMock.Verify(x => x.UpdateAsync(It.Is<StudentProfile>(
-                sp => sp.StudentCode == "JD" + studentProfile.ChildId
-            )), Times.Once);
+            _studentProfileRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<StudentProfile>(sp => sp.StudentCode == "JD" + studentProfile.ChildId)
+                    ),
+                Times.Once
+            );
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -742,37 +991,55 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         public async Task UpdateAsync_Case5_NameProvided_NoStudentProfile_BirthDateNotProvided_MediaNotProvided()
         {
             // Arrange
-            var updateDTO = new ChildInformationUpdateDTO
-            {
-                Name = "John Doe",
-                ChildId = 1
-            };
+            var updateDTO = new ChildInformationUpdateDTO { Name = "John Doe", ChildId = 1 };
 
             var child = new ChildInformation
             {
                 Id = updateDTO.ChildId,
                 ParentId = "parent123",
                 Name = "Old Name",
-                BirthDate = null // BirthDate is not provided
+                BirthDate =
+                    null // BirthDate is not provided
+                ,
             };
 
             // No existing student profile
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync((StudentProfile)null); // No existing student profile
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that the child information is updated
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(
-                c => c.Name == updateDTO.Name && c.BirthDate == null // Name is updated, but BirthDate remains null
-            )), Times.Once);
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.Name == updateDTO.Name && c.BirthDate == null // Name is updated, but BirthDate remains null
+                        )
+                    ),
+                Times.Once
+            );
 
             // Assert that media upload was not triggered
-            _blobStorageRepositoryMock.Verify(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false), Times.Never);
+            _blobStorageRepositoryMock.Verify(
+                x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false),
+                Times.Never
+            );
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -793,7 +1060,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Name = "John Doe",
                 ChildId = 1,
-                Media = new FormFile(Mock.Of<Stream>(), 0, 100, "file", "filename.jpg") // Simulating media provided
+                Media = new FormFile(
+                    Mock.Of<Stream>(),
+                    0,
+                    100,
+                    "file",
+                    "filename.jpg"
+                ) // Simulating media provided
+                ,
             };
 
             var child = new ChildInformation
@@ -801,26 +1075,48 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = updateDTO.ChildId,
                 ParentId = "parent123",
                 Name = "Old Name",
-                BirthDate = null // BirthDate is not provided
+                BirthDate =
+                    null // BirthDate is not provided
+                ,
             };
 
             // No existing student profile
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync((StudentProfile)null); // No existing student profile
 
-            _blobStorageRepositoryMock.Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false)).ReturnsAsync("http://image.url/test.jpg"); // Mocking the media upload
+            _blobStorageRepositoryMock
+                .Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false))
+                .ReturnsAsync("http://image.url/test.jpg"); // Mocking the media upload
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
-
             // Assert that the child information is updated
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(
-                c => c.Name == updateDTO.Name && c.BirthDate == null && c.ImageUrlPath == "http://image.url/test.jpg" // Name is updated, but BirthDate remains null
-            )), Times.Once);
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.Name == updateDTO.Name
+                            && c.BirthDate == null
+                            && c.ImageUrlPath == "http://image.url/test.jpg" // Name is updated, but BirthDate remains null
+                        )
+                    ),
+                Times.Once
+            );
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -842,7 +1138,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Name = "John Doe",
                 ChildId = 1,
                 BirthDate = new DateTime(2010, 1, 1), // BirthDate is provided
-                Media = new FormFile(Mock.Of<Stream>(), 0, 100, "file", "filename.jpg") // Simulating media provided
+                Media = new FormFile(
+                    Mock.Of<Stream>(),
+                    0,
+                    100,
+                    "file",
+                    "filename.jpg"
+                ) // Simulating media provided
+                ,
             };
 
             var child = new ChildInformation
@@ -850,27 +1153,49 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = updateDTO.ChildId,
                 ParentId = "parent123",
                 Name = "Old Name",
-                BirthDate = null // BirthDate is not provided initially
+                BirthDate =
+                    null // BirthDate is not provided initially
+                ,
             };
 
             // No existing student profile
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync((StudentProfile)null); // No existing student profile
 
-            _blobStorageRepositoryMock.Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false)).ReturnsAsync("http://image.url/test.jpg"); // Mocking the media upload
+            _blobStorageRepositoryMock
+                .Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false))
+                .ReturnsAsync("http://image.url/test.jpg"); // Mocking the media upload
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that the child information is updated
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(c =>
-                c.Name == updateDTO.Name &&
-                c.BirthDate == updateDTO.BirthDate &&  // BirthDate is updated
-                c.ImageUrlPath == "http://image.url/test.jpg" // Image is uploaded
-            )), Times.Once);
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.Name == updateDTO.Name
+                            && c.BirthDate == updateDTO.BirthDate
+                            && // BirthDate is updated
+                            c.ImageUrlPath == "http://image.url/test.jpg" // Image is uploaded
+                        )
+                    ),
+                Times.Once
+            );
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -883,7 +1208,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
 
-
         [Fact]
         public async Task UpdateAsync_Case7_NameProvided_NoStudentProfile_BirthDateProvided_NoMedia()
         {
@@ -892,8 +1216,13 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 Name = "John Doe",
                 ChildId = 1,
-                BirthDate = new DateTime(2010, 1, 1) // BirthDate is provided
-                                                     // No Media provided
+                BirthDate = new DateTime(
+                    2010,
+                    1,
+                    1
+                ) // BirthDate is provided
+                ,
+                // No Media provided
             };
 
             var child = new ChildInformation
@@ -901,26 +1230,45 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = updateDTO.ChildId,
                 ParentId = "parent123",
                 Name = "Old Name",
-                BirthDate = null // BirthDate is not provided initially
+                BirthDate =
+                    null // BirthDate is not provided initially
+                ,
             };
 
             // No existing student profile
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync((StudentProfile)null); // No existing student profile
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that the child information is updated
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(c =>
-                c.Name == updateDTO.Name &&
-                c.BirthDate == updateDTO.BirthDate &&  // BirthDate is updated
-                c.ImageUrlPath == null // No image URL, as no media was provided
-            )), Times.Once);
-
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.Name == updateDTO.Name
+                            && c.BirthDate == updateDTO.BirthDate
+                            && // BirthDate is updated
+                            c.ImageUrlPath == null // No image URL, as no media was provided
+                        )
+                    ),
+                Times.Once
+            );
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -941,7 +1289,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 ChildId = 1,
                 BirthDate = new DateTime(2010, 1, 1), // BirthDate is provided
-                Media = new FormFile(Mock.Of<Stream>(), 0, 100, "file", "filename.jpg") // Simulating media provided
+                Media = new FormFile(
+                    Mock.Of<Stream>(),
+                    0,
+                    100,
+                    "file",
+                    "filename.jpg"
+                ) // Simulating media provided
+                ,
             };
 
             var child = new ChildInformation
@@ -949,29 +1304,51 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = updateDTO.ChildId,
                 ParentId = "parent123",
                 Name = "Old Name", // The name will not be updated, but the existing name is "Old Name"
-                BirthDate = null // BirthDate is not provided initially
+                BirthDate =
+                    null // BirthDate is not provided initially
+                ,
             };
 
             // No existing student profile
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync((StudentProfile)null); // No existing student profile
 
             // Mocking the media upload
-            _blobStorageRepositoryMock.Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false))
+            _blobStorageRepositoryMock
+                .Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false))
                 .ReturnsAsync("http://image.url/test.jpg"); // Media upload URL
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that the child information is updated with new BirthDate and media uploaded
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(c =>
-                c.Name == "Old Name" &&  // Name remains unchanged
-                c.BirthDate == updateDTO.BirthDate && // BirthDate is updated
-                c.ImageUrlPath == "http://image.url/test.jpg" // Media URL is updated
-            )), Times.Once);
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.Name == "Old Name"
+                            && // Name remains unchanged
+                            c.BirthDate == updateDTO.BirthDate
+                            && // BirthDate is updated
+                            c.ImageUrlPath == "http://image.url/test.jpg" // Media URL is updated
+                        )
+                    ),
+                Times.Once
+            );
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -992,7 +1369,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 ChildId = 1,
                 BirthDate = new DateTime(2010, 1, 1), // BirthDate is provided
-                Media = null // No media provided
+                Media =
+                    null // No media provided
+                ,
             };
 
             var child = new ChildInformation
@@ -1000,25 +1379,46 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = updateDTO.ChildId,
                 ParentId = "parent123",
                 Name = "Old Name", // The name will not be updated, but the existing name is "Old Name"
-                BirthDate = null // BirthDate is not provided initially
+                BirthDate =
+                    null // BirthDate is not provided initially
+                ,
             };
 
             // No existing student profile
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync((StudentProfile)null); // No existing student profile
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that the child information is updated with new BirthDate, but no media uploaded
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(c =>
-                c.Name == "Old Name" &&  // Name remains unchanged
-                c.BirthDate == updateDTO.BirthDate && // BirthDate is updated
-                c.ImageUrlPath == null // No media URL is set since no media was provided
-            )), Times.Once);
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.Name == "Old Name"
+                            && // Name remains unchanged
+                            c.BirthDate == updateDTO.BirthDate
+                            && // BirthDate is updated
+                            c.ImageUrlPath == null // No media URL is set since no media was provided
+                        )
+                    ),
+                Times.Once
+            );
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -1040,7 +1440,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ChildId = 1,
                 Name = null, // No Name provided
                 BirthDate = null, // No BirthDate provided
-                Media = null // No media provided
+                Media =
+                    null // No media provided
+                ,
             };
 
             var child = new ChildInformation
@@ -1049,25 +1451,46 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ParentId = "parent123",
                 Name = "Old Name", // The name will not be updated, but the existing name is "Old Name"
                 BirthDate = new DateTime(2010, 1, 1), // BirthDate is initially provided
-                ImageUrlPath = "http://oldimage.url/test.jpg" // Existing media URL
+                ImageUrlPath =
+                    "http://oldimage.url/test.jpg" // Existing media URL
+                ,
             };
 
             // No existing student profile
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync((StudentProfile)null); // No existing student profile
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that no update is made since no values are provided
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(c =>
-                c.Name == "Old Name" &&  // Name remains unchanged
-                c.BirthDate == child.BirthDate && // BirthDate remains unchanged
-                c.ImageUrlPath == child.ImageUrlPath // Media URL remains unchanged
-            )), Times.Once); // Ensure that UpdateAsync was NOT called
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.Name == "Old Name"
+                            && // Name remains unchanged
+                            c.BirthDate == child.BirthDate
+                            && // BirthDate remains unchanged
+                            c.ImageUrlPath == child.ImageUrlPath // Media URL remains unchanged
+                        )
+                    ),
+                Times.Once
+            ); // Ensure that UpdateAsync was NOT called
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -1089,7 +1512,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ChildId = 1,
                 Name = null, // No Name provided
                 BirthDate = null, // No BirthDate provided
-                Media = new FormFile(Mock.Of<Stream>(), 0, 100, "file", "filename.jpg") // Simulating media provided
+                Media = new FormFile(
+                    Mock.Of<Stream>(),
+                    0,
+                    100,
+                    "file",
+                    "filename.jpg"
+                ) // Simulating media provided
+                ,
             };
 
             var child = new ChildInformation
@@ -1098,29 +1528,51 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 ParentId = "parent123",
                 Name = "Old Name", // Existing name will remain unchanged
                 BirthDate = new DateTime(2010, 1, 1), // Existing birth date will remain unchanged
-                ImageUrlPath = "http://oldimage.url/test.jpg" // Existing media URL
+                ImageUrlPath =
+                    "http://oldimage.url/test.jpg" // Existing media URL
+                ,
             };
 
             // No existing student profile
-            _childInfoRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), true, null, null))
+            _childInfoRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        true,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(child);
 
-            _studentProfileRepositoryMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null))
+            _studentProfileRepositoryMock
+                .Setup(x =>
+                    x.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), true, null, null)
+                )
                 .ReturnsAsync((StudentProfile)null); // No existing student profile
 
             // Mocking the media upload
-            _blobStorageRepositoryMock.Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false))
+            _blobStorageRepositoryMock
+                .Setup(x => x.Upload(It.IsAny<Stream>(), It.IsAny<string>(), false))
                 .ReturnsAsync("http://image.url/test.jpg"); // Media upload URL
 
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert that the child information is updated with the new media URL (no other fields should be updated)
-            _childInfoRepositoryMock.Verify(x => x.UpdateAsync(It.Is<ChildInformation>(c =>
-                c.Name == "Old Name" &&  // Name remains unchanged
-                c.BirthDate == child.BirthDate && // BirthDate remains unchanged
-                c.ImageUrlPath == "http://image.url/test.jpg" // Media URL is updated
-            )), Times.Once); // Ensure that the update is called once
+            _childInfoRepositoryMock.Verify(
+                x =>
+                    x.UpdateAsync(
+                        It.Is<ChildInformation>(c =>
+                            c.Name == "Old Name"
+                            && // Name remains unchanged
+                            c.BirthDate == child.BirthDate
+                            && // BirthDate remains unchanged
+                            c.ImageUrlPath == "http://image.url/test.jpg" // Media URL is updated
+                        )
+                    ),
+                Times.Once
+            ); // Ensure that the update is called once
 
             // Assert the result is an OK response
             var okResult = result.Result as ObjectResult;
@@ -1132,8 +1584,5 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.IsSuccess.Should().BeTrue();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
-
-
     }
-
 }

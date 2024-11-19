@@ -141,7 +141,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int? paymentId = 0, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int? packageId = 0, int pageNumber = 1)
         {
             try
             {
@@ -173,9 +173,9 @@ namespace AutismEduConnectSystem.Controllers
                     }
                 }
                 int total = 0;
-                if (paymentId != 0)
+                if (packageId != 0)
                 {
-                    filter = filter.AndAlso(x => x.PackagePaymentId == paymentId);
+                    filter = filter.AndAlso(x => x.PackagePaymentId == packageId);
                 }
                 if (!string.IsNullOrEmpty(search))
                 {

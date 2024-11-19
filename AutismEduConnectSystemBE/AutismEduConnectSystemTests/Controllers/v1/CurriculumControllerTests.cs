@@ -3,9 +3,11 @@ using System.Net;
 using System.Security.Claims;
 using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs;
+using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.RabbitMQSender;
+using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
@@ -13,6 +15,7 @@ using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
@@ -20,11 +23,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Org.BouncyCastle.Tls;
 using Xunit;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using static AutismEduConnectSystem.SD;
-using AutismEduConnectSystem.Repository;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -74,7 +74,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
             };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
@@ -82,12 +82,13 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var submitterUser = new ApplicationUser { Id = "testTutorId", UserName = "testTutor" };
 
             _userRepositoryMock
-               .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
-               .ReturnsAsync(submitterUser);
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(submitterUser);
         }
 
         public Mock<IResourceService> ResourceServiceMock => _resourceServiceMock;
-
 
         [Fact]
         public async Task CreateAsync_ShouldReturnBadRequest_WhenDuplicateCurriculumExists()
@@ -95,14 +96,17 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             var existingCurriculums = new List<Curriculum>
             {
-                new Curriculum { OriginalCurriculumId = 1, RequestStatus = SD.Status.PENDING }
+                new Curriculum { OriginalCurriculumId = 1, RequestStatus = SD.Status.PENDING },
             };
             var pagedResult = (existingCurriculums.Count, existingCurriculums);
             _curriculumRepositoryMock
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
-                        It.IsAny<Expression<Func<Curriculum, bool>>>(), 
-                        null, null, null, true
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        null,
+                        null,
+                        null,
+                        true
                     )
                 )
                 .ReturnsAsync(pagedResult);
@@ -111,7 +115,13 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(service => service.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CURRICULUM))
                 .Returns("Duplicate curriculum exists");
 
-            var curriculumDto = new CurriculumCreateDTO { OriginalCurriculumId = 1, AgeEnd = 5, AgeFrom = 1, Description = "Update curriculum" };
+            var curriculumDto = new CurriculumCreateDTO
+            {
+                OriginalCurriculumId = 1,
+                AgeEnd = 5,
+                AgeFrom = 1,
+                Description = "Update curriculum",
+            };
 
             // Act
             var result = await _controller.CreateAsync(curriculumDto);
@@ -136,24 +146,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Returns("Forbidden access.");
 
             // Simulate a user with no valid claims (unauthorized)
-            var claims = new List<Claim>
-             {
-                 new Claim(ClaimTypes.NameIdentifier, "testUserId")
-             };
+            var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, "testUserId") };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
-
-
 
             var requestPayload = new CurriculumCreateDTO
             {
                 AgeFrom = 3,
                 AgeEnd = 10,
                 Description = "Description",
-                OriginalCurriculumId = 0
+                OriginalCurriculumId = 0,
             };
-
 
             // Act
             var result = await _controller.CreateAsync(requestPayload);
@@ -183,18 +187,16 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
-
 
             var requestPayload = new CurriculumCreateDTO
             {
                 AgeFrom = 3,
                 AgeEnd = 10,
                 Description = "Description",
-                OriginalCurriculumId = 0
+                OriginalCurriculumId = 0,
             };
-
 
             // Act
             var result = await _controller.CreateAsync(requestPayload);
@@ -210,8 +212,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
-
-
 
         [Fact]
         public async Task DeleteAsync_ReturnsBadRequest_WhenIdIsZero()
@@ -4208,8 +4208,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var submitterUser = new ApplicationUser { Id = "testTutorId", UserName = "testTutor" };
             var tutor = new Tutor() { TutorId = "testTutorId" };
             _userRepositoryMock
-               .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
-               .ReturnsAsync(It.IsAny<ApplicationUser>());
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(It.IsAny<ApplicationUser>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
@@ -8992,8 +8994,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var tutor = new Tutor() { TutorId = "testTutorId" };
 
             _userRepositoryMock
-               .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
-               .ReturnsAsync(submitterUser);
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(submitterUser);
             var curricula = new List<Curriculum>
             {
                 new Curriculum
@@ -9695,7 +9699,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _curriculumRepositoryMock.Verify(
                 repo =>
                     repo.GetAllAsync(
-                       It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         "Submitter",
                         5, // PageSize
                         1, // PageNumber
@@ -14590,24 +14594,32 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testTutorId"),
-                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) // Set to TUTOR_ROLE as user is a tutor
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.TUTOR_ROLE
+                ) // Set to TUTOR_ROLE as user is a tutor
+                ,
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = new DefaultHttpContext { User = user },
             };
-            _resourceServiceMock.Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
-                    .Returns("An internal server error occurred.");
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("An internal server error occurred.");
             // Mock the repository to throw an exception when GetAllAsync is called
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllAsync(
-                    It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                    "Submitter",
-                    It.IsAny<int>(), // Any page size
-                    It.IsAny<int>(), // Any page number
-                    It.IsAny<Expression<Func<Curriculum, object>>>(), // Any orderBy expression
-                    It.IsAny<bool>())) // Any sorting order
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        "Submitter",
+                        It.IsAny<int>(), // Any page size
+                        It.IsAny<int>(), // Any page number
+                        It.IsAny<Expression<Func<Curriculum, object>>>(), // Any orderBy expression
+                        It.IsAny<bool>()
+                    )
+                ) // Any sorting order
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
@@ -14630,8 +14642,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Should().NotBeNull();
             response.IsSuccess.Should().BeFalse();
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            response.ErrorMessages.FirstOrDefault().Should().Contain("An internal server error occurred.");
-
+            response
+                .ErrorMessages.FirstOrDefault()
+                .Should()
+                .Contain("An internal server error occurred.");
         }
 
         [Fact]
@@ -14652,23 +14666,28 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Should().NotBeNull();
             response.IsSuccess.Should().BeFalse();
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            response.ErrorMessages.Should().Contain(_resourceServiceMock.Object.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM));
+            response
+                .ErrorMessages.Should()
+                .Contain(
+                    _resourceServiceMock.Object.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM)
+                );
         }
 
         [Fact]
         public async Task CreateAsync_ShouldReturnBadRequest_WhenDuplicateAgeRangeExists()
         {
             // Arrange
-            var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10, OriginalCurriculumId = 0 };
+            var curriculumDto = new CurriculumCreateDTO
+            {
+                AgeFrom = 5,
+                AgeEnd = 10,
+                OriginalCurriculumId = 0,
+            };
             string userId = "testId";
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(
-                    ClaimTypes.Role,
-                    SD.TUTOR_ROLE
-                )
-                ,
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
@@ -14676,9 +14695,25 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 HttpContext = new DefaultHttpContext { User = user },
             };
 
-            var duplicateCurriculum = new Curriculum { AgeFrom = 5, AgeEnd = 10, SubmitterId = userId, IsActive = true, IsDeleted = false, OriginalCurriculumId = 1 };
+            var duplicateCurriculum = new Curriculum
+            {
+                AgeFrom = 5,
+                AgeEnd = 10,
+                SubmitterId = userId,
+                IsActive = true,
+                IsDeleted = false,
+                OriginalCurriculumId = 1,
+            };
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, It.IsAny<Expression<Func<Curriculum, object>>>(), false))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        null,
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false
+                    )
+                )
                 .ReturnsAsync((1, new List<Curriculum> { duplicateCurriculum }));
 
             // Act
@@ -14693,23 +14728,26 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Should().NotBeNull();
             response.IsSuccess.Should().BeFalse();
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            response.ErrorMessages.Should().Contain(_resourceServiceMock.Object.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE));
+            response
+                .ErrorMessages.Should()
+                .Contain(_resourceServiceMock.Object.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE));
         }
 
         [Fact]
         public async Task CreateAsync_ShouldReturnCreated_WhenCurriculumCreatedSuccessfullyWithOriginalIdIsZero()
         {
             // Arrange
-            var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10, OriginalCurriculumId = 0 };
+            var curriculumDto = new CurriculumCreateDTO
+            {
+                AgeFrom = 5,
+                AgeEnd = 10,
+                OriginalCurriculumId = 0,
+            };
             string userId = "testId";
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(
-                    ClaimTypes.Role,
-                    SD.TUTOR_ROLE
-                )
-                ,
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
@@ -14718,14 +14756,29 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             };
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, It.IsAny<Expression<Func<Curriculum, object>>>(), false))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        null,
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false
+                    )
+                )
                 .ReturnsAsync((0, new List<Curriculum>()));
 
             _curriculumRepositoryMock
                 .Setup(repo => repo.GetNextVersionNumberAsync(It.IsAny<int>()))
                 .ReturnsAsync(1);
 
-            var newCurriculum = new Curriculum { Id = 1, AgeFrom = 5, AgeEnd = 10, SubmitterId = userId, CreatedDate = DateTime.Now };
+            var newCurriculum = new Curriculum
+            {
+                Id = 1,
+                AgeFrom = 5,
+                AgeEnd = 10,
+                SubmitterId = userId,
+                CreatedDate = DateTime.Now,
+            };
             _curriculumRepositoryMock
                 .Setup(repo => repo.CreateAsync(It.IsAny<Curriculum>()))
                 .ReturnsAsync(newCurriculum);
@@ -14749,16 +14802,17 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         public async Task CreateAsync_ShouldReturnCreated_WhenCurriculumCreatedSuccessfullyWithOriginalIdDifZero()
         {
             // Arrange
-            var curriculumDto = new CurriculumCreateDTO { AgeFrom = 5, AgeEnd = 10, OriginalCurriculumId = 1 };
+            var curriculumDto = new CurriculumCreateDTO
+            {
+                AgeFrom = 5,
+                AgeEnd = 10,
+                OriginalCurriculumId = 1,
+            };
             string userId = "testId";
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(
-                    ClaimTypes.Role,
-                    SD.TUTOR_ROLE
-                )
-                ,
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
@@ -14767,14 +14821,29 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             };
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, It.IsAny<Expression<Func<Curriculum, object>>>(), false))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        null,
+                        null,
+                        It.IsAny<Expression<Func<Curriculum, object>>>(),
+                        false
+                    )
+                )
                 .ReturnsAsync((0, new List<Curriculum>()));
 
             _curriculumRepositoryMock
                 .Setup(repo => repo.GetNextVersionNumberAsync(It.IsAny<int>()))
                 .ReturnsAsync(1);
 
-            var newCurriculum = new Curriculum { Id = 1, AgeFrom = 5, AgeEnd = 10, SubmitterId = userId, CreatedDate = DateTime.Now };
+            var newCurriculum = new Curriculum
+            {
+                Id = 1,
+                AgeFrom = 5,
+                AgeEnd = 10,
+                SubmitterId = userId,
+                CreatedDate = DateTime.Now,
+            };
             _curriculumRepositoryMock
                 .Setup(repo => repo.CreateAsync(It.IsAny<Curriculum>()))
                 .ReturnsAsync(newCurriculum);
@@ -14803,11 +14872,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(
-                    ClaimTypes.Role,
-                    SD.TUTOR_ROLE
-                )
-                ,
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
             };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
@@ -14816,7 +14881,15 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             };
 
             _curriculumRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), null, null, null, true))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        null,
+                        null,
+                        null,
+                        true
+                    )
+                )
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
@@ -14831,9 +14904,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Should().NotBeNull();
             response.IsSuccess.Should().BeFalse();
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            response.ErrorMessages.Should().Contain(_resourceServiceMock.Object.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE));
+            response
+                .ErrorMessages.Should()
+                .Contain(_resourceServiceMock.Object.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE));
         }
-
 
         [Fact]
         public async Task UpdateStatusRequest_ApproveStatus_Succeeds()
@@ -14841,19 +14915,57 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             var curriculumId = 1;
             var userId = "user123";
-            var curriculum = new Curriculum { Id = curriculumId, SubmitterId = userId, RequestStatus = Status.PENDING, Description = "Test Curriculum" };
-            var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
-            var changeStatusDTO = new ChangeStatusDTO { Id = curriculumId, StatusChange = (int)Status.APPROVE };
+            var curriculum = new Curriculum
+            {
+                Id = curriculumId,
+                SubmitterId = userId,
+                RequestStatus = Status.PENDING,
+                Description = "Test Curriculum",
+            };
+            var tutor = new ApplicationUser
+            {
+                Id = userId,
+                FullName = "Tutor Name",
+                Email = "tutor@example.com",
+            };
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = curriculumId,
+                StatusChange = (int)Status.APPROVE,
+            };
 
-            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, "Submitter", null))
+            _curriculumRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        true,
+                        "Submitter",
+                        null
+                    )
+                )
                 .ReturnsAsync(curriculum);
-            _userRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), It.IsAny<bool>(), It.IsAny<string>()))
+            _userRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(tutor);
-            _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
+            _resourceServiceMock
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Error message");
 
             // Set user identity
-            var userClaims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, STAFF_ROLE) };
-            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
+            };
+            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
+                new ClaimsIdentity(userClaims, "mock")
+            );
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
@@ -14875,21 +14987,54 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             var curriculumId = 1;
             var userId = "user123";
-            var submitterUser = new Tutor { TutorId = "testTutorId", AboutMe= "testTutor" };
-            var curriculum = new Curriculum { Id = curriculumId, SubmitterId = userId, Submitter = submitterUser, RequestStatus = Status.PENDING, Description = "Test Curriculum" };
-            var tutor = new ApplicationUser { Id = userId, FullName = "Tutor Name", Email = "tutor@example.com" };
+            var submitterUser = new Tutor { TutorId = "testTutorId", AboutMe = "testTutor" };
+            var curriculum = new Curriculum
+            {
+                Id = curriculumId,
+                SubmitterId = userId,
+                Submitter = submitterUser,
+                RequestStatus = Status.PENDING,
+                Description = "Test Curriculum",
+            };
+            var tutor = new ApplicationUser
+            {
+                Id = userId,
+                FullName = "Tutor Name",
+                Email = "tutor@example.com",
+            };
 
-            var changeStatusDTO = new ChangeStatusDTO { Id = curriculumId, StatusChange = (int)Status.REJECT, RejectionReason = "Invalid document" };
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = curriculumId,
+                StatusChange = (int)Status.REJECT,
+                RejectionReason = "Invalid document",
+            };
 
-            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, "Submitter", null))
+            _curriculumRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        true,
+                        "Submitter",
+                        null
+                    )
+                )
                 .ReturnsAsync(curriculum);
 
             _userRepositoryMock
-               .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null))
-               .ReturnsAsync(tutor);
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(tutor);
             // Set user identity
-            var userClaims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, STAFF_ROLE) };
-            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
+            var userClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, STAFF_ROLE),
+            };
+            _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
+                new ClaimsIdentity(userClaims, "mock")
+            );
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
@@ -14905,17 +15050,25 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.Result.Should().NotBeNull();
         }
 
-
         [Fact]
         public async Task UpdateStatusRequest_ReturnsBadRequest_IfCurriculumIsNull()
         {
             // Arrange
             var curriculumId = 1;
-            var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.APPROVE };
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = 1,
+                StatusChange = (int)Status.APPROVE,
+            };
 
-            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+            _curriculumRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null)
+                )
                 .ReturnsAsync((Curriculum)null);
-            _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
+            _resourceServiceMock
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Error message");
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
@@ -14929,7 +15082,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.Should().Contain("Error message");
         }
 
-
         [Fact]
         public async Task UpdateStatusRequest_ReturnsBadRequest_IfCurriculumStatusIsNotPending()
         {
@@ -14938,9 +15090,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var curriculum = new Curriculum { Id = 1, RequestStatus = Status.APPROVE };
             var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.REJECT };
 
-            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null))
+            _curriculumRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null)
+                )
                 .ReturnsAsync(curriculum);
-            _resourceServiceMock.Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>())).Returns("Error message");
+            _resourceServiceMock
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Error message");
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
@@ -14959,9 +15116,23 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var curriculumId = 1;
-            var changeStatusDTO = new ChangeStatusDTO { Id = 1, StatusChange = (int)Status.APPROVE };
-            _resourceServiceMock.Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE)).Returns("Internal server error");
-            _curriculumRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, "Submitter", null))
+            var changeStatusDTO = new ChangeStatusDTO
+            {
+                Id = 1,
+                StatusChange = (int)Status.APPROVE,
+            };
+            _resourceServiceMock
+                .Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("Internal server error");
+            _curriculumRepositoryMock
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<Curriculum, bool>>>(),
+                        true,
+                        "Submitter",
+                        null
+                    )
+                )
                 .ThrowsAsync(new Exception("Database error"));
 
             // Act
@@ -14970,14 +15141,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Assert
             internalServerErrorResult.Should().NotBeNull();
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var apiResponse = internalServerErrorResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.ErrorMessages.Should().Contain("Internal server error");
         }
-
     }
-
 }

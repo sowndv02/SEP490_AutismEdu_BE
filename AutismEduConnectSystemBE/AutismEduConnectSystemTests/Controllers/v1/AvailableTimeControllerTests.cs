@@ -1,11 +1,16 @@
-﻿using AutoMapper;
+﻿using System.Linq.Expressions;
+using System.Net;
+using System.Security.Claims;
+using System.Text;
 using AutismEduConnectSystem;
+using AutismEduConnectSystem.Controllers;
 using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
+using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,18 +18,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json;
-using System.Linq.Expressions;
-using System.Net;
-using System.Security.Claims;
-using System.Text;
 using Xunit;
-using AutismEduConnectSystem.Controllers;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
     public class AvailableTimeControllerTests
     {
-
         private readonly Mock<IAvailableTimeSlotRepository> _availableTimeSlotRepositoryMock;
         private readonly IMapper _mapper;
         private readonly Mock<IResourceService> _resourceServiceMock;
@@ -47,21 +46,19 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 _availableTimeSlotRepositoryMock.Object,
                 _mapper,
                 _resourceServiceMock.Object,
-                _loggerMock.Object);
+                _loggerMock.Object
+            );
             _response = new APIResponse();
-
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE)
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
             };
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
-
         }
-
 
         //[Fact]
         //public async Task CreateAsync_ReturnsUnauthorized_WhenUserIsNotInStaffRole()
@@ -95,12 +92,16 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Invalid request data.");
         }
 
-
         [Fact]
         public async Task CreateAsync_ReturnsBadRequest_WhenFromTimeIsAfterToTime()
         {
             // Arrange
-            var dto = new AvailableTimeSlotCreateDTO { Weekday = 2, From = "14:00", To = "12:00" };
+            var dto = new AvailableTimeSlotCreateDTO
+            {
+                Weekday = 2,
+                From = "14:00",
+                To = "12:00",
+            };
             _resourceServiceMock
                 .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.TIME_SLOT))
                 .Returns("'Thời gian rảnh' không hợp lệ.");
@@ -125,16 +126,30 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             var dto = new AvailableTimeSlotCreateDTO { From = "10:00", To = "12:00" };
             var existingSlots = new List<AvailableTimeSlot>
-        {
-            new AvailableTimeSlot { From = TimeSpan.Parse("09:00"), To = TimeSpan.Parse("11:00") }
-        };
+            {
+                new AvailableTimeSlot
+                {
+                    From = TimeSpan.Parse("09:00"),
+                    To = TimeSpan.Parse("11:00"),
+                },
+            };
 
             _resourceServiceMock
-                .Setup(r => r.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, "09:00", "11:00"))
+                .Setup(r =>
+                    r.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, "09:00", "11:00")
+                )
                 .Returns("Khung giờ bị trùng với khung giờ đã tồn tại 09:00-11:00");
 
             _availableTimeSlotRepositoryMock
-                .Setup(r => r.GetAllNotPagingAsync(It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<AvailableTimeSlot, object>>>(), It.IsAny<bool>()))
+                .Setup(r =>
+                    r.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<AvailableTimeSlot, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((existingSlots.Count, existingSlots));
 
             // Act
@@ -148,7 +163,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var apiResponse = statusCodeResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
-            apiResponse.ErrorMessages.First().Should().Be("Khung giờ bị trùng với khung giờ đã tồn tại 09:00-11:00");
+            apiResponse
+                .ErrorMessages.First()
+                .Should()
+                .Be("Khung giờ bị trùng với khung giờ đã tồn tại 09:00-11:00");
         }
 
         [Fact]
@@ -156,9 +174,16 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var dto = new AvailableTimeSlotCreateDTO { From = "10:00", To = "12:00" };
-            var availableTimeSlot = new AvailableTimeSlot { Id = 1, From = TimeSpan.Parse("10:00"), To = TimeSpan.Parse("12:00") };
+            var availableTimeSlot = new AvailableTimeSlot
+            {
+                Id = 1,
+                From = TimeSpan.Parse("10:00"),
+                To = TimeSpan.Parse("12:00"),
+            };
 
-            _availableTimeSlotRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<AvailableTimeSlot>())).ReturnsAsync(availableTimeSlot);
+            _availableTimeSlotRepositoryMock
+                .Setup(r => r.CreateAsync(It.IsAny<AvailableTimeSlot>()))
+                .ReturnsAsync(availableTimeSlot);
 
             // Act
             var result = await _controller.CreateAsync(dto);
@@ -202,7 +227,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.First().Should().Be("Lỗi hệ thống. Vui lòng thử lại sau!");
         }
 
-
         [Fact]
         public async Task GetAllTimeSlotFromWeekday_ReturnsOk_WhenTimeSlotsExist()
         {
@@ -211,18 +235,42 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var weekday = 3; // For example, Wednesday
             var timeSlots = new List<AvailableTimeSlot>
             {
-                new AvailableTimeSlot { Id = 1, TutorId = tutorId, Weekday = weekday, From = TimeSpan.Parse("08:00"), To = TimeSpan.Parse("10:00") },
-                new AvailableTimeSlot { Id = 2, TutorId = tutorId, Weekday = weekday, From = TimeSpan.Parse("10:00"), To = TimeSpan.Parse("12:00") }
+                new AvailableTimeSlot
+                {
+                    Id = 1,
+                    TutorId = tutorId,
+                    Weekday = weekday,
+                    From = TimeSpan.Parse("08:00"),
+                    To = TimeSpan.Parse("10:00"),
+                },
+                new AvailableTimeSlot
+                {
+                    Id = 2,
+                    TutorId = tutorId,
+                    Weekday = weekday,
+                    From = TimeSpan.Parse("10:00"),
+                    To = TimeSpan.Parse("12:00"),
+                },
             };
 
-            var expectedDtos = timeSlots.Select(ts => new AvailableTimeSlotDTO
-            {
-                TimeSlotId = ts.Id,
-                TimeSlot = ts.From.ToString(@"hh\:mm") + "-" + ts.To.ToString(@"hh\:mm")
-            }).ToList();
+            var expectedDtos = timeSlots
+                .Select(ts => new AvailableTimeSlotDTO
+                {
+                    TimeSlotId = ts.Id,
+                    TimeSlot = ts.From.ToString(@"hh\:mm") + "-" + ts.To.ToString(@"hh\:mm"),
+                })
+                .ToList();
 
             _availableTimeSlotRepositoryMock
-                .Setup(r => r.GetAllNotPagingAsync(It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<AvailableTimeSlot, object>>>(), It.IsAny<bool>()))
+                .Setup(r =>
+                    r.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<AvailableTimeSlot, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((timeSlots.Count, timeSlots));
             // Act
             var result = await _controller.GetAllTimeSlotFromWeekday(tutorId, weekday);
@@ -246,7 +294,15 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var weekday = 3;
 
             _availableTimeSlotRepositoryMock
-                .Setup(r => r.GetAllNotPagingAsync(It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<AvailableTimeSlot, object>>>(), It.IsAny<bool>()))
+                .Setup(r =>
+                    r.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<AvailableTimeSlot, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ThrowsAsync(new Exception("Lỗi hệ thống. Vui lòng thử lại sau!"));
 
             _resourceServiceMock
@@ -277,7 +333,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Set up the mock to return the timeslot when queried by ID and tutor ID
             _availableTimeSlotRepositoryMock
-                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(availableTimeSlot);
 
             // Set up RemoveAsync to complete without error
@@ -308,7 +371,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Set up the mock to return null when the timeslot is not found
             _availableTimeSlotRepositoryMock
-                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync((AvailableTimeSlot)null);
 
             _resourceServiceMock
@@ -338,7 +408,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Set up the mock to throw an exception when attempting to retrieve the timeslot
             _availableTimeSlotRepositoryMock
-                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<AvailableTimeSlot, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ThrowsAsync(new Exception("Lỗi hệ thống. Vui lòng thử lại sau!"));
 
             _resourceServiceMock
@@ -358,6 +435,5 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.ErrorMessages.Should().Contain("Lỗi hệ thống. Vui lòng thử lại sau!");
         }
-
     }
 }
