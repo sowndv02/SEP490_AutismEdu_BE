@@ -66,6 +66,66 @@ namespace AutismEduConnectSystem.Controllers.v1
             _resourceService = resourceService;
         }
 
+        [HttpGet("{id}")]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        public async Task<ActionResult<APIResponse>> GetByIdAsync(int id)
+        {
+            try
+            {
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
+                var result = await _tutorRegistrationRequestRepository.GetAsync(x => x.Id == id, true, "ApprovedBy,Curriculums,WorkExperiences,Certificates", null);
+                if (result == null)
+                {
+                    _logger.LogWarning("Exercise with ID {ExerciseId} not found for user: {UserId}", id, userId);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
+                    return NotFound(_response);
+                }
+                foreach (var certificate in result.Certificates)
+                {
+                    var (countMedias, medias) = await _certificateMediaRepository.GetAllNotPagingAsync(x => x.CertificateId == certificate.Id, includeProperties: null, excludeProperties: null);
+                    certificate.CertificateMedias = medias;
+                }
+                _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(result);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing GetAsync");
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
 
         [HttpPost]
         [AllowAnonymous]
@@ -192,7 +252,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                
+
                 int totalCount = 0;
                 List<TutorRegistrationRequest> list = new();
                 Expression<Func<TutorRegistrationRequest, bool>> filter = u => true;
@@ -291,7 +351,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 if (tutorRegistrationRequestChange.StatusChange == (int)Status.PENDING)
                 {
                     _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
