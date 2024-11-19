@@ -300,17 +300,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
                 var (count, result) = await _tutorRegistrationRequestRepository.GetAllAsync(filter,
-                                "ApprovedBy,Curriculums,WorkExperiences,Certificates", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                                null, pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                 list = result;
                 totalCount = count;
-                foreach (var item in list)
-                {
-                    foreach (var certificate in item.Certificates)
-                    {
-                        var (countMedias, medias) = await _certificateMediaRepository.GetAllNotPagingAsync(x => x.CertificateId == certificate.Id, includeProperties: null, excludeProperties: null);
-                        certificate.CertificateMedias = medias;
-                    }
-                }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<TutorRegistrationRequestDTO>>(list);
                 _response.StatusCode = HttpStatusCode.OK;
