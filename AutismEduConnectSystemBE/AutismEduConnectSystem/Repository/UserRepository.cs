@@ -295,7 +295,7 @@ namespace AutismEduConnectSystem.Repository
             {
                 throw new InvalidOperationException(_resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE));
             }
-            
+
             var listRoles = await _userManager.GetRolesAsync(user);
             if (listRoles != null && listRoles.Count > 0)
             {
@@ -731,7 +731,7 @@ namespace AutismEduConnectSystem.Repository
                 {
                     await _userManager.AddToRoleAsync(obj, SD.PARENT_ROLE);
                 }
-                
+
                 if (!string.IsNullOrEmpty(roleId))
                 {
                     user.Role = _roleManager.FindByIdAsync(roleId).GetAwaiter().GetResult().Name;
@@ -779,7 +779,7 @@ namespace AutismEduConnectSystem.Repository
         }
 
         public async Task<(int TotalCount, List<ApplicationUser> list)> GetAllAsync(Expression<Func<ApplicationUser, bool>>? filter = null, string? includeProperties = null,
-            int pageSize = 10, int pageNumber = 1, Expression<Func<ApplicationUser, object>>? orderBy = null, bool isDesc = true, bool isAdminRole = false)
+            int pageSize = 10, int pageNumber = 1, Expression<Func<ApplicationUser, object>>? orderBy = null, bool isDesc = true, bool isAdminRole = false, string? byRole = null)
         {
 
             IQueryable<ApplicationUser> query = _context.ApplicationUsers;
@@ -799,21 +799,33 @@ namespace AutismEduConnectSystem.Repository
                     query = query.OrderBy(orderBy);
             }
             int count = query.Count();
-            
+
+            if (!string.IsNullOrEmpty(byRole))
+            {
+                query = query.Where(user => _context.UserRoles
+                    .Any(ur => ur.UserId == user.Id && _context.Roles.Any(role => role.Id == ur.RoleId && role.Name == byRole)));
+            }
+
+            if (filter != null)
+                query = query.Where(filter);
+
             var users = await query.ToListAsync();
+
+
             foreach (var user in users)
             {
                 if (user.LockoutEnd == null || user.LockoutEnd <= DateTime.Now)
                     user.IsLockedOut = false;
-                else user.IsLockedOut = true;
-                var user_role = await _userManager.GetRolesAsync(user) as List<string>;
-                //var user_claim = await _userManager.GetClaimsAsync(user) as List<Claim>;
-                //var claimString = user_claim.Select(x => $"{x.Type}-{x.Value}").ToList();
-                //user.UserClaim = claimString.Count() != 0 ? String.Join(",", claimString) : "";
-                user.Role = String.Join(",", user_role);
+                else
+                    user.IsLockedOut = true;
+
+                var userRoles = await _userManager.GetRolesAsync(user);
+                user.Role = string.Join(",", userRoles);
             }
-            if (filter != null)
-                query = query.Where(filter);
+            if (!string.IsNullOrEmpty(byRole))
+            {
+                users = users.Where(x => x.Role.Contains(byRole)).ToList();
+            }
             if (isAdminRole)
             {
                 users = users.Where(x => x.Role.Contains(SD.STAFF_ROLE) || x.Role.Contains(SD.MANAGER_ROLE)).ToList();
@@ -822,9 +834,11 @@ namespace AutismEduConnectSystem.Repository
             {
                 users = users.Where(x => !x.Role.Contains(SD.STAFF_ROLE) && !x.Role.Contains(SD.MANAGER_ROLE) && !x.Role.Contains(SD.ADMIN_ROLE)).ToList();
             }
-            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+            users = users.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
 
             return (count, users);
+
         }
 
         public async Task<List<UserClaim>> GetClaimByUserIdAsync(string userId)
