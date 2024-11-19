@@ -57,15 +57,14 @@ namespace AutismEduConnectSystem.Repository
 
             if (pageSize > 0)
                 query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
-            
+
             if (orderBy != null)
                 if (isDesc)
                     query = query.OrderByDescending(orderBy);
                 else
                     query = query.OrderBy(orderBy);
 
-            var tutorList =  query.ToList();
-            return (totalCount, tutorList);
+            return (totalCount, await query.ToListAsync());
         }
         public async Task<IQueryable<Tutor>> GetTutorsWithReviews(IQueryable<Tutor> query, int filterScore)
         {
