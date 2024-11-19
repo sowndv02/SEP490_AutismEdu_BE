@@ -117,7 +117,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                var questions = await _assessmentQuestionRepository.GetAllNotPagingAsync(x => x.TestId == null, "AssessmentOptions", null);
+                var questions = await _assessmentQuestionRepository.GetAllNotPagingAsync(null, "AssessmentOptions", null);
                 var scoreRanges = await _assessmentScoreRangeRepository.GetAllNotPagingAsync();
 
                 foreach (var question in questions.list)
