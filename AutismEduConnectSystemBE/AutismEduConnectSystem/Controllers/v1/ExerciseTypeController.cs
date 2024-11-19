@@ -90,14 +90,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EXERCISE_TYPE) };
                     return BadRequest(_response);
                 }
-                if (updateDTO.ExerciseTypeName.ToLower().Equals(model.ExerciseTypeName.ToLower()))
-                {
-                    _logger.LogWarning("ExerciseTypeName already exists");
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EXERCISE_TYPE) };
-                    return BadRequest(_response);
-                }
 
                 model.ExerciseTypeName = updateDTO.ExerciseTypeName;
                 model.UpdatedDate = DateTime.Now;
@@ -221,28 +213,40 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
         [HttpGet("exercise/{id}")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute] int id, [FromQuery] string? search, int pageNumber = 1, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
             {
-                int totalCount = 0;
-                List<Exercise> list = new();
-                Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == id;
-                Expression<Func<Exercise, object>> orderByQuery = u => true;
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles.Contains(SD.TUTOR_ROLE))
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
                 {
-                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    if (string.IsNullOrEmpty(userId))
-                    {
-                        _logger.LogWarning("Unauthorized access attempt detected.");
-                        _response.IsSuccess = false;
-                        _response.StatusCode = HttpStatusCode.Unauthorized;
-                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
-                        return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                    }
-                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive && e.TutorId == userId);
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
+                Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == id && !e.IsDeleted && e.IsActive && e.TutorId == userId;
+                Expression<Func<Exercise, object>> orderByQuery = u => true;
+                
                 if (!string.IsNullOrEmpty(search))
                 {
                     filter = filter.AndAlso(e => e.ExerciseName.Contains(search));
@@ -262,15 +266,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                             break;
                     }
                 }
+                else
+                {
+                    orderByQuery = x => x.CreatedDate;
+                }
 
                 var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: 10, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
-
-                list = result;
-                totalCount = count;
-
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 10, Total = totalCount };
-
-                _response.Result = _mapper.Map<List<ExerciseDTO>>(list);
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 10, Total = count };
+                _response.Result = _mapper.Map<List<ExerciseDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 _response.IsSuccess = true;

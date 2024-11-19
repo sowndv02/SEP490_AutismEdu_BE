@@ -19,14 +19,6 @@ namespace AutismEduConnectSystem.Repository
             string? includeProperties = null, int pageSize = 0, int pageNumber = 1, Expression<Func<Tutor, object>>? orderBy = null, bool isDesc = true)
         {
             IQueryable<Tutor> query = dbset.AsNoTracking();
-
-            if (filterName != null)
-                query = query.Where(filterName);
-            if (filterAddress != null)
-                query = query.Include(x => x.User).Where(filterAddress);
-            if (filterAge != null)
-                query = query.Where(filterAge);
-            IQueryable<Tutor> storageQuery = query;
             if (includeProperties != null)
             {
                 var includeProps = includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -35,6 +27,14 @@ namespace AutismEduConnectSystem.Repository
                     query = query.Include(includeProp);
                 }
             }
+            if (filterName != null)
+                query = query.Where(filterName);
+            if (filterAddress != null)
+                query = query.Where(filterAddress);
+            if (filterAge != null)
+                query = query.Where(filterAge);
+            IQueryable<Tutor> storageQuery = query;
+            
             int defaultFilterScore = 5;
             if (filterScore != null)
             {

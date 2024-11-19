@@ -319,7 +319,10 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 var model = new ListScheduleDTO();
                 var allTutorSchedule = await _scheduleRepository.GetAllNotPagingAsync(x => !x.IsHidden && studentProfileId != 0 ? (x.StudentProfileId == studentProfileId) : (x.TutorId.Equals(tutorId)));
-                model.MaxDate = allTutorSchedule.list.Max(x => x.ScheduleDate.Date).Date;
+                if (allTutorSchedule.list.Any())
+                {
+                    model.MaxDate = allTutorSchedule.list.Max(x => x.ScheduleDate.Date).Date;
+                }
                 model.Schedules = _mapper.Map<List<ScheduleDTO>>(list);
 
                 _response.Result = model;
