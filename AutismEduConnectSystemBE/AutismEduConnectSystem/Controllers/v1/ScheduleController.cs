@@ -26,10 +26,12 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly IChildInformationRepository _childInfoRepository;
         private readonly ISyllabusRepository _syllabusRepository;
         private readonly ILogger<ScheduleController> _logger;
+        protected int pageSize = 0;
 
         public ScheduleController(IScheduleRepository scheduleRepository, IMapper mapper
             , IStudentProfileRepository studentProfileRepository, IResourceService resourceService,
-            IChildInformationRepository childInfoRepository, ISyllabusRepository syllabusRepository, ILogger<ScheduleController> logger)
+            IChildInformationRepository childInfoRepository, ISyllabusRepository syllabusRepository, 
+            ILogger<ScheduleController> logger, IConfiguration configuration)
         {
             _resourceService = resourceService;
             _scheduleRepository = scheduleRepository;
@@ -39,6 +41,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             _childInfoRepository = childInfoRepository;
             _syllabusRepository = syllabusRepository;
             _logger = logger;
+            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
         }
 
         [HttpGet("{id}")]
@@ -411,6 +414,76 @@ namespace AutismEduConnectSystem.Controllers.v1
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while changing schedule date and time for ScheduleId: {ScheduleId}", updateDTO?.Id);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpGet("GetAllAssignedSchedule")]
+        [Authorize]
+        public async Task<ActionResult<APIResponse>> GetAllAssignedSchedule([FromQuery] int studentProfileId, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        {
+            try
+            {
+                int totalCount = 0;
+                List<Schedule> list = new();
+                Expression<Func<Schedule, bool>> filter = u => true;
+                bool isDesc = sort != null && sort == SD.ORDER_DESC;
+
+                var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(tutorId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                if (studentProfileId != 0)
+                {
+                    filter = u => u.StudentProfileId == studentProfileId && !u.IsHidden && u.ExerciseId != null;
+                }
+                else
+                {
+                    filter = u => u.TutorId.Equals(tutorId) && !u.IsHidden && u.ExerciseId != null;
+                }
+
+                var (count, result) = await _scheduleRepository.GetAllWithIncludeAsync(filter: filter,
+                                                                                       includeProperties: "StudentProfile,Exercise,ExerciseType",
+                                                                                       pageSize: pageSize,
+                                                                                       pageNumber: pageNumber,
+                                                                                       orderBy: x => x.ScheduleDate,
+                                                                                       isDesc: isDesc);
+                foreach (Schedule schedule in result)
+                {
+                    schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId);
+                    schedule.StudentProfile.Child = await _childInfoRepository.GetAsync(x => x.Id == schedule.StudentProfile.ChildId, true, "Parent");
+                    schedule.Syllabus = await _syllabusRepository.GetAsync(x => x.Id == schedule.SyllabusId);
+                }
+
+                list = result
+                    .OrderBy(x => x.ScheduleDate.Date)
+                    .ThenBy(x => x.Start)
+                    .ToList();
+                totalCount = count;
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+
+                var model = new ListScheduleDTO();
+                var allTutorSchedule = await _scheduleRepository.GetAllNotPagingAsync(x => !x.IsHidden && studentProfileId != 0 ? (x.StudentProfileId == studentProfileId) : (x.TutorId.Equals(tutorId)));
+                model.MaxDate = allTutorSchedule.list.Max(x => x.ScheduleDate.Date).Date;
+                model.Schedules = _mapper.Map<List<ScheduleDTO>>(list);
+
+                _response.Result = model;
+                _response.Pagination = pagination;
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching schedules for Tutor ID: {TutorId} with StudentProfileId: {StudentProfileId}",
+                    User.FindFirst(ClaimTypes.NameIdentifier)?.Value, studentProfileId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
