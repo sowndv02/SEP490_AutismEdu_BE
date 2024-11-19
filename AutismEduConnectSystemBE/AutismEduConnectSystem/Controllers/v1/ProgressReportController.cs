@@ -253,9 +253,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                if (id <= 0)
+                if (Id <= 0)
                 {
-                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
