@@ -376,7 +376,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var id = 1;
-            _resourceServiceMock.Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE)).Returns("Internal server error");
+            _resourceServiceMock.Setup(r => r.GetString(INTERNAL_SERVER_ERROR_MESSAGE)).Returns("Lỗi hệ thống vui lòng thử lại sau");
             _exerciseTypeRepositoryMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<ExerciseType, bool>>>(), true, "Submitter", null))
                 .ThrowsAsync(new Exception("Lỗi hệ thống vui lòng thử lại sau"));
 
@@ -452,6 +452,95 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             });
         }
 
+        [Fact]
+        public async Task UpdateAsync_ReturnsUnauthorized_WhenUserIsUnauthorized()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
+
+            var updateDTO = new ExerciseTypeUpdateDTO()
+            {
+                Id = 1,
+                ExerciseTypeName = "ExerciseType name"
+            };
+            // Act
+            var result = await _controller.UpdateAsync(1, updateDTO);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
+
+
+        [Fact]
+        public async Task UpdateAsync_ReturnsForbiden_WhenUserDoesNotHaveRequiredRole()
+        {
+            // Arrange
+            _resourceServiceMock
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbiden access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId")
+            };
+            var identity = new ClaimsIdentity(claims, "test");
+            var user = new ClaimsPrincipal(identity);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext { User = user };
+
+            var updateDTO = new ExerciseTypeUpdateDTO() 
+            {
+                Id = 1,
+                ExerciseTypeName = "ExerciseType name"
+            };
+            // Act
+            var result = await _controller.UpdateAsync(1, updateDTO);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            apiResponse.ErrorMessages.First().Should().Be("Forbiden access.");
+        }
+
+        //[Fact]
+        //public async Task UpdateAsync_ReturnsBadRequest_WhenModelStateIsInvalid()
+        //{
+        //    // Arrange
+        //    _controller.ControllerContext = TestHelpers.CreateControllerContext("user123", roles: new[] { SD.STAFF_ROLE });
+        //    _controller.ModelState.AddModelError("Id", "Invalid");
+
+        //    // Act
+        //    var result = await _controller.UpdateAsync(1, new ExerciseTypeUpdateDTO());
+        //    var badRequestResult = result.Result as ObjectResult;
+
+        //    // Assert
+        //    badRequestResult.Should().NotBeNull();
+        //    badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        //}
 
     }
 }
