@@ -211,8 +211,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
-
-
         [HttpGet("{id}")]
         public async Task<ActionResult<APIResponse>> GetByIdAsync(string id)
         {
@@ -255,13 +253,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 model.TotalReview = model.Reviews.Count;
                 model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Average(x => x.RateScore) : 5;
-                if (model == null)
-                {
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR) };
-                    return NotFound(_response);
-                }
                 var result = _mapper.Map<TutorDTO>(model);
                 result.RejectChildIds = requests;
                 _response.Result = result;

@@ -2,6 +2,7 @@
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutoMapper;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
+using static AutismEduConnectSystem.SD;
 
 namespace AutismEduConnectSystem.Controllers
 {
@@ -20,6 +22,7 @@ namespace AutismEduConnectSystem.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
+        private readonly ITutorRepository _tutorRepository;
         private readonly IBlobStorageRepository _blobStorageRepository;
         private readonly ILogger<UserController> _logger;
         private readonly IMapper _mapper;
@@ -29,7 +32,8 @@ namespace AutismEduConnectSystem.Controllers
 
         public UserController(IUserRepository userRepository, IMapper mapper,
             IConfiguration configuration, IBlobStorageRepository blobStorageRepository,
-            ILogger<UserController> logger, IRoleRepository roleRepository, IResourceService resourceService)
+            ILogger<UserController> logger, IRoleRepository roleRepository, 
+            IResourceService resourceService, ITutorRepository tutorRepository)
         {
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -39,6 +43,7 @@ namespace AutismEduConnectSystem.Controllers
             _blobStorageRepository = blobStorageRepository;
             _logger = logger;
             _resourceService = resourceService;
+            _tutorRepository = tutorRepository;
         }
 
         [HttpPut("password/{id}", Name = "UpdatePassword")]
@@ -597,6 +602,9 @@ namespace AutismEduConnectSystem.Controllers
             }
         }
 
+        
+
+
         [HttpGet("{id}", Name = "GetUserById")]
         [Authorize]
         public async Task<ActionResult<APIResponse>> GetByIdAsync(string id)
@@ -621,6 +629,10 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
                 ApplicationUser model = await _userRepository.GetAsync(x => x.Id == id, false, "TutorProfile");
+                if(model.TutorProfile != null)
+                {
+                    model.TutorProfile = await _tutorRepository.GetAsync(x => x.TutorId == id, false, "User,Curriculums,AvailableTimeSlots,Certificates,WorkExperiences,Reviews");
+                }
                 if (model == null)
                 {
                     _logger.LogWarning("User not found for Id: {UserId}", id);
