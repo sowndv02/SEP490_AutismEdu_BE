@@ -313,7 +313,7 @@ namespace AutismEduConnectSystem.Controllers
             {
                 _logger.LogError(e, "Missing member exception occurred during login for user: {Email}", model.Email);
                 _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.NotAcceptable;
+                _response.StatusCode = HttpStatusCode.Locked;
                 _response.ErrorMessages = new List<string>() { e.Message };
                 return BadRequest(_response);
             }

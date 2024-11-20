@@ -5,10 +5,12 @@ using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
+using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 using static AutismEduConnectSystem.SD;
@@ -522,28 +524,25 @@ namespace AutismEduConnectSystem.Controllers
                 int totalCount = 0;
                 List<ApplicationUser> list = new();
                 bool isAdmin = false;
-                //var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                //if (userRoles.Contains(SD.STAFF_ROLE) || userRoles.Contains(SD.MANAGER_ROLE))
-                //{
-                //    isAdmin = false;
-                //}
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles.Contains(SD.STAFF_ROLE) || userRoles.Contains(SD.MANAGER_ROLE))
+                {
+                    isAdmin = false;
+                }
+                Expression<Func<ApplicationUser, bool>> filter = u => true;
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    filter = filter.AndAlso(u => u.Email.ToLower().Contains(searchValue.ToLower()) || !string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower()));
+                }
+
                 if (!string.IsNullOrEmpty(searchType))
                 {
                     switch (searchType.ToLower().Trim())
                     {
                         case "all":
-                            if (!string.IsNullOrEmpty(searchValue))
-                            {
-                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(u => u.Email.ToLower().Contains(searchValue.ToLower()) || !string.IsNullOrEmpty(u.FullName) && u.FullName.ToLower().Contains(searchValue.ToLower()), pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
-                                totalCount = totalResult;
-                                list = resultObject;
-                            }
-                            else
-                            {
-                                var (totalResult, resultObject) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
-                                totalCount = totalResult;
-                                list = resultObject;
-                            }
+                            var (totalResultAll, resultObjectAll) = await _userRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
+                            totalCount = totalResultAll;
+                            list = resultObjectAll;
                             break;
                         case "claim":
                             if (!string.IsNullOrEmpty(searchTypeId))
@@ -562,17 +561,17 @@ namespace AutismEduConnectSystem.Controllers
                             }
                             break;
                         case "parent":
-                            var (totalParent, resultParent) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin, byRole: SD.PARENT_ROLE);
+                            var (totalParent, resultParent) = await _userRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin, byRole: SD.PARENT_ROLE);
                             totalCount = totalParent;
                             list = resultParent;
                             break;
                         case "tutor":
-                            var (totalTutor, resultTutor) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin, byRole: SD.TUTOR_ROLE);
+                            var (totalTutor, resultTutor) = await _userRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin, byRole: SD.TUTOR_ROLE);
                             totalCount = totalTutor;
                             list = resultTutor;
                             break;
                         default:
-                            var (total, result) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
+                            var (total, result) = await _userRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
                             list = result;
                             totalCount = _userRepository.GetTotalUser();
                             break;
@@ -581,7 +580,7 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 else
                 {
-                    var (total, result) = await _userRepository.GetAllAsync(null, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
+                    var (total, result) = await _userRepository.GetAllAsync(filter, pageSize: pageSize, pageNumber: pageNumber, orderBy: x => x.CreatedDate, isDesc: true, isAdminRole: isAdmin);
                     list = result;
                     totalCount = _userRepository.GetTotalUser();
                 }

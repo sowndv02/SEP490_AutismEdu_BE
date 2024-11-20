@@ -240,7 +240,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet("{Id}")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetProgressReportById(int Id)
+        public async Task<ActionResult<APIResponse>> GetByIdÁync(int Id)
         {
             try
             {
