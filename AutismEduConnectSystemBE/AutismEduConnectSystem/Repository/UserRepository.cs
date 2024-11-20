@@ -308,6 +308,13 @@ namespace AutismEduConnectSystem.Repository
                         {
                             throw new Exception(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, loginRequestDTO.AuthenticationRole));
                         }
+                    } else if (loginRequestDTO.AuthenticationRole == SD.ADMIN_ROLE)
+                    {
+                        bool isValidRole = listRoles.Contains(SD.STAFF_ROLE) || listRoles.Contains(SD.ADMIN_ROLE) || listRoles.Contains(SD.MANAGER_ROLE);
+                        if (!isValidRole)
+                        {
+                            throw new Exception(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, loginRequestDTO.AuthenticationRole));
+                        }
                     }
                 }
                 else

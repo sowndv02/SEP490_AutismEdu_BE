@@ -211,6 +211,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<APIResponse>> GetByIdAsync(string id)
         {
