@@ -8,6 +8,7 @@ namespace AutismEduConnectSystem.Models.DTOs
         public int Id { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
+        public string Description { get; set; }
         public string UrlImageDisplay { get; set; }
         public ApplicationUserDTO Author { get; set; }
         public int ViewCount { get; set; }

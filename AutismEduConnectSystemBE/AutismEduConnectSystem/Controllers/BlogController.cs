@@ -274,6 +274,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
                 model.Title = updateDTO.Title;
+                model.Description = updateDTO.Description;
                 model.Content = updateDTO.Content;
                 model.UpdatedDate = DateTime.Now;
                 if (updateDTO.ImageDisplay != null)
