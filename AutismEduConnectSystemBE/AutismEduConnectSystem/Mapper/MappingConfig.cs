@@ -70,9 +70,9 @@ namespace AutismEduConnectSystem.Mapper
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ForMember(dest => dest.TotalReview, opt => opt.MapFrom(src => src.TotalReview))
-                .ForMember(dest => dest.Certificates, opt => opt.MapFrom(src => src.Certificates.Where(x => string.IsNullOrEmpty(x.IdentityCardNumber) && !x.IsDeleted)))
-                .ForMember(dest => dest.Curriculums, opt => opt.MapFrom(src => src.Curriculums.Where(x => x.IsActive && !x.IsDeleted).OrderBy(x => x.AgeFrom)))
-                .ForMember(dest => dest.WorkExperiences, opt => opt.MapFrom(src => src.WorkExperiences.Where(x => x.IsActive && !x.IsDeleted).OrderBy(x => x.StartDate)))
+                .ForMember(dest => dest.Certificates, opt => opt.MapFrom(src => src.Certificates.Where(x => string.IsNullOrEmpty(x.IdentityCardNumber) && !x.IsDeleted && x.RequestStatus == SD.Status.APPROVE)))
+                .ForMember(dest => dest.Curriculums, opt => opt.MapFrom(src => src.Curriculums.Where(x => x.IsActive && !x.IsDeleted && x.RequestStatus == SD.Status.APPROVE).OrderBy(x => x.AgeFrom)))
+                .ForMember(dest => dest.WorkExperiences, opt => opt.MapFrom(src => src.WorkExperiences.Where(x => x.IsActive && !x.IsDeleted && x.RequestStatus == SD.Status.APPROVE).OrderBy(x => x.StartDate)))
                 .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => src.ReviewScore == 0 ? 5 : src.ReviewScore))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.ImageUrl));
 
