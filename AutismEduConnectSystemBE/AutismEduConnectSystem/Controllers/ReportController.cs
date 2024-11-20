@@ -458,6 +458,8 @@ namespace AutismEduConnectSystem.Controllers
                         item.HandlerId = userId;
                         await _reportRepository.UpdateAsync(item);
                     }
+                    var review = await _reviewRepository.GetAsync(x => x.Id == model.ReviewId, true, null, null);
+                    await _reviewRepository.RemoveAsync(review);    
                     _response.Result = _mapper.Map<ReportDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
