@@ -37,7 +37,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             _messageBus = messageBus;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
-            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
+            queueName = configuration["RabbitMQSettings:QueueName"];
             _response = new APIResponse();
             _mapper = mapper;
             _userRepository = userRepository;
@@ -110,7 +110,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.MANAGER_ROLE},{SD.STAFF_ROLE}")]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? status = SD.STATUS_ALL, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
@@ -123,6 +123,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.TUTOR_ROLE) && !userRoles.Contains(SD.STAFF_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 Expression<Func<WorkExperience, bool>> filter = u => true;
                 Expression<Func<WorkExperience, object>> orderByQuery = u => true;
@@ -172,6 +181,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         item.Submitter.User = await _userRepository.GetAsync(u => u.Id == item.SubmitterId, false, null);
                     }
                 }
+
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = count };
                 _response.Result = _mapper.Map<List<WorkExperienceDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -221,7 +231,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
                     return BadRequest(_response);
                 }
-                var isExisted = await _workExperienceRepository.GetAllNotPagingAsync(x => x.OriginalId == createDTO.OriginalId && x.RequestStatus == SD.Status.PENDING, null, null, null, true);
+                var isExisted = await _workExperienceRepository.GetAllNotPagingAsync(x => createDTO.OriginalId != null && createDTO.OriginalId != 0 && x.OriginalId == createDTO.OriginalId && x.RequestStatus == SD.Status.PENDING, null, null, null, true);
                 if (isExisted.TotalCount > 0)
                 {
                     _logger.LogWarning("Cannot spam update workex");
@@ -231,9 +241,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
-
                 var newModel = _mapper.Map<WorkExperience>(createDTO);
-
                 newModel.SubmitterId = userId;
                 newModel.IsActive = false;
                 newModel.VersionNumber = await _workExperienceRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
