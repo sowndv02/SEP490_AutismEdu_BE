@@ -306,14 +306,14 @@ namespace AutismEduConnectSystem.Repository
                         bool isValidRole = listRoles.Contains(loginRequestDTO.AuthenticationRole);
                         if (!isValidRole)
                         {
-                            throw new Exception(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, loginRequestDTO.AuthenticationRole));
+                            throw new InvalidJwtException(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, loginRequestDTO.AuthenticationRole));
                         }
                     } else if (loginRequestDTO.AuthenticationRole == SD.ADMIN_ROLE)
                     {
                         bool isValidRole = listRoles.Contains(SD.STAFF_ROLE) || listRoles.Contains(SD.ADMIN_ROLE) || listRoles.Contains(SD.MANAGER_ROLE);
                         if (!isValidRole)
                         {
-                            throw new Exception(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, loginRequestDTO.AuthenticationRole));
+                            throw new InvalidJwtException(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, loginRequestDTO.AuthenticationRole));
                         }
                     }
                 }
@@ -322,7 +322,7 @@ namespace AutismEduConnectSystem.Repository
                     bool isValidRole = listRoles.Contains(SD.PARENT_ROLE);
                     if (!isValidRole)
                     {
-                        throw new Exception(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, SD.PARENT_ROLE));
+                        throw new InvalidJwtException(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, SD.PARENT_ROLE));
                     }
                 }
             }

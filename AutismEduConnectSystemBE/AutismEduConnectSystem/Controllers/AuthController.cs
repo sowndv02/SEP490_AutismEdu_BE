@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
+using Google.Apis.Auth;
 
 namespace AutismEduConnectSystem.Controllers
 {
@@ -314,6 +315,14 @@ namespace AutismEduConnectSystem.Controllers
                 _logger.LogError(e, "Missing member exception occurred during login for user: {Email}", model.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.Locked;
+                _response.ErrorMessages = new List<string>() { e.Message };
+                return BadRequest(_response);
+            }
+            catch (InvalidJwtException e)
+            {
+                _logger.LogError(e, "Missing member exception occurred during login for user: {Email}", model.Email);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.NotModified;
                 _response.ErrorMessages = new List<string>() { e.Message };
                 return BadRequest(_response);
             }
