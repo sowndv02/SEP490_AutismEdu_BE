@@ -83,7 +83,9 @@ namespace AutismEduConnectSystem.Controllers
                 {
                     foreach (var slot in existingTimeSlots.list)
                     {
-                        if (!(availableTimeSlot.To <= slot.From || availableTimeSlot.From >= slot.To))
+                        if (availableTimeSlot.From >= slot.From && availableTimeSlot.From < slot.To ||
+                            availableTimeSlot.To > slot.From && availableTimeSlot.To <= slot.To ||
+                            availableTimeSlot.From <= slot.From && availableTimeSlot.To >= slot.To)
                         {
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
