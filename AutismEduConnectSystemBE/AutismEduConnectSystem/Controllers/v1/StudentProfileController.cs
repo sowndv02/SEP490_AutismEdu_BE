@@ -330,7 +330,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     //Generate current week schedule
                     foreach (var timeslot in model.ScheduleTimeSlots)
                     {
-                        DateTime today = DateTime.Now;
+                        DateTime today = DateTime.Now.Date;
                         if ((int)today.DayOfWeek > timeslot.Weekday && timeslot.Weekday != 0)
                         {
                             continue;
@@ -338,7 +338,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                         int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
 
                         DateTime targetDate = today.AddDays(daysUntilTargetDay);
-
+                        if (targetDate == today)
+                        {
+                            continue;
+                        }
                         var schedule = new Schedule()
                         {
                             TutorId = model.TutorId,
@@ -698,7 +701,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         timeslot.AppliedDate = DateTime.Today;
                         timeslot.UpdatedDate = DateTime.Today;
                         await _scheduleTimeSlotRepository.UpdateAsync(timeslot);
-                        DateTime today = DateTime.Now;
+                        DateTime today = DateTime.Now.Date;
                         if ((int)today.DayOfWeek > timeslot.Weekday && timeslot.Weekday != 0)
                         {
                             continue;
@@ -706,7 +709,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                         int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
 
                         DateTime targetDate = today.AddDays(daysUntilTargetDay);
-
+                        if (targetDate == today)
+                        {
+                            continue;
+                        }
                         var schedule = new Schedule()
                         {
                             TutorId = studentProfile.TutorId,

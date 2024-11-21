@@ -56,7 +56,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet("NoStudentProfile")]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<ActionResult<APIResponse>> GetAllRequestNoStudentProfileAsync(string? status = SD.STATUS_APPROVE, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
+        public async Task<ActionResult<APIResponse>> GetAllRequestNoStudentProfileAsync(string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
             {

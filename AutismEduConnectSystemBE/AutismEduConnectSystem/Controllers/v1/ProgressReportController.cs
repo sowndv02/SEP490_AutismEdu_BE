@@ -23,7 +23,6 @@ namespace AutismEduConnectSystem.Controllers.v1
     {
         protected APIResponse _response;
         private readonly IMapper _mapper;
-        protected int pageSize = 0;
         private readonly IProgressReportRepository _progressReportRepository;
         private readonly IAssessmentResultRepository _assessmentResultRepository;
         private readonly IInitialAssessmentResultRepository _initialAssessmentResultRepository;
@@ -42,7 +41,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             _response = new APIResponse();
             _mapper = mapper;
-            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _progressReportRepository = progressReportRepository;
             _assessmentResultRepository = assessmentResultRepository;
             _initialAssessmentResultRepository = initialAssessmentResultRepository;
@@ -164,8 +162,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                int totalCount = 0;
-                List<ProgressReport> list = new();
+                if(studentProfileId <= 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", studentProfileId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 Expression<Func<ProgressReport, bool>> filter = u => true;
                 Expression<Func<ProgressReport, object>> orderByQuery = u => true;
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
@@ -190,6 +194,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                             break;
                     }
                 }
+                else
+                {
+                    orderByQuery = x => x.CreatedDate;
+                }
+                
 
                 if (startDate != null)
                 {
@@ -203,10 +212,8 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 var (count, result) = await _progressReportRepository.GetAllAsync(filter,
                                 "StudentProfile,AssessmentResults", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
-                list = result;
-                totalCount = count;
 
-                foreach (var item in list)
+                foreach (var item in result)
                 {
                     List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
                     foreach (var assessmentResult in item.AssessmentResults)
@@ -216,12 +223,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                     item.AssessmentResults = assessmentResults;
                 }
 
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = count };
 
                 if (getInitialResult)
                 {
                     ProgressReportGraphDTO graph = new ProgressReportGraphDTO();
-                    graph.ProgressReports = _mapper.Map<List<ProgressReportDTO>>(list);
+                    graph.ProgressReports = _mapper.Map<List<ProgressReportDTO>>(result);
 
                     var initialAssessmentResult = await _initialAssessmentResultRepository.GetAllAsync(x => x.StudentProfileId == studentProfileId, "Question,Option");
                     graph.InitialAssessmentResultDTO = _mapper.Map<List<InitialAssessmentResultDTO>>(initialAssessmentResult.list);
@@ -232,7 +239,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return Ok(_response);
                 }
 
-                _response.Result = _mapper.Map<List<ProgressReportDTO>>(list);
+                _response.Result = _mapper.Map<List<ProgressReportDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);

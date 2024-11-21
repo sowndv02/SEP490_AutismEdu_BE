@@ -805,7 +805,6 @@ namespace AutismEduConnectSystem.Repository
                 else
                     query = query.OrderBy(orderBy);
             }
-            int count = query.Count();
 
             if (!string.IsNullOrEmpty(byRole))
             {
@@ -816,6 +815,7 @@ namespace AutismEduConnectSystem.Repository
             if (filter != null)
                 query = query.Where(filter);
 
+            int count = query.Count();
             var users = await query.ToListAsync();
 
 
