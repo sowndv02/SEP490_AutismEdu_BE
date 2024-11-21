@@ -61,7 +61,7 @@ namespace AutismEduConnectSystem.Controllers
                 }
 
                 var (totalReviews, reviews) = await _reviewRepository.GetAllAsync(
-                    filter: x => x.TutorId == tutorId,
+                    filter: x => x.TutorId == tutorId && x.IsHide,
                     includeProperties: "Parent",
                     pageSize: pageSize,
                     pageNumber: pageNumber,
@@ -145,7 +145,7 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
-                var (totalCount, reviews) = await _reviewRepository.GetAllAsync(
+                var (totalCount, reviews) = await _reviewRepository.GetAllAsync(x => x.IsHide,
                     includeProperties: "Parent,Tutor",
                     pageSize: pageSize,
                     pageNumber: pageNumber
@@ -233,6 +233,7 @@ namespace AutismEduConnectSystem.Controllers
                 reviewModel.ParentId = userId;
                 reviewModel.TutorId = reviewCreateDTO.TutorId;
                 reviewModel.CreatedDate = DateTime.Now;
+                reviewModel.IsHide = false;
 
                 var createdReview = await _reviewRepository.CreateAsync(reviewModel);
 
@@ -246,6 +247,7 @@ namespace AutismEduConnectSystem.Controllers
                     Description = createdReview.Description,
                     Parent = _mapper.Map<ApplicationUserDTO>(createdReview.Parent),
                     TutorId = createdReview.TutorId,
+                    IsHide = createdReview.IsHide,
                     CreatedDate = createdReview.CreatedDate,
                     UpdatedDate = createdReview.UpdatedDate
                 };
@@ -305,7 +307,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
 
-                var existingReview = await _reviewRepository.GetAsync(x => x.Id == reviewId && x.ParentId == userId);
+                var existingReview = await _reviewRepository.GetAsync(x => x.Id == reviewId && x.ParentId == userId && x.IsHide);
 
                 if (existingReview == null)
                 {
@@ -363,7 +365,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
                     return NotFound(_response);
                 }
-
+                review.IsHide = true;
                 await _reviewRepository.RemoveAsync(review);
 
                 _response.StatusCode = HttpStatusCode.OK;

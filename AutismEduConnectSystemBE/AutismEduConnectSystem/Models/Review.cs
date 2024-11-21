@@ -9,6 +9,7 @@ namespace AutismEduConnectSystem.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public decimal RateScore { get; set; }
+        public bool IsHide { get; set; } = false;
         public string Description { get; set; }
         public string ParentId { get; set; }
         public string TutorId { get; set; }

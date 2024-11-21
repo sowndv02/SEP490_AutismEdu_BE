@@ -461,12 +461,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     var subject = $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã được chấp nhận";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+
+                    var rejectionReasonHtml = string.Empty;
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.Parent.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
-                        .Replace("@Model.IsApproved", Status.APPROVE.ToString())
                         .Replace("@Model.IsApprovedString", "Chấp nhận")
-                        ;
+                        .Replace("@Model.RejectionReason", rejectionReasonHtml);
+
                     _messageBus.SendMessage(new EmailLogger()
                     {
                         UserId = model.ParentId,
@@ -522,12 +524,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                     var subject = $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var rejectionReasonHtml = $"<p><strong>Lý do từ chối:</strong> {reason}</p>";
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.Parent.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
-                        .Replace("@Model.IsApproved", Status.REJECT.ToString())
                         .Replace("@Model.IsApprovedString", "Từ chối")
-                        .Replace("@Model.RejectionReason", reason);
+                        .Replace("@Model.RejectionReason", rejectionReasonHtml);
                     _messageBus.SendMessage(new EmailLogger()
                     {
                         UserId = model.ParentId,

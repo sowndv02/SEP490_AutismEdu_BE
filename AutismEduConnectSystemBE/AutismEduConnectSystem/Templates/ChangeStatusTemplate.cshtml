@@ -11,10 +11,7 @@
 
     <p><strong>Trạng thái:</strong> @Model.IsApprovedString</p>
 
-    @if (!Model.IsApproved)
-    {
-        <p><strong>Lý do từ chối:</strong> @Model.RejectionReason</p>
-    }
+    @Model.RejectionReason
 
     <p>Nếu có bất kỳ câu hỏi nào, xin vui lòng liên hệ với đội ngũ hỗ trợ của chúng tôi.</p>
 

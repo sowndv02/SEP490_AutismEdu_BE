@@ -320,10 +320,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                         // Send mail
                         var subject = "Yêu cập nhật kinh nghiệm làm việc của bạn đã được chấp nhận!";
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+
+                        var rejectionReasonHtml = string.Empty;
                         var htmlMessage = templateContent
-                            .Replace("@Model.FullName", tutor.FullName)
-                            .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
-                            .Replace("@Model.IsApproved", Status.APPROVE.ToString());
+                        .Replace("@Model.FullName", tutor.FullName)
+                        .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
+                        .Replace("@Model.IsApprovedString", "Chấp nhận")
+                        .Replace("@Model.RejectionReason", rejectionReasonHtml);
+
                         _messageBus.SendMessage(new EmailLogger()
                         {
                             UserId = tutor.Id,
@@ -353,11 +357,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                         //Send mail
                         var subject = "Yêu cập nhật kinh nghiệm làm việc của bạn đã bị từ chối!";
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+
+                        var rejectionReasonHtml = $"<p><strong>Lý do từ chối:</strong> {changeStatusDTO.RejectionReason}</p>";
                         var htmlMessage = templateContent
                             .Replace("@Model.FullName", tutor.FullName)
                             .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
-                            .Replace("@Model.IsApproved", Status.REJECT.ToString())
-                            .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
+                            .Replace("@Model.IsApprovedString", "Từ chối")
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml);
+
                         _messageBus.SendMessage(new EmailLogger()
                         {
                             UserId = tutor.Id,

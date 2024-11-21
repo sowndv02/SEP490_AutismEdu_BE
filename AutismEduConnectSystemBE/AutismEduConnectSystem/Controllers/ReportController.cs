@@ -419,7 +419,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
 
-                Report model = await _reportRepository.GetAsync(x => x.Id == updateDTO.Id, false, "Reporter", null);
+                Report model = await _reportRepository.GetAsync(x => x.Id == updateDTO.Id, true, "Reporter", null);
                 List<Report> reports = new();
                 if (model == null || model.Status != Status.PENDING)
                 {
@@ -448,6 +448,9 @@ namespace AutismEduConnectSystem.Controllers
                     {
                         var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == model.ReviewId && x.Id != model.Id && x.Status == SD.Status.PENDING, null, null, x => x.CreatedDate, true);
                         reports = listReportReview;
+                        var review = await _reviewRepository.GetAsync(x => x.Id == model.ReviewId, true, null, null);
+                        review.IsHide = true;
+                        await _reviewRepository.UpdateAsync(review);
                     }
                     foreach (var item in reports)
                     {
@@ -457,8 +460,6 @@ namespace AutismEduConnectSystem.Controllers
                         item.HandlerId = userId;
                         await _reportRepository.UpdateAsync(item);
                     }
-                    var review = await _reviewRepository.GetAsync(x => x.Id == model.ReviewId, true, null, null);
-                    await _reviewRepository.RemoveAsync(review);
                     _response.Result = _mapper.Map<ReportDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;

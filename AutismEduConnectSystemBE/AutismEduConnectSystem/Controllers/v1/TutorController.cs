@@ -432,10 +432,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                     if (System.IO.File.Exists(templatePath))
                     {
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+
+                        var rejectionReasonHtml = string.Empty;
                         var htmlMessage = templateContent
                         .Replace("@Model.FullName", tutor.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật thông tin của bạn")
-                        .Replace("@Model.IsApproved", Status.APPROVE.ToString());
+                        .Replace("@Model.IsApprovedString", "Chấp nhận")
+                        .Replace("@Model.RejectionReason", rejectionReasonHtml);
 
                         _messageBus.SendMessage(new EmailLogger()
                         {
@@ -480,11 +483,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                     if (System.IO.File.Exists(templatePath))
                     {
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+
+                        var rejectionReasonHtml = $"<p><strong>Lý do từ chối:</strong> {changeStatusDTO.RejectionReason}</p>";
                         var htmlMessage = templateContent
                             .Replace("@Model.FullName", tutor.FullName)
                             .Replace("@Model.IssueName", $"Yêu cầu cập nhật thông tin của bạn")
-                            .Replace("@Model.IsApproved", Status.REJECT.ToString())
-                            .Replace("@Model.RejectionReason", changeStatusDTO.RejectionReason);
+                            .Replace("@Model.IsApprovedString", "Từ chối")
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml);
                         _messageBus.SendMessage(new EmailLogger()
                         {
                             UserId = tutor.Id,

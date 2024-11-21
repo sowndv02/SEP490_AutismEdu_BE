@@ -170,6 +170,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
+                if (startDate != null && endDate != null && startDate > endDate)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", studentProfileId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SEARCH_DATE) };
+                    return BadRequest(_response);
+                }
+
+
                 Expression<Func<ProgressReport, bool>> filter = u => true;
                 Expression<Func<ProgressReport, object>> orderByQuery = u => true;
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
@@ -198,7 +208,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 {
                     orderByQuery = x => x.CreatedDate;
                 }
-                
 
                 if (startDate != null)
                 {

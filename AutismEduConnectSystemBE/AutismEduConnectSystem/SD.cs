@@ -155,6 +155,7 @@
         public const string TUTOR_UPDATE_PROFILE_REQUEST = "Yêu cầu cập nhận thông tin";
         public const string CONVERSATION = "Cuộc hội thoại";
         public const string MESSAGE = "Tin nhắn";
+        public const string SEARCH_DATE = "Ngày tìm kiếm";
 
 
 
