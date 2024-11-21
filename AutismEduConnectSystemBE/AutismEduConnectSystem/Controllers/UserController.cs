@@ -76,6 +76,14 @@ namespace AutismEduConnectSystem.Controllers
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
+            catch (InvalidDataException ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating password for User ID: {UserId}", id);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.BadRequest, _response);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while updating password for User ID: {UserId}", id);
@@ -229,6 +237,14 @@ namespace AutismEduConnectSystem.Controllers
                     _response.StatusCode = HttpStatusCode.Created;
                     return Ok(_response);
                 }
+            }
+            catch (InvalidDataException ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating password for User ID: {UserId}", id);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.BadRequest, _response);
             }
             catch (Exception ex)
             {
@@ -820,6 +836,14 @@ namespace AutismEduConnectSystem.Controllers
                 _response.Result = _mapper.Map<List<RoleDTO>>(model);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
+            }
+            catch (InvalidDataException ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating password for User ID: {UserId}", id);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.ErrorMessages = new List<string>() { ex.Message };
+                return StatusCode((int)HttpStatusCode.BadRequest, _response);
             }
             catch (Exception ex)
             {

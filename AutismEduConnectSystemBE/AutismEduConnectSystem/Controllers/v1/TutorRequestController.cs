@@ -81,8 +81,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                int totalCount = 0;
-                List<TutorRequest> list = new();
                 Expression<Func<TutorRequest, bool>> filter = u => u.TutorId == userId && u.RequestStatus == SD.Status.APPROVE && !u.HasStudentProfile;
                 Expression<Func<TutorRequest, object>> orderByQuery = u => true;
 
@@ -107,10 +105,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 var (count, result) = await _tutorRequestRepository.GetAllNotPagingAsync(filter,
                                includeProperties: "Parent,ChildInformation", excludeProperties: null, orderBy: orderByQuery, isDesc);
-                list = result;
-                totalCount = count;
-
-                _response.Result = _mapper.Map<List<TutorRequestDTO>>(list);
+                _response.Result = _mapper.Map<List<TutorRequestDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = null;
                 return Ok(_response);
@@ -152,8 +147,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                int totalCount = 0;
-                List<TutorRequest> list = new();
                 Expression<Func<TutorRequest, bool>> filter = u => u.ParentId == userId;
                 Expression<Func<TutorRequest, object>> orderByQuery = u => true;
 
@@ -193,17 +186,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 var (count, result) = await _tutorRequestRepository.GetAllWithIncludeAsync(filter,
                                "Tutor,ChildInformation", pageSize: 5, pageNumber: pageNumber, orderByQuery, isDesc);
-                list = result;
-                totalCount = count;
-                foreach (var item in list)
+                foreach (var item in result)
                 {
                     if(item.Tutor != null)
                     {
                         item.Tutor.User = await _userRepository.GetAsync(x => x.Id == item.TutorId);
                     }
                 }
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
-                _response.Result = _mapper.Map<List<TutorRequestDTO>>(list);
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = count };
+                _response.Result = _mapper.Map<List<TutorRequestDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);

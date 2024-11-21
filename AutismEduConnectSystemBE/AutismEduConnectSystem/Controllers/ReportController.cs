@@ -288,7 +288,7 @@ namespace AutismEduConnectSystem.Controllers
                 }
 
                 if (search != null && !string.IsNullOrEmpty(search))
-                    filter = filter.AndAlso(x => x.Tutor.User != null && (x.Tutor.User.Email.ToLower().Contains(search.ToLower()) || x.Tutor.User.FullName.Contains(search.ToLower())));
+                    filter = filter.AndAlso(x => x.Tutor!= null && x.Tutor.User != null && (x.Tutor.User.Email.ToLower().Contains(search.ToLower()) || x.Tutor.User.FullName.Contains(search.ToLower())));
 
                 if (startDate != null)
                     filter.AndAlso(x => x.CreatedDate.Date >= startDate.Value.Date);

@@ -662,24 +662,24 @@ namespace AutismEduConnectSystem.Repository
 
             if (user == null)
             {
-                throw new Exception(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
+                throw new InvalidDataException(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
             }
             if (user.UserType == SD.GOOGLE_USER)
             {
-                throw new Exception(_resourceService.GetString(SD.GG_CANNOT_CHANGE_PASSWORD));
+                throw new InvalidDataException(_resourceService.GetString(SD.GG_CANNOT_CHANGE_PASSWORD));
             }
             bool isValid = await _userManager.CheckPasswordAsync(user, updatePasswordRequestDTO.OldPassword);
 
             if (!isValid)
             {
-                throw new Exception(_resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PASSWORD));
+                throw new InvalidDataException(_resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PASSWORD));
             }
 
             var result = await _userManager.ChangePasswordAsync(user, updatePasswordRequestDTO.OldPassword, updatePasswordRequestDTO.NewPassword);
 
             if (!result.Succeeded)
             {
-                throw new Exception(_resourceService.GetString(SD.CHANGE_PASS_FAIL));
+                throw new InvalidDataException(_resourceService.GetString(SD.CHANGE_PASS_FAIL));
             }
             var objReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == user.Email);
 
@@ -984,7 +984,7 @@ namespace AutismEduConnectSystem.Repository
                 {
                     List<IdentityRole> roles = new List<IdentityRole>();
                     var user = await _userManager.FindByIdAsync(userId);
-                    if (user == null) throw new Exception(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
+                    if (user == null) throw new InvalidDataException(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
                     var roleNames = await _userManager.GetRolesAsync(user);
                     foreach (var name in roleNames)
                     {
@@ -1009,7 +1009,7 @@ namespace AutismEduConnectSystem.Repository
                 {
                     List<IdentityRole> roles = new List<IdentityRole>();
                     var user = await _userManager.FindByIdAsync(userId);
-                    if (user == null) throw new Exception(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
+                    if (user == null) throw new InvalidDataException(_resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER));
                     var roleNames = await _userManager.GetRolesAsync(user);
                     return roles.FirstOrDefault(x => x.Name == roleName) != null;
                 }
