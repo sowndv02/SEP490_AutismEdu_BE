@@ -245,14 +245,11 @@ namespace AutismEduConnectSystem.Controllers
                         return Ok(_response);
                     }
                 }
-                else
-                {
-                    _logger.LogWarning("Cannot report tutor");
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
-                    return BadRequest(_response);
-                }
+                _logger.LogWarning("Cannot report tutor");
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
+                return BadRequest(_response);
             }
             catch (Exception ex)
             {
