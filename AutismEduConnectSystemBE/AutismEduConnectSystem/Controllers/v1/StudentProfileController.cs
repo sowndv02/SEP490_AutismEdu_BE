@@ -485,7 +485,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
                 var scheduleTimeSlots = await _studentProfileRepository.GetAllNotPagingAsync(x => x.TutorId.Equals(tutorId)
-                && (x.Status == SD.StudentProfileStatus.Teaching || x.Status == SD.StudentProfileStatus.Teaching), "ScheduleTimeSlots,Child");
+                && (x.Status == SD.StudentProfileStatus.Teaching || x.Status == SD.StudentProfileStatus.Pending), "ScheduleTimeSlots,Child");
 
                 _response.Result = _mapper.Map<List<GetAllStudentProfileTimeSlotDTO>>(scheduleTimeSlots.list);
                 _response.StatusCode = HttpStatusCode.OK;
