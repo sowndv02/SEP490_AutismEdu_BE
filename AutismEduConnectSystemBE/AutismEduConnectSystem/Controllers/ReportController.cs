@@ -89,7 +89,7 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (user != null) newModel.ReporterId = user.Id;
                 newModel.ReportType = SD.ReportType.UNLOCKREQUEST;
-                //newModel.Title = SD.REPORT_UNLOCKREQUEST_TITLE;
+                newModel.Title = SD.REPORT_UNLOCKREQUEST_TITLE;
 
                 var reportModel = await _reportRepository.CreateAsync(newModel);
                 var result = await _reportRepository.GetAsync(x => x.Id == reportModel.Id, false, "Reporter", null);

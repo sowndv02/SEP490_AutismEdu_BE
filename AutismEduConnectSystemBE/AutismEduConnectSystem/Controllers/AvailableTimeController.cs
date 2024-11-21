@@ -169,7 +169,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 AvailableTimeSlot model = _mapper.Map<AvailableTimeSlot>(timeslot);
                 await _availableTimeSlotRepository.RemoveAsync(model);
-                // TODO: Add log
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
