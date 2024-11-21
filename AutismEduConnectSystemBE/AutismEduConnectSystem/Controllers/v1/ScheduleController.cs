@@ -354,7 +354,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 else
                 {
                     list = result
-                    .Where(x => x.StudentProfile.Status == SD.StudentProfileStatus.Teaching && x.StudentProfile.Status == SD.StudentProfileStatus.Pending)
+                    .Where(x => x.StudentProfile.Status == SD.StudentProfileStatus.Teaching || x.StudentProfile.Status == SD.StudentProfileStatus.Pending)
                     .OrderBy(x => x.ScheduleDate.Date)
                     .ThenBy(x => x.Start)
                     .ToList();
