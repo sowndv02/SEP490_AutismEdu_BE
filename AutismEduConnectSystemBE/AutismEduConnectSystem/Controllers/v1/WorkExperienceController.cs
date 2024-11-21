@@ -135,7 +135,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 Expression<Func<WorkExperience, bool>> filter = u => true;
                 Expression<Func<WorkExperience, object>> orderByQuery = u => true;
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     filter = filter.AndAlso(x => !string.IsNullOrEmpty(x.SubmitterId) && x.SubmitterId == userId && !x.IsDeleted);
@@ -156,6 +155,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                             orderByQuery = x => x.CreatedDate;
                             break;
                     }
+                }
+                else
+                {
+                    orderByQuery = x => x.CreatedDate;
                 }
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
