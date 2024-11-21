@@ -10,6 +10,7 @@ using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing.Template;
 using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
 using System.Net;
@@ -42,7 +43,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             _messageBus = messageBus;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
-            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
+            queueName = configuration["RabbitMQSettings:QueueName"];
             _response = new APIResponse();
             _mapper = mapper;
             _userRepository = userRepository;
@@ -98,6 +99,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                             orderByQuery = x => x.CreatedDate;
                             break;
                     }
+                }
+                else
+                {
+                    orderByQuery = x => x.CreatedDate;
                 }
 
                 var (count, result) = await _tutorRequestRepository.GetAllNotPagingAsync(filter,
@@ -166,6 +171,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                             break;
                     }
                 }
+                else
+                {
+                    orderByQuery = x => x.CreatedDate;
+                }
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
@@ -188,7 +197,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 totalCount = count;
                 foreach (var item in list)
                 {
-                    item.Tutor.User = await _userRepository.GetAsync(x => x.Id == item.TutorId);
+                    if(item.Tutor != null)
+                    {
+                        item.Tutor.User = await _userRepository.GetAsync(x => x.Id == item.TutorId);
+                    }
                 }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
                 _response.Result = _mapper.Map<List<TutorRequestDTO>>(list);
@@ -233,8 +245,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                int totalCount = 0;
-                List<TutorRequest> list = new();
                 Expression<Func<TutorRequest, bool>> filter = u => u.TutorId == userId;
                 Expression<Func<TutorRequest, object>> orderByQuery = u => true;
 
@@ -256,6 +266,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                             break;
                     }
                 }
+                else
+                {
+                    orderByQuery = x => x.CreatedDate;
+                }
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
                 {
@@ -274,11 +288,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 var (count, result) = await _tutorRequestRepository.GetAllWithIncludeAsync(filter,
                                "Parent,ChildInformation", pageSize: 5, pageNumber: pageNumber, orderByQuery, isDesc);
-                list = result;
-                totalCount = count;
 
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
-                _response.Result = _mapper.Map<List<TutorRequestDTO>>(list);
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = count };
+                _response.Result = _mapper.Map<List<TutorRequestDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);
@@ -350,54 +362,57 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var createdObject = await _tutorRequestRepository.CreateAsync(model);
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId);
                 var parent = await _userRepository.GetAsync(x => x.Id == model.ParentId);
-                // Send mail for parent
 
-                var subjectForParent = "Xác nhận Yêu cầu Dạy học";
+                // Send mail for parent
                 var parentTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ParentRequestConfirmationTemplate.cshtml");
-                var parentTemplateContent = await System.IO.File.ReadAllTextAsync(parentTemplatePath);
-                var parentHtmlMessage = parentTemplateContent
-                    .Replace("@Model.ParentFullName", parent.FullName)
-                    .Replace("@Model.TutorFullName", tutor.FullName)
-                    .Replace("@Model.TutorEmail", tutor.Email)
-                    .Replace("@Model.TutorPhoneNumber", tutor.PhoneNumber)
-                    .Replace("@Model.RequestDescription", model.Description);
-                _messageBus.SendMessage(new EmailLogger()
+                if (System.IO.File.Exists(parentTemplatePath) && parent != null)
                 {
-                    UserId = parent.Id,
-                    Email = parent.Email,
-                    Subject = subjectForParent,
-                    Message = parentHtmlMessage
-                }, queueName);
+                    var subjectForParent = "Xác nhận Yêu cầu Dạy học";
+                    var parentTemplateContent = await System.IO.File.ReadAllTextAsync(parentTemplatePath);
+                    var parentHtmlMessage = parentTemplateContent
+                        .Replace("@Model.ParentFullName", parent.FullName)
+                        .Replace("@Model.TutorFullName", tutor.FullName)
+                        .Replace("@Model.TutorEmail", tutor.Email)
+                        .Replace("@Model.TutorPhoneNumber", tutor.PhoneNumber)
+                        .Replace("@Model.RequestDescription", model.Description);
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        UserId = parent.Id,
+                        Email = parent.Email,
+                        Subject = subjectForParent,
+                        Message = parentHtmlMessage
+                    }, queueName);
+                }
 
 
                 // Send mail for tutor
-
-                var subjectForTutor = "Thông báo Yêu cầu Dạy học Mới";
                 var tutorTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TutorRequestNotificationTemplate.cshtml");
-                var tutorTemplateContent = await System.IO.File.ReadAllTextAsync(tutorTemplatePath);
-                var tutorHtmlMessage = tutorTemplateContent
-                    .Replace("@Model.TutorFullName", tutor.FullName)
-                    .Replace("@Model.ParentFullName", parent.FullName)
-                    .Replace("@Model.RequestDescription", model.Description);
-                _messageBus.SendMessage(
-                    new EmailLogger() { UserId = tutor.Id, Email = tutor.Email, Subject = subjectForTutor, Message = tutorHtmlMessage }, queueName);
-
-                // Notification
-                var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
-                var notfication = new Notification()
+                if (System.IO.File.Exists(parentTemplatePath) && tutor != null)
                 {
-                    ReceiverId = tutor.Id,
-                    Message = _resourceService.GetString(SD.TUTOR_REQUEST_TUTOR_NOTIFICATION, parent.FullName),
-                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_TUTOR_REQUEST),
-                    IsRead = false,
-                    CreatedDate = DateTime.Now
-                };
-                var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                if (!string.IsNullOrEmpty(connectionId))
-                {
-                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                    var subjectForTutor = "Thông báo Yêu cầu Dạy học Mới";
+                    var tutorTemplateContent = await System.IO.File.ReadAllTextAsync(tutorTemplatePath);
+                    var tutorHtmlMessage = tutorTemplateContent
+                        .Replace("@Model.TutorFullName", tutor.FullName)
+                        .Replace("@Model.ParentFullName", parent.FullName)
+                        .Replace("@Model.RequestDescription", model.Description);
+                    _messageBus.SendMessage(
+                        new EmailLogger() { UserId = tutor.Id, Email = tutor.Email, Subject = subjectForTutor, Message = tutorHtmlMessage }, queueName);
+                    // Notification
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = tutor.Id,
+                        Message = _resourceService.GetString(SD.TUTOR_REQUEST_TUTOR_NOTIFICATION, parent.FullName),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_TUTOR_REQUEST),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
                 }
-
 
                 _response.Result = _mapper.Map<TutorRequestDTO>(createdObject);
                 _response.StatusCode = HttpStatusCode.Created;
@@ -460,35 +475,38 @@ namespace AutismEduConnectSystem.Controllers.v1
                     // Send mail
                     var subject = $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã được chấp nhận";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    if (System.IO.File.Exists(templatePath) && model.Parent != null)
+                    {
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
 
-                    var rejectionReasonHtml = string.Empty;
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", model.Parent.FullName)
-                        .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
-                        .Replace("@Model.IsApprovedString", "Chấp nhận")
-                        .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                        var rejectionReasonHtml = string.Empty;
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", model.Parent.FullName)
+                            .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
+                            .Replace("@Model.IsApprovedString", "Chấp nhận")
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml);
 
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        UserId = model.ParentId,
-                        Email = model.Parent.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
-                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
-                    var notfication = new Notification()
-                    {
-                        ReceiverId = model.ParentId,
-                        Message = _resourceService.GetString(SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION, SD.STATUS_APPROVE_VIE, tutor.FullName),
-                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_TUTOR_REQUEST),
-                        IsRead = false,
-                        CreatedDate = DateTime.Now
-                    };
-                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                    if (!string.IsNullOrEmpty(connectionId))
-                    {
-                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = model.ParentId,
+                            Email = model.Parent.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                        var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                        var notfication = new Notification()
+                        {
+                            ReceiverId = model.ParentId,
+                            Message = _resourceService.GetString(SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION, SD.STATUS_APPROVE_VIE, tutor.FullName),
+                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_TUTOR_REQUEST),
+                            IsRead = false,
+                            CreatedDate = DateTime.Now
+                        };
+                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                        if (!string.IsNullOrEmpty(connectionId))
+                        {
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                        }
                     }
                     _response.Result = _mapper.Map<TutorRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -520,36 +538,38 @@ namespace AutismEduConnectSystem.Controllers.v1
                             reason = changeStatusDTO.RejectionReason;
                             break;
                     }
-
-                    var subject = $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var rejectionReasonHtml = $"<p><strong>Lý do từ chối:</strong> {reason}</p>";
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", model.Parent.FullName)
-                        .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
-                        .Replace("@Model.IsApprovedString", "Từ chối")
-                        .Replace("@Model.RejectionReason", rejectionReasonHtml);
-                    _messageBus.SendMessage(new EmailLogger()
+                    if (System.IO.File.Exists(templatePath) && model.Parent != null)
                     {
-                        UserId = model.ParentId,
-                        Email = model.Parent.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
-                    var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
-                    var notfication = new Notification()
-                    {
-                        ReceiverId = model.ParentId,
-                        Message = _resourceService.GetString(SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION, SD.STATUS_REJECT_VIE, tutor.FullName),
-                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_TUTOR_REQUEST),
-                        IsRead = false,
-                        CreatedDate = DateTime.Now
-                    };
-                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                    if (!string.IsNullOrEmpty(connectionId))
-                    {
-                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                        var subject = $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var rejectionReasonHtml = $"<p><strong>Lý do từ chối:</strong> {reason}</p>";
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", model.Parent.FullName)
+                            .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
+                            .Replace("@Model.IsApprovedString", "Từ chối")
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = model.ParentId,
+                            Email = model.Parent.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                        var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                        var notfication = new Notification()
+                        {
+                            ReceiverId = model.ParentId,
+                            Message = _resourceService.GetString(SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION, SD.STATUS_REJECT_VIE, tutor.FullName),
+                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_TUTOR_REQUEST),
+                            IsRead = false,
+                            CreatedDate = DateTime.Now
+                        };
+                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                        if (!string.IsNullOrEmpty(connectionId))
+                        {
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                        }
                     }
                     _response.Result = _mapper.Map<TutorRequestDTO>(returnObject);
                     _response.StatusCode = HttpStatusCode.OK;

@@ -277,8 +277,6 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                int totalCount = 0;
-                List<Report> list = new();
                 Expression<Func<Report, bool>> filter = u => true;
                 Expression<Func<Report, object>> orderByQuery = u => true;
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
@@ -360,15 +358,18 @@ namespace AutismEduConnectSystem.Controllers
 
                 foreach (var item in result)
                 {
-                    item.Tutor.User = await _userRepository.GetAsync(x => x.Id.Equals(item.TutorId));
+                    if(item.Tutor != null)
+                    {
+                        item.Tutor.User = await _userRepository.GetAsync(x => x.Id.Equals(item.TutorId));
+                    }else if(item.Review != null)
+                    {
+                        item.Review.Parent = await _userRepository.GetAsync(x => x.Id.Equals(item.Review.ParentId));
+                    }
                 }
 
-                list = result;
-                totalCount = count;
-
                 // Setup pagination and response
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 10, Total = totalCount };
-                _response.Result = _mapper.Map<List<ReportDTO>>(list);
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 10, Total = count };
+                _response.Result = _mapper.Map<List<ReportDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
 
