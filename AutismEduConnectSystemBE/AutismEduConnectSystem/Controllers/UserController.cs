@@ -240,7 +240,7 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (InvalidDataException ex)
             {
-                _logger.LogError(ex, "Error occurred while updating password for User ID: {UserId}", id);
+                _logger.LogError(ex, "Error occurred while updating password for User");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.ErrorMessages = new List<string>() { ex.Message };
@@ -839,7 +839,7 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (InvalidDataException ex)
             {
-                _logger.LogError(ex, "Error occurred while updating password for User ID: {UserId}", id);
+                _logger.LogError(ex, "Error occurred while updating password for User");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.ErrorMessages = new List<string>() { ex.Message };

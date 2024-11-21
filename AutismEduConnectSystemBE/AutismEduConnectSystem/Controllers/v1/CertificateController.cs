@@ -169,13 +169,17 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 newModel.SubmitterId = userId;
                 var certificate = await _certificateRepository.CreateAsync(newModel);
-                foreach (var media in createDTO.Medias)
+                if (createDTO.Medias != null && createDTO.Medias.Any()) 
                 {
-                    using var stream = media.OpenReadStream();
-                    var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
-                    var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
-                    await _certificateMediaRepository.CreateAsync(objMedia);
+                    foreach (var media in createDTO.Medias)
+                    {
+                        using var stream = media.OpenReadStream();
+                        var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
+                        var objMedia = new CertificateMedia() { CertificateId = certificate.Id, UrlPath = url, CreatedDate = DateTime.Now };
+                        await _certificateMediaRepository.CreateAsync(objMedia);
+                    }
                 }
+
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<CertificateDTO>(newModel);
                 _response.IsSuccess = true;
