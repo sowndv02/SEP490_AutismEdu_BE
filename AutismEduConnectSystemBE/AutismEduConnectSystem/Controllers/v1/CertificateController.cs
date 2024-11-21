@@ -153,7 +153,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Forbidden, _response);
             }
-            
+
             try
             {
                 if (!ModelState.IsValid)
@@ -213,7 +213,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Forbidden, _response);
             }
-            
+
             try
             {
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
@@ -266,7 +266,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                             await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
                         }
                     }
-                    
+
                     _response.Result = _mapper.Map<CertificateDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -364,7 +364,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 List<Certificate> list = new();
                 Expression<Func<Certificate, bool>> filter = u => true;
                 Expression<Func<Certificate, object>> orderByQuery = u => true;
-                
+
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     filter = u => !string.IsNullOrEmpty(u.SubmitterId) && u.SubmitterId == userId && !u.IsDeleted;
@@ -420,7 +420,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 totalCount = count;
                 foreach (var item in list)
                 {
-                    item.Submitter.User = await _userRepository.GetAsync(x => x.Id == item.Submitter.TutorId, false, null);
+                    if (item.Submitter != null)
+                    {
+                        item.Submitter.User = await _userRepository.GetAsync(u => u.Id == item.SubmitterId, false, null);
+                    }
                 }
                 // Setup pagination and response
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
@@ -463,7 +466,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Forbidden, _response);
             }
-            
+
             try
             {
                 if (id <= 0)

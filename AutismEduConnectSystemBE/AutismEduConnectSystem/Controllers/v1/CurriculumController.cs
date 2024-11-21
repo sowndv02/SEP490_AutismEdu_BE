@@ -202,7 +202,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 foreach (var item in list)
                 {
-                    item.Submitter.User = await _userRepository.GetAsync(u => u.Id == item.SubmitterId, false, null);
+                    if (item.Submitter != null)
+                    {
+                        item.Submitter.User = await _userRepository.GetAsync(u => u.Id == item.SubmitterId, false, null);
+                    }
                 }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
                 _response.Result = _mapper.Map<List<CurriculumDTO>>(list);
@@ -388,7 +391,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                             await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
                         }
                     }
-                    
+
                     _response.Result = _mapper.Map<CurriculumDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;

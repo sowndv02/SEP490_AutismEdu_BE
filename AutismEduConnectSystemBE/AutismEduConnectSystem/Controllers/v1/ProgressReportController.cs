@@ -129,7 +129,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 ReceiverId = child.ParentId,
                 Message = _resourceService.GetString(SD.CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName),
-                UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, progressReportId),
+                UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, studentProfileId),
                 IsRead = false,
                 CreatedDate = DateTime.Now
             };
@@ -422,7 +422,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 ReceiverId = child.ParentId,
                 Message = _resourceService.GetString(SD.UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName, model.From.ToString("dd/mm/yyyy"), model.To.ToString("dd/mm/yyyy")),
-                UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_REVIEW_LIST),
+                UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST),
                 IsRead = false,
                 CreatedDate = DateTime.Now
             };

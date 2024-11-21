@@ -1,7 +1,6 @@
 ﻿using AutismEduConnectSystem.Data;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.RabbitMQSender;
-using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 
 namespace AutismEduConnectSystem.Services
@@ -81,7 +80,7 @@ namespace AutismEduConnectSystem.Services
                 var messageBus = scope.ServiceProvider.GetRequiredService<IRabbitMQMessageSender>();
 
                 var (total, list) = await tutorRequestRepository.GetAllNotPagingAsync(
-                    t => t.CreatedDate.AddDays(2) <= DateTime.Now && t.RequestStatus == SD.Status.PENDING, "Parent", null, x => x.CreatedDate, true
+                    t => t.CreatedDate.AddDays(2) >= DateTime.Now && t.RequestStatus == SD.Status.PENDING, "Parent", null, x => x.CreatedDate, true
                 );
 
                 foreach (var item in list)
@@ -124,7 +123,7 @@ namespace AutismEduConnectSystem.Services
                 _logger.LogError(ex, "Error rejecting expired tutor requests");
             }
         }
-       
+
 
         private async Task CheckAndSendPaymentReminders()
         {
@@ -151,7 +150,7 @@ namespace AutismEduConnectSystem.Services
                         var htmlMessage = templateContent
                             .Replace("@Model.FullName", user.FullName)
                             .Replace("@Model.ExpirationDate", paymentHistory.ExpirationDate.ToString("dd/MM/yyyy"))
-                            .Replace("@Model.PaymentUrl", string.Concat(SD.URL_FE,SD.URL_FE_PAYMENT_QR));
+                            .Replace("@Model.PaymentUrl", string.Concat(SD.URL_FE, SD.URL_FE_PAYMENT_QR));
 
                         try
                         {

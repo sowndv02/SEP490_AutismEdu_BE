@@ -190,7 +190,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");
@@ -218,39 +218,41 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
                     return BadRequest(_response);
                 }
-                foreach (var item in child.list)
+                var studentProfiles = await _studentProfileRepository.GetAsync(x => x.Id == createDTO.StudentProfileId);
+                if (child.list != null)
                 {
-                    var studentProfiles = await _studentProfileRepository.GetAllNotPagingAsync(x => x.ChildId == item.Id);
-                    if (!studentProfiles.list.Any(x => x.TutorId == createDTO.TutorId))
+                    if (studentProfiles != null && studentProfiles.TutorId == createDTO.TutorId && child.list.Any(u => u.Id == studentProfiles.ChildId))
                     {
-                        _logger.LogWarning("Cannot report tutor");
-                        _response.StatusCode = HttpStatusCode.BadRequest;
-                        _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
-                        return BadRequest(_response);
+                        var newModel = _mapper.Map<Report>(createDTO);
+
+                        newModel.ReporterId = userId;
+                        newModel.ReportType = SD.ReportType.TUTOR;
+
+                        var reportModel = await _reportRepository.CreateAsync(newModel);
+
+                        foreach (var media in createDTO.ReportMedias)
+                        {
+                            using var stream = media.OpenReadStream();
+                            var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
+                            var objMedia = new ReportMedia() { ReportId = reportModel.Id, UrlMedia = url, CreatedDate = DateTime.Now };
+                            await _reportMediaRepository.CreateAsync(objMedia);
+                        }
+
+                        var result = await _reportRepository.GetAsync(x => x.Id == reportModel.Id, false, "Tutor,Reporter,ReportMedias", null);
+                        _response.StatusCode = HttpStatusCode.Created;
+                        _response.Result = _mapper.Map<ReportTutorDTO>(result);
+                        _response.IsSuccess = true;
+                        return Ok(_response);
                     }
                 }
-
-                var newModel = _mapper.Map<Report>(createDTO);
-
-                newModel.ReporterId = userId;
-                newModel.ReportType = SD.ReportType.TUTOR;
-
-                var reportModel = await _reportRepository.CreateAsync(newModel);
-
-                foreach (var media in createDTO.ReportMedias)
+                else
                 {
-                    using var stream = media.OpenReadStream();
-                    var url = await _blobStorageRepository.Upload(stream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(media.FileName)));
-                    var objMedia = new ReportMedia() { ReportId = reportModel.Id, UrlMedia = url, CreatedDate = DateTime.Now };
-                    await _reportMediaRepository.CreateAsync(objMedia);
+                    _logger.LogWarning("Cannot report tutor");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
+                    return BadRequest(_response);
                 }
-
-                var result = await _reportRepository.GetAsync(x => x.Id == reportModel.Id, false, "Tutor,Reporter,ReportMedias", null);
-                _response.StatusCode = HttpStatusCode.Created;
-                _response.Result = _mapper.Map<ReportTutorDTO>(result);
-                _response.IsSuccess = true;
-                return Ok(_response);
             }
             catch (Exception ex)
             {
@@ -409,7 +411,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");
@@ -459,7 +461,7 @@ namespace AutismEduConnectSystem.Controllers
                         await _reportRepository.UpdateAsync(item);
                     }
                     var review = await _reviewRepository.GetAsync(x => x.Id == model.ReviewId, true, null, null);
-                    await _reviewRepository.RemoveAsync(review);    
+                    await _reviewRepository.RemoveAsync(review);
                     _response.Result = _mapper.Map<ReportDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;

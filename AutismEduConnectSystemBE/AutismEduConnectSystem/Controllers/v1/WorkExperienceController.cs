@@ -3,7 +3,6 @@ using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.RabbitMQSender;
-using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
@@ -70,7 +69,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.Forbidden, _response);
             }
-            
+
             try
             {
 
@@ -166,10 +165,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 var (count, result) = await _workExperienceRepository.GetAllAsync(filter,
                                 "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
-                foreach (var item in result) 
+                foreach (var item in result)
                 {
-                    item.Submitter.User = await _userRepository.GetAsync(u => u.Id == item.SubmitterId, false, null);
-                } 
+                    if (item.Submitter != null)
+                    {
+                        item.Submitter.User = await _userRepository.GetAsync(u => u.Id == item.SubmitterId, false, null);
+                    }
+                }
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = count };
                 _response.Result = _mapper.Map<List<WorkExperienceDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -281,7 +283,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Model state is invalid. Returning BadRequest.");
@@ -364,7 +366,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                             Message = htmlMessage
                         }, queueName);
                     }
-                        
+
 
                     _response.Result = _mapper.Map<WorkExperienceDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
