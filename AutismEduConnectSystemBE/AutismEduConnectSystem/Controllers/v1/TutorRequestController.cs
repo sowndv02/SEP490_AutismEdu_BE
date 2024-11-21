@@ -112,7 +112,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the request for TutorRequests with status {Status}.", status);
+                _logger.LogError(ex, "An error occurred while processing the request for TutorRequests with status.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
