@@ -337,7 +337,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 TutorRequest model = _mapper.Map<TutorRequest>(tutorRequestCreateDTO);
                 model.ParentId = userId;
-                var isExistedRequest = await _tutorRequestRepository.GetAllNotPagingAsync(x => x.ParentId == userId && x.TutorId == tutorRequestCreateDTO.TutorId && x.ChildId == tutorRequestCreateDTO.ChildId && x.RequestStatus == SD.Status.PENDING);
+                var isExistedRequest = await _tutorRequestRepository.GetAllNotPagingAsync(x => x.ParentId == userId && x.TutorId == tutorRequestCreateDTO.TutorId && x.ChildId == tutorRequestCreateDTO.ChildId && (x.RequestStatus == SD.Status.PENDING || x.RequestStatus == SD.Status.APPROVE));
                 if (isExistedRequest.list != null && isExistedRequest.list.Any())
                 {
                     _logger.LogWarning("Duplicated request tutor {userId}-{childId}-{tutorId}.", userId, tutorRequestCreateDTO.ChildId, tutorRequestCreateDTO.TutorId);

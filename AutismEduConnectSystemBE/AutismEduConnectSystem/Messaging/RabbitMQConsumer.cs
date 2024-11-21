@@ -39,7 +39,6 @@ namespace AutismEduConnectSystem.Messaging
             {
                 var content = Encoding.UTF8.GetString(ea.Body.ToArray());
                 EmailLogger emailLogger = JsonConvert.DeserializeObject<EmailLogger>(content);
-                Console.WriteLine("Message Received: " + content);
                 HandleMessage(emailLogger);
 
                 _channel.BasicAck(ea.DeliveryTag, false);
