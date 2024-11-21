@@ -142,7 +142,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet]
         [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.PARENT_ROLE}")]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1, bool getInitialResult = false)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1, int pageSize = 10,bool getInitialResult = false)
         {
             try
             {

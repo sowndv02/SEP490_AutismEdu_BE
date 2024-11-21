@@ -857,7 +857,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 // Remove schedule after stop tutoring
                 var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == closeDTO.StudentProfileId
-                                                                                        && x.ScheduleDate.Date > DateTime.Now);
+                                                                                        && x.ScheduleDate.Date.Add(x.Start) > DateTime.Now);
                 foreach (var schedule in scheduleToDelete.list)
                 {
                     await _scheduleRepository.RemoveAsync(schedule);
