@@ -299,7 +299,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] int studentProfileId, DateTime? startDate = null, DateTime? endDate = null, bool getAll = true)
         {
             try
             {
@@ -344,11 +344,21 @@ namespace AutismEduConnectSystem.Controllers.v1
                     schedule.Syllabus = await _syllabusRepository.GetAsync(x => x.Id == schedule.SyllabusId);
                 }
 
-                list = result
+                if (getAll)
+                {
+                    list = result
+                    .OrderBy(x => x.ScheduleDate.Date)
+                    .ThenBy(x => x.Start)
+                    .ToList();
+                }
+                else
+                {
+                    list = result
                     .Where(x => x.StudentProfile.Status == SD.StudentProfileStatus.Teaching && x.StudentProfile.Status == SD.StudentProfileStatus.Pending)
                     .OrderBy(x => x.ScheduleDate.Date)
                     .ThenBy(x => x.Start)
                     .ToList();
+                }             
 
                 var model = new ListScheduleDTO();
                 var allTutorSchedule = await _scheduleRepository.GetAllNotPagingAsync(x => !x.IsHidden && studentProfileId != 0 ? (x.StudentProfileId == studentProfileId) : (x.TutorId.Equals(tutorId)));
