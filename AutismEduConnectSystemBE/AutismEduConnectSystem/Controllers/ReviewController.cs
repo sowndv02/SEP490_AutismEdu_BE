@@ -61,7 +61,7 @@ namespace AutismEduConnectSystem.Controllers
                 }
 
                 var (totalReviews, reviews) = await _reviewRepository.GetAllAsync(
-                    filter: x => x.TutorId == tutorId && x.IsHide,
+                    filter: x => x.TutorId == tutorId && !x.IsHide,
                     includeProperties: "Parent",
                     pageSize: pageSize,
                     pageNumber: pageNumber,
@@ -145,7 +145,7 @@ namespace AutismEduConnectSystem.Controllers
         {
             try
             {
-                var (totalCount, reviews) = await _reviewRepository.GetAllAsync(x => x.IsHide,
+                var (totalCount, reviews) = await _reviewRepository.GetAllAsync(x => !x.IsHide,
                     includeProperties: "Parent,Tutor",
                     pageSize: pageSize,
                     pageNumber: pageNumber
@@ -307,7 +307,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
 
-                var existingReview = await _reviewRepository.GetAsync(x => x.Id == reviewId && x.ParentId == userId && x.IsHide);
+                var existingReview = await _reviewRepository.GetAsync(x => x.Id == reviewId && x.ParentId == userId && !x.IsHide);
 
                 if (existingReview == null)
                 {
