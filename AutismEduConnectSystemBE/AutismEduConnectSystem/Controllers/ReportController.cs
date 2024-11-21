@@ -556,7 +556,13 @@ namespace AutismEduConnectSystem.Controllers
                     var (countReportReview, listReportReview) = await _reportRepository.GetAllNotPagingAsync(x => x.ReviewId == report.ReviewId && x.Id != report.Id && x.Status == SD.Status.PENDING, "Handler,Reporter", null, x => x.CreatedDate, true);
                     reports = listReportReview;
                 }
-                report.Tutor.User = await _userRepository.GetAsync(x => x.Id.Equals(report.TutorId));
+                if (report.Tutor != null)
+                {
+                    report.Tutor.User = await _userRepository.GetAsync(x => x.Id.Equals(report.TutorId));
+                }else if(report.Review != null)
+                {
+                    report.Review.Parent = await _userRepository.GetAsync(x => x.Id == report.Review.ParentId);
+                }
                 _response.Result = new { Result = _mapper.Map<ReportDTO>(report), ReportsRelated = _mapper.Map<List<ReportDTO>>(reports) };
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;

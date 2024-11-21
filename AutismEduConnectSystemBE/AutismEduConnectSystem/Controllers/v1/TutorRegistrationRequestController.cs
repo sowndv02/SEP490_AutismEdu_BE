@@ -253,8 +253,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
 
-                int totalCount = 0;
-                List<TutorRegistrationRequest> list = new();
                 Expression<Func<TutorRegistrationRequest, bool>> filter = u => true;
                 Expression<Func<TutorRegistrationRequest, object>> orderByQuery = u => true;
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
@@ -301,10 +299,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 var (count, result) = await _tutorRegistrationRequestRepository.GetAllAsync(filter,
                                 null, pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
-                list = result;
-                totalCount = count;
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
-                _response.Result = _mapper.Map<List<TutorRegistrationRequestDTO>>(list);
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = count };
+                _response.Result = _mapper.Map<List<TutorRegistrationRequestDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);

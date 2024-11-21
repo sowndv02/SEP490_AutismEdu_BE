@@ -93,10 +93,12 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 var progressReport = await _progressReportRepository.CreateAsync(model);
                 List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
-
-                foreach (var assessmentResult in progressReport.AssessmentResults)
+                if (progressReport.AssessmentResults != null) 
                 {
-                    assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
+                    foreach (var assessmentResult in progressReport.AssessmentResults)
+                    {
+                        assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
+                    }
                 }
                 progressReport.AssessmentResults = assessmentResults;
 
@@ -120,21 +122,30 @@ namespace AutismEduConnectSystem.Controllers.v1
         private async Task SendNotificationWhenCreateProgressReport(int studentProfileId, int progressReportId)
         {
             var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == studentProfileId);
-            var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
-            var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
-            var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
-            var notfication = new Notification()
+            if(studentProfile != null)
             {
-                ReceiverId = child.ParentId,
-                Message = _resourceService.GetString(SD.CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName),
-                UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, studentProfileId),
-                IsRead = false,
-                CreatedDate = DateTime.Now
-            };
-            var notificationResult = await _notificationRepository.CreateAsync(notfication);
-            if (!string.IsNullOrEmpty(connectionId))
-            {
-                await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
+                if (child != null)
+                {
+                    var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
+                    if (tutor != null)
+                    {
+                        var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                        var notfication = new Notification()
+                        {
+                            ReceiverId = child.ParentId,
+                            Message = _resourceService.GetString(SD.CREATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName),
+                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, studentProfileId),
+                            IsRead = false,
+                            CreatedDate = DateTime.Now
+                        };
+                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                        if (!string.IsNullOrEmpty(connectionId))
+                        {
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                        }
+                    }
+                }
             }
         }
 
@@ -222,14 +233,20 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var (count, result) = await _progressReportRepository.GetAllAsync(filter,
                                 "StudentProfile,AssessmentResults", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
 
-                foreach (var item in result)
+                if (result != null && result.Any())
                 {
-                    List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
-                    foreach (var assessmentResult in item.AssessmentResults)
+                    foreach (var item in result)
                     {
-                        assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
+                        List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
+                        if(item.AssessmentResults != null && item.AssessmentResults.Any())
+                        {
+                            foreach (var assessmentResult in item.AssessmentResults)
+                            {
+                                assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
+                            }
+                            item.AssessmentResults = assessmentResults;
+                        }
                     }
-                    item.AssessmentResults = assessmentResults;
                 }
 
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = count };
@@ -307,12 +324,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 List<AssessmentResult> assessmentResults = new List<AssessmentResult>();
-
-                foreach (var assessmentResult in progressReport.AssessmentResults)
+                if(progressReport.AssessmentResults != null && progressReport.AssessmentResults.Any())
                 {
-                    assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
+                    foreach (var assessmentResult in progressReport.AssessmentResults)
+                    {
+                        assessmentResults.Add(await _assessmentResultRepository.GetAsync(x => x.Id == assessmentResult.Id, true, "Question,Option"));
+                    }
+                    progressReport.AssessmentResults = assessmentResults;
                 }
-                progressReport.AssessmentResults = assessmentResults;
 
                 _response.Result = _mapper.Map<ProgressReportDTO>(progressReport);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -396,19 +415,25 @@ namespace AutismEduConnectSystem.Controllers.v1
                 await _progressReportRepository.UpdateAsync(model);
 
                 List<AssessmentResult> updatedAssessmentResults = new List<AssessmentResult>();
-
-                foreach (var updatedAssessmentResult in updateDTO.AssessmentResults)
+                if(updateDTO.AssessmentResults != null && updateDTO.AssessmentResults.Any())
                 {
-                    var assessmentResult = await _assessmentResultRepository.GetAsync(x => x.Id == updatedAssessmentResult.Id);
-                    assessmentResult.QuestionId = updatedAssessmentResult.QuestionId;
-                    assessmentResult.OptionId = updatedAssessmentResult.OptionId;
-                    await _assessmentResultRepository.UpdateAsync(assessmentResult);
-
-                    assessmentResult = await _assessmentResultRepository.GetAsync(x => x.Id == updatedAssessmentResult.Id, true, "Question,Option");
-                    updatedAssessmentResults.Add(assessmentResult);
+                    foreach (var updatedAssessmentResult in updateDTO.AssessmentResults)
+                    {
+                        var assessmentResult = await _assessmentResultRepository.GetAsync(x => x.Id == updatedAssessmentResult.Id);
+                        if (assessmentResult != null) 
+                        {
+                            assessmentResult.QuestionId = updatedAssessmentResult.QuestionId;
+                            assessmentResult.OptionId = updatedAssessmentResult.OptionId;
+                            await _assessmentResultRepository.UpdateAsync(assessmentResult);
+                        }
+                        assessmentResult = await _assessmentResultRepository.GetAsync(x => x.Id == updatedAssessmentResult.Id, true, "Question,Option");
+                        if (assessmentResult != null) 
+                        {
+                            updatedAssessmentResults.Add(assessmentResult);
+                        }
+                    }
                 }
                 model.AssessmentResults = updatedAssessmentResults;
-
 
                 // Notification
                 await SendNotificationWhenUpdateProgressReport(model);
@@ -431,21 +456,30 @@ namespace AutismEduConnectSystem.Controllers.v1
         private async Task SendNotificationWhenUpdateProgressReport(ProgressReport model)
         {
             var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId);
-            var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
-            var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
-            var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
-            var notfication = new Notification()
+            if (studentProfile != null) 
             {
-                ReceiverId = child.ParentId,
-                Message = _resourceService.GetString(SD.UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName, model.From.ToString("dd/mm/yyyy"), model.To.ToString("dd/mm/yyyy")),
-                UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST),
-                IsRead = false,
-                CreatedDate = DateTime.Now
-            };
-            var notificationResult = await _notificationRepository.CreateAsync(notfication);
-            if (!string.IsNullOrEmpty(connectionId))
-            {
-                await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                var child = await _childInformationRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, null, null);
+                if (child != null) 
+                {
+                    var tutor = await _userRepository.GetAsync(x => x.Id == studentProfile.TutorId);
+                    if(tutor != null)
+                    {
+                        var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                        var notfication = new Notification()
+                        {
+                            ReceiverId = child.ParentId,
+                            Message = _resourceService.GetString(SD.UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName, model.From.ToString("dd/mm/yyyy"), model.To.ToString("dd/mm/yyyy")),
+                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST),
+                            IsRead = false,
+                            CreatedDate = DateTime.Now
+                        };
+                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                        if (!string.IsNullOrEmpty(connectionId))
+                        {
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                        }
+                    }
+                }
             }
         }
     }

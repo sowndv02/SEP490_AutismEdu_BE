@@ -128,8 +128,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                int totalCount = 0;
-                List<Syllabus> list = new();
                 Expression<Func<Syllabus, bool>> filter = u => !string.IsNullOrEmpty(u.TutorId) && u.TutorId == userId && !u.IsDeleted;
                 Expression<Func<Syllabus, object>> orderByQuery = u => true;
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
@@ -149,9 +147,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
                 var (count, result) = await _syllabusRepository.GetAllNotPagingAsync(filter, includeProperties: "SyllabusExercises", excludeProperties: null, orderByQuery, isDesc);
-                list = result;
-                totalCount = count;
-                foreach (var item in list)
+                foreach (var item in result)
                 {
                     var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == item.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
                     item.SyllabusExercises = syllabusExercises;
@@ -170,7 +166,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }).ToList();
                 }
 
-                var reutnResult = _mapper.Map<List<SyllabusDTO>>(list);
+                var reutnResult = _mapper.Map<List<SyllabusDTO>>(result);
                 _response.Result = reutnResult;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = null;

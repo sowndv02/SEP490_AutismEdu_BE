@@ -189,7 +189,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                List<Schedule> list = new();
 
                 var (countFailed, resultFailed) = await _scheduleRepository.GetAllNotPagingAsync(u =>
                                                 u.TutorId == userId && u.StudentProfileId == studentProfileId &&
@@ -362,7 +361,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 var model = new ListScheduleDTO();
                 var allTutorSchedule = await _scheduleRepository.GetAllNotPagingAsync(x => !x.IsHidden && studentProfileId != 0 ? (x.StudentProfileId == studentProfileId) : (x.TutorId.Equals(tutorId)));
-                if (allTutorSchedule.list.Any())
+                if (allTutorSchedule.list != null && allTutorSchedule.list.Any())
                 {
                     model.MaxDate = allTutorSchedule.list.Max(x => x.ScheduleDate.Date).Date;
                 }

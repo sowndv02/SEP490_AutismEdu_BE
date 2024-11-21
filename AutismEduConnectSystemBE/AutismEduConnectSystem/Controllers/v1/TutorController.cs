@@ -85,8 +85,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                int totalCount = 0;
-                List<TutorProfileUpdateRequest> list = new();
                 Expression<Func<TutorProfileUpdateRequest, bool>> filter = u => true;
                 Expression<Func<TutorProfileUpdateRequest, bool>> filterName = null;
                 Expression<Func<TutorProfileUpdateRequest, object>> orderByQuery = u => true;
@@ -133,10 +131,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 var (count, result) = await _tutorProfileUpdateRequestRepository.GetAllTutorUpdateRequestAsync
                     (filterName: filterName, filterOther: filter, includeProperties: null, pageSize: 5, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
-                list = result;
-                totalCount = count;
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
-                _response.Result = _mapper.Map<List<TutorProfileUpdateRequestDTO>>(list);
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = count };
+                _response.Result = _mapper.Map<List<TutorProfileUpdateRequestDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
                 return Ok(_response);
@@ -320,8 +316,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                int totalCount = 0;
-                List<Tutor> list = new();
                 if (ageFrom == null || ageTo == null || ageFrom < 0 || ageTo == 0)
                 {
                     ageFrom = 0;
@@ -349,10 +343,8 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 var (count, result) = await _tutorRepository.GetAllTutorAsync(filterName: searchNameFilter, filterAddress: searchAddressFilter, filterScore: reviewScore,
                     filterAge: filterAge, includeProperties: "User", pageSize: 9, pageNumber: pageNumber, orderBy: null, isDesc: true);
-                list = result.OrderByDescending(x => x.ReviewScore).ToList();
-                totalCount = count;
-                List<TutorDTO> tutorDTOList = _mapper.Map<List<TutorDTO>>(list);
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 9, Total = totalCount };
+                List<TutorDTO> tutorDTOList = _mapper.Map<List<TutorDTO>>(result.OrderByDescending(x => x.ReviewScore).ToList());
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 9, Total = count };
                 _response.Result = tutorDTOList;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
@@ -405,7 +397,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_UPDATE_PROFILE_REQUEST) };
                     return BadRequest(_response);
                 }
-                if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
+                if (changeStatusDTO.StatusChange == (int)Status.APPROVE && tutor != null && tutorProfile != null)
                 {
                     model.RequestStatus = Status.APPROVE;
                     model.UpdatedDate = DateTime.Now;
@@ -467,7 +459,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.IsSuccess = true;
                     return Ok(_response);
                 }
-                else if (changeStatusDTO.StatusChange == (int)Status.REJECT)
+                else if (changeStatusDTO.StatusChange == (int)Status.REJECT && tutor != null && tutorProfile != null)
                 {
                     // Handle for reject
                     model.RejectionReason = changeStatusDTO.RejectionReason;

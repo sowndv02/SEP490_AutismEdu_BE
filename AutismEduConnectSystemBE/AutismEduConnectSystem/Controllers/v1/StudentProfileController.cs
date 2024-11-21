@@ -11,6 +11,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -231,37 +232,41 @@ namespace AutismEduConnectSystem.Controllers.v1
                     var subject = "Thông báo ";
 
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateParentAndChild.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", parent.FullName)
-                        .Replace("@Model.Username", parent.Email)
-                        .Replace("@Model.Password", passsword)
-                        .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
-
-                    _messageBus.SendMessage(new EmailLogger()
+                    if (System.IO.File.Exists(templatePath) && parent != null)
                     {
-                        UserId = parent.Id,
-                        Email = parent.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", parent.FullName)
+                            .Replace("@Model.Username", parent.Email)
+                            .Replace("@Model.Password", passsword)
+                            .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
+
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = parent.Id,
+                            Email = parent.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
 
                     // Tao child
                     using var mediaStream = createDTO.Media.OpenReadStream();
                     string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(createDTO.Media.FileName)));
-
-                    var childInformation = await _childInfoRepository.CreateAsync(new ChildInformation()
+                    if(parent != null)
                     {
-                        ParentId = parent.Id,
-                        Name = createDTO.ChildName,
-                        isMale = (bool)createDTO.isMale,
-                        ImageUrlPath = mediaUrl,
-                        BirthDate = createDTO.BirthDate,
-                        CreatedDate = DateTime.Now
-                    });
+                        var childInformation = await _childInfoRepository.CreateAsync(new ChildInformation()
+                        {
+                            ParentId = parent.Id,
+                            Name = createDTO.ChildName,
+                            isMale = (bool)createDTO.isMale,
+                            ImageUrlPath = mediaUrl,
+                            BirthDate = createDTO.BirthDate,
+                            CreatedDate = DateTime.Now
+                        });
 
-                    model.ChildId = childInformation.Id;
+                        model.ChildId = childInformation.Id;
+                    }
                 }
                 else if (createDTO.ChildId <= 0)
                 {
@@ -298,12 +303,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO) };
                     return BadRequest(_response);
                 }
-
-                string[] names = child.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-                foreach (var name in names)
+                if (!string.IsNullOrEmpty(child.Name))
                 {
-                    model.StudentCode += name.ToUpper().ElementAt(0);
+                    string[] names = child.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var name in names)
+                    {
+                        model.StudentCode += name.ToUpper().ElementAt(0);
+                    }
                 }
+                
                 model.StudentCode += model.ChildId;
                 model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(tutorId), true, "User");
                 model = await _studentProfileRepository.CreateAsync(model);
@@ -364,23 +372,27 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (model.ChildId > 0)
                 {
                     //var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
-                    var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateStudentProfileTemplate.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.ParentName", child.Parent.FullName)
-                        .Replace("@Model.TutorName", model.Tutor.User.FullName)
-                        .Replace("@Model.StudentName", child.Name)
-                        .Replace("@Model.Email", child.Parent.Email)
-                        .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL + model.Id)
-                        .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
-                    _messageBus.SendMessage(new EmailLogger()
+                    if (System.IO.File.Exists(templatePath) && child.Parent != null && model.Tutor != null && model.Tutor.User != null)
                     {
-                        UserId = child.ParentId,
-                        Email = child.Parent.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                        var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.ParentName", child.Parent.FullName)
+                            .Replace("@Model.TutorName", model.Tutor.User.FullName)
+                            .Replace("@Model.StudentName", child.Name)
+                            .Replace("@Model.Email", child.Parent.Email)
+                            .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL + model.Id)
+                            .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = child.ParentId,
+                            Email = child.Parent.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
+                        
                 }
 
                 if (createDTO.TutorRequestId > 0)
@@ -410,8 +422,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                int totalCount = 0;
-                List<StudentProfile> list = new();
                 Expression<Func<StudentProfile, bool>> filter = u => true;
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
 
@@ -451,12 +461,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                 foreach (var profile in studentProfiles)
                 {
                     var parent = await _childInfoRepository.GetAsync(x => x.Id == profile.ChildId, true, "Parent");
-                    profile.Address = parent.Parent.Address;
-                    profile.PhoneNumber = parent.Parent.PhoneNumber;
+                    if(parent != null && parent.Parent != null)
+                    {
+                        profile.Address = parent.Parent.Address;
+                        profile.PhoneNumber = parent.Parent.PhoneNumber;
+                    }
                 }
 
-                totalCount = count;
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = count };
                 _response.Result = studentProfiles;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
@@ -655,18 +667,21 @@ namespace AutismEduConnectSystem.Controllers.v1
                 {
                     var connectionId = NotificationHub.GetConnectionIdByUserId(studentProfile.TutorId);
                     var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, "Parent", null);
-                    var notfication = new Notification()
+                    if(child != null && child.Parent != null)
                     {
-                        ReceiverId = studentProfile.TutorId,
-                        Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "chấp nhận"),
-                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
-                        IsRead = false,
-                        CreatedDate = DateTime.Now
-                    };
-                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                    if (!string.IsNullOrEmpty(connectionId))
-                    {
-                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
+                        var notfication = new Notification()
+                        {
+                            ReceiverId = studentProfile.TutorId,
+                            Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "chấp nhận"),
+                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
+                            IsRead = false,
+                            CreatedDate = DateTime.Now
+                        };
+                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                        if (!string.IsNullOrEmpty(connectionId))
+                        {
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
+                        }
                     }
 
                 }
@@ -674,18 +689,21 @@ namespace AutismEduConnectSystem.Controllers.v1
                 {
                     var connectionId = NotificationHub.GetConnectionIdByUserId(studentProfile.TutorId);
                     var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, "Parent", null);
-                    var notfication = new Notification()
+                    if (child != null && child.Parent != null)
                     {
-                        ReceiverId = studentProfile.TutorId,
-                        Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "từ chối"),
-                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
-                        IsRead = false,
-                        CreatedDate = DateTime.Now
-                    };
-                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                    if (!string.IsNullOrEmpty(connectionId))
-                    {
-                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
+                        var notfication = new Notification()
+                        {
+                            ReceiverId = studentProfile.TutorId,
+                            Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "từ chối"),
+                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
+                            IsRead = false,
+                            CreatedDate = DateTime.Now
+                        };
+                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                        if (!string.IsNullOrEmpty(connectionId))
+                        {
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
+                        }
                     }
                 }
 

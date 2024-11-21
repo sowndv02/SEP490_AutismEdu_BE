@@ -369,8 +369,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
 
-                int totalCount = 0;
-                List<Certificate> list = new();
                 Expression<Func<Certificate, bool>> filter = u => true;
                 Expression<Func<Certificate, object>> orderByQuery = u => true;
 
@@ -425,9 +423,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     isDesc
                 );
 
-                list = result;
-                totalCount = count;
-                foreach (var item in list)
+                foreach (var item in result)
                 {
                     if (item.Submitter != null)
                     {
@@ -435,8 +431,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
                 // Setup pagination and response
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = totalCount };
-                _response.Result = _mapper.Map<List<CertificateDTO>>(list);
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = 5, Total = count };
+                _response.Result = _mapper.Map<List<CertificateDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = pagination;
 
