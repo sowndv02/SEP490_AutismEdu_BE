@@ -147,7 +147,7 @@ namespace AutismEduConnectSystem.Controllers
                 newModel.ReporterId = userId;
                 newModel.ReportType = SD.ReportType.REVIEW;
                 newModel.Title = SD.REPORT_REVIEW_TITLE;
-
+                
                 var reportModel = await _reportRepository.CreateAsync(newModel);
                 var result = await _reportRepository.GetAsync(x => x.Id == reportModel.Id, false, "Review,Reporter", null);
                 _response.StatusCode = HttpStatusCode.Created;

@@ -258,7 +258,7 @@ namespace AutismEduConnectSystem.Mapper
                .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
                .ReverseMap();
 
-            CreateMap<Syllabus, SyllabusCreateDTO>().ReverseMap().ForMember(dest => dest.SyllabusExercises, opt => opt.Ignore()); ;
+            CreateMap<Syllabus, SyllabusCreateDTO>().ReverseMap().ForMember(dest => dest.SyllabusExercises, opt => opt.Ignore());
             CreateMap<Syllabus, SyllabusDTO>().ReverseMap();
             CreateMap<SyllabusExercise, SyllabusExerciseDTO>().ReverseMap();
             CreateMap<SyllabusExercise, SyllabusExerciseCreateDTO>().ReverseMap();
@@ -280,8 +280,8 @@ namespace AutismEduConnectSystem.Mapper
             CreateMap<NotificationDTO, Notification>().ReverseMap();
             CreateMap<BlogDTO, Blog>().ReverseMap();
             CreateMap<BlogUpdateDTO, Blog>().ReverseMap();
-            CreateMap<Report, ReportReviewCreateDTO>();
-            CreateMap<Report, ReportReviewDTO>();
+            CreateMap<Report, ReportReviewCreateDTO>().ReverseMap();
+            CreateMap<Report, ReportReviewDTO>().ReverseMap();
             CreateMap<ReportTutorCreateDTO, Report>()
                 .ForMember(dest => dest.ReportMedias, opt => opt.Ignore())
                 .ReverseMap(); ;
