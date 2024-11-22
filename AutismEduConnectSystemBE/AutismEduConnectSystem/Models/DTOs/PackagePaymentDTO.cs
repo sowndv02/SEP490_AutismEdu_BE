@@ -11,6 +11,7 @@
         public PackagePaymentDTO? Original { get; set; }
         public bool IsActive { get; set; }
         public bool IsHide { get; set; }
+        public int TotalPurchases { get; set; }
         public ApplicationUserDTO Submitter { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }

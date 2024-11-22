@@ -61,6 +61,19 @@ namespace AutismEduConnectSystem.Repository
 
             return (totalCount, tutorList);
         }
+
+        public Task<int> GetTotalTutor()
+        {
+            try
+            {
+                return _context.Tutors.CountAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<IQueryable<Tutor>> GetTutorsWithReviews(IQueryable<Tutor> query, int filterScore)
         {
             // Get reviews from the database and perform the filtering

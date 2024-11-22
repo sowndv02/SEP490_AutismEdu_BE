@@ -4,9 +4,11 @@ using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using Google.Apis.Auth;
+using MailKit.Search;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MimeKit.Tnef;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
 using System.Security.Claims;
@@ -842,7 +844,10 @@ namespace AutismEduConnectSystem.Repository
                 users = users.Where(x => !x.Role.Contains(SD.STAFF_ROLE) && !x.Role.Contains(SD.MANAGER_ROLE) && !x.Role.Contains(SD.ADMIN_ROLE)).ToList();
             }
 
-            users = users.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            if(pageSize != 0)
+            {
+                users = users.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            }
 
             return (count, users);
 
@@ -1019,6 +1024,50 @@ namespace AutismEduConnectSystem.Repository
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        public Task<int> GetTotalUserHaveFilterAsync(string roleName, Expression<Func<ApplicationUser, bool>>? filter = null)
+        {
+
+            IQueryable<ApplicationUser> query = _context.ApplicationUsers;
+
+            if (!string.IsNullOrEmpty(roleName))
+            {
+                query = query.Where(user => _context.UserRoles
+                    .Any(ur => ur.UserId == user.Id && _context.Roles.Any(role => role.Id == ur.RoleId && role.Name == roleName)));
+            }
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            return query.CountAsync();
+            
+        }
+
+        public async Task<int> GetTotalParentHaveStduentProfileAsync(Expression<Func<ApplicationUser, bool>>? filter = null)
+        {
+            IQueryable<ApplicationUser> query = _context.ApplicationUsers;
+
+            query = query.Where(user => _context.UserRoles
+                .Any(ur => ur.UserId == user.Id && _context.Roles.Any(role => role.Id == ur.RoleId && role.Name == SD.PARENT_ROLE)));
+            int total = 0;
+            if (filter != null)
+                query = query.Where(filter);
+            var parents = await query.ToListAsync();
+            foreach(var parent in parents)
+            {
+                var children = _context.ChildInformations.Where(x => x.ParentId == parent.Id);
+                foreach(var child in children)
+                {
+                    var studentProfiles = _context.StudentProfiles.Where(y => y.ChildId == child.Id).ToList();
+                    if (studentProfiles != null && studentProfiles.Any()) 
+                    {
+                        total++;
+                    }
+                }
+            }
+
+            return total;
         }
     }
 }

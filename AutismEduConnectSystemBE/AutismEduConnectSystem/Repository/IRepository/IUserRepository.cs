@@ -24,6 +24,8 @@ namespace AutismEduConnectSystem.Repository.IRepository
         Task<bool> RemoveAsync(string userId);
         int GetTotalUser();
         Task<(int TotalCount, List<ApplicationUser> list)> GetAllAsync(Expression<Func<ApplicationUser, bool>>? filter = null, string? includeProperties = null, int pageSize = 10, int pageNumber = 1, Expression<Func<ApplicationUser, object>>? orderBy = null, bool isDesc = true, bool isAdminRole = false, string byRole = null);
+        Task<int> GetTotalUserHaveFilterAsync(string roleName, Expression<Func<ApplicationUser, bool>>? filter = null);
+        Task<int> GetTotalParentHaveStduentProfileAsync(Expression<Func<ApplicationUser, bool>>? filter = null);
         Task<List<ApplicationUser>> GetListUserByClaim(ApplicationClaim claim);
         Task<bool> RemoveClaimByUserId(string userId, List<int> userClaimIds);
         Task<bool> AddClaimToUser(string userId, List<int> claimIds);
