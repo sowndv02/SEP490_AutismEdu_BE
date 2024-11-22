@@ -171,35 +171,35 @@ namespace AutismEduConnectSystem.Controllers
         //    }
         //}
 
-        [HttpGet("TotalTutor")]
-        public async Task<ActionResult<APIResponse>> GetTotalTutorAsync()
-        {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
-                var total = await _tutorRepository.GetTotalTutor();
-                _response.IsSuccess = true;
-                _response.Result = total;
-                _response.StatusCode = HttpStatusCode.OK;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
+        //[HttpGet("TotalTutor")]
+        //public async Task<ActionResult<APIResponse>> GetTotalTutorAsync()
+        //{
+        //    try
+        //    {
+        //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //        if (string.IsNullOrEmpty(userId))
+        //        {
+        //            _logger.LogWarning("Unauthorized access attempt detected.");
+        //            _response.IsSuccess = false;
+        //            _response.StatusCode = HttpStatusCode.Unauthorized;
+        //            _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+        //            return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+        //        }
+        //        var total = await _tutorRepository.GetTotalTutor();
+        //        _response.IsSuccess = true;
+        //        _response.Result = total;
+        //        _response.StatusCode = HttpStatusCode.OK;
+        //        return Ok(_response);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _response.IsSuccess = false;
+        //        _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
+        //        _response.StatusCode = HttpStatusCode.InternalServerError;
+        //        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+        //        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+        //    }
+        //}
 
 
         [HttpGet("PackagePayment")]
