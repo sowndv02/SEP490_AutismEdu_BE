@@ -59,7 +59,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             _scheduleTimeSlotRepository = scheduleTimeSlotRepository;
             _initialAssessmentResultRepository = initialAssessmentResultRepository;
             _childInfoRepository = childInfoRepository;
-            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
+            queueName = configuration["RabbitMQSettings:QueueName"];
             _tutorRequestRepository = tutorRequestRepository;
             _response = new APIResponse();
             _mapper = mapper;
@@ -880,9 +880,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                 studentProfile.Child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, true, "Parent");
 
                 // Remove schedule after stop tutoring
-                var scheduleToDelete = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == closeDTO.StudentProfileId
-                                                                                        && x.ScheduleDate.Date.Add(x.Start) > DateTime.Now);
-                foreach (var schedule in scheduleToDelete.list)
+                var schedules = await _scheduleRepository.GetAllNotPagingAsync(x => x.StudentProfileId == closeDTO.StudentProfileId);
+                var filteredSchedules = schedules.list
+                    .Where(x => x.ScheduleDate.Date.Add(x.Start) > DateTime.Now)
+                    .ToList();
+                foreach (var schedule in filteredSchedules)
                 {
                     await _scheduleRepository.RemoveAsync(schedule);
                 }

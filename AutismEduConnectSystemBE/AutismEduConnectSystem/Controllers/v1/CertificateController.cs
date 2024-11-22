@@ -416,7 +416,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 var (count, result) = await _certificateRepository.GetAllAsync(
                     filter,
-                    "Submitter,CertificateMedias",
+                    "Submitter,CertificateMedias,TutorRegistrationRequest",
                     pageSize: 5,
                     pageNumber: pageNumber,
                     orderByQuery,

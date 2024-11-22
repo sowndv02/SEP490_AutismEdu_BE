@@ -52,7 +52,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             _formatString = formatString;
             _roleRepository = roleRepository;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
-            queueName = configuration.GetValue<string>("RabbitMQSettings:QueueName");
+            queueName = configuration["RabbitMQSettings:QueueName"];
             _response = new APIResponse();
             _mapper = mapper;
             _blobStorageRepository = blobStorageRepository;

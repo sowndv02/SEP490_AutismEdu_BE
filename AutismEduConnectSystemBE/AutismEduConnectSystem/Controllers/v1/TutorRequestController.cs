@@ -26,6 +26,7 @@ namespace AutismEduConnectSystem.Controllers.v1
     {
         private readonly IUserRepository _userRepository;
         private readonly ITutorRequestRepository _tutorRequestRepository;
+        private readonly IChildInformationRepository _childInformationRepository;
         private readonly IMapper _mapper;
         private string queueName = string.Empty;
         private readonly ILogger<TutorRequestController> _logger;
@@ -39,7 +40,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         public TutorRequestController(IUserRepository userRepository, ITutorRequestRepository tutorRequestRepository,
             IMapper mapper, IConfiguration configuration,
             IRabbitMQMessageSender messageBus, IResourceService resourceService, ILogger<TutorRequestController> logger,
-            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
+            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext, IChildInformationRepository childInformationRepository)
         {
             _messageBus = messageBus;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
@@ -52,6 +53,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             _logger = logger;
             _notificationRepository = notificationRepository;
             _hubContext = hubContext;
+            _childInformationRepository = childInformationRepository;
         }
 
 
@@ -70,7 +72,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
@@ -80,12 +81,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
                 Expression<Func<TutorRequest, bool>> filter = u => u.TutorId == userId && u.RequestStatus == SD.Status.APPROVE && !u.HasStudentProfile;
                 Expression<Func<TutorRequest, object>> orderByQuery = u => true;
-
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
-
                 if (orderBy != null)
                 {
                     switch (orderBy)
@@ -102,7 +100,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 {
                     orderByQuery = x => x.CreatedDate;
                 }
-
                 var (count, result) = await _tutorRequestRepository.GetAllNotPagingAsync(filter,
                                includeProperties: "Parent,ChildInformation", excludeProperties: null, orderBy: orderByQuery, isDesc);
                 _response.Result = _mapper.Map<List<TutorRequestDTO>>(result);
@@ -215,7 +212,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -235,10 +231,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
                 Expression<Func<TutorRequest, bool>> filter = u => u.TutorId == userId;
                 Expression<Func<TutorRequest, object>> orderByQuery = u => true;
-
                 if (!string.IsNullOrEmpty(search))
                 {
                     filter = filter.AndAlso(u => !string.IsNullOrEmpty(u.Parent.Email) && !string.IsNullOrEmpty(u.Parent.FullName) && (u.Parent.Email.ToLower().Contains(search.ToLower()) || u.Parent.FullName.ToLower().Contains(search.ToLower())));
@@ -321,16 +315,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
-                if (tutorRequestCreateDTO == null)
+               
+                if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Received null tutor request from user {UserId}.", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -338,8 +324,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST) };
                     return BadRequest(_response);
                 }
-                TutorRequest model = _mapper.Map<TutorRequest>(tutorRequestCreateDTO);
-                model.ParentId = userId;
+                if (tutorRequestCreateDTO.ChildId <= 0)
+                {
+                    _logger.LogWarning("Duplicated request tutor {userId}-{childId}-{tutorId}.", userId, tutorRequestCreateDTO.ChildId, tutorRequestCreateDTO.TutorId);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD) };
+                    return NotFound(_response);
+                }
                 var isExistedRequest = await _tutorRequestRepository.GetAllNotPagingAsync(x => x.ParentId == userId && x.TutorId == tutorRequestCreateDTO.TutorId && x.ChildId == tutorRequestCreateDTO.ChildId && (x.RequestStatus == SD.Status.PENDING || x.RequestStatus == SD.Status.APPROVE));
                 if (isExistedRequest.list != null && isExistedRequest.list.Any())
                 {
@@ -349,9 +341,28 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.TUTOR_REQUEST) };
                     return BadRequest(_response);
                 }
+                var tutor = await _userRepository.GetAsync(x => x.Id == tutorRequestCreateDTO.TutorId);
+                if (tutor == null)
+                {
+                    _logger.LogWarning("Duplicated request tutor {userId}-{childId}-{tutorId}.", userId, tutorRequestCreateDTO.ChildId, tutorRequestCreateDTO.TutorId);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR) };
+                    return NotFound(_response);
+                }
+                var child = await _childInformationRepository.GetAsync(x => x.Id == tutorRequestCreateDTO.ChildId && x.ParentId == userId);
+                if (child == null)
+                {
+                    _logger.LogWarning("Duplicated request tutor {userId}-{childId}-{tutorId}.", userId, tutorRequestCreateDTO.ChildId, tutorRequestCreateDTO.TutorId);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD) };
+                    return NotFound(_response);
+                }
+                TutorRequest model = _mapper.Map<TutorRequest>(tutorRequestCreateDTO);
+                model.ParentId = userId;
                 model.CreatedDate = DateTime.Now;
                 var createdObject = await _tutorRequestRepository.CreateAsync(model);
-                var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId);
                 var parent = await _userRepository.GetAsync(x => x.Id == model.ParentId);
 
                 // Send mail for parent
@@ -446,7 +457,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                if (changeStatusDTO == null)
+                if (changeStatusDTO == null || !ModelState.IsValid || changeStatusDTO.StatusChange == (int)SD.Status.PENDING)
                 {
                     _logger.LogWarning($"Received a bad request for tutor request with ID {id}.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -456,6 +467,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 TutorRequest model = await _tutorRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "Parent,Tutor", null);
+                if (model == null || model.RequestStatus != SD.Status.PENDING)
+                {
+                    _logger.LogWarning($"Received a bad request for tutor request with ID {id}.");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST) };
+                    return BadRequest(_response);
+                }
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId, false, null);
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
                 {

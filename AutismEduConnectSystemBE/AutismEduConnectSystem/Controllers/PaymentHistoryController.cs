@@ -20,6 +20,7 @@ namespace AutismEduConnectSystem.Controllers
     {
         private readonly IPaymentHistoryRepository _paymentHistoryRepository;
         private readonly IPackagePaymentRepository _packagePaymentRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         protected APIResponse _response;
         protected int pageSize = 0;
@@ -28,7 +29,7 @@ namespace AutismEduConnectSystem.Controllers
         public PaymentHistoryController(IPaymentHistoryRepository paymentHistoryRepository,
             IPackagePaymentRepository packagePaymentRepository,
             IConfiguration configuration, IMapper mapper, IResourceService resourceService,
-            ILogger<PaymentHistoryController> logger)
+            ILogger<PaymentHistoryController> logger, IUserRepository userRepository)
         {
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
             _response = new APIResponse();
@@ -37,6 +38,7 @@ namespace AutismEduConnectSystem.Controllers
             _resourceService = resourceService;
             _logger = logger;
             _packagePaymentRepository = packagePaymentRepository;
+            _userRepository = userRepository;
         }
 
         [HttpPost]
@@ -74,13 +76,18 @@ namespace AutismEduConnectSystem.Controllers
                     orderBy: x => x.ExpirationDate,
                     isDesc: true
                 );
-
                 var latestPaymentHistory = latestPaymentHistoryResult.list.FirstOrDefault();
-
-                if (packagePayment != null && latestPaymentHistory != null)
+                var user = await _userRepository.GetAsync(x =>x.Id == userId);
+                
+                if (packagePayment != null && latestPaymentHistory != null && user != null)
                 {
                     var additionalMonths = packagePayment.Duration;
-                    var remainingDaysFromLastExpiration = (latestPaymentHistory.ExpirationDate - DateTime.Now).Days;
+                    int trialDays = 0;
+                    if(user.CreatedDate.AddDays(30) < DateTime.Now)
+                    {
+                        trialDays = (DateTime.Now.Date - user.CreatedDate.Date).Days;
+                    }
+                    var remainingDaysFromLastExpiration = (latestPaymentHistory.ExpirationDate - DateTime.Now).Days + trialDays;
                     newModel.ExpirationDate = DateTime.Now.AddMonths(additionalMonths).AddDays(remainingDaysFromLastExpiration);
                 }
                 else if (packagePayment != null)

@@ -176,7 +176,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
                 var (count, result) = await _workExperienceRepository.GetAllAsync(filter,
-                                "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                                "Submitter,TutorRegistrationRequest", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                 foreach (var item in result)
                 {
                     if (item.Submitter != null)

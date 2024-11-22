@@ -189,14 +189,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (pageSize != 0)
                 {
                     var (count, result) = await _curriculumRepository.GetAllAsync(filter,
-                                "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                                "Submitter,TutorRegistrationRequest", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                     list = result;
                     totalCount = count;
                 }
                 else
                 {
                     var (count, result) = await _curriculumRepository.GetAllNotPagingAsync(filter,
-                                "Submitter", null, orderByQuery, isDesc);
+                                "Submitter,TutorRegistrationRequest", null, orderByQuery, isDesc);
                     list = result;
                     totalCount = count;
                 }

@@ -16,6 +16,7 @@ namespace AutismEduConnectSystem.Models.DTOs
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
         public TutorUserInfo? Submitter { get; set; }
+        public TutorRegistrationRequestInfoDTO? TutorRegistrationRequest { get; set; }
         public string? Feedback { get; set; }
         public Status RequestStatus { get; set; }
         public List<CertificateMediaDTO> CertificateMedias { get; set; }

@@ -14,6 +14,7 @@ namespace AutismEduConnectSystem.Models.DTOs
         public bool IsDeleted { get; set; }
         public string? RejectionReason { get; set; }
         public TutorUserInfo? Submitter { get; set; }
+        public TutorRegistrationRequestInfoDTO? TutorRegistrationRequest { get; set; }
         public ApplicationUserDTO? ApprovedBy { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime UpdatedDate { get; set; }
