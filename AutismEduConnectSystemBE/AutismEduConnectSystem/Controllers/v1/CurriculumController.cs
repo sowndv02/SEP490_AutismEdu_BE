@@ -176,10 +176,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                     switch (status.ToLower())
                     {
                         case "approve":
-                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE);
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.APPROVE && x.IsActive);
                             break;
                         case "reject":
-                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT);
+                            filter = filter.AndAlso(x => x.RequestStatus == Status.REJECT && !x.IsActive);
                             break;
                         case "pending":
                             filter = filter.AndAlso(x => x.RequestStatus == Status.PENDING);
@@ -365,7 +365,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     {
                         var subject = "Yêu cập nhật khung chương trình của bạn đã được chấp nhận!";
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                        
+
                         var rejectionReasonHtml = string.Empty;
                         var htmlMessage = templateContent
                         .Replace("@Model.FullName", tutor.FullName)
