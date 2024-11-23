@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
+using System.Runtime.ConstrainedExecution;
 using System.Security.Claims;
 using static AutismEduConnectSystem.SD;
 
@@ -108,10 +109,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
                     return NotFound(_response);
                 }
-                foreach (var certificate in result.Certificates)
+                if(result.Certificates != null && result.Certificates.Any())
                 {
-                    var (countMedias, medias) = await _certificateMediaRepository.GetAllNotPagingAsync(x => x.CertificateId == certificate.Id, includeProperties: null, excludeProperties: null);
-                    certificate.CertificateMedias = medias;
+                    foreach (var certificate in result.Certificates)
+                    {
+                        var (countMedias, medias) = await _certificateMediaRepository.GetAllNotPagingAsync(x => x.CertificateId == certificate.Id, includeProperties: null, excludeProperties: null);
+                        certificate.CertificateMedias = medias;
+                    }
                 }
                 _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(result);
                 _response.StatusCode = HttpStatusCode.OK;
@@ -129,11 +133,11 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<ActionResult<APIResponse>> CreateTutorRegistrationRequestAsync([FromForm] TutorRegistrationRequestCreateDTO tutorRegistrationRequestCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] TutorRegistrationRequestCreateDTO tutorRegistrationRequestCreateDTO)
         {
             try
             {
-                if (tutorRegistrationRequestCreateDTO == null)
+                if (tutorRegistrationRequestCreateDTO == null || !ModelState.IsValid)
                 {
                     _logger.LogWarning("Tutor registration request is null.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -201,20 +205,22 @@ namespace AutismEduConnectSystem.Controllers.v1
                         }
                     }
                 }
-                // TODO: Send email
-                var subject = "Xác nhận Đăng ký Gia sư Dạy Trẻ Tự Kỷ - Đang Chờ Duyệt";
                 var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TutorRegistrationRequestTemplate.cshtml");
-                var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                var htmlMessage = templateContent
-                    .Replace("@Model.FullName", model.FullName)
-                    .Replace("@Model.Email", model.Email)
-                    .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
-                _messageBus.SendMessage(new EmailLogger()
+                if (System.IO.File.Exists(templatePath))
                 {
-                    Email = model.Email,
-                    Subject = subject,
-                    Message = htmlMessage
-                }, queueName);
+                    var subject = "Xác nhận Đăng ký Gia sư Dạy Trẻ Tự Kỷ - Đang Chờ Duyệt";
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", model.FullName)
+                        .Replace("@Model.Email", model.Email)
+                        .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        Email = model.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
+                }
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
@@ -234,15 +240,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-                if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
-                {
-                    _logger.LogWarning("Forbidden access attempt detected.");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Forbidden;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
-                }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -252,7 +249,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
+                {
+                    _logger.LogWarning("Forbidden access attempt detected.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
                 Expression<Func<TutorRegistrationRequest, bool>> filter = u => true;
                 Expression<Func<TutorRegistrationRequest, object>> orderByQuery = u => true;
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
@@ -272,6 +277,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                             orderByQuery = x => x.CreatedDate;
                             break;
                     }
+                }
+                else
+                {
+                    orderByQuery = x => x.CreatedDate;
                 }
                 if (startDate != null)
                 {
@@ -339,7 +348,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
                 if (tutorRegistrationRequestChange.StatusChange == (int)Status.PENDING)
                 {
                     _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
@@ -349,6 +365,22 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
                 TutorRegistrationRequest model = await _tutorRegistrationRequestRepository.GetAsync(x => x.Id == tutorRegistrationRequestChange.Id, false, "Curriculums,WorkExperiences,Certificates", null);
+                if(model == null)
+                {
+                    _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    return NotFound(_response);
+                }
+                if(model.RequestStatus != Status.PENDING)
+                {
+                    _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
                 if (tutorRegistrationRequestChange.StatusChange == (int)Status.APPROVE)
                 {
                     string passsword = PasswordGenerator.GeneratePassword();
@@ -368,7 +400,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                         LockoutEnabled = true,
                         RoleId = _roleRepository.GetByNameAsync(SD.TUTOR_ROLE).GetAwaiter().GetResult().Id
                     }, passsword);
-
+                    if(user == null)
+                    {
+                        _logger.LogError("An error occurred while processing Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
+                        _response.IsSuccess = false;
+                        _response.StatusCode = HttpStatusCode.InternalServerError;
+                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                    }
                     // Create tutor profile
                     var tutor = await _tutorRepository.CreateAsync(new Tutor()
                     {
@@ -383,67 +422,53 @@ namespace AutismEduConnectSystem.Controllers.v1
                         CreatedDate = DateTime.Now,
                         UpdatedDate = DateTime.Now
                     });
-
+                    if (tutor == null)
+                    {
+                        _logger.LogError("An error occurred while processing Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
+                        _response.IsSuccess = false;
+                        _response.StatusCode = HttpStatusCode.InternalServerError;
+                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                    }
                     // Update status curriculum
                     if (model.Curriculums != null)
                     {
                         var curiculums = model.Curriculums.Where(x => x.RequestStatus == Status.PENDING).ToList();
-                        foreach (var item in curiculums)
-                        {
-                            item.RequestStatus = Status.APPROVE;
-                            item.ApprovedId = userId;
-                            item.IsActive = true;
-                            item.UpdatedDate = DateTime.Now;
-                            item.SubmitterId = tutor.TutorId;
-                            await _curriculumRepository.UpdateAsync(item);
-                        }
+                        await UpdateStatusCurriculums(curiculums, userId, string.Empty, Status.APPROVE, tutor.TutorId);
                     }
-
                     // Update status certificate except certificate have status is reject
                     if (model.Certificates != null)
                     {
                         var certificates = model.Certificates.Where(x => x.RequestStatus == Status.PENDING).ToList();
-                        foreach (var cert in certificates)
-                        {
-                            cert.RequestStatus = Status.APPROVE;
-                            cert.SubmitterId = tutor.TutorId;
-                            cert.ApprovedId = userId;
-                            cert.UpdatedDate = DateTime.Now;
-                            await _certificateRepository.UpdateAsync(cert);
-                        }
+                        await UpdateStatusCertificates(certificates, userId, string.Empty, Status.APPROVE,tutor.TutorId);
                     }
-
                     // Update status work experience
                     if (model.WorkExperiences != null)
                     {
                         var workExperiences = model.WorkExperiences.Where(x => x.RequestStatus == Status.PENDING).ToList();
-                        foreach (var workExperience in workExperiences)
-                        {
-                            workExperience.RequestStatus = Status.APPROVE;
-                            workExperience.SubmitterId = tutor.TutorId;
-                            workExperience.ApprovedId = userId;
-                            workExperience.IsActive = true;
-                            workExperience.UpdatedDate = DateTime.Now;
-                            await _workExperienceRepository.UpdateAsync(workExperience);
-                        }
+                        await UpdateStatusWorkExperiences(workExperiences, userId, string.Empty, Status.APPROVE, tutor.TutorId);
                     }
 
                     model.RequestStatus = Status.APPROVE;
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _tutorRegistrationRequestRepository.UpdateAsync(model);
-                    // TODO: Send mail
-                    var subject = "Thông báo Chấp nhận Đơn Đăng ký Gia sư Dạy Trẻ Tự Kỷ";
-
+                    
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AcceptedTutorRegistrationRequest.cshtml");
+                    if (!System.IO.File.Exists(templatePath))
+                    {
+                        _response.IsSuccess = false;
+                        _response.StatusCode = HttpStatusCode.InternalServerError;
+                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                    }
+                    var subject = "Thông báo Chấp nhận Đơn Đăng ký Gia sư Dạy Trẻ Tự Kỷ";
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.FullName)
                         .Replace("@Model.Username", model.Email)
                         .Replace("@Model.Password", passsword)
                         .Replace("@Model.LoginUrl", SD.URL_FE_TUTOR_LOGIN);
-
 
                     _messageBus.SendMessage(new EmailLogger()
                     {
@@ -452,7 +477,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                         Subject = subject,
                         Message = htmlMessage
                     }, queueName);
-
                     _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -470,65 +494,39 @@ namespace AutismEduConnectSystem.Controllers.v1
                     // Reject certificate
                     if (model.Certificates != null)
                     {
-                        foreach (var cert in model.Certificates)
-                        {
-                            cert.ApprovedId = userId;
-                            cert.IsDeleted = true;
-                            cert.UpdatedDate = DateTime.Now;
-                            cert.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
-                            cert.RequestStatus = Status.REJECT;
-                            await _certificateRepository.UpdateAsync(cert);
-                        }
+                        await UpdateStatusCertificates(model.Certificates, userId, tutorRegistrationRequestChange.RejectionReason, Status.REJECT, string.Empty);
                     }
-
                     // Reject curriculum
                     if (model.Curriculums != null)
                     {
-                        foreach (var item in model.Curriculums)
-                        {
-                            item.ApprovedId = userId;
-                            item.IsActive = false;
-                            item.UpdatedDate = DateTime.Now;
-                            item.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
-                            item.RequestStatus = Status.REJECT;
-                            await _curriculumRepository.UpdateAsync(item);
-                        }
+                        await UpdateStatusCurriculums(model.Curriculums, userId, tutorRegistrationRequestChange.RejectionReason, Status.REJECT, string.Empty);
                     }
-
                     if (model.WorkExperiences != null)
                     {
-                        foreach (var item in model.WorkExperiences)
-                        {
-                            item.ApprovedId = userId;
-                            item.UpdatedDate = DateTime.Now;
-                            item.IsActive = false;
-                            item.RejectionReason = tutorRegistrationRequestChange.RejectionReason;
-                            item.RequestStatus = Status.REJECT;
-                            await _workExperienceRepository.UpdateAsync(item);
-                        }
+                        await UpdateStatusWorkExperiences(model.WorkExperiences, userId, tutorRegistrationRequestChange.RejectionReason, Status.REJECT, string.Empty);
                     }
-                    // TODO: Send mail
-
-                    var subject = "Thông báo Từ chối Đơn Đăng ký Gia sư và Hướng dẫn Tạo Đơn Mới";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "RejectTutorRegistrationRequest.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", model.FullName)
-                        .Replace("@Model.RejectionReason", model.RejectionReason ?? "Không có lý do cụ thể.");
-
-                    _messageBus.SendMessage(new EmailLogger()
+                    if (System.IO.File.Exists(templatePath))
                     {
-                        Email = model.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                        var subject = "Thông báo Từ chối Đơn Đăng ký Gia sư và Hướng dẫn Tạo Đơn Mới";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", model.FullName)
+                            .Replace("@Model.RejectionReason", model.RejectionReason ?? "Không có lý do cụ thể.");
+
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            Email = model.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                    }
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
                     _response.IsSuccess = true;
                     return Ok(_response);
 
                 }
-
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -540,6 +538,84 @@ namespace AutismEduConnectSystem.Controllers.v1
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+
+        private async Task UpdateStatusWorkExperiences(List<WorkExperience> list, string userId, string rejectReason, Status status, string tutorId)
+        {
+            foreach (var workExperience in list)
+            {
+                if (status == Status.REJECT)
+                {
+                    workExperience.ApprovedId = userId;
+                    workExperience.UpdatedDate = DateTime.Now;
+                    workExperience.IsActive = false;
+                    workExperience.RejectionReason = rejectReason;
+                    workExperience.RequestStatus = Status.REJECT;
+                    await _workExperienceRepository.UpdateAsync(workExperience);
+                }
+                else
+                {
+                    workExperience.RequestStatus = Status.APPROVE;
+                    workExperience.SubmitterId = tutorId;
+                    workExperience.ApprovedId = userId;
+                    workExperience.IsActive = true;
+                    workExperience.UpdatedDate = DateTime.Now;
+                    await _workExperienceRepository.UpdateAsync(workExperience);
+                }
+
+            }
+        }
+
+        private async Task UpdateStatusCurriculums(List<Curriculum> curriculums, string userId, string rejectReason, Status status, string tutorId)
+        {
+            foreach (var item in curriculums)
+            {
+                if(status == Status.REJECT)
+                {
+                    item.ApprovedId = userId;
+                    item.IsActive = false;
+                    item.UpdatedDate = DateTime.Now;
+                    item.RejectionReason = rejectReason;
+                    item.RequestStatus = status;
+                    await _curriculumRepository.UpdateAsync(item);
+                }
+                else
+                {
+                    item.RequestStatus = Status.APPROVE;
+                    item.ApprovedId = userId;
+                    item.IsActive = true;
+                    item.UpdatedDate = DateTime.Now;
+                    item.SubmitterId = tutorId;
+                    await _curriculumRepository.UpdateAsync(item);
+                }
+                
+            }
+        }
+
+        private async Task UpdateStatusCertificates(List<Certificate> list, string userId, string rejectReason, Status status, string tutorId)
+        {
+            foreach (var item in list)
+            {
+                if (status == Status.REJECT)
+                {
+                    item.ApprovedId = userId;
+                    item.IsDeleted = true;
+                    item.UpdatedDate = DateTime.Now;
+                    item.RejectionReason = rejectReason;
+                    item.RequestStatus = Status.REJECT;
+                    await _certificateRepository.UpdateAsync(item);
+                }
+                else
+                {
+                    item.RequestStatus = Status.APPROVE;
+                    item.SubmitterId = tutorId;
+                    item.ApprovedId = userId;
+                    item.UpdatedDate = DateTime.Now;
+                    await _certificateRepository.UpdateAsync(item);
+                }
+
             }
         }
 

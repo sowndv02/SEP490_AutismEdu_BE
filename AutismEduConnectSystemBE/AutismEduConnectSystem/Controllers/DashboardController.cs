@@ -230,7 +230,7 @@ namespace AutismEduConnectSystem.Controllers
                 var result = _mapper.Map<List<PackagePaymentDTO>>(list);
                 result.ForEach(x => x.TotalPurchases = _paymentHistoryRepository.GetTotalPaymentHistory(x.Id, filter).GetAwaiter().GetResult());
                 _response.IsSuccess = true;
-                _response.Result = result;
+                _response.Result = result.Select(x => new {x.Title, x.TotalPurchases});
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }

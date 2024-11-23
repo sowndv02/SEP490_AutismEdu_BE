@@ -52,7 +52,6 @@ namespace AutismEduConnectSystem.Services
 
                     context.StudentProfiles.Update(profile);
 
-                    //TODO: send email
                     var tutor = context.Tutors.Where(t => t.TutorId.Equals(profile.TutorId)).Include(t => t.User).FirstOrDefault();
                     var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AutoRejectStudentProfileTemplate.cshtml");

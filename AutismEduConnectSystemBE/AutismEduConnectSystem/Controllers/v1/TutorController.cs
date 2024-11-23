@@ -173,26 +173,44 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
 
-                var (total, list) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, null, null);
-                TutorProfileUpdateRequest model = null;
-                model = list.OrderByDescending(x => x.CreatedDate).ToList().FirstOrDefault();
-                Tutor result = null;
-                if (model == null)
+                var (totalPending, pendingRequests) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(
+                        x => x.TutorId == userId && x.RequestStatus == Status.PENDING,
+                        null,
+                        null
+                    );
+
+                var latestRequest = pendingRequests
+                    .OrderByDescending(x => x.CreatedDate)
+                    .FirstOrDefault();
+
+                if (latestRequest == null)
                 {
-                    var (totalResult, listResult) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.APPROVE, null, null);
-                    model = listResult.OrderByDescending(x => x.CreatedDate).ToList().FirstOrDefault();
-                    if (model == null)
+                    var (totalApproved, approvedRequests) = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(
+                        x => x.TutorId == userId && x.RequestStatus == Status.APPROVE,
+                        null,
+                        null
+                    );
+
+                    latestRequest = approvedRequests
+                        .OrderByDescending(x => x.CreatedDate)
+                        .FirstOrDefault();
+                }
+                if (latestRequest != null)
+                {
+                    _response.Result = _mapper.Map<TutorProfileUpdateRequestDTO>(latestRequest);
+                }
+                else
+                {
+                    var tutor = await _tutorRepository.GetAsync(
+                        x => x.TutorId == userId,
+                        false,
+                        "User",
+                        null
+                    );
+                    if (tutor != null)
                     {
-                        result = await _tutorRepository.GetAsync(x => x.TutorId == userId, false, "User", null);
+                        _response.Result = _mapper.Map<TutorDTO>(tutor);
                     }
-                }
-                if (model != null)
-                {
-                    _response.Result = _mapper.Map<TutorProfileUpdateRequestDTO>(model);
-                }
-                else if (result != null)
-                {
-                    _response.Result = _mapper.Map<TutorDTO>(result);
                 }
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -292,7 +310,24 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                // TODO: Spam update profile
+                if (!ModelState.IsValid) 
+                {
+                    _logger.LogWarning("Duplicated Request.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.UPDATE_PROFILE_REQUEST) };
+                    return StatusCode((int)HttpStatusCode.BadRequest, _response);
+                }
+                var existedRequest = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, null, null, x => x.CreatedDate, true);
+                if(existedRequest.list != null && existedRequest.list.Any())
+                {
+                    _logger.LogWarning("Duplicated Request.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.UPDATE_PROFILE_REQUEST) };
+                    return StatusCode((int)HttpStatusCode.BadRequest, _response);
+                }
+                
                 TutorProfileUpdateRequest model = _mapper.Map<TutorProfileUpdateRequest>(updateDTO);
                 model.TutorId = userId;
                 var result = await _tutorProfileUpdateRequestRepository.CreateAsync(model);
@@ -316,7 +351,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                if (ageFrom == null || ageTo == null || ageFrom < 0 || ageTo == 0)
+                if (ageFrom == null || ageTo == null || ageFrom < 0 || ageTo <= 0)
                 {
                     ageFrom = 0;
                     ageTo = 15;
@@ -327,6 +362,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     ageTo = ageFrom;
                     ageFrom = temp;
                 }
+                if (reviewScore < 0) reviewScore = 5;
                 Expression<Func<Tutor, bool>> filterAge = u => u.StartAge >= ageFrom || u.EndAge <= ageTo;
                 Expression<Func<Tutor, bool>> searchNameFilter = null;
                 Expression<Func<Tutor, bool>> searchAddressFilter = null;
@@ -387,16 +423,16 @@ namespace AutismEduConnectSystem.Controllers.v1
             try
             {
                 TutorProfileUpdateRequest model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
+                if (model == null)
+                {
+                    _logger.LogWarning("Duplicated Request.");
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.UPDATE_PROFILE_REQUEST) };
+                    return StatusCode((int)HttpStatusCode.NotFound, _response);
+                }
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.TutorId, true, null);
                 var tutorProfile = await _tutorRepository.GetAsync(x => x.TutorId == model.TutorId, true, null);
-                if (model == null || model.RequestStatus != Status.PENDING)
-                {
-                    _logger.LogWarning("Invalid request status or tutor update request not found for tutor update request ID {Id} by user {UserId}", changeStatusDTO.Id, userId);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_UPDATE_PROFILE_REQUEST) };
-                    return BadRequest(_response);
-                }
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE && tutor != null && tutorProfile != null)
                 {
                     model.RequestStatus = Status.APPROVE;

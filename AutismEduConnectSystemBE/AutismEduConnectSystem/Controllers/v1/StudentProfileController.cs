@@ -228,7 +228,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                         RoleId = _roleRepository.GetByNameAsync(SD.PARENT_ROLE).GetAwaiter().GetResult().Id
                     }, passsword);
 
-                    // TODO: Send mail
                     var subject = "Thông báo ";
 
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateParentAndChild.cshtml");
@@ -368,7 +367,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
 
-                //TODO: send email
                 if (model.ChildId > 0)
                 {
                     //var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");

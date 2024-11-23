@@ -156,6 +156,7 @@
         public const string CONVERSATION = "Cuộc hội thoại";
         public const string MESSAGE = "Tin nhắn";
         public const string SEARCH_DATE = "Ngày tìm kiếm";
+        public const string UPDATE_PROFILE_REQUEST = "Yêu cầu cập nhật hồ sơ";
 
 
 
