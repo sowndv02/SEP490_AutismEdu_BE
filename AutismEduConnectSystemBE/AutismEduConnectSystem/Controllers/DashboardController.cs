@@ -89,7 +89,7 @@ namespace AutismEduConnectSystem.Controllers
             }
         }
 
-        [HttpGet("TotalUserInMonth")]
+        [HttpGet("TotalUser")]
         public async Task<ActionResult<APIResponse>> GetTotalUserInMonthAsync([FromQuery] string userType = SD.PARENT_ROLE, DateTime? startDate = null, DateTime? endDate = null)
         {
             try
