@@ -276,7 +276,7 @@ namespace AutismEduConnectSystem.Controllers
                     .GroupBy(x => new { x.CreatedDate.Year, x.CreatedDate.Month })
                     .Select(g => new
                     {
-                        Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMMM yyyy", CultureInfo.InvariantCulture),
+                        Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMMM yyyy", new CultureInfo("vi-VN")),
                         TotalPrice = g.Sum(x => x.Amount)
                     })
                     .ToList();
