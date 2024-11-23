@@ -68,7 +68,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                if (id == 0)
+                if (id <= 0)
                 {
                     _logger.LogWarning($"Invalid syllabus ID: {id} provided by User: {userId}");
                     _response.StatusCode = HttpStatusCode.Unauthorized;
@@ -76,7 +76,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var model = await _syllabusRepository.GetAsync(x => x.Id == id && x.TutorId == userId, false, null);
+                var model = await _syllabusRepository.GetAsync(x => x.Id == id && x.TutorId == userId, true, null);
 
                 if (model == null)
                 {
@@ -189,14 +189,22 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                var model = await _syllabusRepository.GetAsync(x => x.Id == id && !x.IsDeleted);
-                if (model == null)
+                if(id <= 0)
                 {
                     _logger.LogWarning("Syllabus not found for id: {id}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
+                }
+                var model = await _syllabusRepository.GetAsync(x => x.Id == id && !x.IsDeleted);
+                if (model == null)
+                {
+                    _logger.LogWarning("Syllabus not found for id: {id}", id);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SYLLABUS) };
+                    return NotFound(_response);
                 }
                 var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
                 model.SyllabusExercises = syllabusExercises;

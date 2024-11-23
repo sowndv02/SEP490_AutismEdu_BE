@@ -817,7 +817,7 @@ namespace AutismEduConnectSystem.Repository
             if (filter != null)
                 query = query.Where(filter);
 
-            int count = query.Count();
+            
             var users = await query.ToListAsync();
 
 
@@ -843,8 +843,8 @@ namespace AutismEduConnectSystem.Repository
             {
                 users = users.Where(x => !x.Role.Contains(SD.STAFF_ROLE) && !x.Role.Contains(SD.MANAGER_ROLE) && !x.Role.Contains(SD.ADMIN_ROLE)).ToList();
             }
-
-            if(pageSize != 0)
+            int count = users.Count();
+            if (pageSize != 0)
             {
                 users = users.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
             }
