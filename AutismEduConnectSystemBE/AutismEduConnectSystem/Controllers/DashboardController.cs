@@ -118,6 +118,9 @@ namespace AutismEduConnectSystem.Controllers
                 {
                     switch (userType.ToLower())
                     {
+                        case "all":
+                            total = await _userRepository.GetTotalUserHaveFilterAsync(string.Empty, filter);
+                            break;
                         case "parent":
                             total = await _userRepository.GetTotalUserHaveFilterAsync(SD.PARENT_ROLE, filter);
                             break;
