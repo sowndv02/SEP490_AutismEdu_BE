@@ -103,7 +103,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                if (createDTO == null)
+                if (createDTO == null  || !ModelState.IsValid)
                 {
                     _logger.LogWarning("Received empty createDTO from tutor {TutorId}", tutorId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -293,7 +293,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var child = await _childInfoRepository.GetAsync(x => x.Id == model.ChildId, true, "Parent");
-                model.Child = child;
                 if (child == null)
                 {
                     _logger.LogError("Child information not found: No child found with the given criteria.");
@@ -302,6 +301,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO) };
                     return BadRequest(_response);
                 }
+                model.Child = child;
+                
                 if (!string.IsNullOrEmpty(child.Name))
                 {
                     string[] names = child.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
@@ -316,19 +317,22 @@ namespace AutismEduConnectSystem.Controllers.v1
                 model = await _studentProfileRepository.CreateAsync(model);
 
                 // Notification
-                var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
-                var notfication = new Notification()
+                if (model.Tutor != null && model.Tutor.User != null)
                 {
-                    ReceiverId = child.ParentId,
-                    Message = _resourceService.GetString(SD.CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION, model.Tutor?.User.FullName),
-                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_UPDATE_STATUS_STUDENT_PROFILE, model.Id),
-                    IsRead = false,
-                    CreatedDate = DateTime.Now
-                };
-                var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                if (!string.IsNullOrEmpty(connectionId))
-                {
-                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = child.ParentId,
+                        Message = _resourceService.GetString(SD.CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION, model.Tutor?.User.FullName),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_UPDATE_STATUS_STUDENT_PROFILE, model.Id),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
                 }
 
 
@@ -369,7 +373,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (model.ChildId > 0)
                 {
-                    //var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(model.TutorId), true, "User");
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateStudentProfileTemplate.cshtml");
                     if (System.IO.File.Exists(templatePath) && child.Parent != null && model.Tutor != null && model.Tutor.User != null)
                     {

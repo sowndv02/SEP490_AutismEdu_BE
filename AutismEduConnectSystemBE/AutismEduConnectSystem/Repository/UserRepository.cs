@@ -1056,15 +1056,10 @@ namespace AutismEduConnectSystem.Repository
             var parents = await query.ToListAsync();
             foreach(var parent in parents)
             {
-                var children = _context.ChildInformations.Where(x => x.ParentId == parent.Id);
-                foreach(var child in children)
-                {
-                    var studentProfiles = _context.StudentProfiles.Where(y => y.ChildId == child.Id).ToList();
-                    if (studentProfiles != null && studentProfiles.Any()) 
-                    {
-                        total++;
-                    }
-                }
+                var childIds = _context.ChildInformations.Where(x => x.ParentId == parent.Id).Select(x => x.Id);
+                bool hasMatchingChild = _context.StudentProfiles
+                    .Any(x => childIds.Contains(x.ChildId) && (x.Status == SD.StudentProfileStatus.Teaching || x.Status == SD.StudentProfileStatus.Stop));
+                if (hasMatchingChild) total++;
             }
 
             return total;
