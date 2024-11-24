@@ -47,7 +47,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -57,7 +56,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
                 {
-                    _logger.LogWarning("Forbidden access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -65,11 +63,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
 
-                if (assessmentQuestionCreateDTO == null)
+                if (assessmentQuestionCreateDTO == null || !ModelState.IsValid)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _logger.LogWarning("Attempted to create an assessment question with a null request payload.");
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_QUESTION) };
                     return BadRequest(_response);
                 }
@@ -77,7 +74,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var assessmentExist = await _assessmentQuestionRepository.GetAsync(x => x.Question.Equals(assessmentQuestionCreateDTO.Question));
                 if (assessmentExist != null)
                 {
-                    _logger.LogWarning($"Duplicate question attempted: {assessmentQuestionCreateDTO.Question}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, assessmentQuestionCreateDTO.Question) };
@@ -112,7 +108,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -153,7 +148,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -163,18 +157,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
                 {
-                    _logger.LogWarning("Forbidden access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
 
-                if (updateDTO == null)
+                if (updateDTO == null || !ModelState.IsValid)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _logger.LogWarning("Attempted to update an assessment question with a null request payload.");
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_QUESTION) };
                     return BadRequest(_response);
                 }
@@ -182,17 +174,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var model = await _assessmentQuestionRepository.GetAsync(x => x.Id == updateDTO.Id, true, "AssessmentOptions");
                 if (model == null)
                 {
-                    _logger.LogWarning($"Question id not found: {updateDTO.Id}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ID) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ASSESSMENT_QUESTION) };
                     return BadRequest(_response);
                 }
 
                 var assessmentExist = await _assessmentQuestionRepository.GetAsync(x => x.Id != updateDTO.Id && x.Question.Equals(updateDTO.Question));
                 if (assessmentExist != null)
                 {
-                    _logger.LogWarning($"Duplicate question attempted: {updateDTO.Question}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, updateDTO.Question) };

@@ -86,7 +86,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -96,7 +96,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                    _logger.LogWarning("Forbidden access attempt detected.");
+                   
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -227,27 +227,37 @@ namespace AutismEduConnectSystem.Controllers.v1
                         LockoutEnabled = true,
                         RoleId = _roleRepository.GetByNameAsync(SD.PARENT_ROLE).GetAwaiter().GetResult().Id
                     }, passsword);
-
+                    if(parent == null)
+                    {
+                        _response.StatusCode = HttpStatusCode.InternalServerError;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                    }
                     var subject = "Thông báo ";
 
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateParentAndChild.cshtml");
-                    if (System.IO.File.Exists(templatePath) && parent != null)
+                    if (!System.IO.File.Exists(templatePath))
                     {
-                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                        var htmlMessage = templateContent
-                            .Replace("@Model.FullName", parent.FullName)
-                            .Replace("@Model.Username", parent.Email)
-                            .Replace("@Model.Password", passsword)
-                            .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
-
-                        _messageBus.SendMessage(new EmailLogger()
-                        {
-                            UserId = parent.Id,
-                            Email = parent.Email,
-                            Subject = subject,
-                            Message = htmlMessage
-                        }, queueName);
+                        _response.StatusCode = HttpStatusCode.InternalServerError;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                     }
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", parent.FullName)
+                        .Replace("@Model.Username", parent.Email)
+                        .Replace("@Model.Password", passsword)
+                        .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
+
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        UserId = parent.Id,
+                        Email = parent.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
 
                     // Tao child
                     using var mediaStream = createDTO.Media.OpenReadStream();
@@ -263,7 +273,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                             BirthDate = createDTO.BirthDate,
                             CreatedDate = DateTime.Now
                         });
-
+                        if(childInformation == null)
+                        {
+                            _response.StatusCode = HttpStatusCode.InternalServerError;
+                            _response.IsSuccess = false;
+                            _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                            return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                        }
                         model.ChildId = childInformation.Id;
                     }
                 }
@@ -296,10 +312,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (child == null)
                 {
                     _logger.LogError("Child information not found: No child found with the given criteria.");
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 model.Child = child;
                 
@@ -429,7 +445,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -494,7 +510,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -527,7 +543,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(parentId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -601,7 +617,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -620,10 +636,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (studentProfile == null)
                 {
                     _logger.LogWarning("Bad Request: changeStatusDTO is null.");
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Teaching)
@@ -774,11 +790,18 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                if(id <= 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
                 }
                 var roles = User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList();
 
@@ -829,7 +852,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -839,14 +862,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                    _logger.LogWarning("Forbidden access attempt detected.");
+                   
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
                 
-                if (closeDTO == null)
+                if (closeDTO == null || !ModelState.IsValid)
                 {
                     _logger.LogWarning($"CloseTutoringCreateDTO is null");
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -854,7 +877,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.END_TUTORING) };
                     return BadRequest(_response);
                 }
-
+                if (closeDTO.StudentProfileId <= 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
                 var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == closeDTO.StudentProfileId, true, "InitialAndFinalAssessmentResults,ScheduleTimeSlots");
 
                 if (studentProfile == null)
@@ -914,21 +943,28 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                if (studentProfileId <= 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
                 }
                 var scheduleTimeSlots = await _studentProfileRepository.GetAsync(x => x.Id == studentProfileId, true, "ScheduleTimeSlots,Child");
 
                 if (scheduleTimeSlots == null)
                 {
                     _logger.LogWarning($"No schedule time slots found for Student Profile ID: {studentProfileId}");
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TIME_SLOT) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 _response.Result = _mapper.Map<GetAllStudentProfileTimeSlotDTO>(scheduleTimeSlots);

@@ -255,4 +255,10 @@
   <data name="FORBIDDEN_MESSAGE" xml:space="preserve">
     <value>Không có quyền truy cập vào tài nguyên.</value>
   </data>
+  <data name="CANNOT_GREATER" xml:space="preserve">
+    <value>{0} không thể lớn hơn {1}</value>
+  </data>
+  <data name="CANNOT_UPDATE_BECAUSE_PENDING" xml:space="preserve">
+    <value>Không thể cập nhật. Vì {0} đang không ở trạng thái chờ</value>
+  </data>
 </root>

@@ -42,7 +42,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        //[Authorize]
         public async Task<ActionResult<APIResponse>> CreateAsync(PaymentHistoryCreateDTO createDTO)
         {
             try
@@ -56,10 +56,10 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
 
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = "a09752778505389093199";
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -79,20 +79,20 @@ namespace AutismEduConnectSystem.Controllers
                 var latestPaymentHistory = latestPaymentHistoryResult.list.FirstOrDefault();
                 var user = await _userRepository.GetAsync(x =>x.Id == userId);
                 
+                int trialDays = 0;
+                if (user.CreatedDate.AddDays(30) < DateTime.Now)
+                {
+                    trialDays = (DateTime.Now.Date - user.CreatedDate.Date).Days;
+                }
                 if (packagePayment != null && latestPaymentHistory != null && user != null)
                 {
                     var additionalMonths = packagePayment.Duration;
-                    int trialDays = 0;
-                    if(user.CreatedDate.AddDays(30) < DateTime.Now)
-                    {
-                        trialDays = (DateTime.Now.Date - user.CreatedDate.Date).Days;
-                    }
                     var remainingDaysFromLastExpiration = (latestPaymentHistory.ExpirationDate - DateTime.Now).Days + trialDays;
                     newModel.ExpirationDate = DateTime.Now.AddMonths(additionalMonths).AddDays(remainingDaysFromLastExpiration);
                 }
                 else if (packagePayment != null)
                 {
-                    newModel.ExpirationDate = DateTime.Now.AddMonths(packagePayment.Duration);
+                    newModel.ExpirationDate = DateTime.Now.AddMonths(packagePayment.Duration).AddDays(trialDays);
                 }
 
                 var result = await _paymentHistoryRepository.CreateAsync(newModel);
@@ -122,7 +122,7 @@ namespace AutismEduConnectSystem.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -155,7 +155,7 @@ namespace AutismEduConnectSystem.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };

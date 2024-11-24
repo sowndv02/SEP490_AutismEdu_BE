@@ -75,7 +75,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -84,7 +84,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                    _logger.LogWarning("Forbidden access attempt detected.");
+                   
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -138,7 +138,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                _logger.LogWarning("Unauthorized access attempt detected.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.Unauthorized;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -147,7 +146,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
             if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
             {
-                _logger.LogWarning("Forbidden access attempt detected.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.Forbidden;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -158,7 +156,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid for user {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
@@ -202,7 +199,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                _logger.LogWarning("Unauthorized access attempt detected.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.Unauthorized;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -211,7 +207,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
             if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
             {
-                _logger.LogWarning("Forbidden access attempt detected.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.Forbidden;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -222,12 +217,25 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 Certificate model = await _certificateRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "CertificateMedias", null);
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId, false, null);
-                if (model == null || model.RequestStatus != Status.PENDING || id != changeStatusDTO.Id)
+                if (model == null)
                 {
-                    _logger.LogWarning("Invalid request status or certificate not found for certificate ID {CertificateId} by user {UserId}", changeStatusDTO.Id, userId);
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE) };
+                    return NotFound(_response);
+                }
+                if(id != changeStatusDTO.Id)
+                {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
+                if ( model.RequestStatus != Status.PENDING)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_UPDATE_BECAUSE_NOT_PENDING, SD.CERTIFICATE) };
                     return BadRequest(_response);
                 }
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
@@ -353,7 +361,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -362,7 +370,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.TUTOR_ROLE) && !userRoles.Contains(SD.STAFF_ROLE)))
                 {
-                    _logger.LogWarning("Forbidden access attempt detected.");
+                   
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -456,7 +464,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                _logger.LogWarning("Unauthorized access attempt detected.");
+                
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.Unauthorized;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -465,7 +473,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
             if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
             {
-                _logger.LogWarning("Forbidden access attempt detected.");
+               
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.Forbidden;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };

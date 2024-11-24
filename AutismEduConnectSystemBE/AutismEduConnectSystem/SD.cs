@@ -157,6 +157,8 @@
         public const string MESSAGE = "Tin nhắn";
         public const string SEARCH_DATE = "Ngày tìm kiếm";
         public const string UPDATE_PROFILE_REQUEST = "Yêu cầu cập nhật hồ sơ";
+        public const string MAX_SCORE = "Điểm đánh giá tối đa";
+        public const string MIN_SCORE = "Điểm đánh giá tối thiểu";
 
 
 
@@ -195,6 +197,8 @@
         public const string TOKEN_EXPIRED_MESSAGE = "TOKEN_EXPIRED_MESSAGE";
         public const string UNAUTHORIZED_MESSAGE = "UNAUTHORIZED_MESSAGE";
         public const string FORBIDDEN_MESSAGE = "FORBIDDEN_MESSAGE";
+        public const string CANNOT_GREATER = "CANNOT_GREATER";
+        public const string CANNOT_UPDATE_BECAUSE_NOT_PENDING = "CANNOT_UPDATE_BECAUSE_NOT_PENDING";
 
         // const notification
         public const string CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION = "CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION";
