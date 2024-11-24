@@ -78,11 +78,13 @@ namespace AutismEduConnectSystem.Controllers
                 );
                 var latestPaymentHistory = latestPaymentHistoryResult.list.FirstOrDefault();
                 var user = await _userRepository.GetAsync(x =>x.Id == userId);
-                
+
                 int trialDays = 0;
-                if (user.CreatedDate.AddDays(30) < DateTime.Now)
+                DateTime trialEndDate = user.CreatedDate.AddDays(30);
+
+                if (trialEndDate >= DateTime.Now)
                 {
-                    trialDays = (DateTime.Now.Date - user.CreatedDate.Date).Days;
+                    trialDays = (trialEndDate - DateTime.Now).Days;
                 }
                 if (packagePayment != null && latestPaymentHistory != null && user != null)
                 {
