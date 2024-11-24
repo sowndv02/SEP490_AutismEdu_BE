@@ -128,12 +128,7 @@ namespace AutismEduConnectSystem.Mapper
                 .ForMember(dest => dest.ApprovedBy, opt => opt.MapFrom(src => src.ApprovedBy))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
                 .ForMember(dest => dest.VersionNumber, opt => opt.MapFrom(src => src.VersionNumber))
-                .ForMember(dest => dest.OriginalId, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.Id : 0))
-                .ForMember(dest => dest.OriginalDescription, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.Description : string.Empty))
-                .ForMember(dest => dest.OriginalAgeFrom, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.AgeFrom : 0))
-                .ForMember(dest => dest.OriginalAgeEnd, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum.AgeEnd : 0))
-                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
-                .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(src => src.UpdatedDate))
+                .ForMember(dest => dest.OriginalCurriculum, opt => opt.MapFrom(src => src.OriginalCurriculum != null ? src.OriginalCurriculum : null))
                 .ReverseMap();
             CreateMap<TutorRequest, TutorRequestCreateDTO>().ReverseMap();
             CreateMap<TutorRequest, TutorRequestDTO>().ReverseMap();
