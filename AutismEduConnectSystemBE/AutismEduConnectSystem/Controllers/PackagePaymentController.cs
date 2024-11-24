@@ -119,7 +119,7 @@ namespace AutismEduConnectSystem.Controllers
                 var result = new List<PackagePayment>();
                 if (userRoles != null && userRoles.Contains(SD.MANAGER_ROLE))
                 {
-                    var (count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(filter, "Submitter", null, x => x.Price, true);
+                    var (count, list) = await _packagePaymentRepository.GetAllNotPagingAsync(filter, "Submitter,Original", null, x => x.Price, true);
                     result = list;
                 }
                 else
