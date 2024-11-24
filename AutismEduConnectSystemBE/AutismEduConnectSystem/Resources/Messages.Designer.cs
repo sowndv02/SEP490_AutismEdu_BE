@@ -277,6 +277,15 @@ namespace AutismEduConnectSystem.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} đang trong trạng thái chờ..
+        /// </summary>
+        public static string IN_STATUS_PENDING {
+            get {
+                return ResourceManager.GetString("IN_STATUS_PENDING", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lỗi hệ thống. Vui lòng thử lại sau!.
         /// </summary>
         public static string INTERNAL_SERVER_ERROR_MESSAGE {
