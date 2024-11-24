@@ -158,7 +158,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var exerciseModel = _mapper.Map<Exercise>(exerciseCreateDTO);
                 if (exerciseCreateDTO.OriginalId == 0)
                 {
-                    var isExisted = await _exerciseRepository.GetAllNotPagingAsync(x => x.ExerciseName.ToLower().Equals(exerciseCreateDTO.ExerciseName.ToLower()), null, null, null, true);
+                    var isExisted = await _exerciseRepository.GetAllNotPagingAsync(x => x.ExerciseName.ToLower().Equals(exerciseCreateDTO.ExerciseName.ToLower()) && x.ExerciseTypeId == exerciseCreateDTO.ExerciseTypeId, null, null, null, true);
                     if (isExisted.TotalCount > 0)
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
