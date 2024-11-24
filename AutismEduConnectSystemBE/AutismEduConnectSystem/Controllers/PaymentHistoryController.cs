@@ -42,7 +42,7 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<APIResponse>> CreateAsync(PaymentHistoryCreateDTO createDTO)
         {
             try
@@ -56,7 +56,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
 
-                var userId = "a09752778505389093199";
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
                     

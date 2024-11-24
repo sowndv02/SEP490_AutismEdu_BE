@@ -213,7 +213,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
         [HttpGet("exercise/{id}")]
-        [Authorize(Roles = SD.TUTOR_ROLE)]
+        //[Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute] int id, [FromQuery] string? search, int pageNumber = 1, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
         {
             try
@@ -221,7 +221,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -230,7 +230,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -271,7 +271,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     orderByQuery = x => x.CreatedDate;
                 }
 
-                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: "Orìginal", pageSize: 10, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
+                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: "Original", pageSize: 10, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 10, Total = count };
                 _response.Result = _mapper.Map<List<ExerciseDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;

@@ -261,7 +261,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("Cannot spam update curriculum");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CURRICULUM) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.IN_STATUS_PENDING, SD.CURRICULUM) };
                     return BadRequest(_response);
                 }
 

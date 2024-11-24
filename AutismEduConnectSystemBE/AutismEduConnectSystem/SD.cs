@@ -201,6 +201,7 @@
         public const string CANNOT_GREATER = "CANNOT_GREATER";
         public const string CANNOT_UPDATE_BECAUSE_NOT_PENDING = "CANNOT_UPDATE_BECAUSE_NOT_PENDING";
         public const string CANNOT_ACTION = "CANNOT_ACTION";
+        public const string IN_STATUS_PENDING = "IN_STATUS_PENDING";
 
         // const notification
         public const string CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION = "CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION";
