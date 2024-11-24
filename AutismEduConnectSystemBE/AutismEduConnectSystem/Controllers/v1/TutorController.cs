@@ -324,7 +324,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("Duplicated Request.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.UPDATE_PROFILE_REQUEST) };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.IN_STATUS_PENDING, SD.UPDATE_PROFILE_REQUEST) };
                     return StatusCode((int)HttpStatusCode.BadRequest, _response);
                 }
                 

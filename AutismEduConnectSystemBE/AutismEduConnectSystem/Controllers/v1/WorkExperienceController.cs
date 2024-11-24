@@ -86,10 +86,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (model == null)
                 {
                     _logger.LogWarning($"Work experience with ID {id} not found for user {userId}.");
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
-                    return BadRequest(_response);
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.WORK_EXPERIENCE) };
+                    return NotFound(_response);
                 }
                 model.IsActive = false;
                 model.IsDeleted = true;
@@ -240,7 +240,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("Cannot spam update workex");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.WORK_EXPERIENCE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.IN_STATUS_PENDING, SD.WORK_EXPERIENCE) };
                     return BadRequest(_response);
                 }
 

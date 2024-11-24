@@ -77,7 +77,7 @@ namespace AutismEduConnectSystem.Controllers
                     _logger.LogWarning("Invalid Role ID provided: {RoleId}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.BAD_REQUEST_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ROLE) }; 
                     return BadRequest(_response);
                 }
                 IdentityRole model = await _roleRepository.GetByIdAsync(id);
@@ -86,7 +86,7 @@ namespace AutismEduConnectSystem.Controllers
                     _logger.LogWarning("Role with ID: {RoleId} not found", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.NOT_FOUND_MESSAGE };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ROLE) };
                     return NotFound(_response);
                 }
                 var result = _mapper.Map<RoleDTO>(model);

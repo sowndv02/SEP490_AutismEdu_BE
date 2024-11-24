@@ -166,7 +166,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("Invalid age range for tutor registration: {StartAge} - {EndAge}", tutorRegistrationRequestCreateDTO.StartAge, tutorRegistrationRequestCreateDTO.EndAge);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.AGE) };
                     return BadRequest(_response);
                 }
                 tutorRegistrationRequestCreateDTO.FullName = _formatString.FormatStringFormalName(tutorRegistrationRequestCreateDTO.FullName);

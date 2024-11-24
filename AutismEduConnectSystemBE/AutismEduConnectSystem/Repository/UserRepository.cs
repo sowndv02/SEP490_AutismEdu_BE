@@ -674,7 +674,7 @@ namespace AutismEduConnectSystem.Repository
 
             if (!isValid)
             {
-                throw new InvalidDataException(_resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PASSWORD));
+                throw new InvalidDataException(_resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.OLD_PASSWORD));
             }
 
             var result = await _userManager.ChangePasswordAsync(user, updatePasswordRequestDTO.OldPassword, updatePasswordRequestDTO.NewPassword);

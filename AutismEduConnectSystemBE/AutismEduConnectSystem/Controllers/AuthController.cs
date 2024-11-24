@@ -181,7 +181,7 @@ namespace AutismEduConnectSystem.Controllers
                     _logger.LogWarning($"Google user with UserId: {model.UserId} attempted password reset.");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { $"User gooogle cannot forgot password." };
+                    _response.ErrorMessages = new List<string>() { $"Người dùng Google không thể sử dụng chức năng quên mật khẩu." };
                     return NotFound(_response);
                 }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
@@ -190,7 +190,7 @@ namespace AutismEduConnectSystem.Controllers
                     _logger.LogWarning($"Reset password link expired for UserId: {model.UserId}. Expiry time: {security.AddMinutes(validateTime)}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { "Link Expired." };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.LINK_EXPIRED_MESSAGE) };
                     return BadRequest(_response);
                 }
                 var result = await _userRepository.ResetPasswordAsync(user, model.Code, model.Password);

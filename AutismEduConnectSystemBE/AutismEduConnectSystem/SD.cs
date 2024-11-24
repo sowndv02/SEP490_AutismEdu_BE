@@ -123,7 +123,7 @@
         public const string EXERCISE = "Bài tập";
         public const string EXERCISE_TYPE = "Loại bài tập";
         public const string PROGRESS_REPORT = "Sổ liên lạc";
-        public const string REVIEW = "Review";
+        public const string REVIEW = "Đánh giá";
         public const string STUDENT_PROFILE = "Hồ sơ học sinh";
         public const string EMAIL = "Email";
         public const string PARENT = "Phụ huynh";
@@ -137,6 +137,7 @@
         public const string WORK_EXPERIENCE = "Kinh nghiệm làm việc";
         public const string SCHEDULE = "Lịch học";
         public const string PASSWORD = "Mật khẩu";
+        public const string OLD_PASSWORD = "Mật khẩu cũ";
         public const string ASSESSMENT_SCORE_RANGE = "Khoảng điểm đánh giá";
         public const string SCORE_RANGE = "Khoảng điểm";
         public const string END_TUTORING = "Đơn kết thúc dạy";

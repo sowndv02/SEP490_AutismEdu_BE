@@ -175,7 +175,7 @@ namespace AutismEduConnectSystem.Controllers
 
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PACKAGE_PAYMENT) };
                     return BadRequest(_response);
                 }
 
@@ -186,7 +186,8 @@ namespace AutismEduConnectSystem.Controllers
 
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.PACKAGE_PAYMENT) };
+
                     return BadRequest(_response);
                 }
                 model.IsHide = updateActiveDTO.IsActive;
