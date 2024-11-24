@@ -76,7 +76,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
@@ -118,7 +118,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
                 if (DateTime.Now > security.AddMinutes(validateTime))
@@ -174,7 +174,7 @@ namespace AutismEduConnectSystem.Controllers
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 else if (user.UserType == SD.GOOGLE_USER)
                 {

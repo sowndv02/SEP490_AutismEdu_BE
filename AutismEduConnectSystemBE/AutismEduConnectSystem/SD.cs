@@ -159,6 +159,7 @@
         public const string UPDATE_PROFILE_REQUEST = "Yêu cầu cập nhật hồ sơ";
         public const string MAX_SCORE = "Điểm đánh giá tối đa";
         public const string MIN_SCORE = "Điểm đánh giá tối thiểu";
+        public const string HIDE = "ẩn";
 
 
 
@@ -199,6 +200,7 @@
         public const string FORBIDDEN_MESSAGE = "FORBIDDEN_MESSAGE";
         public const string CANNOT_GREATER = "CANNOT_GREATER";
         public const string CANNOT_UPDATE_BECAUSE_NOT_PENDING = "CANNOT_UPDATE_BECAUSE_NOT_PENDING";
+        public const string CANNOT_ACTION = "CANNOT_ACTION";
 
         // const notification
         public const string CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION = "CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION";

@@ -80,7 +80,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (id <= 0)
                 {
-                    _logger.LogWarning("Invalid curriculum ID: {CurriculumId}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -90,7 +89,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (model == null)
                 {
-                    _logger.LogWarning("Curriculum not found for ID: {CurriculumId} and User ID: {UserId}. Returning BadRequest.", id, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CURRICULUM) };
@@ -196,7 +194,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 else
                 {
                     var (count, result) = await _curriculumRepository.GetAllNotPagingAsync(filter,
-                                "Submitter,TutorRegistrationRequest", null, orderByQuery, isDesc);
+                                "Submitter,TutorRegistrationRequest,OriginalCurriculum", null, orderByQuery, isDesc);
                     list = result;
                     totalCount = count;
                 }
@@ -335,20 +333,20 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 Curriculum model = await _curriculumRepository.GetAsync(x => x.Id == changeStatusDTO.Id, true, "Submitter", null);
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId, false, null);
-                if (model == null || model.RequestStatus != Status.PENDING)
+                if (model == null)
                 {
                     _logger.LogWarning("Curriculum not found for ID: {CurriculumId}", changeStatusDTO.Id);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
-                    return BadRequest(_response);
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_UPDATE_BECAUSE_NOT_PENDING, SD.CURRICULUM) };
+                    return NotFound(_response);
                 }
                 if (model.RequestStatus != Status.PENDING)
                 {
                     _logger.LogWarning("Curriculum ID: {CurriculumId} has already been processed with status: {RequestStatus}", changeStatusDTO.Id, model.RequestStatus);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_UPDATE_BECAUSE_NOT_PENDING, SD.CURRICULUM) };
                     return BadRequest(_response);
                 }
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)

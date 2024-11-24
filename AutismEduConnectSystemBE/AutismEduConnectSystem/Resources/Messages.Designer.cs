@@ -106,11 +106,38 @@ namespace AutismEduConnectSystem.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Không thể {0} vì {1} đang không {2}.
+        /// </summary>
+        public static string CANNOT_ACTION {
+            get {
+                return ResourceManager.GetString("CANNOT_ACTION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Không thể thêm {0} cho người dùng với vai trò {1}..
         /// </summary>
         public static string CANNOT_ADD_ROLE {
             get {
                 return ResourceManager.GetString("CANNOT_ADD_ROLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} không thể lớn hơn {1}.
+        /// </summary>
+        public static string CANNOT_GREATER {
+            get {
+                return ResourceManager.GetString("CANNOT_GREATER", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Không thể cập nhật. Vì {0} đang không ở trạng thái chờ.
+        /// </summary>
+        public static string CANNOT_UPDATE_BECAUSE_PENDING {
+            get {
+                return ResourceManager.GetString("CANNOT_UPDATE_BECAUSE_PENDING", resourceCulture);
             }
         }
         

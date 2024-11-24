@@ -1,6 +1,7 @@
 ﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
@@ -153,7 +154,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE) };
                     return BadRequest(_response);
                 }
-
+                var isExisted = await _exerciseRepository.GetAllNotPagingAsync(x => x.ExerciseName.ToLower().Equals(exerciseCreateDTO.ExerciseName.ToLower()) && x.Id != exerciseCreateDTO.OriginalId, null, null, null, true);
+                if (isExisted.TotalCount > 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EXERCISE) };
+                    return BadRequest(_response);
+                }
                 var exerciseModel = _mapper.Map<Exercise>(exerciseCreateDTO);
                 if (exerciseCreateDTO.OriginalId == 0)
                 {

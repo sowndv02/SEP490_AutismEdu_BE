@@ -261,4 +261,7 @@
   <data name="CANNOT_UPDATE_BECAUSE_PENDING" xml:space="preserve">
     <value>Không thể cập nhật. Vì {0} đang không ở trạng thái chờ</value>
   </data>
+  <data name="CANNOT_ACTION" xml:space="preserve">
+    <value>Không thể {0} vì {1} đang không {2}</value>
+  </data>
 </root>

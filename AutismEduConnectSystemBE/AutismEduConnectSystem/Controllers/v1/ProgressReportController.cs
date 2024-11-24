@@ -379,7 +379,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                if (updateDTO == null)
+                if (updateDTO == null || !ModelState.IsValid)
                 {
                     _logger.LogWarning("Received null updateDTO for ProgressReport update.");
                     _response.StatusCode = HttpStatusCode.BadRequest;

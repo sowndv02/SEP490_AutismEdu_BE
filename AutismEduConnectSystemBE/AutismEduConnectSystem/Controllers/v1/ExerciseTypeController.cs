@@ -324,6 +324,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
                     return BadRequest(_response);
                 }
+                var isExist = await _exerciseTypeRepository.GetAsync(x => x.ExerciseTypeName.ToLower().Equals(exerciseTypeCreateDTO.ExerciseTypeName.ToLower()), false, null, null);
+                if (isExist != null)
+                {
+                    _logger.LogWarning("ExerciseTypeName already exists");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EXERCISE_TYPE) };
+                    return BadRequest(_response);
+                }
 
 
                 var newExerciseType = _mapper.Map<ExerciseType>(exerciseTypeCreateDTO);
@@ -382,7 +391,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("Not found exercise Type with Id: {@id}.", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.EXERCISE_TYPE) };
                     return NotFound(_response);
                 }
                 if (!exerciseType.IsHide)
@@ -390,7 +399,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("exercise Type not hide cannot update hide or show with Id: {@id}.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_ACTION, SD.HIDE, SD.EXERCISE_TYPE, SD.HIDE) };
                     return BadRequest(_response);
                 }
 
