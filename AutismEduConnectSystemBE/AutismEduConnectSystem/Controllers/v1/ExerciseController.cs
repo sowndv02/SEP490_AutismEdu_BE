@@ -172,7 +172,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 await _exerciseRepository.DeactivatePreviousVersionsAsync(exerciseCreateDTO.OriginalId);
                 exerciseModel.TutorId = userId;
                 var createdExercise = await _exerciseRepository.CreateAsync(exerciseModel);
-
+                exerciseModel.Original = await _exerciseRepository.GetAsync(x => x.Id == exerciseModel.OriginalId, false, null, null);
                 _response.Result = _mapper.Map<ExerciseDTO>(exerciseModel);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.IsSuccess = true;

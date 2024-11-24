@@ -76,7 +76,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("Schedule time slot with Id: {TimeSlotId} not found", timeSlotId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TIME_SLOT) };
                     return NotFound(_response);
                 }
                 model.UpdatedDate = DateTime.Now;
