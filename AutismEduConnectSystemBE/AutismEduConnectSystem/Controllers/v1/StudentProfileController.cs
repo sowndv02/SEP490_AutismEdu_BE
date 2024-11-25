@@ -365,7 +365,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
 
                         DateTime targetDate = today.AddDays(daysUntilTargetDay);
-                        if (targetDate == today)
+                        if (targetDate.Date.Add(timeslot.From) < DateTime.Now)
                         {
                             continue;
                         }
@@ -744,7 +744,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
 
                         DateTime targetDate = today.AddDays(daysUntilTargetDay);
-                        if (targetDate == today)
+                        if (targetDate.Date.Add(timeslot.From) < DateTime.Now)
                         {
                             continue;
                         }
