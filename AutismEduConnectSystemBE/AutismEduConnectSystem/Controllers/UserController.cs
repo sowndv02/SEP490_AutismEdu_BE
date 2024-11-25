@@ -533,13 +533,13 @@ namespace AutismEduConnectSystem.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? searchValue, string? searchType, string? searchTypeId, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? searchValue, string? searchTypeId, int pageNumber = 1, string? searchType = SD.STATUS_ALL)
         {
             try
             {
                 int totalCount = 0;
                 List<ApplicationUser> list = new();
-                bool isAdmin = false;
+                bool isAdmin = true;
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles.Contains(SD.STAFF_ROLE) || userRoles.Contains(SD.MANAGER_ROLE))
                 {
