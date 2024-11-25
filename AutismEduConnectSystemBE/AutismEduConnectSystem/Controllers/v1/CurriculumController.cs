@@ -267,7 +267,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (curriculumDto.OriginalCurriculumId == 0)
                 {
-                    var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && curriculumDto.AgeEnd >= x.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && x.IsActive, null, null, null, false);
+                    var (total, list) = await _curriculumRepository.GetAllNotPagingAsync(x => x.AgeFrom <= curriculumDto.AgeFrom && curriculumDto.AgeEnd >= x.AgeEnd && x.SubmitterId == userId && !x.IsDeleted && (x.IsActive || x.RequestStatus == SD.Status.PENDING), null, null, null, false);
                     foreach (var item in list)
                     {
                         if (item.AgeFrom == curriculumDto.AgeFrom && item.AgeEnd == curriculumDto.AgeEnd)

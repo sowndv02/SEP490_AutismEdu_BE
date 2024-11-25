@@ -67,7 +67,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
 
-                if (TimeSpan.Parse(availableTimeSlotCreateDTO.From) > TimeSpan.Parse(availableTimeSlotCreateDTO.To))
+                if (TimeSpan.Parse(availableTimeSlotCreateDTO.From) >= TimeSpan.Parse(availableTimeSlotCreateDTO.To))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _logger.LogError("Bad request: 'From' time ({FromTime}) is later than 'To' time ({ToTime}).", availableTimeSlotCreateDTO.From, availableTimeSlotCreateDTO.To);
