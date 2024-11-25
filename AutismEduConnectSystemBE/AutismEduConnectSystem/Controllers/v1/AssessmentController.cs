@@ -174,10 +174,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var model = await _assessmentQuestionRepository.GetAsync(x => x.Id == updateDTO.Id, true, "AssessmentOptions");
                 if (model == null)
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ASSESSMENT_QUESTION) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 var assessmentExist = await _assessmentQuestionRepository.GetAsync(x => x.Id != updateDTO.Id && x.Question.Equals(updateDTO.Question));

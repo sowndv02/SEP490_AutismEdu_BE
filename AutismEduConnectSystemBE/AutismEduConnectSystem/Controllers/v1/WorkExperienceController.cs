@@ -315,7 +315,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
                     return BadRequest(_response);
                 }
-                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId);
+                var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId, false, null);
                 if (changeStatusDTO.StatusChange == (int)Status.APPROVE)
                 {
                     model.RequestStatus = Status.APPROVE;

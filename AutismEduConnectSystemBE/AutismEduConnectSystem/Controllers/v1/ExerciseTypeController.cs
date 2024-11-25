@@ -213,7 +213,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
         [HttpGet("exercise/{id}")]
-        //[Authorize(Roles = SD.TUTOR_ROLE)]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute] int id, [FromQuery] string? search, int pageNumber = 1, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
         {
             try

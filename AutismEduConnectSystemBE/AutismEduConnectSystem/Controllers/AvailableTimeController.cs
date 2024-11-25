@@ -163,9 +163,9 @@ namespace AutismEduConnectSystem.Controllers
                 if (timeslot == null)
                 {
                     _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.AVAILABLE_TIME) };
-                    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                    return NotFound(_response);
                 }
                 AvailableTimeSlot model = _mapper.Map<AvailableTimeSlot>(timeslot);
                 await _availableTimeSlotRepository.RemoveAsync(model);

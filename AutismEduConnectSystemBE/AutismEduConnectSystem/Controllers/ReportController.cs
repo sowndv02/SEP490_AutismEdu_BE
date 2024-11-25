@@ -541,10 +541,10 @@ namespace AutismEduConnectSystem.Controllers
                 List<Report> reports = new();
                 if (report == null)
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.REPORT) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 if (!string.IsNullOrEmpty(report.TutorId))
                 {

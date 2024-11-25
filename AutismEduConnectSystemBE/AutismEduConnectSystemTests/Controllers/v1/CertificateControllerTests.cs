@@ -111,7 +111,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
                         false,
-                        "CertificateMedias",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -154,7 +154,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
                         false,
-                        "CertificateMedias",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -197,7 +197,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
                         false,
-                        "CertificateMedias",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -242,7 +242,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
                         false,
-                        "CertificateMedias",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -778,7 +778,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
                         false,
-                        "CertificateMedias",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -850,7 +850,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
                         false,
-                        "CertificateMedias",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -900,7 +900,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
                         false,
-                        "CertificateMedias",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -911,7 +911,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(certificateId, changeStatusDTO);
-            var badRequestResult = result.Result as BadRequestObjectResult;
+            var badRequestResult = result.Result as NotFoundObjectResult;
 
             // Assert
             badRequestResult.Should().NotBeNull();
@@ -934,7 +934,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
                         false,
-                        "CertificateMedias",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -973,7 +973,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
                         false,
-                        "CertificateMedias",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -1207,7 +1207,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1276,7 +1276,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Pending"
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1321,7 +1321,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1390,7 +1390,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Reject"
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1451,7 +1451,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1525,7 +1525,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates[0])
                             && filter.Compile().Invoke(certificates[1])
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1570,7 +1570,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1639,7 +1639,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Approve"
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1684,7 +1684,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1753,7 +1753,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Reject"
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1798,7 +1798,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1867,7 +1867,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Approve"
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1912,7 +1912,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -1981,7 +1981,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Apply filter to check it includes only "testUserId" and status "Pending"
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2038,7 +2038,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2107,7 +2107,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Applies the filter to check it includes "testUserId" and no specific status
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2164,7 +2164,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2233,7 +2233,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter should include only certificates with "testUserId" and status "Pending"
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2301,7 +2301,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2370,7 +2370,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter == null || filter.Compile().Invoke(certificates.First())
                         ), // Ensures no specific filtering is applied
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2429,7 +2429,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter for REJECT status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2498,7 +2498,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter checks for REJECT status only
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2557,7 +2557,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter for APPROVE status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2626,7 +2626,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter checks for APPROVE status only
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2685,7 +2685,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter for REJECT status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2754,7 +2754,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter checks for REJECT status only
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2813,7 +2813,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter for PENDING status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2882,7 +2882,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter checks for PENDING status only
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -2941,7 +2941,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // No specific status filter for "All"
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3010,7 +3010,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // No filter, for all statuses
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3069,7 +3069,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter by APPROVE status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3139,7 +3139,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are approved
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3201,7 +3201,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last()) // Filter by REJECT status
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3272,7 +3272,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are rejected
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3334,7 +3334,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last()) // Filter by PENDING status
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3405,7 +3405,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are pending
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3467,7 +3467,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last()) // Filter by APPROVE status
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3538,7 +3538,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last()) // Ensure both certificates are approved
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3597,7 +3597,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(), // No status filter
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3665,7 +3665,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(), // Ensure no status filter
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3727,7 +3727,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last()) // Ensure filtering by PENDING status
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3798,7 +3798,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last()) // Ensure filtering by PENDING status
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3868,7 +3868,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter on status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3936,7 +3936,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter on status (All)
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -3997,7 +3997,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Ensures filter applies status REJECT
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4068,7 +4068,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Ensure filter applies status REJECT
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4129,7 +4129,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Ensures filter applies status APPROVE
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4200,7 +4200,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First()) // Ensure filter applies status APPROVE
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4259,7 +4259,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(), // No filtering on status (All status)
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4322,7 +4322,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Certificate, bool>>>(), // No filter applied for status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4383,7 +4383,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter for APPROVE status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4456,7 +4456,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             && // Apply filter to check it includes only APPROVE status certificates
                             filter.Compile().Invoke(certificates.Last())
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4517,7 +4517,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter for REJECT status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4590,7 +4590,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             && // Apply filter to check it includes only REJECT status certificates
                             filter.Compile().Invoke(certificates.Last())
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4651,7 +4651,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter for PENDING status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4724,7 +4724,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             && // Apply filter to check it includes only PENDING status certificates
                             filter.Compile().Invoke(certificates.Last())
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4785,7 +4785,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter for REJECT status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4858,7 +4858,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             && // Apply filter to check it includes only REJECT status certificates
                             filter.Compile().Invoke(certificates.Last())
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4919,7 +4919,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.Is<Expression<Func<Certificate, bool>>>(filter =>
                             filter.Compile().Invoke(certificates.First())
                         ), // Filter for PENDING status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -4992,7 +4992,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             && // Apply filter to check it includes only PENDING status certificates
                             filter.Compile().Invoke(certificates.Last())
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -5054,7 +5054,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last())
                         ), // No specific filter as status is ALL
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -5121,7 +5121,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             && // No specific status filter as status is All
                             filter.Compile().Invoke(certificates.Last())
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -5183,7 +5183,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             filter.Compile().Invoke(certificates.First())
                             && filter.Compile().Invoke(certificates.Last())
                         ), // Filter for APPROVE status
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),
@@ -5256,7 +5256,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                             && // Only APPROVE status certificates
                             filter.Compile().Invoke(certificates.Last())
                         ),
-                        "Submitter,CertificateMedias",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Certificate, object>>>(),

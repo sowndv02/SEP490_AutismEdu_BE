@@ -196,7 +196,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             _resourceServiceMock
-                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.SCORE_RANGE))
+                .Setup(r => r.GetString(SD.CANNOT_GREATER, SD.MIN_SCORE, SD.MAX_SCORE))
                 .Returns("Khoảng điểm không hợp lệ.");
             var createDTO = new AssessmentScoreRangeCreateDTO
             {
@@ -495,14 +495,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var result = await _controller.UpdateAsync(updateDTO);
 
             // Assert
-            var badRequestResult = result.Result as BadRequestObjectResult;
+            var badRequestResult = result.Result as NotFoundObjectResult;
             badRequestResult.Should().NotBeNull();
-            badRequestResult!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+            badRequestResult!.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
 
             var response = badRequestResult.Value as APIResponse;
             response.Should().NotBeNull();
             response!.IsSuccess.Should().BeFalse();
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
             _assessmentScoreRangeRepositoryMock.Verify(
                 repo =>

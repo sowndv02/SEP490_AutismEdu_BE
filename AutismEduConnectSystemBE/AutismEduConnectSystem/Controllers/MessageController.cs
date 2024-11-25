@@ -78,10 +78,10 @@ namespace AutismEduConnectSystem.Controllers
                 if (model == null)
                 {
                     _logger.LogWarning("Message with ID: {Id} is either not found.", id);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.MESSAGE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 var (count, list) = await _messageRepository.GetAllNotPagingAsync(x => x.ConversationId == model.Id && !x.IsRead, null, null, x => x.CreatedDate, true);

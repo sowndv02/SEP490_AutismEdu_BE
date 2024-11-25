@@ -47,10 +47,10 @@ namespace AutismEduConnectSystem.Controllers
                 var claim = await _claimRepository.GetAsync(x => x.Id == id, false);
                 if (claim == null)
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CLAIM) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 ApplicationClaim model = _mapper.Map<ApplicationClaim>(claim);
                 model.ClaimValue = model.DefaultClaimValue;

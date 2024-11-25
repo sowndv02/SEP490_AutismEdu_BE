@@ -144,10 +144,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == studentProfileId && x.TutorId == tutorId);
                 if(studentProfile == null)
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTOs);
                 List<ScheduleTimeSlot> createdTimeSlots = new();
@@ -273,10 +273,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (oldTimeSlot == null)
                 {
                     _logger.LogWarning("Schedule time slot with Id: {TimeSlotId} not found", updateDTO.TimeSlotId);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SCHEDULE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 var isTimeSlotDuplicate = await _scheduleTimeSlotRepository.GetAsync(x => x != oldTimeSlot

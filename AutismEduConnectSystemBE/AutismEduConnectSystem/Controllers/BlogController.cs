@@ -207,10 +207,10 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (blog == null)
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.BLOG) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 blog.ViewCount += 1;
                 await _blogRepository.UpdateAsync(blog);

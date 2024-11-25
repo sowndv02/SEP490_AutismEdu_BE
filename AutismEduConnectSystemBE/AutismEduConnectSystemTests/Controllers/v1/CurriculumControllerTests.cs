@@ -96,7 +96,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             var existingCurriculums = new List<Curriculum>
             {
-                new Curriculum { OriginalCurriculumId = 1, RequestStatus = SD.Status.PENDING },
+                new Curriculum { OriginalCurriculumId = 0, RequestStatus = SD.Status.PENDING },
             };
             var pagedResult = (existingCurriculums.Count, existingCurriculums);
             _curriculumRepositoryMock
@@ -112,12 +112,12 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .ReturnsAsync(pagedResult);
 
             _resourceServiceMock
-                .Setup(service => service.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CURRICULUM))
+                .Setup(service => service.GetString(SD.IN_STATUS_PENDING, SD.CURRICULUM))
                 .Returns("Duplicate curriculum exists");
 
             var curriculumDto = new CurriculumCreateDTO
             {
-                OriginalCurriculumId = 1,
+                OriginalCurriculumId = 0,
                 AgeEnd = 5,
                 AgeFrom = 1,
                 Description = "Update curriculum",
@@ -239,7 +239,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Arrange
             _curriculumRepositoryMock
                 .Setup(repo =>
-                    repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null)
+                    repo.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, It.IsAny<string>(), null)
                 )
                 .ReturnsAsync((Curriculum)null);
             _resourceServiceMock
@@ -395,7 +395,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -408,7 +408,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -442,7 +442,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter checks for APPROVE status and SubmitterId
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -521,7 +521,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -555,7 +555,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status if applied
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -643,7 +643,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -677,7 +677,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status if applied
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
                             expr.Body.ToString().Contains("CreatedDate")
@@ -767,7 +767,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -801,7 +801,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status if applied
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
                             expr.Body.ToString().Contains("CreatedDate")
@@ -882,7 +882,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -917,7 +917,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status if applied
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -997,7 +997,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1032,7 +1032,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status if applied
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1121,7 +1121,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
@@ -1158,7 +1158,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status if applied
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
@@ -1249,7 +1249,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
@@ -1286,7 +1286,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status if applied
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
@@ -1354,7 +1354,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1389,7 +1389,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1455,7 +1455,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1490,7 +1490,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1556,7 +1556,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1591,7 +1591,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1657,7 +1657,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1692,7 +1692,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -1764,7 +1764,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
                             expr.Body.ToString().Contains("CreatedDate")
@@ -1800,7 +1800,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
                             expr.Body.ToString().Contains("CreatedDate")
@@ -1873,7 +1873,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
                             expr.Body.ToString().Contains("CreatedDate")
@@ -1909,7 +1909,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(expr =>
                             expr.Body.ToString().Contains("CreatedDate")
@@ -1982,7 +1982,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -2016,7 +2016,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -2087,7 +2087,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -2121,7 +2121,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -2192,7 +2192,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -2226,7 +2226,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -2297,7 +2297,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -2331,7 +2331,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -2402,7 +2402,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -2436,7 +2436,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -2507,7 +2507,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -2541,7 +2541,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -2606,7 +2606,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -2641,7 +2641,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -2707,7 +2707,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -2742,7 +2742,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -2808,7 +2808,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -2843,7 +2843,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -2909,7 +2909,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -2944,7 +2944,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -3010,7 +3010,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -3045,7 +3045,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -3111,7 +3111,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -3146,7 +3146,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -3212,7 +3212,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -3247,7 +3247,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -3313,7 +3313,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -3348,7 +3348,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -3414,7 +3414,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -3448,7 +3448,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -3519,7 +3519,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -3553,7 +3553,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -3624,7 +3624,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -3658,7 +3658,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -3729,7 +3729,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -3763,7 +3763,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -3834,7 +3834,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -3868,7 +3868,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filter for status (All status)
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -3939,7 +3939,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -3973,7 +3973,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filter for status (All status)
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -4044,7 +4044,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -4078,7 +4078,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filter for status (All status)
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -4149,7 +4149,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -4183,7 +4183,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filter for status (All status)
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -4255,7 +4255,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4290,7 +4290,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filter for status (All status)
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4356,7 +4356,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4391,7 +4391,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4457,7 +4457,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4492,7 +4492,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filter for status (All status)
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4558,7 +4558,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4593,7 +4593,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filter for status (All status)
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4659,7 +4659,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4694,7 +4694,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for rejected status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4759,7 +4759,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4794,7 +4794,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for rejected status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4859,7 +4859,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4894,7 +4894,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for rejected status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4959,7 +4959,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -4994,7 +4994,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for rejected status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -5065,7 +5065,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -5099,7 +5099,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -5169,7 +5169,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -5203,7 +5203,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -5274,7 +5274,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -5308,7 +5308,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -5379,7 +5379,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -5413,7 +5413,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -5484,7 +5484,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -5518,7 +5518,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -5589,7 +5589,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -5623,7 +5623,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -5694,7 +5694,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -5728,7 +5728,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -5799,7 +5799,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -5833,7 +5833,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -5898,7 +5898,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -5933,7 +5933,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -5999,7 +5999,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6034,7 +6034,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6100,7 +6100,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6135,7 +6135,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6201,7 +6201,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6236,7 +6236,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6302,7 +6302,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6337,7 +6337,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6403,7 +6403,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6438,7 +6438,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6504,7 +6504,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6539,7 +6539,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6605,7 +6605,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6640,7 +6640,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -6706,7 +6706,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null, // Search term applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -6740,7 +6740,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null, // Ensure search term is applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -6805,7 +6805,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null, // Search term applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -6839,7 +6839,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null, // Ensure search term is applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -6910,7 +6910,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null, // Search term applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -6944,7 +6944,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null, // Ensure search term is applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true
@@ -7016,7 +7016,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null, // Search term applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -7050,7 +7050,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVE status
-                        "Submitter",
+                        It.IsAny<string>(),
                         null, // Ensure search term is applied
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false
@@ -7129,7 +7129,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -7165,7 +7165,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -7246,7 +7246,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -7282,7 +7282,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -7363,7 +7363,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by AgeEnd
@@ -7397,7 +7397,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeEnd
@@ -7475,7 +7475,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -7510,7 +7510,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -7592,7 +7592,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -7627,7 +7627,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -7709,7 +7709,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -7744,7 +7744,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -7826,7 +7826,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -7863,7 +7863,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -7952,7 +7952,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -7989,7 +7989,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -8076,7 +8076,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -8113,7 +8113,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -8200,7 +8200,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8235,7 +8235,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8320,7 +8320,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8355,7 +8355,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -8442,7 +8442,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -8478,7 +8478,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -8566,7 +8566,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -8602,7 +8602,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -8689,7 +8689,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by AgeFrom
@@ -8723,7 +8723,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeFrom
@@ -8809,7 +8809,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Sort ascending by AgeFrom
@@ -8843,7 +8843,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Ensure sorting is ascending by AgeFrom
@@ -8929,7 +8929,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Sort ascending by AgeFrom
@@ -8963,7 +8963,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Ensure sorting is ascending by AgeFrom
@@ -9054,7 +9054,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by AgeFrom
@@ -9088,7 +9088,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeFrom
@@ -9173,7 +9173,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -9209,7 +9209,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -9296,7 +9296,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -9332,7 +9332,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -9412,7 +9412,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -9449,7 +9449,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -9546,7 +9546,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -9581,7 +9581,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -9663,7 +9663,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -9700,7 +9700,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -9794,7 +9794,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -9829,7 +9829,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -9921,7 +9921,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -9956,7 +9956,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -10051,7 +10051,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -10086,7 +10086,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
@@ -10181,7 +10181,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -10218,7 +10218,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -10312,7 +10312,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -10349,7 +10349,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize
                         1, // PageNumber
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -10450,7 +10450,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null, // No page size (page size 0 implies no pagination)
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -10486,7 +10486,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -10570,7 +10570,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -10606,7 +10606,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -10694,7 +10694,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by AgeFrom (Age)
@@ -10728,7 +10728,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeFrom
@@ -10814,7 +10814,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Sort ascending by Age (AgeFrom)
@@ -10848,7 +10848,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Ensure sorting is ascending by AgeFrom
@@ -10927,7 +10927,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -10963,7 +10963,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -11047,7 +11047,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -11083,7 +11083,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -11167,7 +11167,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by AgeFrom
@@ -11201,7 +11201,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeFrom
@@ -11280,7 +11280,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Sort ascending by AgeFrom
@@ -11314,7 +11314,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Ensure sorting is ascending by AgeFrom
@@ -11400,7 +11400,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Sort ascending by AgeFrom
@@ -11436,7 +11436,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Ensure sorting is ascending by AgeFrom
@@ -11519,7 +11519,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by AgeFrom
@@ -11553,7 +11553,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeFrom
@@ -11637,7 +11637,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -11673,7 +11673,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -11759,7 +11759,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -11795,7 +11795,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -11880,7 +11880,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -11916,7 +11916,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -12002,7 +12002,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -12038,7 +12038,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -12123,7 +12123,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Sort ascending by AgeFrom
@@ -12157,7 +12157,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Ensure sorting is ascending by AgeFrom
@@ -12240,7 +12240,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Sort descending by AgeFrom
@@ -12274,7 +12274,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeFrom
@@ -12358,7 +12358,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Order by Age
                         true // Sort descending by AgeFrom
@@ -12392,7 +12392,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         true // Ensure sorting is descending by AgeFrom
@@ -12475,7 +12475,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Sort ascending by AgeFrom
@@ -12509,7 +12509,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.IsAny<Expression<Func<Curriculum, object>>>(),
                         false // Ensure sorting is ascending by AgeFrom
@@ -12593,7 +12593,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -12629,7 +12629,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -12714,7 +12714,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -12750,7 +12750,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllNotPagingAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         null,
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
                             x.Body.ToString().Contains("CreatedDate")
@@ -12833,7 +12833,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by Age
@@ -12868,7 +12868,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by Age
@@ -12950,7 +12950,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by Age
@@ -12985,7 +12985,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by Age
@@ -13067,7 +13067,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -13104,7 +13104,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -13188,7 +13188,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -13225,7 +13225,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // No filtering, all statuses
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -13311,7 +13311,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -13348,7 +13348,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -13434,7 +13434,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -13471,7 +13471,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -13557,7 +13557,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -13592,7 +13592,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -13676,7 +13676,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -13711,7 +13711,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for REJECT status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -13792,7 +13792,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -13827,7 +13827,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -13908,7 +13908,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -13943,7 +13943,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -14011,7 +14011,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -14048,7 +14048,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -14118,7 +14118,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -14155,7 +14155,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for PENDING status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -14225,7 +14225,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -14262,7 +14262,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -14332,7 +14332,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -14369,7 +14369,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.Is<Expression<Func<Curriculum, object>>>(x =>
@@ -14439,7 +14439,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -14474,7 +14474,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -14542,7 +14542,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -14577,7 +14577,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(), // Filter for APPROVED status
-                        "Submitter",
+                        It.IsAny<string>(),
                         5, // PageSize is 5
                         1, // PageNumber is 1
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Sort by AgeFrom
@@ -14613,7 +14613,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
-                        "Submitter",
+                        It.IsAny<string>(),
                         It.IsAny<int>(), // Any page size
                         It.IsAny<int>(), // Any page number
                         It.IsAny<Expression<Func<Curriculum, object>>>(), // Any orderBy expression
@@ -14939,7 +14939,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         true,
-                        "Submitter",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -15015,7 +15015,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         true,
-                        "Submitter",
+                        It.IsAny<string>(),
                         null
                     )
                 )
@@ -15063,7 +15063,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             _curriculumRepositoryMock
                 .Setup(r =>
-                    r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null)
+                    r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, It.IsAny<string>(), null)
                 )
                 .ReturnsAsync((Curriculum)null);
             _resourceServiceMock
@@ -15072,11 +15072,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Act
             var result = await _controller.UpdateStatusRequest(curriculumId, changeStatusDTO);
-            var badRequestResult = result.Result as BadRequestObjectResult;
+            var notFoundResult = result.Result as NotFoundObjectResult;
 
             // Assert
-            badRequestResult.Should().NotBeNull();
-            var apiResponse = badRequestResult.Value as APIResponse;
+            notFoundResult.Should().NotBeNull();
+            var apiResponse = notFoundResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.ErrorMessages.Should().Contain("Error message");
@@ -15092,7 +15092,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             _curriculumRepositoryMock
                 .Setup(r =>
-                    r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), false, null, null)
+                    r.GetAsync(It.IsAny<Expression<Func<Curriculum, bool>>>(), true, It.IsAny<string>(), null)
                 )
                 .ReturnsAsync(curriculum);
             _resourceServiceMock
@@ -15129,7 +15129,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     r.GetAsync(
                         It.IsAny<Expression<Func<Curriculum, bool>>>(),
                         true,
-                        "Submitter",
+                        It.IsAny<string>(),
                         null
                     )
                 )

@@ -338,7 +338,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("Curriculum not found for ID: {CurriculumId}", changeStatusDTO.Id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_UPDATE_BECAUSE_NOT_PENDING, SD.CURRICULUM) };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CURRICULUM) };
                     return NotFound(_response);
                 }
                 if (model.RequestStatus != Status.PENDING)

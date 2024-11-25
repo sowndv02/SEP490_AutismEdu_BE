@@ -809,10 +809,10 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (studentProfile == null)
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 var childInfo = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, true, "Parent");
@@ -888,10 +888,10 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (studentProfile == null)
                 {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
 
                 studentProfile.InitialAndFinalAssessmentResults.AddRange(_mapper.Map<List<InitialAssessmentResult>>(closeDTO.FinalAssessmentResults));

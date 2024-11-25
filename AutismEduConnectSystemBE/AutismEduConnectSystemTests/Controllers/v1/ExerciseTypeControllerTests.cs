@@ -534,7 +534,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var apiResponse = okResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeTrue();
-            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
             apiResponse
                 .Result.Should()
                 .BeEquivalentTo(
@@ -6427,7 +6427,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Exercise, bool>>>(),
-                        null,
+                        It.IsAny<string>(),
                         10,
                         pageNumber,
                         It.IsAny<Expression<Func<Exercise, object>>>(),
@@ -6627,7 +6627,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Exercise, bool>>>(),
-                        null,
+                        It.IsAny<string>(),
                         10,
                         pageNumber,
                         It.IsAny<Expression<Func<Exercise, object>>>(),
@@ -6693,7 +6693,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Exercise, bool>>>(),
-                        null,
+                         It.IsAny<string>(),
                         10,
                         pageNumber,
                         It.IsAny<Expression<Func<Exercise, object>>>(),
@@ -6716,10 +6716,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock the user claims
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, userId),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
             var mockUser = new ClaimsPrincipal(new ClaimsIdentity(userClaims));
             _controller.ControllerContext = new ControllerContext
             {
@@ -6728,31 +6728,31 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock response data
             var exercises = new List<Exercise>
-    {
-        new Exercise
-        {
-            Id = 1,
-            ExerciseName = "Test Exercise 1",
-            ExerciseTypeId = exerciseTypeId,
-            TutorId = userId,
-            CreatedDate = DateTime.Now.AddDays(-1), // Older date
-        },
-        new Exercise
-        {
-            Id = 2,
-            ExerciseName = "Test Exercise 2",
-            ExerciseTypeId = exerciseTypeId,
-            TutorId = userId,
-            CreatedDate = DateTime.Now, // Newer date
-        },
-    };
+            {
+                new Exercise
+                {
+                    Id = 1,
+                    ExerciseName = "Test Exercise 1",
+                    ExerciseTypeId = exerciseTypeId,
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-1), // Older date
+                },
+                new Exercise
+                {
+                    Id = 2,
+                    ExerciseName = "Test Exercise 2",
+                    ExerciseTypeId = exerciseTypeId,
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now, // Newer date
+                },
+            };
 
             var count = exercises.Count;
             _exerciseRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Exercise, bool>>>(),
-                        null,
+                        It.IsAny<string>(),
                         10,
                         pageNumber,
                         It.IsAny<Expression<Func<Exercise, object>>>(),
@@ -6763,20 +6763,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock the mapping to ExerciseDTO
             var exerciseDTOs = new List<ExerciseDTO>
-    {
-        new ExerciseDTO
-        {
-            Id = 1,
-            ExerciseName = "Test Exercise 1",
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new ExerciseDTO
-        {
-            Id = 2,
-            ExerciseName = "Test Exercise 2",
-            CreatedDate = DateTime.Now,
-        },
-    };
+            {
+                new ExerciseDTO
+                {
+                    Id = 1,
+                    ExerciseName = "Test Exercise 1",
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new ExerciseDTO
+                {
+                    Id = 2,
+                    ExerciseName = "Test Exercise 2",
+                    CreatedDate = DateTime.Now,
+                },
+            };
 
             // Mock the resource service
             _resourceServiceMock
@@ -6818,7 +6818,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Exercise, bool>>>(),
-                        null,
+                        It.IsAny<string>(),
                         10,
                         pageNumber,
                         It.IsAny<Expression<Func<Exercise, object>>>(),
@@ -6841,10 +6841,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock the user claims
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, userId),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
             var mockUser = new ClaimsPrincipal(new ClaimsIdentity(userClaims));
             _controller.ControllerContext = new ControllerContext
             {
@@ -6853,31 +6853,31 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock response data
             var exercises = new List<Exercise>
-    {
-        new Exercise
-        {
-            Id = 1,
-            ExerciseName = "Test Exercise 1",
-            ExerciseTypeId = exerciseTypeId,
-            TutorId = userId,
-            CreatedDate = DateTime.Now.AddDays(-1), // Older date
-        },
-        new Exercise
-        {
-            Id = 2,
-            ExerciseName = "Test Exercise 2",
-            ExerciseTypeId = exerciseTypeId,
-            TutorId = userId,
-            CreatedDate = DateTime.Now, // Newer date
-        },
-    };
+            {
+                new Exercise
+                {
+                    Id = 1,
+                    ExerciseName = "Test Exercise 1",
+                    ExerciseTypeId = exerciseTypeId,
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-1), // Older date
+                },
+                new Exercise
+                {
+                    Id = 2,
+                    ExerciseName = "Test Exercise 2",
+                    ExerciseTypeId = exerciseTypeId,
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now, // Newer date
+                },
+            };
 
             var count = exercises.Count;
             _exerciseRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Exercise, bool>>>(),
-                        null,
+                        It.IsAny<string>(),
                         10,
                         pageNumber,
                         It.IsAny<Expression<Func<Exercise, object>>>(),
@@ -6888,20 +6888,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock the mapping to ExerciseDTO
             var exerciseDTOs = new List<ExerciseDTO>
-    {
-        new ExerciseDTO
-        {
-            Id = 1,
-            ExerciseName = "Test Exercise 1",
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new ExerciseDTO
-        {
-            Id = 2,
-            ExerciseName = "Test Exercise 2",
-            CreatedDate = DateTime.Now,
-        },
-    };
+            {
+                new ExerciseDTO
+                {
+                    Id = 1,
+                    ExerciseName = "Test Exercise 1",
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new ExerciseDTO
+                {
+                    Id = 2,
+                    ExerciseName = "Test Exercise 2",
+                    CreatedDate = DateTime.Now,
+                },
+            };
 
             // Mock the resource service
             _resourceServiceMock
@@ -6943,7 +6943,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Exercise, bool>>>(),
-                        null,
+                        It.IsAny<string>(),
                         10,
                         pageNumber,
                         It.IsAny<Expression<Func<Exercise, object>>>(),
@@ -6953,24 +6953,23 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             );
         }
 
-
         [Fact]
         public async Task GetExercisesByTypeAsync_TutorRole_WithNoSearch_OrderByCreatedDate_Asc_ReturnsOk()
         {
             // Arrange
             var userId = "test-tutor-id";
             var exerciseTypeId = 1;
-            var search = string.Empty;  // No search
+            var search = string.Empty; // No search
             var pageNumber = 1;
             var orderBy = SD.CREATED_DATE;
             var sort = SD.ORDER_ASC; // Ascending order
 
             // Mock the user claims
             var userClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, userId),
-        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
             var mockUser = new ClaimsPrincipal(new ClaimsIdentity(userClaims));
             _controller.ControllerContext = new ControllerContext
             {
@@ -6979,31 +6978,31 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock response data
             var exercises = new List<Exercise>
-    {
-        new Exercise
-        {
-            Id = 1,
-            ExerciseName = "Test Exercise 1",
-            ExerciseTypeId = exerciseTypeId,
-            TutorId = userId,
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new Exercise
-        {
-            Id = 2,
-            ExerciseName = "Test Exercise 2",
-            ExerciseTypeId = exerciseTypeId,
-            TutorId = userId,
-            CreatedDate = DateTime.Now,
-        },
-    };
+            {
+                new Exercise
+                {
+                    Id = 1,
+                    ExerciseName = "Test Exercise 1",
+                    ExerciseTypeId = exerciseTypeId,
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new Exercise
+                {
+                    Id = 2,
+                    ExerciseName = "Test Exercise 2",
+                    ExerciseTypeId = exerciseTypeId,
+                    TutorId = userId,
+                    CreatedDate = DateTime.Now,
+                },
+            };
 
             var count = exercises.Count;
             _exerciseRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Exercise, bool>>>(),
-                        null,
+                         It.IsAny<string>(),
                         10,
                         pageNumber,
                         It.IsAny<Expression<Func<Exercise, object>>>(),
@@ -7014,20 +7013,20 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock the mapping to ExerciseDTO
             var exerciseDTOs = new List<ExerciseDTO>
-    {
-        new ExerciseDTO
-        {
-            Id = 1,
-            ExerciseName = "Test Exercise 1",
-            CreatedDate = DateTime.Now.AddDays(-1),
-        },
-        new ExerciseDTO
-        {
-            Id = 2,
-            ExerciseName = "Test Exercise 2",
-            CreatedDate = DateTime.Now,
-        },
-    };
+            {
+                new ExerciseDTO
+                {
+                    Id = 1,
+                    ExerciseName = "Test Exercise 1",
+                    CreatedDate = DateTime.Now.AddDays(-1),
+                },
+                new ExerciseDTO
+                {
+                    Id = 2,
+                    ExerciseName = "Test Exercise 2",
+                    CreatedDate = DateTime.Now,
+                },
+            };
 
             // Mock the resource service
             _resourceServiceMock
@@ -7069,17 +7068,16 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo =>
                     repo.GetAllAsync(
                         It.IsAny<Expression<Func<Exercise, bool>>>(),
-                        null,
+                         It.IsAny<string>(),
                         10,
                         pageNumber,
-                        It.Is<Expression<Func<Exercise, object>>>(exp => exp.Body.ToString().Contains("CreatedDate")),
+                        It.Is<Expression<Func<Exercise, object>>>(exp =>
+                            exp.Body.ToString().Contains("CreatedDate")
+                        ),
                         false
                     ),
                 Times.Once
             );
         }
-
-
-
     }
 }

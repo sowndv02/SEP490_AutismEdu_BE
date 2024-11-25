@@ -81,10 +81,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (model == null)
                 {
                     _logger.LogWarning($"Syllabus ID: {id} not found for Tutor: {userId}");
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SYLLABUS) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 model.IsDeleted = true;
                 await _syllabusRepository.UpdateAsync(model);
@@ -262,10 +262,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (model == null)
                 {
                     _logger.LogWarning("Syllabus not found for id: {id} and tutor: {userId}", id, userId);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SYLLABUS) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => updateDTO.AgeFrom >= x.AgeFrom && updateDTO.AgeEnd >= x.AgeEnd && x.TutorId == userId && !x.IsDeleted && x.Id != updateDTO.Id);
                 foreach (var item in list)

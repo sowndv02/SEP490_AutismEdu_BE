@@ -50,10 +50,10 @@ namespace AutismEduConnectSystem.Controllers
                 if (model == null)
                 {
                     _logger.LogWarning("Notification with ID: {Id} is either not found.", id);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.NOTIFICATION) };
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 model.IsRead = true;
                 model.UpdatedDate = DateTime.Now;

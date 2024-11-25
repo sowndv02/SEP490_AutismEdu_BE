@@ -184,11 +184,11 @@ namespace AutismEduConnectSystem.Controllers
                 {
                     _logger.LogWarning("Package payment with ID: {Id} is either not found.", updateActiveDTO.Id);
 
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.PACKAGE_PAYMENT) };
 
-                    return BadRequest(_response);
+                    return NotFound(_response);
                 }
                 model.IsHide = updateActiveDTO.IsActive;
                 model.UpdatedDate = DateTime.Now;
