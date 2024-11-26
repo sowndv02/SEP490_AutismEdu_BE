@@ -78,51 +78,21 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         }
 
         [Theory]
-        [InlineData(SD.ORDER_ASC, (string)null, STATUS_PENDING, "createdDate")]
-        [InlineData(SD.ORDER_DESC, (string)null, STATUS_PENDING, "createdDate")]
-        [InlineData(SD.ORDER_ASC, "search-query", STATUS_PENDING, "createdDate")]
-        [InlineData(SD.ORDER_DESC, "search-query", STATUS_PENDING, "createdDate")]
-        [InlineData(SD.ORDER_ASC, (string)null, STATUS_APPROVE, "createdDate")]
-        [InlineData(SD.ORDER_DESC, (string)null, STATUS_APPROVE, "createdDate")]
-        [InlineData(SD.ORDER_ASC, "search-query", STATUS_APPROVE, "createdDate")]
-        [InlineData(SD.ORDER_DESC, "search-query", STATUS_APPROVE, "createdDate")]
-        [InlineData(SD.ORDER_ASC, (string)null, STATUS_REJECT, "createdDate")]
-        [InlineData(SD.ORDER_DESC, (string)null, STATUS_REJECT, "createdDate")]
-        [InlineData(SD.ORDER_ASC, "search-query", STATUS_REJECT, "createdDate")]
-        [InlineData(SD.ORDER_DESC, "search-query", STATUS_REJECT, "createdDate")]
-        [InlineData(SD.ORDER_ASC, (string)null, "all", "createdDate")]
-        [InlineData(SD.ORDER_DESC, (string)null, "all", "createdDate")]
-        [InlineData(SD.ORDER_ASC, "search-query", "all", "createdDate")]
-        [InlineData(SD.ORDER_DESC, "search-query", "all", "createdDate")]
-        [InlineData(SD.ORDER_ASC, (string)null, STATUS_PENDING, (string)null)]
-        [InlineData(SD.ORDER_DESC, (string)null, STATUS_PENDING, (string)null)]
-        [InlineData(SD.ORDER_ASC, "search-query", STATUS_PENDING, (string)null)]
-        [InlineData(SD.ORDER_DESC, "search-query", STATUS_PENDING, (string)null)]
-        [InlineData(SD.ORDER_ASC, (string)null, STATUS_APPROVE, (string)null)]
-        [InlineData(SD.ORDER_DESC, (string)null, STATUS_APPROVE, (string)null)]
-        [InlineData(SD.ORDER_ASC, "search-query", STATUS_APPROVE, (string)null)]
-        [InlineData(SD.ORDER_DESC, "search-query", STATUS_APPROVE, (string)null)]
-        [InlineData(SD.ORDER_ASC, (string)null, STATUS_REJECT, (string)null)]
-        [InlineData(SD.ORDER_DESC, (string)null, STATUS_REJECT, (string)null)]
-        [InlineData(SD.ORDER_ASC, "search-query", STATUS_REJECT, (string)null)]
-        [InlineData(SD.ORDER_DESC, "search-query", STATUS_REJECT, (string)null)]
-        [InlineData(SD.ORDER_ASC, (string)null, "all", (string)null)]
-        [InlineData(SD.ORDER_DESC, (string)null, "all", (string)null)]
-        [InlineData(SD.ORDER_ASC, "search-query", "all", (string)null)]
-        [InlineData(SD.ORDER_DESC, "search-query", "all", (string)null)]
-        public async Task GetAllAsync_StaffRole_Scenarios_ReturnsOkResponse(
-            string sort,
-            string search,
-            string status,
-            string orderBy
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_StaffRole_Search_StatusPending_OrderByCreatedDate_Sort_ReturnsOkResponse(
+            string sort
         )
         {
             // Arrange
             var userId = "staff-user-id";
+            var search = "Middle"; // Search string
+            var status = STATUS_PENDING; // Status Pending
+            var orderBy = nameof(WorkExperience.CreatedDate); // Order by CreatedDate
             var pageNumber = 1;
             var pageSize = 10;
 
-            // Mock user identity with STAFF_ROLE
+            // Create a mock user with the STAFF_ROLE
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
@@ -131,22 +101,22 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var identity = new ClaimsIdentity(claims);
             var principal = new ClaimsPrincipal(identity);
 
-            // Example data
+            // Create a list of work experiences
             var workExperiences = new List<WorkExperience>
             {
                 new WorkExperience
                 {
                     Id = 1,
-                    CompanyName = "Approved Company",
+                    CompanyName = "Oldest Company",
                     SubmitterId = "user1",
                     IsDeleted = false,
-                    RequestStatus = Status.APPROVE,
+                    RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.UtcNow.AddDays(-2),
                 },
                 new WorkExperience
                 {
                     Id = 2,
-                    CompanyName = "Pending Company",
+                    CompanyName = "Middle Company",
                     SubmitterId = "user2",
                     IsDeleted = false,
                     RequestStatus = Status.PENDING,
@@ -155,19 +125,26 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 new WorkExperience
                 {
                     Id = 3,
-                    CompanyName = "Rejected Company",
+                    CompanyName = "Newest Company",
                     SubmitterId = "user3",
                     IsDeleted = false,
-                    RequestStatus = Status.REJECT,
+                    RequestStatus = Status.PENDING,
                     CreatedDate = DateTime.UtcNow,
                 },
             };
-            if (orderBy == null)
-            {
-                orderBy = "createdDate";
-            }
 
-            // Mock repository behavior
+            // Filter the work experiences based on the search term
+            workExperiences = workExperiences
+                .Where(w => w.CompanyName.Contains(search, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            // Sort based on the sort parameter
+            if (sort == SD.ORDER_ASC)
+                workExperiences = workExperiences.OrderBy(w => w.CreatedDate).ToList();
+            else
+                workExperiences = workExperiences.OrderByDescending(w => w.CreatedDate).ToList();
+
+            // Set up repository mock to return filtered work experiences
             _workExperienceRepositoryMock
                 .Setup(repo =>
                     repo.GetAllAsync(
@@ -179,106 +156,706 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync(() =>
-                {
-                    var filteredList = workExperiences.AsQueryable();
-                    if (status != "all")
-                    {
-                        switch (status)
-                        {
-                            case "pending":
-                                filteredList = filteredList.Where(w =>
-                                    w.RequestStatus == Status.PENDING
-                                );
-                                break;
-                            case "approve":
-                                filteredList = filteredList.Where(w =>
-                                    w.RequestStatus == Status.APPROVE
-                                );
-                                break;
-                            case "reject":
-                                filteredList = filteredList.Where(w =>
-                                    w.RequestStatus == Status.REJECT
-                                );
-                                break;
-                        }
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(search))
-                    {
-                        filteredList = filteredList.Where(w =>
-                            w.CompanyName.Contains(search, StringComparison.OrdinalIgnoreCase)
-                        );
-                    }
-
-                    return (filteredList.Count(), filteredList.ToList());
-                });
+                .ReturnsAsync((workExperiences.Count, workExperiences));
 
             // Act
-            var result = await _controller.GetAllAsync(
-                search,
-                status,
-                nameof(WorkExperience.CreatedDate),
-                sort,
-                pageNumber
-            );
+            var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
 
             // Assert
             var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
             var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
 
-            // Assert success and data type
+            // Assert APIResponse is successful and the result is a list of DTOs
             apiResponse.IsSuccess.Should().BeTrue();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            apiResponse.Result.Should().NotBeNull().And.BeOfType<List<WorkExperienceDTO>>();
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<List<WorkExperienceDTO>>();
 
             var resultList = apiResponse.Result as List<WorkExperienceDTO>;
+            resultList.Should().HaveCount(1); // Only one result matches the search term
 
-            // Verify filtering by status
-            if (status != "all")
+            // Verify the result matches the search and order
+            var expected = workExperiences.First();
+            resultList[0].CompanyName.Should().Be(expected.CompanyName);
+            resultList[0].CreatedDate.Should().Be(expected.CreatedDate);
+        }
+
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_StaffRole_WithSearch_StatusAll_OrderByCreatedDate_Sort_ReturnsOkResponse(
+            string sort
+        )
+        {
+            // Arrange
+            var userId = "staff-user-id";
+            var search = "Company"; // Search string to filter by CompanyName
+            var status = STATUS_ALL; // No filtering by status
+            var orderBy = nameof(WorkExperience.CreatedDate); // Order by CreatedDate
+            var pageNumber = 1;
+            var pageSize = 10;
+
+            // Create a mock user with the STAFF_ROLE
+            var claims = new List<Claim>
             {
-                switch (status)
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Create a list of work experiences to be returned from the repository
+            var workExperiences = new List<WorkExperience>
+            {
+                new WorkExperience
                 {
-                    case "pending":
-                        resultList
-                            .Should()
-                            .AllSatisfy(dto => dto.RequestStatus.Should().Be(Status.PENDING));
-                        break;
-                    case "approve":
-                        resultList
-                            .Should()
-                            .AllSatisfy(dto => dto.RequestStatus.Should().Be(Status.APPROVE));
-                        break;
-                    case "reject":
-                        resultList
-                            .Should()
-                            .AllSatisfy(dto => dto.RequestStatus.Should().Be(Status.REJECT));
-                        break;
-                }
-            }
-            else
-            {
-                resultList.Should().HaveCount(workExperiences.Count);
-            }
+                    Id = 1,
+                    CompanyName = "Oldest Company",
+                    SubmitterId = "user1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.UtcNow.AddDays(-2),
+                },
+                new WorkExperience
+                {
+                    Id = 2,
+                    CompanyName = "Middle Company",
+                    SubmitterId = "user2",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.UtcNow.AddDays(-1),
+                },
+                new WorkExperience
+                {
+                    Id = 3,
+                    CompanyName = "Newest Company",
+                    SubmitterId = "user3",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.UtcNow,
+                },
+            };
 
-            // Verify sorting order
+            // Filter by search query
+            workExperiences = workExperiences
+                .Where(w => w.CompanyName.Contains(search, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            // Sort the results based on the `sort` parameter
+            if (sort == SD.ORDER_ASC)
+                workExperiences = workExperiences.OrderBy(w => w.CreatedDate).ToList();
+            else
+                workExperiences = workExperiences.OrderByDescending(w => w.CreatedDate).ToList();
+
+            // Set up repository mock to return filtered and sorted work experiences
+            _workExperienceRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        pageSize,
+                        pageNumber,
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((workExperiences.Count, workExperiences));
+
+            // Act
+            var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            // Assert APIResponse is successful and the result is a list of DTOs
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<List<WorkExperienceDTO>>();
+
+            var resultList = apiResponse.Result as List<WorkExperienceDTO>;
+            resultList.Should().HaveCount(workExperiences.Count); // Number of returned work experiences
+
+            // Verify the order of results
             if (sort == SD.ORDER_ASC)
             {
-                resultList.Should().BeInAscendingOrder(dto => dto.CreatedDate);
+                resultList[0].CompanyName.Should().Be("Oldest Company");
+                resultList[1].CompanyName.Should().Be("Middle Company");
+                resultList[2].CompanyName.Should().Be("Newest Company");
+
+                resultList[0].CreatedDate.Should().BeBefore(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeBefore(resultList[2].CreatedDate);
             }
             else if (sort == SD.ORDER_DESC)
             {
-                resultList.Should().BeInDescendingOrder(dto => dto.CreatedDate);
-            }
+                resultList[0].CompanyName.Should().Be("Newest Company");
+                resultList[1].CompanyName.Should().Be("Middle Company");
+                resultList[2].CompanyName.Should().Be("Oldest Company");
 
-            // Verify search filter
-            if (!string.IsNullOrWhiteSpace(search))
+                resultList[0].CreatedDate.Should().BeAfter(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeAfter(resultList[2].CreatedDate);
+            }
+        }
+
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_StaffRole_WithSearch_StatusRejected_OrderByCreatedDate_Sort_ReturnsOkResponse(
+            string sort
+        )
+        {
+            // Arrange
+            var userId = "staff-user-id";
+            var search = "Company"; // Search string
+            var status = STATUS_REJECT; // Status Rejected
+            var orderBy = nameof(WorkExperience.CreatedDate); // Order by CreatedDate
+            var pageNumber = 1;
+            var pageSize = 10;
+
+            // Create a mock user with the STAFF_ROLE
+            var claims = new List<Claim>
             {
-                resultList
-                    .Should()
-                    .OnlyContain(dto =>
-                        dto.CompanyName.Contains(search, StringComparison.OrdinalIgnoreCase)
-                    );
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Create a list of work experiences to be returned from the repository
+            var workExperiences = new List<WorkExperience>
+            {
+                new WorkExperience
+                {
+                    Id = 1,
+                    CompanyName = "Rejected Company A",
+                    SubmitterId = "user1",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.UtcNow.AddDays(-2),
+                },
+                new WorkExperience
+                {
+                    Id = 2,
+                    CompanyName = "Rejected Company B",
+                    SubmitterId = "user2",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.UtcNow.AddDays(-1),
+                },
+                new WorkExperience
+                {
+                    Id = 3,
+                    CompanyName = "Rejected Company C",
+                    SubmitterId = "user3",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.UtcNow,
+                },
+            };
+
+            if (sort == SD.ORDER_ASC)
+                workExperiences = workExperiences.OrderBy(w => w.CreatedDate).ToList();
+            else
+                workExperiences = workExperiences.OrderByDescending(w => w.CreatedDate).ToList();
+
+            // Set up repository mock to return filtered work experiences
+            _workExperienceRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        pageSize,
+                        pageNumber,
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((workExperiences.Count, workExperiences));
+
+            // Act
+            var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            // Assert APIResponse is successful and the result is a list of DTOs
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<List<WorkExperienceDTO>>();
+
+            var resultList = apiResponse.Result as List<WorkExperienceDTO>;
+            resultList.Should().HaveCount(3); // All 3 work experiences should be returned
+
+            // Verify the order of results
+            if (sort == SD.ORDER_ASC)
+            {
+                resultList[0].CompanyName.Should().Be("Rejected Company A");
+                resultList[1].CompanyName.Should().Be("Rejected Company B");
+                resultList[2].CompanyName.Should().Be("Rejected Company C");
+
+                resultList[0].CreatedDate.Should().BeBefore(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeBefore(resultList[2].CreatedDate);
+            }
+            else if (sort == SD.ORDER_DESC)
+            {
+                resultList[0].CompanyName.Should().Be("Rejected Company C");
+                resultList[1].CompanyName.Should().Be("Rejected Company B");
+                resultList[2].CompanyName.Should().Be("Rejected Company A");
+
+                resultList[0].CreatedDate.Should().BeAfter(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeAfter(resultList[2].CreatedDate);
+            }
+        }
+
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_StaffRole_WithSearch_StatusApproved_OrderByCreatedDate_Sort_ReturnsOkResponse(
+            string sort
+        )
+        {
+            // Arrange
+            var userId = "staff-user-id";
+            var search = "Company"; // Search string
+            var status = STATUS_APPROVE; // Status Approved
+            var orderBy = nameof(WorkExperience.CreatedDate); // Order by CreatedDate
+            var pageNumber = 1;
+            var pageSize = 10;
+
+            // Create a mock user with the STAFF_ROLE
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Create a list of work experiences to be returned from the repository
+            var workExperiences = new List<WorkExperience>
+            {
+                new WorkExperience
+                {
+                    Id = 1,
+                    CompanyName = "Oldest Company",
+                    SubmitterId = "user1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.UtcNow.AddDays(-2),
+                },
+                new WorkExperience
+                {
+                    Id = 2,
+                    CompanyName = "Middle Company",
+                    SubmitterId = "user2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.UtcNow.AddDays(-1),
+                },
+                new WorkExperience
+                {
+                    Id = 3,
+                    CompanyName = "Newest Company",
+                    SubmitterId = "user3",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.UtcNow,
+                },
+            };
+
+            if (sort == SD.ORDER_ASC)
+                workExperiences = workExperiences.OrderBy(w => w.CreatedDate).ToList();
+            else
+                workExperiences = workExperiences.OrderByDescending(w => w.CreatedDate).ToList();
+
+            // Set up repository mock to return filtered work experiences
+            _workExperienceRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        pageSize,
+                        pageNumber,
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((workExperiences.Count, workExperiences));
+
+            // Act
+            var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            // Assert APIResponse is successful and the result is a list of DTOs
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<List<WorkExperienceDTO>>();
+
+            var resultList = apiResponse.Result as List<WorkExperienceDTO>;
+            resultList.Should().HaveCount(3); // All 3 work experiences should be returned
+
+            // Verify the order of results
+            if (sort == SD.ORDER_ASC)
+            {
+                resultList[0].CompanyName.Should().Be("Oldest Company");
+                resultList[1].CompanyName.Should().Be("Middle Company");
+                resultList[2].CompanyName.Should().Be("Newest Company");
+
+                resultList[0].CreatedDate.Should().BeBefore(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeBefore(resultList[2].CreatedDate);
+            }
+            else if (sort == SD.ORDER_DESC)
+            {
+                resultList[0].CompanyName.Should().Be("Newest Company");
+                resultList[1].CompanyName.Should().Be("Middle Company");
+                resultList[2].CompanyName.Should().Be("Oldest Company");
+
+                resultList[0].CreatedDate.Should().BeAfter(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeAfter(resultList[2].CreatedDate);
+            }
+        }
+
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_StaffRole_NoSearch_StatusAll_OrderByCreatedDate_Sort_ReturnsOkResponse(
+            string sort
+        )
+        {
+            // Arrange
+            var userId = "staff-user-id";
+            var search = string.Empty; // No search string
+            var status = STATUS_ALL; // Status All (null or no filter)
+            var orderBy = nameof(WorkExperience.CreatedDate); // Order by CreatedDate
+            var pageNumber = 1;
+            var pageSize = 10;
+
+            // Create a mock user with the STAFF_ROLE
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Create a list of work experiences with different statuses
+            var workExperiences = new List<WorkExperience>
+            {
+                new WorkExperience
+                {
+                    Id = 1,
+                    CompanyName = "Oldest Company",
+                    SubmitterId = "user1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.UtcNow.AddDays(-3),
+                },
+                new WorkExperience
+                {
+                    Id = 2,
+                    CompanyName = "Middle Company",
+                    SubmitterId = "user2",
+                    IsDeleted = false,
+                    RequestStatus = Status.PENDING,
+                    CreatedDate = DateTime.UtcNow.AddDays(-2),
+                },
+                new WorkExperience
+                {
+                    Id = 3,
+                    CompanyName = "Newest Company",
+                    SubmitterId = "user3",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.UtcNow.AddDays(-1),
+                },
+            };
+
+            if (sort == SD.ORDER_ASC)
+                workExperiences = workExperiences.OrderBy(w => w.CreatedDate).ToList();
+            else
+                workExperiences = workExperiences.OrderByDescending(w => w.CreatedDate).ToList();
+
+            // Set up repository mock to return all work experiences
+            _workExperienceRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        pageSize,
+                        pageNumber,
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((workExperiences.Count, workExperiences));
+
+            // Act
+            var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            // Assert APIResponse is successful and the result is a list of DTOs
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<List<WorkExperienceDTO>>();
+
+            var resultList = apiResponse.Result as List<WorkExperienceDTO>;
+            resultList.Should().HaveCount(3); // All 3 work experiences should be returned
+
+            // Verify the order of results
+            if (sort == SD.ORDER_ASC)
+            {
+                resultList[0].CompanyName.Should().Be("Oldest Company");
+                resultList[1].CompanyName.Should().Be("Middle Company");
+                resultList[2].CompanyName.Should().Be("Newest Company");
+
+                resultList[0].CreatedDate.Should().BeBefore(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeBefore(resultList[2].CreatedDate);
+            }
+            else if (sort == SD.ORDER_DESC)
+            {
+                resultList[0].CompanyName.Should().Be("Newest Company");
+                resultList[1].CompanyName.Should().Be("Middle Company");
+                resultList[2].CompanyName.Should().Be("Oldest Company");
+
+                resultList[0].CreatedDate.Should().BeAfter(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeAfter(resultList[2].CreatedDate);
+            }
+        }
+
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_StaffRole_NoSearch_StatusApprove_OrderByCreatedDate_Sort_ReturnsOkResponse(
+            string sort
+        )
+        {
+            // Arrange
+            var userId = "staff-user-id";
+            var search = string.Empty; // No search string
+            var status = STATUS_APPROVE; // Status Approve
+            var orderBy = nameof(WorkExperience.CreatedDate); // Order by CreatedDate
+            var pageNumber = 1;
+            var pageSize = 10;
+
+            // Create a mock user with the STAFF_ROLE
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Create a list of work experiences to be returned from the repository
+            var workExperiences = new List<WorkExperience>
+            {
+                new WorkExperience
+                {
+                    Id = 1,
+                    CompanyName = "Oldest Approved Company",
+                    SubmitterId = "user1",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.UtcNow.AddDays(-3),
+                },
+                new WorkExperience
+                {
+                    Id = 2,
+                    CompanyName = "Middle Approved Company",
+                    SubmitterId = "user2",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.UtcNow.AddDays(-2),
+                },
+                new WorkExperience
+                {
+                    Id = 3,
+                    CompanyName = "Newest Approved Company",
+                    SubmitterId = "user3",
+                    IsDeleted = false,
+                    RequestStatus = Status.APPROVE,
+                    CreatedDate = DateTime.UtcNow.AddDays(-1),
+                },
+            };
+
+            // Sort the work experiences based on the sort parameter
+            if (sort == SD.ORDER_ASC)
+                workExperiences = workExperiences.OrderBy(w => w.CreatedDate).ToList();
+            else
+                workExperiences = workExperiences.OrderByDescending(w => w.CreatedDate).ToList();
+
+            // Set up repository mock to return filtered work experiences
+            _workExperienceRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        pageSize,
+                        pageNumber,
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((workExperiences.Count, workExperiences));
+
+            // Act
+            var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            // Assert APIResponse is successful and the result is a list of DTOs
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<List<WorkExperienceDTO>>();
+
+            var resultList = apiResponse.Result as List<WorkExperienceDTO>;
+            resultList.Should().HaveCount(3); // All 3 work experiences should be returned
+
+            // Verify the order of results
+            if (sort == SD.ORDER_ASC)
+            {
+                resultList[0].CompanyName.Should().Be("Oldest Approved Company");
+                resultList[1].CompanyName.Should().Be("Middle Approved Company");
+                resultList[2].CompanyName.Should().Be("Newest Approved Company");
+
+                resultList[0].CreatedDate.Should().BeBefore(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeBefore(resultList[2].CreatedDate);
+            }
+            else if (sort == SD.ORDER_DESC)
+            {
+                resultList[0].CompanyName.Should().Be("Newest Approved Company");
+                resultList[1].CompanyName.Should().Be("Middle Approved Company");
+                resultList[2].CompanyName.Should().Be("Oldest Approved Company");
+
+                resultList[0].CreatedDate.Should().BeAfter(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeAfter(resultList[2].CreatedDate);
+            }
+        }
+
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_StaffRole_NoSearch_StatusReject_OrderByCreatedDate_Sort_ReturnsOkResponse(
+            string sort
+        )
+        {
+            // Arrange
+            var userId = "staff-user-id";
+            var search = string.Empty; // No search string
+            var status = STATUS_REJECT; // Status Rejected
+            var orderBy = nameof(WorkExperience.CreatedDate); // Order by CreatedDate
+            var pageNumber = 1;
+            var pageSize = 10;
+
+            // Create a mock user with the STAFF_ROLE
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Create a list of work experiences to be returned from the repository
+            var workExperiences = new List<WorkExperience>
+            {
+                new WorkExperience
+                {
+                    Id = 1,
+                    CompanyName = "Oldest Rejected Company",
+                    SubmitterId = "user1",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.UtcNow.AddDays(-3),
+                },
+                new WorkExperience
+                {
+                    Id = 2,
+                    CompanyName = "Middle Rejected Company",
+                    SubmitterId = "user2",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.UtcNow.AddDays(-2),
+                },
+                new WorkExperience
+                {
+                    Id = 3,
+                    CompanyName = "Newest Rejected Company",
+                    SubmitterId = "user3",
+                    IsDeleted = false,
+                    RequestStatus = Status.REJECT,
+                    CreatedDate = DateTime.UtcNow,
+                },
+            };
+
+            if (sort == SD.ORDER_ASC)
+                workExperiences = workExperiences.OrderBy(w => w.CreatedDate).ToList();
+            else
+                workExperiences = workExperiences.OrderByDescending(w => w.CreatedDate).ToList();
+
+            // Set up repository mock to return filtered work experiences
+            _workExperienceRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllAsync(
+                        It.IsAny<Expression<Func<WorkExperience, bool>>>(),
+                        It.IsAny<string>(),
+                        pageSize,
+                        pageNumber,
+                        It.IsAny<Expression<Func<WorkExperience, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((workExperiences.Count, workExperiences));
+
+            // Act
+            var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            // Assert APIResponse is successful and the result is a list of DTOs
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<List<WorkExperienceDTO>>();
+
+            var resultList = apiResponse.Result as List<WorkExperienceDTO>;
+            resultList.Should().HaveCount(3); // All 3 work experiences should be returned
+
+            // Verify the order of results
+            if (sort == SD.ORDER_ASC)
+            {
+                resultList[0].CompanyName.Should().Be("Oldest Rejected Company");
+                resultList[1].CompanyName.Should().Be("Middle Rejected Company");
+                resultList[2].CompanyName.Should().Be("Newest Rejected Company");
+
+                resultList[0].CreatedDate.Should().BeBefore(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeBefore(resultList[2].CreatedDate);
+            }
+            else if (sort == SD.ORDER_DESC)
+            {
+                resultList[0].CompanyName.Should().Be("Newest Rejected Company");
+                resultList[1].CompanyName.Should().Be("Middle Rejected Company");
+                resultList[2].CompanyName.Should().Be("Oldest Rejected Company");
+
+                resultList[0].CreatedDate.Should().BeAfter(resultList[1].CreatedDate);
+                resultList[1].CreatedDate.Should().BeAfter(resultList[2].CreatedDate);
             }
         }
 
@@ -337,7 +914,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     CreatedDate = DateTime.UtcNow.AddDays(-2),
                 },
             };
-
+            if (sort == "asc")
+                workExperiences = workExperiences.OrderBy(x => x.CreatedDate).ToList();
             // Set up repository mock to return work experiences
             _workExperienceRepositoryMock
                 .Setup(repo =>
@@ -458,6 +1036,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     CreatedDate = DateTime.UtcNow.AddDays(-2),
                 },
             };
+            if (sort == "asc")
+                workExperiences = workExperiences.OrderBy(x => x.CreatedDate).ToList();
 
             // Set up repository mock to return work experiences
             _workExperienceRepositoryMock
@@ -589,7 +1169,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -883,7 +1465,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -972,7 +1556,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -1230,7 +1816,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -1402,7 +1990,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -1488,7 +2078,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -1660,7 +2252,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -1918,7 +2512,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -2176,7 +2772,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -2262,7 +2860,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -2434,7 +3034,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -2520,7 +3122,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
@@ -2692,7 +3296,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<bool>()
                     )
                 )
-                .ReturnsAsync((workExperiences.Count, workExperiences));
+                .ReturnsAsync(
+                    (workExperiences.Count, workExperiences.OrderBy(x => x.CreatedDate).ToList())
+                );
 
             // Act
             var result = await _controller.GetAllAsync(search, status, orderBy, sort, pageNumber);
