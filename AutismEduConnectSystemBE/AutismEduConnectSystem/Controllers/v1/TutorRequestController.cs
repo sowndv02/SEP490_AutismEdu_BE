@@ -503,7 +503,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                             Subject = subject,
                             Message = htmlMessage
                         }, queueName);
-                        var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                        var connectionId = NotificationHub.GetConnectionIdByUserId(model.ParentId);
                         var notfication = new Notification()
                         {
                             ReceiverId = model.ParentId,
@@ -515,7 +515,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         var notificationResult = await _notificationRepository.CreateAsync(notfication);
                         if (!string.IsNullOrEmpty(connectionId))
                         {
-                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{model.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
                         }
                     }
                     _response.Result = _mapper.Map<TutorRequestDTO>(model);
@@ -566,7 +566,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                             Subject = subject,
                             Message = htmlMessage
                         }, queueName);
-                        var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
+                        var connectionId = NotificationHub.GetConnectionIdByUserId(model.ParentId);
                         var notfication = new Notification()
                         {
                             ReceiverId = model.ParentId,
@@ -578,7 +578,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         var notificationResult = await _notificationRepository.CreateAsync(notfication);
                         if (!string.IsNullOrEmpty(connectionId))
                         {
-                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{tutor.Id}", _mapper.Map<NotificationDTO>(notificationResult));
+                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{model.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
                         }
                     }
                     _response.Result = _mapper.Map<TutorRequestDTO>(returnObject);
