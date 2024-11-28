@@ -211,7 +211,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     createdTimeSlots.Add(newTimeSLot);
 
                     // Generate next week schedule
-                    DateTime nextWeekSchedule = slot.Weekday == 0 ? timeTillApply : timeTillApply.AddDays(slot.Weekday - 1);
+                    DateTime nextWeekSchedule = slot.Weekday == 0 ? timeTillApply.AddDays(6) : timeTillApply.AddDays(slot.Weekday - 1);
 
                     Schedule schedule = new Schedule()
                     {
