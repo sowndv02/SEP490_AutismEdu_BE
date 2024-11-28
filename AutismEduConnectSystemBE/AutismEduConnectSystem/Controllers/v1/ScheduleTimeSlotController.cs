@@ -141,6 +141,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
+                if(createDTOs == null || createDTOs.Count() == 0)
+                {
+                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", studentProfileId);
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TIME_SLOT) };
+                    return BadRequest(_response);
+                }
                 var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == studentProfileId && x.TutorId == tutorId);
                 if(studentProfile == null)
                 {
