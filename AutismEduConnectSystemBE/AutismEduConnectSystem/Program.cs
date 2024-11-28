@@ -112,7 +112,6 @@ builder.Services.AddSingleton<TokenEcryption>();
 builder.Services.AddSingleton<FormatString>();
 builder.Services.AddHostedService<DailyService>();
 builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
-builder.Services.AddHostedService<AutoRejectStudentProfile>();
 builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddSignalR();
 // Config Message Queue
