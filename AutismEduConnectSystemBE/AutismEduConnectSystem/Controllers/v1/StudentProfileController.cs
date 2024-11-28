@@ -86,7 +86,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -96,14 +96,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
-                if (createDTO == null  || !ModelState.IsValid)
+
+                if (createDTO == null || !ModelState.IsValid)
                 {
                     _logger.LogWarning("Received empty createDTO from tutor {TutorId}", tutorId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -115,14 +115,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                 List<ScheduleTimeSlot> scheduleTimeSlot = _mapper.Map<List<ScheduleTimeSlot>>(createDTO.ScheduleTimeSlots);
                 foreach (var slot in scheduleTimeSlot)
                 {
-                    if (createDTO.ChildId <= 0)
-                    {
-                        slot.AppliedDate = DateTime.Today;
-                    }
-                    else
-                    {
-                        slot.IsDeleted = true;
-                    }
+
+                    slot.AppliedDate = DateTime.Today;
+
                     var isTimeSlotDuplicate = scheduleTimeSlot.Where(x => x != slot
                                                                        && x.Weekday == slot.Weekday
                                                                        && !(slot.To <= x.From || slot.From >= x.To)).FirstOrDefault();
@@ -175,6 +170,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 model.CreatedDate = DateTime.Now;
                 model.TutorId = tutorId;
                 model.ScheduleTimeSlots = scheduleTimeSlot;
+                model.Status = SD.StudentProfileStatus.Teaching;
 
                 foreach (var assessment in model.InitialAndFinalAssessmentResults)
                 {
@@ -199,7 +195,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                         return BadRequest(_response);
                     }
 
-                    model.Status = SD.StudentProfileStatus.Teaching;
                     // Tao account parent
                     var parentEmailExist = await _userRepository.GetAsync(x => x.Email.Equals(createDTO.Email));
                     if (parentEmailExist != null)
@@ -227,7 +222,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         LockoutEnabled = true,
                         RoleId = _roleRepository.GetByNameAsync(SD.PARENT_ROLE).GetAwaiter().GetResult().Id
                     }, passsword);
-                    if(parent == null)
+                    if (parent == null)
                     {
                         _response.StatusCode = HttpStatusCode.InternalServerError;
                         _response.IsSuccess = false;
@@ -236,15 +231,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                     var subject = "Thông báo ";
 
-                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateParentAndChild.cshtml");
-                    if (!System.IO.File.Exists(templatePath))
+                    var templatePathSendEmailForParent = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateParentAndChild.cshtml");
+                    if (!System.IO.File.Exists(templatePathSendEmailForParent))
                     {
                         _response.StatusCode = HttpStatusCode.InternalServerError;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                         return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                     }
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePathSendEmailForParent);
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", parent.FullName)
                         .Replace("@Model.Username", parent.Email)
@@ -262,26 +257,24 @@ namespace AutismEduConnectSystem.Controllers.v1
                     // Tao child
                     using var mediaStream = createDTO.Media.OpenReadStream();
                     string mediaUrl = await _blobStorageRepository.Upload(mediaStream, string.Concat(Guid.NewGuid().ToString(), Path.GetExtension(createDTO.Media.FileName)));
-                    if(parent != null)
+
+                    var childInformation = await _childInfoRepository.CreateAsync(new ChildInformation()
                     {
-                        var childInformation = await _childInfoRepository.CreateAsync(new ChildInformation()
-                        {
-                            ParentId = parent.Id,
-                            Name = createDTO.ChildName,
-                            isMale = (bool)createDTO.isMale,
-                            ImageUrlPath = mediaUrl,
-                            BirthDate = createDTO.BirthDate,
-                            CreatedDate = DateTime.Now
-                        });
-                        if(childInformation == null)
-                        {
-                            _response.StatusCode = HttpStatusCode.InternalServerError;
-                            _response.IsSuccess = false;
-                            _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                            return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-                        }
-                        model.ChildId = childInformation.Id;
+                        ParentId = parent.Id,
+                        Name = createDTO.ChildName,
+                        isMale = (bool)createDTO.isMale,
+                        ImageUrlPath = mediaUrl,
+                        BirthDate = createDTO.BirthDate,
+                        CreatedDate = DateTime.Now
+                    });
+                    if (childInformation == null)
+                    {
+                        _response.StatusCode = HttpStatusCode.InternalServerError;
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
                     }
+                    model.ChildId = childInformation.Id;
                 }
                 else if (createDTO.ChildId <= 0)
                 {
@@ -290,10 +283,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { SD.MISSING_2_INFORMATIONS, SD.PARENT, SD.CHILD };
                     return BadRequest(_response);
-                }
-                else
-                {
-                    model.Status = SD.StudentProfileStatus.Pending;
                 }
 
                 var childTutorExist = await _studentProfileRepository.GetAsync(x => x.ChildId == model.ChildId
@@ -318,7 +307,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return NotFound(_response);
                 }
                 model.Child = child;
-                
+
                 if (!string.IsNullOrEmpty(child.Name))
                 {
                     string[] names = child.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
@@ -327,7 +316,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         model.StudentCode += name.ToUpper().ElementAt(0);
                     }
                 }
-                
+
                 model.StudentCode += model.ChildId;
                 model.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(tutorId), true, "User");
                 model = await _studentProfileRepository.CreateAsync(model);
@@ -351,65 +340,27 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
 
+                await GenerateSchedule(model);
 
-                if (createDTO.ChildId <= 0)
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateStudentProfileTemplate.cshtml");
+                if (System.IO.File.Exists(templatePath) && child.Parent != null && model.Tutor != null && model.Tutor.User != null)
                 {
-                    //Generate current week schedule
-                    foreach (var timeslot in model.ScheduleTimeSlots)
+                    var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.ParentName", child.Parent.FullName)
+                        .Replace("@Model.TutorName", model.Tutor.User.FullName)
+                        .Replace("@Model.StudentName", child.Name)
+                        .Replace("@Model.Email", child.Parent.Email)
+                        .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL + model.Id)
+                        .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
+                    _messageBus.SendMessage(new EmailLogger()
                     {
-                        DateTime today = DateTime.Now.Date;
-                        if ((int)today.DayOfWeek > timeslot.Weekday && timeslot.Weekday != 0)
-                        {
-                            continue;
-                        }
-                        int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
-
-                        DateTime targetDate = today.AddDays(daysUntilTargetDay);
-                        if (targetDate.Date.Add(timeslot.From) < DateTime.Now)
-                        {
-                            continue;
-                        }
-                        var schedule = new Schedule()
-                        {
-                            TutorId = model.TutorId,
-                            AttendanceStatus = SD.AttendanceStatus.NOT_YET,
-                            ScheduleDate = targetDate,
-                            StudentProfileId = model.Id,
-                            CreatedDate = DateTime.Now,
-                            PassingStatus = SD.PassingStatus.NOT_YET,
-                            UpdatedDate = null,
-                            Start = timeslot.From,
-                            End = timeslot.To,
-                            ScheduleTimeSlotId = timeslot.Id,
-                            Note = ""
-                        };
-                        await _scheduleRepository.CreateAsync(schedule);
-                    }
-                }
-
-                if (model.ChildId > 0)
-                {
-                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateStudentProfileTemplate.cshtml");
-                    if (System.IO.File.Exists(templatePath) && child.Parent != null && model.Tutor != null && model.Tutor.User != null)
-                    {
-                        var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
-                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                        var htmlMessage = templateContent
-                            .Replace("@Model.ParentName", child.Parent.FullName)
-                            .Replace("@Model.TutorName", model.Tutor.User.FullName)
-                            .Replace("@Model.StudentName", child.Name)
-                            .Replace("@Model.Email", child.Parent.Email)
-                            .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL + model.Id)
-                            .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
-                        _messageBus.SendMessage(new EmailLogger()
-                        {
-                            UserId = child.ParentId,
-                            Email = child.Parent.Email,
-                            Subject = subject,
-                            Message = htmlMessage
-                        }, queueName);
-                    }
-                        
+                        UserId = child.ParentId,
+                        Email = child.Parent.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
                 }
 
                 if (createDTO.TutorRequestId > 0)
@@ -433,6 +384,41 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
         }
 
+        private async Task GenerateSchedule(StudentProfile model)
+        {
+            //Generate current week schedule
+            foreach (var timeslot in model.ScheduleTimeSlots)
+            {
+                DateTime today = DateTime.Now.Date;
+                if ((int)today.DayOfWeek > timeslot.Weekday && timeslot.Weekday != 0)
+                {
+                    continue;
+                }
+                int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
+
+                DateTime targetDate = today.AddDays(daysUntilTargetDay);
+                if (targetDate.Date.Add(timeslot.From) < DateTime.Now)
+                {
+                    continue;
+                }
+                var schedule = new Schedule()
+                {
+                    TutorId = model.TutorId,
+                    AttendanceStatus = SD.AttendanceStatus.NOT_YET,
+                    ScheduleDate = targetDate,
+                    StudentProfileId = model.Id,
+                    CreatedDate = DateTime.Now,
+                    PassingStatus = SD.PassingStatus.NOT_YET,
+                    UpdatedDate = null,
+                    Start = timeslot.From,
+                    End = timeslot.To,
+                    ScheduleTimeSlotId = timeslot.Id,
+                    Note = ""
+                };
+                await _scheduleRepository.CreateAsync(schedule);
+            }
+        }
+
         [HttpGet]
         [Authorize]
         public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? status = SD.STATUS_ALL, string? sort = SD.ORDER_DESC, int pageNumber = 1)
@@ -445,7 +431,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -478,7 +464,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 foreach (var profile in studentProfiles)
                 {
                     var parent = await _childInfoRepository.GetAsync(x => x.Id == profile.ChildId, true, "Parent");
-                    if(parent != null && parent.Parent != null)
+                    if (parent != null && parent.Parent != null)
                     {
                         profile.Address = parent.Parent.Address;
                         profile.PhoneNumber = parent.Parent.PhoneNumber;
@@ -510,7 +496,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -543,7 +529,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(parentId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -608,178 +594,178 @@ namespace AutismEduConnectSystem.Controllers.v1
         }
 
 
-        [HttpPut("changeStatus")]
-        [Authorize]
-        public async Task<ActionResult<APIResponse>> UpdateStatusStudentProfile(ChangeStatusDTO changeStatusDTO)
-        {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
-                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
-                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
-                }
-                if (changeStatusDTO == null)
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.STATUS_CHANGE) };
-                    return BadRequest(_response);
-                }
+        //[HttpPut("changeStatus")]
+        //[Authorize]
+        //public async Task<ActionResult<APIResponse>> UpdateStatusStudentProfile(ChangeStatusDTO changeStatusDTO)
+        //{
+        //    try
+        //    {
+        //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //        if (string.IsNullOrEmpty(userId))
+        //        {
 
-                var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == changeStatusDTO.Id, true, "InitialAndFinalAssessmentResults,ScheduleTimeSlots");
+        //            _response.IsSuccess = false;
+        //            _response.StatusCode = HttpStatusCode.Unauthorized;
+        //            _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+        //            return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+        //        }
+        //        if (changeStatusDTO == null)
+        //        {
+        //            _response.StatusCode = HttpStatusCode.BadRequest;
+        //            _response.IsSuccess = false;
+        //            _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.STATUS_CHANGE) };
+        //            return BadRequest(_response);
+        //        }
 
-                if (studentProfile == null)
-                {
-                    _logger.LogWarning("Bad Request: changeStatusDTO is null.");
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
-                    return NotFound(_response);
-                }
+        //        var studentProfile = await _studentProfileRepository.GetAsync(x => x.Id == changeStatusDTO.Id, true, "InitialAndFinalAssessmentResults,ScheduleTimeSlots");
 
-                if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Teaching)
-                {
-                    if (studentProfile.CreatedDate.AddHours(24) <= DateTime.Now)
-                    {
-                        _logger.LogWarning($"Student profile with ID: {changeStatusDTO.Id} has expired. Cannot change status to Teaching.");
-                        _response.StatusCode = HttpStatusCode.BadRequest;
-                        _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.STUDENT_PROFILE_EXPIRED) };
-                        return BadRequest(_response);
-                    }
-                }
+        //        if (studentProfile == null)
+        //        {
+        //            _logger.LogWarning("Bad Request: changeStatusDTO is null.");
+        //            _response.StatusCode = HttpStatusCode.NotFound;
+        //            _response.IsSuccess = false;
+        //            _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
+        //            return NotFound(_response);
+        //        }
 
-                switch (changeStatusDTO.StatusChange)
-                {
-                    case 0:
-                        studentProfile.Status = StudentProfileStatus.Stop;
-                        studentProfile.UpdatedDate = DateTime.Now;
-                        break;
-                    case 1:
-                        studentProfile.Status = StudentProfileStatus.Teaching;
-                        studentProfile.UpdatedDate = DateTime.Now;
-                        break;
-                    case 2:
-                        studentProfile.Status = StudentProfileStatus.Reject;
-                        studentProfile.UpdatedDate = DateTime.Now;
-                        break;
-                    case 3:
-                        studentProfile.Status = StudentProfileStatus.Pending;
-                        studentProfile.UpdatedDate = DateTime.Now;
-                        break;
-                }
+        //        if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Teaching)
+        //        {
+        //            if (studentProfile.CreatedDate.AddHours(24) <= DateTime.Now)
+        //            {
+        //                _logger.LogWarning($"Student profile with ID: {changeStatusDTO.Id} has expired. Cannot change status to Teaching.");
+        //                _response.StatusCode = HttpStatusCode.BadRequest;
+        //                _response.IsSuccess = false;
+        //                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.STUDENT_PROFILE_EXPIRED) };
+        //                return BadRequest(_response);
+        //            }
+        //        }
 
-                List<InitialAssessmentResult> initialAssessmentResults = new List<InitialAssessmentResult>();
-                foreach (var assessment in studentProfile.InitialAndFinalAssessmentResults)
-                {
-                    initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id && x.isInitialAssessment == true, true, "Question,Option"));
-                }
-                studentProfile.InitialAndFinalAssessmentResults = initialAssessmentResults;
-                if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Teaching)
-                {
-                    var connectionId = NotificationHub.GetConnectionIdByUserId(studentProfile.TutorId);
-                    var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, "Parent", null);
-                    if(child != null && child.Parent != null)
-                    {
-                        var notfication = new Notification()
-                        {
-                            ReceiverId = studentProfile.TutorId,
-                            Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "chấp nhận"),
-                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
-                            IsRead = false,
-                            CreatedDate = DateTime.Now
-                        };
-                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                        if (!string.IsNullOrEmpty(connectionId))
-                        {
-                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
-                        }
-                    }
+        //        switch (changeStatusDTO.StatusChange)
+        //        {
+        //            case 0:
+        //                studentProfile.Status = StudentProfileStatus.Stop;
+        //                studentProfile.UpdatedDate = DateTime.Now;
+        //                break;
+        //            case 1:
+        //                studentProfile.Status = StudentProfileStatus.Teaching;
+        //                studentProfile.UpdatedDate = DateTime.Now;
+        //                break;
+        //            case 2:
+        //                studentProfile.Status = StudentProfileStatus.Reject;
+        //                studentProfile.UpdatedDate = DateTime.Now;
+        //                break;
+        //            case 3:
+        //                studentProfile.Status = StudentProfileStatus.Pending;
+        //                studentProfile.UpdatedDate = DateTime.Now;
+        //                break;
+        //        }
 
-                }
-                else if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Reject)
-                {
-                    var connectionId = NotificationHub.GetConnectionIdByUserId(studentProfile.TutorId);
-                    var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, "Parent", null);
-                    if (child != null && child.Parent != null)
-                    {
-                        var notfication = new Notification()
-                        {
-                            ReceiverId = studentProfile.TutorId,
-                            Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "từ chối"),
-                            UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
-                            IsRead = false,
-                            CreatedDate = DateTime.Now
-                        };
-                        var notificationResult = await _notificationRepository.CreateAsync(notfication);
-                        if (!string.IsNullOrEmpty(connectionId))
-                        {
-                            await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
-                        }
-                    }
-                }
+        //        List<InitialAssessmentResult> initialAssessmentResults = new List<InitialAssessmentResult>();
+        //        foreach (var assessment in studentProfile.InitialAndFinalAssessmentResults)
+        //        {
+        //            initialAssessmentResults.Add(await _initialAssessmentResultRepository.GetAsync(x => x.Id == assessment.Id && x.isInitialAssessment == true, true, "Question,Option"));
+        //        }
+        //        studentProfile.InitialAndFinalAssessmentResults = initialAssessmentResults;
+        //        if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Teaching)
+        //        {
+        //            var connectionId = NotificationHub.GetConnectionIdByUserId(studentProfile.TutorId);
+        //            var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, "Parent", null);
+        //            if (child != null && child.Parent != null)
+        //            {
+        //                var notfication = new Notification()
+        //                {
+        //                    ReceiverId = studentProfile.TutorId,
+        //                    Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "chấp nhận"),
+        //                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
+        //                    IsRead = false,
+        //                    CreatedDate = DateTime.Now
+        //                };
+        //                var notificationResult = await _notificationRepository.CreateAsync(notfication);
+        //                if (!string.IsNullOrEmpty(connectionId))
+        //                {
+        //                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
+        //                }
+        //            }
+
+        //        }
+        //        else if (changeStatusDTO.StatusChange == (int)StudentProfileStatus.Reject)
+        //        {
+        //            var connectionId = NotificationHub.GetConnectionIdByUserId(studentProfile.TutorId);
+        //            var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, false, "Parent", null);
+        //            if (child != null && child.Parent != null)
+        //            {
+        //                var notfication = new Notification()
+        //                {
+        //                    ReceiverId = studentProfile.TutorId,
+        //                    Message = _resourceService.GetString(SD.CHANGE_STATUS_STUDENT_PROFILE_TUTOR_NOTIFICATION, child?.Parent.FullName, "từ chối"),
+        //                    UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_STUDENT_PROFILE_DETAIL, studentProfile.Id),
+        //                    IsRead = false,
+        //                    CreatedDate = DateTime.Now
+        //                };
+        //                var notificationResult = await _notificationRepository.CreateAsync(notfication);
+        //                if (!string.IsNullOrEmpty(connectionId))
+        //                {
+        //                    await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{studentProfile.TutorId}", _mapper.Map<NotificationDTO>(notificationResult));
+        //                }
+        //            }
+        //        }
 
 
-                await _studentProfileRepository.UpdateAsync(studentProfile);
+        //        await _studentProfileRepository.UpdateAsync(studentProfile);
 
-                if (changeStatusDTO.StatusChange == (int)SD.StudentProfileStatus.Teaching)
-                {
-                    //Generate current week schedule
-                    foreach (var timeslot in studentProfile.ScheduleTimeSlots)
-                    {
-                        timeslot.IsDeleted = false;
-                        timeslot.AppliedDate = DateTime.Today;
-                        timeslot.UpdatedDate = DateTime.Today;
-                        await _scheduleTimeSlotRepository.UpdateAsync(timeslot);
-                        DateTime today = DateTime.Now.Date;
-                        if ((int)today.DayOfWeek > timeslot.Weekday && timeslot.Weekday != 0)
-                        {
-                            continue;
-                        }
-                        int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
+        //        if (changeStatusDTO.StatusChange == (int)SD.StudentProfileStatus.Teaching)
+        //        {
+        //            //Generate current week schedule
+        //            foreach (var timeslot in studentProfile.ScheduleTimeSlots)
+        //            {
+        //                timeslot.IsDeleted = false;
+        //                timeslot.AppliedDate = DateTime.Today;
+        //                timeslot.UpdatedDate = DateTime.Today;
+        //                await _scheduleTimeSlotRepository.UpdateAsync(timeslot);
+        //                DateTime today = DateTime.Now.Date;
+        //                if ((int)today.DayOfWeek > timeslot.Weekday && timeslot.Weekday != 0)
+        //                {
+        //                    continue;
+        //                }
+        //                int daysUntilTargetDay = (timeslot.Weekday - (int)today.DayOfWeek + 7) % 7;
 
-                        DateTime targetDate = today.AddDays(daysUntilTargetDay);
-                        if (targetDate.Date.Add(timeslot.From) < DateTime.Now)
-                        {
-                            continue;
-                        }
-                        var schedule = new Schedule()
-                        {
-                            TutorId = studentProfile.TutorId,
-                            AttendanceStatus = SD.AttendanceStatus.NOT_YET,
-                            ScheduleDate = targetDate,
-                            StudentProfileId = studentProfile.Id,
-                            CreatedDate = DateTime.Now,
-                            PassingStatus = SD.PassingStatus.NOT_YET,
-                            UpdatedDate = null,
-                            Start = timeslot.From,
-                            End = timeslot.To,
-                            ScheduleTimeSlotId = timeslot.Id,
-                            Note = ""
-                        };
-                        await _scheduleRepository.CreateAsync(schedule);
-                    }
-                }
+        //                DateTime targetDate = today.AddDays(daysUntilTargetDay);
+        //                if (targetDate.Date.Add(timeslot.From) < DateTime.Now)
+        //                {
+        //                    continue;
+        //                }
+        //                var schedule = new Schedule()
+        //                {
+        //                    TutorId = studentProfile.TutorId,
+        //                    AttendanceStatus = SD.AttendanceStatus.NOT_YET,
+        //                    ScheduleDate = targetDate,
+        //                    StudentProfileId = studentProfile.Id,
+        //                    CreatedDate = DateTime.Now,
+        //                    PassingStatus = SD.PassingStatus.NOT_YET,
+        //                    UpdatedDate = null,
+        //                    Start = timeslot.From,
+        //                    End = timeslot.To,
+        //                    ScheduleTimeSlotId = timeslot.Id,
+        //                    Note = ""
+        //                };
+        //                await _scheduleRepository.CreateAsync(schedule);
+        //            }
+        //        }
 
-                _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
-                _response.StatusCode = HttpStatusCode.NoContent;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"An error occurred while changing the status for student profile {changeStatusDTO.Id}.");
-                _response.IsSuccess = false;
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-            }
-        }
+        //        _response.Result = _mapper.Map<StudentProfileDTO>(studentProfile);
+        //        _response.StatusCode = HttpStatusCode.NoContent;
+        //        _response.IsSuccess = true;
+        //        return Ok(_response);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, $"An error occurred while changing the status for student profile {changeStatusDTO.Id}.");
+        //        _response.IsSuccess = false;
+        //        _response.StatusCode = HttpStatusCode.InternalServerError;
+        //        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+        //        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+        //    }
+        //}
 
         [HttpGet("{id}")]
         [Authorize]
@@ -790,13 +776,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                if(id <= 0)
+                if (id <= 0)
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -852,7 +838,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -862,13 +848,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 if (closeDTO == null || !ModelState.IsValid)
                 {
                     _logger.LogWarning($"CloseTutoringCreateDTO is null");
@@ -943,7 +929,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
