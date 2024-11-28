@@ -453,7 +453,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     model.UpdatedDate = DateTime.Now;
                     model.ApprovedId = userId;
                     await _tutorRegistrationRequestRepository.UpdateAsync(model);
-                    model.ApprovedBy = await _userRepository.GetAsync(x => x.Id == userId, false, null, null);
+                    model.ApprovedBy = await _userRepository.GetAsync(x => x.Id == userId, false, null);
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AcceptedTutorRegistrationRequest.cshtml");
                     if (!System.IO.File.Exists(templatePath))
                     {
@@ -490,7 +490,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     model.RequestStatus = Status.REJECT;
                     model.ApprovedId = userId;
                     await _tutorRegistrationRequestRepository.UpdateAsync(model);
-                    model.ApprovedBy = await _userRepository.GetAsync(x => x.Id == userId, false, null, null);
+                    model.ApprovedBy = await _userRepository.GetAsync(x => x.Id == userId, false, null);
                     // Reject certificate
                     if (model.Certificates != null)
                     {
