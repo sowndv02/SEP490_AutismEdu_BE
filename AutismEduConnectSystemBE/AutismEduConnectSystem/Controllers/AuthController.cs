@@ -1,16 +1,15 @@
-﻿using AutoMapper;
-using AutismEduConnectSystem.Models;
+﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.RabbitMQSender;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
+using AutoMapper;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
-
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
-using Google.Apis.Auth;
 
 namespace AutismEduConnectSystem.Controllers
 {
@@ -36,7 +35,7 @@ namespace AutismEduConnectSystem.Controllers
 
         public AuthController(IUserRepository userRepository, IMapper mapper,
             IConfiguration configuration, IRabbitMQMessageSender messageBus, DateTimeEncryption dateTimeEncryption,
-            TokenEcryption tokenEncryption, FormatString formatString, ILogger<AuthController> logger, 
+            TokenEcryption tokenEncryption, FormatString formatString, ILogger<AuthController> logger,
             IResourceService resourceService)
         {
             validateTime = configuration.GetValue<int>("APIConfig:ValidateTime");
@@ -51,7 +50,7 @@ namespace AutismEduConnectSystem.Controllers
             _tokenEncryption = tokenEncryption;
             _formatString = formatString;
             _logger = logger;
-            _resourceService = resourceService; 
+            _resourceService = resourceService;
         }
 
         [HttpPost("resend-confirm-email")]
@@ -372,8 +371,8 @@ namespace AutismEduConnectSystem.Controllers
                 {
                     UserId = user.Id,
                     Email = user.Email,
-                    Subject = "Confirm Email",
-                    Message = $"Expiration time 5 minutes. \nPlease confirm email by clicking here: <a href='{callbackUrl}'>link</a>"
+                    Subject = "Xác nhận email",
+                    Message = $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>"
                 }, queueName);
 
                 _response.StatusCode = HttpStatusCode.OK;
@@ -783,11 +782,11 @@ namespace AutismEduConnectSystem.Controllers
                     }
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while retrieving Google user info.");
                 throw new ArgumentException("Đã xảy ra lỗi khi lấy thông tin người dùng từ Google");
-            } 
+            }
         }
 
         private async Task<string> GetNewAccessTokenUsingRefreshTokenGoogle(string refreshToken)
@@ -824,7 +823,7 @@ namespace AutismEduConnectSystem.Controllers
                     }
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while refreshing Google access token.");
                 throw new ArgumentException($"Đã xảy ra lỗi khi lấy accesstoken từ refresh token từ Google");

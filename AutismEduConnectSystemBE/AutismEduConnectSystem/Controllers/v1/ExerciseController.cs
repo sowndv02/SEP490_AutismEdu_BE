@@ -1,7 +1,6 @@
 ﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
-using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
@@ -47,7 +46,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -56,7 +55,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -72,7 +71,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == id;
                 Expression<Func<Exercise, object>> orderByQuery = u => true;
-                
+
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
                     filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive && e.TutorId == userId);
@@ -129,7 +128,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -139,13 +138,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Received null ExerciseCreateDTO from user: {UserId}", userId);
@@ -154,11 +153,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE) };
                     return BadRequest(_response);
                 }
-                
+
                 var exerciseModel = _mapper.Map<Exercise>(exerciseCreateDTO);
                 if (exerciseCreateDTO.OriginalId == 0)
                 {
-                    var isExisted = await _exerciseRepository.GetAllNotPagingAsync(x => x.ExerciseName.ToLower().Equals(exerciseCreateDTO.ExerciseName.ToLower()) && x.ExerciseTypeId == exerciseCreateDTO.ExerciseTypeId, null, null, null, true);
+                    var isExisted = await _exerciseRepository.GetAllNotPagingAsync(x => x.ExerciseName.ToLower().Equals(exerciseCreateDTO.ExerciseName.ToLower()) && x.ExerciseTypeId == exerciseCreateDTO.ExerciseTypeId && x.TutorId == userId, null, null, null, true);
                     if (isExisted.TotalCount > 0)
                     {
                         _response.StatusCode = HttpStatusCode.BadRequest;
@@ -197,7 +196,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -207,7 +206,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
