@@ -1280,5 +1280,178 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             }
         }
 
+
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_ProgressReportWithDates_OrderByFromDate_Sort_ReturnsOkResponse(string sort)
+        {
+            // Arrange
+            var userId = "tutor-user-id";
+            var getInitialResult = true;
+            var startDate = new DateTime(2024, 11, 1);
+            var endDate = new DateTime(2024, 11, 30);
+            var orderBy = SD.DATE_FROM;
+            var pageNumber = 1;
+            var pageSize = 10;
+
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, userId),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+    };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal }
+            };
+
+            var progressReports = new List<ProgressReport>
+    {
+        new ProgressReport { Id = 1, CreatedDate = DateTime.UtcNow.AddDays(-3), From = DateTime.UtcNow.AddDays(-5), To = DateTime.UtcNow.AddDays(-4) },
+        new ProgressReport { Id = 2, CreatedDate = DateTime.UtcNow.AddDays(-2), From = DateTime.UtcNow.AddDays(-4), To = DateTime.UtcNow.AddDays(-3) },
+        new ProgressReport { Id = 3, CreatedDate = DateTime.UtcNow.AddDays(-1), From = DateTime.UtcNow.AddDays(-3), To = DateTime.UtcNow.AddDays(-2) },
+    };
+
+            if (sort == SD.ORDER_ASC)
+            {
+                progressReports = progressReports
+                    .Where(p => p.From >= startDate && p.To <= endDate)
+                    .OrderBy(p => p.From)
+                    .ToList();
+            }
+            else
+            {
+                progressReports = progressReports
+                    .Where(p => p.From >= startDate && p.To <= endDate)
+                    .OrderByDescending(p => p.From)
+                    .ToList();
+            }
+
+            _mockProgressReportRepository
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<ProgressReport, bool>>>(),
+                    It.IsAny<string>(),
+                    pageSize,
+                    pageNumber,
+                    It.IsAny<Expression<Func<ProgressReport, object>>>(),
+                    It.IsAny<bool>())
+                )
+                .ReturnsAsync((progressReports.Count, progressReports));
+
+            // Act
+            var result = await _controller.GetAllAsync(1, startDate, endDate, orderBy, sort, pageNumber, pageSize, getInitialResult);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<ProgressReportGraphDTO>();
+
+            var graphData = apiResponse.Result as ProgressReportGraphDTO;
+            graphData.Should().NotBeNull();
+            graphData.ProgressReports.Should().HaveCount(progressReports.Count);
+
+            // Verify sorting
+            if (sort == SD.ORDER_ASC)
+            {
+                graphData.ProgressReports.Should().BeInAscendingOrder(p => p.From);
+            }
+            else
+            {
+                graphData.ProgressReports.Should().BeInDescendingOrder(p => p.From);
+            }
+        }
+
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_ProgressReportWithDates_OrderByNull_Sort_ReturnsOkResponse(string sort)
+        {
+            // Arrange
+            var userId = "tutor-user-id";
+            var getInitialResult = true;
+            var startDate = new DateTime(2024, 11, 1);
+            var endDate = new DateTime(2024, 11, 30);
+            string orderBy = null; // No specific order
+            var pageNumber = 1;
+            var pageSize = 10;
+
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, userId),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+    };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal }
+            };
+
+            var progressReports = new List<ProgressReport>
+    {
+        new ProgressReport { Id = 3, CreatedDate = DateTime.UtcNow, From = DateTime.UtcNow.AddDays(-3), To = DateTime.UtcNow.AddDays(-2) },
+        new ProgressReport { Id = 2, CreatedDate = DateTime.UtcNow.AddDays(-1), From = DateTime.UtcNow.AddDays(-2), To = DateTime.UtcNow.AddDays(-1) },
+        new ProgressReport { Id = 1, CreatedDate = DateTime.UtcNow.AddDays(-2), From = DateTime.UtcNow.AddDays(-4), To = DateTime.UtcNow.AddDays(-3) },
+    };
+
+            if (sort == SD.ORDER_ASC)
+            {
+                progressReports = progressReports
+                    .Where(p => p.From >= startDate && p.To <= endDate)
+                    .OrderBy(p => p.Id) // Default to ID sorting
+                    .ToList();
+            }
+            else
+            {
+                progressReports = progressReports
+                    .Where(p => p.From >= startDate && p.To <= endDate)
+                    .OrderByDescending(p => p.Id)
+                    .ToList();
+            }
+
+            _mockProgressReportRepository
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<ProgressReport, bool>>>(),
+                    orderBy,
+                    pageSize,
+                    pageNumber,
+                    It.IsAny<Expression<Func<ProgressReport, object>>>(),
+                    It.IsAny<bool>())
+                )
+                .ReturnsAsync((progressReports.Count, progressReports));
+
+            // Act
+            var result = await _controller.GetAllAsync(1, startDate, endDate, orderBy, sort, pageNumber, pageSize, getInitialResult);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<ProgressReportGraphDTO>();
+
+            var graphData = apiResponse.Result as ProgressReportGraphDTO;
+            graphData.Should().NotBeNull();
+            graphData.ProgressReports.Should().HaveCount(progressReports.Count);
+
+            // Verify sorting
+            if (sort == SD.ORDER_ASC)
+            {
+                graphData.ProgressReports.Should().BeInAscendingOrder(p => p.Id);
+            }
+            else
+            {
+                graphData.ProgressReports.Should().BeInDescendingOrder(p => p.Id);
+            }
+        }
+
     }
 }

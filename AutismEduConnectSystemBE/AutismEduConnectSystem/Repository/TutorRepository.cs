@@ -42,9 +42,6 @@ namespace AutismEduConnectSystem.Repository
                 if (!query.Any() && filterScore == defaultFilterScore)
                 {
                     query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
-                }else if(query.Any() && query.Count() < 9)
-                {
-                    query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
                 }
                 for (int i = 4; i >= 1; i--)
                 {
@@ -58,6 +55,10 @@ namespace AutismEduConnectSystem.Repository
             }
             int totalCount = query.Count();
             var tutorList = query.ToList();
+            if (totalCount < 9 && filterScore == defaultFilterScore) 
+            {
+                tutorList.AddRange(storageQuery.ToList());
+            }
             tutorList = tutorList.OrderByDescending(x => x.ReviewScore).ToList();
             if (pageSize > 0)
                 tutorList = tutorList.Skip(pageSize * (pageNumber - 1)).Take(pageSize).ToList();
