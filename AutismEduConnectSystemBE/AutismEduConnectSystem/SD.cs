@@ -368,6 +368,7 @@
 
         // Order by
         public const string CREATED_DATE = "createdDate";
+        public const string RATE = "rate";
         public const string PUBLISH_DATE = "publishDate";
         public const string TITLE = "title";
         public const string AGE_FROM = "ageFrom";

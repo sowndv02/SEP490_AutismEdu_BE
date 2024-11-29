@@ -9,6 +9,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 
@@ -148,7 +149,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpGet]
         [Authorize(Roles = SD.TUTOR_ROLE)]
-        public async Task<ActionResult<APIResponse>> GetAllReviewsAsync(int pageNumber = 1, int pageSize = 10)
+        public async Task<ActionResult<APIResponse>> GetAllReviewsAsync([FromQuery]string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1, int pageSize = 10)
         {
             try
             {
@@ -169,10 +170,29 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
+                Expression<Func<Review, object>> orderByQuery = u => true;
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREATED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        case SD.RATE:
+                            orderByQuery = x => x.RateScore;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
                 var (totalCount, reviews) = await _reviewRepository.GetAllAsync(x => !x.IsHide && x.TutorId == userId,
                     includeProperties: "Parent",
                     pageSize: pageSize,
-                    pageNumber: pageNumber
+                    pageNumber: pageNumber,
+                    orderBy: orderByQuery,
+                    isDesc: isDesc
                 );
 
                 _response.Result = _mapper.Map<List<ReviewDTO>>(reviews);
