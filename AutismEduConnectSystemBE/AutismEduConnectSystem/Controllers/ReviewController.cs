@@ -126,6 +126,12 @@ namespace AutismEduConnectSystem.Controllers
                     ScoreGroups = scoreGroups,
                     Reviews = reviewsDTO
                 };
+                _response.Pagination = new Pagination()
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    Total = totalReviews
+                };
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -151,24 +157,11 @@ namespace AutismEduConnectSystem.Controllers
                     pageNumber: pageNumber
                 );
 
-                if (reviews == null || !reviews.Any())
-                {
-                    _logger.LogWarning("No reviews found.");
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.REVIEW) };
-                    return NotFound(_response);
-                }
-
-                var reviewDTOs = _mapper.Map<List<ReviewDTO>>(reviews);
-
-                _response.Result = new
-                {
-                    TotalCount = totalCount,
+                _response.Result = _mapper.Map<List<ReviewDTO>>(reviews);
+                _response.Pagination = new Pagination() {
+                    Total = totalCount,
                     PageSize = pageSize,
-                    CurrentPage = pageNumber,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                    Reviews = reviewDTOs
+                    PageNumber = pageNumber
                 };
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;

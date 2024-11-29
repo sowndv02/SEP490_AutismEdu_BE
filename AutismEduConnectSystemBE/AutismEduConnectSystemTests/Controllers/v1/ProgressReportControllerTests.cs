@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using AutismEduConnectSystem.Controllers.v1;
+using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
@@ -28,7 +29,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
     public class ProgressReportControllerTests
     {
-        private readonly Mock<IMapper> _mockMapper;
+        private readonly IMapper _mockMapper;
         private readonly Mock<IProgressReportRepository> _mockProgressReportRepository;
         private readonly Mock<IAssessmentResultRepository> _mockAssessmentResultRepository;
         private readonly Mock<IResourceService> _mockResourceService;
@@ -37,14 +38,17 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
         public ProgressReportControllerTests()
         {
-            _mockMapper = new Mock<IMapper>();
             _mockProgressReportRepository = new Mock<IProgressReportRepository>();
             _mockAssessmentResultRepository = new Mock<IAssessmentResultRepository>();
             _mockResourceService = new Mock<IResourceService>();
             _mockLogger = new Mock<ILogger<ProgressReportController>>();
-
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new MappingConfig());
+            });
+            _mockMapper = config.CreateMapper();
             _controller = new ProgressReportController(
-                _mockMapper.Object,
+                _mockMapper,
                 Mock.Of<IConfiguration>(),
                 _mockProgressReportRepository.Object,
                 _mockAssessmentResultRepository.Object,
@@ -91,17 +95,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 HttpContext = new DefaultHttpContext { User = user },
             };
 
-            _mockMapper
-                .Setup(m => m.Map<ProgressReport>(progressReportCreateDTO))
-                .Returns(progressReport);
+        
 
             _mockProgressReportRepository
                 .Setup(repo => repo.CreateAsync(progressReport))
                 .ReturnsAsync(progressReportReturn);
-
-            _mockMapper
-                .Setup(m => m.Map<ProgressReportDTO>(progressReportReturn))
-                .Returns(progressReportDTO);
 
             // Act
             var result = await _controller.CreateAsync(progressReportCreateDTO);
@@ -147,9 +145,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 HttpContext = new DefaultHttpContext { User = user },
             };
 
-            _mockMapper
-                .Setup(m => m.Map<ProgressReport>(progressReportCreateDTO))
-                .Throws(new Exception("Database error"));
 
             // Act
             var result = await _controller.CreateAsync(progressReportCreateDTO);
@@ -532,10 +527,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(progressReport);
 
-            _mockMapper
-                .Setup(mapper => mapper.Map<ProgressReportDTO>(progressReport))
-                .Returns(progressReportDTO);
-
             // Act
             var result = await _controller.GetByIdÁync(1);
             var okResult = result.Result as OkObjectResult;
@@ -908,17 +899,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(r => r.UpdateAsync(It.IsAny<ProgressReport>()))
                 .ReturnsAsync(progressReport);
 
-            // Mock the mapper to map the updated model to DTO
-            _mockMapper
-                .Setup(m => m.Map<ProgressReportDTO>(It.IsAny<ProgressReport>()))
-                .Returns(new ProgressReportDTO
-                {
-                    Id = 1,
-                    Achieved = "Achieved",
-                    Failed = "Failed",
-                    NoteFromTutor = "Updated note"
-                });
-
             // Act
             var result = await _controller.UpdateAsync(updateDTO);
             var okResult = result.Result as ObjectResult;
@@ -1122,6 +1102,90 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.ErrorMessages.Should().Contain("Invalid date range provided.");
         }
 
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_ProgressReportWithDates_OrderByCreatedDate_Sort_ReturnsOkResponse(string sort)
+        {
+            // Arrange
+            var userId = "tutor-user-id";
+            var getInitialResult = true;
+            var startDate = new DateTime(2024, 11, 1);
+            var endDate = new DateTime(2024, 11, 30);
+            var orderBy = SD.CREATED_DATE;
+            var pageNumber = 1;
+            var pageSize = 10;
 
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal }
+            };
+
+            var progressReports = new List<ProgressReport>
+            {
+                new ProgressReport { Id = 1, CreatedDate = DateTime.UtcNow.AddDays(-2), From = DateTime.UtcNow.AddDays(-3), To = DateTime.UtcNow.AddDays(-2) },
+                new ProgressReport { Id = 2, CreatedDate = DateTime.UtcNow.AddDays(-1), From = DateTime.UtcNow.AddDays(-2), To = DateTime.UtcNow.AddDays(-1) },
+                new ProgressReport { Id = 3, CreatedDate = DateTime.UtcNow, From = DateTime.UtcNow.AddDays(-1), To = DateTime.UtcNow },
+            };
+            if(sort == SD.ORDER_ASC)
+            {
+                progressReports = progressReports
+                .Where(p => p.From >= startDate && p.To <= endDate)
+                .OrderBy(p => p.CreatedDate)
+                .ToList();
+            }
+            else
+            {
+                progressReports = progressReports
+                .Where(p => p.From >= startDate && p.To <= endDate)
+                .OrderByDescending(p => p.CreatedDate)
+                .ToList();
+            }
+            
+
+            _mockProgressReportRepository
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<ProgressReport, bool>>>(),
+                    It.IsAny<string>(),
+                    pageSize,
+                    pageNumber,
+                    It.IsAny<Expression<Func<ProgressReport, object>>>(),
+                    It.IsAny<bool>())
+                )
+                .ReturnsAsync((progressReports.Count, progressReports));
+
+            // Act
+            var result = await _controller.GetAllAsync(1, startDate, endDate, orderBy, sort, pageNumber, pageSize, getInitialResult);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<ProgressReportGraphDTO>(); // Update assertion to match expected type
+
+            var graphData = apiResponse.Result as ProgressReportGraphDTO;
+            graphData.Should().NotBeNull();
+            graphData.ProgressReports.Should().HaveCount(progressReports.Count);
+
+            // Verify sorting
+            if (sort == SD.ORDER_ASC)
+            {
+                graphData.ProgressReports.Should().BeInAscendingOrder(p => p.CreatedDate);
+            }
+            else
+            {
+                graphData.ProgressReports.Should().BeInDescendingOrder(p => p.CreatedDate);
+            }
+        }
     }
 }
