@@ -175,7 +175,7 @@
     <value>Người dùng Google không thể đối mật khẩu</value>
   </data>
   <data name="LOGIN_WRONG_SIDE" xml:space="preserve">
-    <value>Phải đăng nhập ở phía {0}</value>
+    <value>Không có quyền truy cập.</value>
   </data>
   <data name="USER_IS_LOCKED_OUT" xml:space="preserve">
     <value>Tài khoản đang bị khóa</value>

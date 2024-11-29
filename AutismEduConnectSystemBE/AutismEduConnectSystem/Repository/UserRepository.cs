@@ -308,7 +308,7 @@ namespace AutismEduConnectSystem.Repository
                         bool isValidRole = listRoles.Contains(loginRequestDTO.AuthenticationRole);
                         if (!isValidRole)
                         {
-                            throw new InvalidJwtException(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, loginRequestDTO.AuthenticationRole));
+                            throw new InvalidJwtException(_resourceService.GetString(SD.LOGIN_WRONG_SIDE));
                         }
                     } else if (loginRequestDTO.AuthenticationRole == SD.ADMIN_ROLE)
                     {

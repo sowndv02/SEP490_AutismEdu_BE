@@ -42,6 +42,9 @@ namespace AutismEduConnectSystem.Repository
                 if (!query.Any() && filterScore == defaultFilterScore)
                 {
                     query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
+                }else if(query.Any() && query.Count() < 9)
+                {
+                    query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
                 }
                 for (int i = 4; i >= 1; i--)
                 {

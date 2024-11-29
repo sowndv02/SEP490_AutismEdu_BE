@@ -147,12 +147,30 @@ namespace AutismEduConnectSystem.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
         public async Task<ActionResult<APIResponse>> GetAllReviewsAsync(int pageNumber = 1, int pageSize = 10)
         {
             try
             {
-                var (totalCount, reviews) = await _reviewRepository.GetAllAsync(x => !x.IsHide,
-                    includeProperties: "Parent,Tutor",
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                var (totalCount, reviews) = await _reviewRepository.GetAllAsync(x => !x.IsHide && x.TutorId == userId,
+                    includeProperties: "Parent",
                     pageSize: pageSize,
                     pageNumber: pageNumber
                 );

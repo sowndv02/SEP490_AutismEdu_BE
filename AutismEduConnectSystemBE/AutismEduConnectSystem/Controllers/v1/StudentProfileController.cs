@@ -352,7 +352,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.TutorName", model.Tutor.User.FullName)
                         .Replace("@Model.StudentName", child.Name)
                         .Replace("@Model.Email", child.Parent.Email)
-                        .Replace("@Model.Url", SD.URL_FE_STUDENT_PROFILE_DETAIL + model.Id)
+                        .Replace("@Model.Url", string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, model.Id))
                         .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
                     _messageBus.SendMessage(new EmailLogger()
                     {

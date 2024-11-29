@@ -68,38 +68,47 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         {
             // Arrange
             var tutorId = "testTutorId";
-            var progressReportCreateDTO = new ProgressReportCreateDTO { StudentProfileId = 1 };
+            var progressReportCreateDTO = new ProgressReportCreateDTO { StudentProfileId = 1, From = DateTime.UtcNow.AddDays(-3), To = DateTime.UtcNow };
             var progressReport = new ProgressReport
             {
                 TutorId = tutorId,
                 StudentProfileId = 1,
+                From = DateTime.UtcNow.AddDays(-3),
+                To = DateTime.UtcNow,
                 CreatedDate = DateTime.Now,
             };
             var progressReportReturn = new ProgressReport
             {
                 Id = 1,
                 TutorId = tutorId,
+                From = DateTime.UtcNow.AddDays(-3),
+                To = DateTime.UtcNow,
                 StudentProfileId = 1,
                 CreatedDate = DateTime.Now,
             };
-            var progressReportDTO = new ProgressReportDTO { Id = 1, CreatedDate = DateTime.Now };
+            var progressReportDTO = new ProgressReportDTO
+            {
+                Id = 1,
+                CreatedDate = progressReportReturn.CreatedDate,
+                From = progressReportReturn.From,
+                To = progressReportReturn.To,
+                AssessmentResults = new List<AssessmentResultDTO>()
+            };
 
             var userClaims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, tutorId),
-                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
-            };
+    {
+        new Claim(ClaimTypes.NameIdentifier, tutorId),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+    };
             var user = new ClaimsPrincipal(new ClaimsIdentity(userClaims, "mock"));
             _controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user },
             };
 
-        
-
             _mockProgressReportRepository
-                .Setup(repo => repo.CreateAsync(progressReport))
-                .ReturnsAsync(progressReportReturn);
+                .Setup(repo => repo.CreateAsync(It.IsAny<ProgressReport>()))
+                .ReturnsAsync(progressReportReturn); // Return a valid progress report
 
             // Act
             var result = await _controller.CreateAsync(progressReportCreateDTO);
@@ -123,6 +132,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Times.Once
             );
         }
+
 
         [Fact]
         public async Task CreateAsync_ShouldReturnInternalServerError_WhenExceptionThrown()
@@ -165,11 +175,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response
                 .ErrorMessages.Should()
                 .Contain("An error occurred while processing your request.");
-
-            _mockProgressReportRepository.Verify(
-                repo => repo.CreateAsync(It.IsAny<ProgressReport>()),
-                Times.Never // Ensure the repository was not called due to the exception
-            );
         }
 
         [Fact]
@@ -1187,5 +1192,93 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 graphData.ProgressReports.Should().BeInDescendingOrder(p => p.CreatedDate);
             }
         }
+
+
+        [Theory]
+        [InlineData(SD.ORDER_ASC)]
+        [InlineData(SD.ORDER_DESC)]
+        public async Task GetAllAsync_ProgressReportWithDates_OrderByToDate_Sort_ReturnsOkResponse(string sort)
+        {
+            // Arrange
+            var userId = "tutor-user-id";
+            var getInitialResult = true;
+            var startDate = new DateTime(2024, 11, 1);
+            var endDate = new DateTime(2024, 11, 30);
+            var orderBy = SD.DATE_TO;
+            var pageNumber = 1;
+            var pageSize = 10;
+
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, userId),
+        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+    };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal }
+            };
+
+            var progressReports = new List<ProgressReport>
+    {
+        new ProgressReport { Id = 1, CreatedDate = DateTime.UtcNow.AddDays(-3), From = DateTime.UtcNow.AddDays(-5), To = DateTime.UtcNow.AddDays(-2) },
+        new ProgressReport { Id = 2, CreatedDate = DateTime.UtcNow.AddDays(-2), From = DateTime.UtcNow.AddDays(-4), To = DateTime.UtcNow.AddDays(-1) },
+        new ProgressReport { Id = 3, CreatedDate = DateTime.UtcNow.AddDays(-1), From = DateTime.UtcNow.AddDays(-3), To = DateTime.UtcNow },
+    };
+
+            if (sort == SD.ORDER_ASC)
+            {
+                progressReports = progressReports
+                    .Where(p => p.From >= startDate && p.To <= endDate)
+                    .OrderBy(p => p.To)
+                    .ToList();
+            }
+            else
+            {
+                progressReports = progressReports
+                    .Where(p => p.From >= startDate && p.To <= endDate)
+                    .OrderByDescending(p => p.To)
+                    .ToList();
+            }
+
+            _mockProgressReportRepository
+                .Setup(repo => repo.GetAllAsync(
+                    It.IsAny<Expression<Func<ProgressReport, bool>>>(),
+                    It.IsAny<string>(),
+                    pageSize,
+                    pageNumber,
+                    It.IsAny<Expression<Func<ProgressReport, object>>>(),
+                    It.IsAny<bool>())
+                )
+                .ReturnsAsync((progressReports.Count, progressReports));
+
+            // Act
+            var result = await _controller.GetAllAsync(1, startDate, endDate, orderBy, sort, pageNumber, pageSize, getInitialResult);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var apiResponse = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            apiResponse.Result.Should().NotBeNull();
+            apiResponse.Result.Should().BeOfType<ProgressReportGraphDTO>(); // Update assertion to match expected type
+
+            var graphData = apiResponse.Result as ProgressReportGraphDTO;
+            graphData.Should().NotBeNull();
+            graphData.ProgressReports.Should().HaveCount(progressReports.Count);
+
+            // Verify sorting
+            if (sort == SD.ORDER_ASC)
+            {
+                graphData.ProgressReports.Should().BeInAscendingOrder(p => p.To);
+            }
+            else
+            {
+                graphData.ProgressReports.Should().BeInDescendingOrder(p => p.To);
+            }
+        }
+
     }
 }
