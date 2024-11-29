@@ -57,7 +57,8 @@ namespace AutismEduConnectSystem.Repository
             var tutorList = query.ToList();
             if (totalCount < 9 && filterScore == defaultFilterScore) 
             {
-                tutorList.AddRange(storageQuery.ToList());
+                List<string> existingTutorIds = tutorList.Select(t => t.TutorId).ToList();
+                tutorList.AddRange(storageQuery.Where(x => !existingTutorIds.Contains(x.TutorId)).ToList());
             }
             tutorList = tutorList.OrderByDescending(x => x.ReviewScore).ToList();
             if (pageSize > 0)
