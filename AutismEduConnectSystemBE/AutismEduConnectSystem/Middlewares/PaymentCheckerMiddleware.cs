@@ -59,7 +59,17 @@ namespace AutismEduConnectSystem.Middlewares
                                 if (user != null)
                                 {
                                     bool isTrialAccount = user.CreatedDate.Date >= DateTime.Now.AddDays(-30).Date;
-                                    if (!isTrialAccount)
+                                    var (total, list) = await paymentHistoryRepository.GetAllAsync(
+                                        x => x.SubmitterId == userId,
+                                        "PackagePayment",
+                                        pageSize: 1,
+                                        pageNumber: 1,
+                                        x => x.Id,
+                                        true
+                                    );
+
+                                    var latestPaymentHistory = list.FirstOrDefault();
+                                    if (!isTrialAccount && latestPaymentHistory == null)
                                     {
                                         var response = new APIResponse()
                                         {
@@ -73,19 +83,7 @@ namespace AutismEduConnectSystem.Middlewares
                                         await context.Response.WriteAsJsonAsync(response);
                                         await context.Response.CompleteAsync();
                                         return;
-                                    }
-
-                                    var (total, list) = await paymentHistoryRepository.GetAllAsync(
-                                        x => x.SubmitterId == userId,
-                                        "PackagePayment",
-                                        pageSize: 1,
-                                        pageNumber: 1,
-                                        x => x.CreatedDate,
-                                        true
-                                    );
-
-                                    var latestPaymentHistory = list.FirstOrDefault();
-                                    if (latestPaymentHistory != null)
+                                    }else if (latestPaymentHistory != null)
                                     {
                                         bool needPaymentPackage = latestPaymentHistory.ExpirationDate <= DateTime.Now;
                                         if (needPaymentPackage)
