@@ -3586,7 +3586,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             );
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
 
             // Set up the mock for ResourceService to return the unauthorized message
@@ -3595,7 +3595,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Returns("You are not authorized to access this resource.");
 
             // Act
-            var result = await _controller.GetAllAssignedSchedule(studentProfileId, sort, pageNumber);
+            var result = await _controller.GetAllAssignedSchedule(
+                studentProfileId,
+                sort,
+                pageNumber
+            );
 
             // Assert
             var objectResult = result.Result as ObjectResult;
@@ -3605,14 +3609,17 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var response = objectResult.Value as APIResponse;
             response.Should().NotBeNull();
             response.IsSuccess.Should().BeFalse();
-            response.ErrorMessages.Should().Contain("You are not authorized to access this resource.");
+            response
+                .ErrorMessages.Should()
+                .Contain("You are not authorized to access this resource.");
         }
 
-
         [Theory]
-        [InlineData(SD.ORDER_ASC)]  // Test for ascending order
+        [InlineData(SD.ORDER_ASC)] // Test for ascending order
         [InlineData(SD.ORDER_DESC)] // Test for descending order
-        public async Task GetAllAssignedSchedule_ValidTutorAndNoStudentProfile_ReturnsOkWithSchedules(string sort)
+        public async Task GetAllAssignedSchedule_ValidTutorAndNoStudentProfile_ReturnsOkWithSchedules(
+            string sort
+        )
         {
             // Arrange
             int studentProfileId = 0; // No specific student profile is provided
@@ -3621,8 +3628,24 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var tutorId = "validTutorId"; // Simulate a valid tutor ID
             var scheduleList = new List<Schedule>
             {
-                new Schedule { Id = 1, TutorId = tutorId, ScheduleDate = DateTime.Now, Start = DateTime.Now.TimeOfDay, IsHidden = false, ExerciseId = 1 },
-                new Schedule { Id = 2, TutorId = tutorId, ScheduleDate = DateTime.Now.AddDays(1), Start = DateTime.Now.AddDays(1).TimeOfDay, IsHidden = false, ExerciseId = 2 }
+                new Schedule
+                {
+                    Id = 1,
+                    TutorId = tutorId,
+                    ScheduleDate = DateTime.Now,
+                    Start = DateTime.Now.TimeOfDay,
+                    IsHidden = false,
+                    ExerciseId = 1,
+                },
+                new Schedule
+                {
+                    Id = 2,
+                    TutorId = tutorId,
+                    ScheduleDate = DateTime.Now.AddDays(1),
+                    Start = DateTime.Now.AddDays(1).TimeOfDay,
+                    IsHidden = false,
+                    ExerciseId = 2,
+                },
             };
 
             var mockSchedules = new List<Schedule>
@@ -3635,7 +3658,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     Start = TimeSpan.FromHours(10),
                     IsHidden = false,
                     ExerciseId = 1,
-                    StudentProfileId = 1
+                    StudentProfileId = 1,
                 },
                 new Schedule
                 {
@@ -3645,40 +3668,68 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     Start = TimeSpan.FromHours(11),
                     IsHidden = false,
                     ExerciseId = 2,
-                    StudentProfileId = 2
-                }
+                    StudentProfileId = 2,
+                },
             };
-
 
             // Mock data setup for repository
             _scheduleRepositoryMock
-                .Setup(repo => repo.GetAllWithIncludeAsync(It.IsAny<Expression<Func<Schedule, bool>>>(),
-                                                           It.IsAny<string>(),
-                                                           It.IsAny<int>(),
-                                                           It.IsAny<int>(),
-                                                           It.IsAny<Expression<Func<Schedule, object>>>(),
-                                                           It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllWithIncludeAsync(
+                        It.IsAny<Expression<Func<Schedule, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<int>(),
+                        It.IsAny<int>(),
+                        It.IsAny<Expression<Func<Schedule, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((scheduleList.Count, scheduleList));
 
             _scheduleRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Schedule, bool>>>(),
-                                                           It.IsAny<string>(),
-                                                           It.IsAny<string>(),
-                                                           It.IsAny<Expression<Func<Schedule, object>>>(),
-                                                           It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Schedule, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Schedule, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((mockSchedules.Count, mockSchedules));
 
             // Mock data for related entities
             _studentProfileRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<StudentProfile, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(new StudentProfile { Id = 1, ChildId = 1 });
 
             _childInfoRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(new ChildInformation { Id = 1 });
 
             _syllabusRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Syllabus, bool>>>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<Syllabus, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(new Syllabus { Id = 1 });
 
             // Mock ResourceService
@@ -3688,15 +3739,28 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Set up claims principal for the authenticated user
             var claimsPrincipal = new ClaimsPrincipal(
-                new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, tutorId), new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) })
+                new ClaimsIdentity(
+                    new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, tutorId),
+                        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+                    }
+                )
             );
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
-            scheduleList = scheduleList.OrderBy(x => x.ScheduleDate.Date).ThenBy(x => x.Start).ToList();
+            scheduleList = scheduleList
+                .OrderBy(x => x.ScheduleDate.Date)
+                .ThenBy(x => x.Start)
+                .ToList();
             // Act
-            var result = await _controller.GetAllAssignedSchedule(studentProfileId, sort, pageNumber);
+            var result = await _controller.GetAllAssignedSchedule(
+                studentProfileId,
+                sort,
+                pageNumber
+            );
 
             // Assert
             var objectResult = result.Result as ObjectResult;
@@ -3716,13 +3780,14 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Verify that the schedules are ordered according to the provided sort order
             model.Schedules[0].ScheduleDate.Should().BeBefore(model.Schedules[1].ScheduleDate);
-            
         }
 
         [Theory]
-        [InlineData(SD.ORDER_ASC)]  // Test for ascending order
+        [InlineData(SD.ORDER_ASC)] // Test for ascending order
         [InlineData(SD.ORDER_DESC)] // Test for descending order
-        public async Task GetAllAssignedSchedule_ValidStudentProfileId_ReturnsOkWithSchedules(string sort)
+        public async Task GetAllAssignedSchedule_ValidStudentProfileId_ReturnsOkWithSchedules(
+            string sort
+        )
         {
             // Arrange
             int studentProfileId = 1; // Specific student profile is provided
@@ -3732,59 +3797,91 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // List of schedules for a specific student profile
             var scheduleList = new List<Schedule>
-    {
-        new Schedule
-        {
-            Id = 1,
-            TutorId = tutorId,
-            ScheduleDate = DateTime.Now,
-            Start = TimeSpan.FromHours(10),
-            IsHidden = false,
-            ExerciseId = 1,
-            StudentProfileId = studentProfileId
-        },
-        new Schedule
-        {
-            Id = 2,
-            TutorId = tutorId,
-            ScheduleDate = DateTime.Now.AddDays(1),
-            Start = TimeSpan.FromHours(11),
-            IsHidden = false,
-            ExerciseId = 2,
-            StudentProfileId = studentProfileId
-        }
-    };
-            scheduleList = scheduleList.OrderBy(x => x.ScheduleDate.Date).ThenBy(x => x.Start).ToList();
+            {
+                new Schedule
+                {
+                    Id = 1,
+                    TutorId = tutorId,
+                    ScheduleDate = DateTime.Now,
+                    Start = TimeSpan.FromHours(10),
+                    IsHidden = false,
+                    ExerciseId = 1,
+                    StudentProfileId = studentProfileId,
+                },
+                new Schedule
+                {
+                    Id = 2,
+                    TutorId = tutorId,
+                    ScheduleDate = DateTime.Now.AddDays(1),
+                    Start = TimeSpan.FromHours(11),
+                    IsHidden = false,
+                    ExerciseId = 2,
+                    StudentProfileId = studentProfileId,
+                },
+            };
+            scheduleList = scheduleList
+                .OrderBy(x => x.ScheduleDate.Date)
+                .ThenBy(x => x.Start)
+                .ToList();
 
             // Mock data setup for repository
             _scheduleRepositoryMock
-                .Setup(repo => repo.GetAllWithIncludeAsync(It.IsAny<Expression<Func<Schedule, bool>>>(),
-                                                           It.IsAny<string>(),
-                                                           It.IsAny<int>(),
-                                                           It.IsAny<int>(),
-                                                           It.IsAny<Expression<Func<Schedule, object>>>(),
-                                                           It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllWithIncludeAsync(
+                        It.IsAny<Expression<Func<Schedule, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<int>(),
+                        It.IsAny<int>(),
+                        It.IsAny<Expression<Func<Schedule, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((scheduleList.Count, scheduleList));
 
             _scheduleRepositoryMock
-                .Setup(repo => repo.GetAllNotPagingAsync(It.IsAny<Expression<Func<Schedule, bool>>>(),
-                                                           It.IsAny<string>(),
-                                                           It.IsAny<string>(),
-                                                           It.IsAny<Expression<Func<Schedule, object>>>(),
-                                                           It.IsAny<bool>()))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Schedule, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Schedule, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((scheduleList.Count, scheduleList));
 
             // Mock data for related entities
             _studentProfileRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<StudentProfile, bool>>>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<StudentProfile, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(new StudentProfile { Id = studentProfileId, ChildId = 1 });
 
             _childInfoRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<ChildInformation, bool>>>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(new ChildInformation { Id = 1 });
 
             _syllabusRepositoryMock
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<Syllabus, bool>>>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<Syllabus, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
                 .ReturnsAsync(new Syllabus { Id = 1 });
 
             // Mock ResourceService
@@ -3794,15 +3891,25 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Set up claims principal for the authenticated user
             var claimsPrincipal = new ClaimsPrincipal(
-                new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, tutorId), new Claim(ClaimTypes.Role, SD.TUTOR_ROLE) })
+                new ClaimsIdentity(
+                    new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, tutorId),
+                        new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+                    }
+                )
             );
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
             };
 
             // Act
-            var result = await _controller.GetAllAssignedSchedule(studentProfileId, sort, pageNumber);
+            var result = await _controller.GetAllAssignedSchedule(
+                studentProfileId,
+                sort,
+                pageNumber
+            );
 
             // Assert
             var objectResult = result.Result as ObjectResult;
@@ -3821,10 +3928,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             model.MaxDate.Should().Be(scheduleList.Max(s => s.ScheduleDate).Date);
 
             // Verify that the schedules are ordered according to the provided sort order
-            
-            model.Schedules[0].ScheduleDate.Should().BeBefore(model.Schedules[1].ScheduleDate);
-            
-        }
 
+            model.Schedules[0].ScheduleDate.Should().BeBefore(model.Schedules[1].ScheduleDate);
+        }
     }
 }

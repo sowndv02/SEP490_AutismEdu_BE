@@ -294,7 +294,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                                                                                    && !x.IsDeleted
                                                                                    && (x.StudentProfile.Status == SD.StudentProfileStatus.Pending
                                                                                    || x.StudentProfile.Status == SD.StudentProfileStatus.Teaching)
-                                                                                   , true, "StudentProfile");
+                                                                                   , false, "StudentProfile");
                 if (isTimeSlotDuplicate != null)
                 {
                     _logger.LogWarning("Duplicate time slot found: From: {From}, To: {To}", isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm"));
