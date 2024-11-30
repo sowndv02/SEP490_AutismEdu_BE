@@ -455,29 +455,28 @@ namespace AutismEduConnectSystem.Controllers.v1
                     await _tutorRegistrationRequestRepository.UpdateAsync(model);
                     model.ApprovedBy = await _userRepository.GetAsync(x => x.Id == userId, false, null);
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AcceptedTutorRegistrationRequest.cshtml");
-                    if (!System.IO.File.Exists(templatePath))
+                    if (System.IO.File.Exists(templatePath))
                     {
-                        _response.IsSuccess = false;
-                        _response.StatusCode = HttpStatusCode.InternalServerError;
-                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
-                    }
-                    var subject = "Thông báo Chấp nhận Đơn Đăng ký Gia sư Dạy Trẻ Tự Kỷ";
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", model.FullName)
-                        .Replace("@Model.Username", model.Email)
-                        .Replace("@Model.Password", passsword)
-                        .Replace("@Model.LoginUrl", SD.URL_FE_TUTOR_LOGIN);
+                        var subject = "Thông báo Chấp nhận Đơn Đăng ký Gia sư Dạy Trẻ Tự Kỷ";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", model.FullName)
+                            .Replace("@Model.Username", model.Email)
+                            .Replace("@Model.Password", passsword)
+                            .Replace("@Model.LoginUrl", SD.URL_FE_TUTOR_LOGIN);
 
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        UserId = user.Id,
-                        Email = model.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
-                    _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
+                        _messageBus.SendMessage(new EmailLogger()
+                        {
+                            UserId = user.Id,
+                            Email = model.Email,
+                            Subject = subject,
+                            Message = htmlMessage
+                        }, queueName);
+                        _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
+                        _response.StatusCode = HttpStatusCode.OK;
+                        _response.IsSuccess = true;
+                        return Ok(_response);
+                    }
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
