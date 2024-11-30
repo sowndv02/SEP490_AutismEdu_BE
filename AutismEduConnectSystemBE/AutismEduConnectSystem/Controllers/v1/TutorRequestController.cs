@@ -545,6 +545,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                             reason = changeStatusDTO.RejectionReason;
                             break;
                         default:
+                            model.RejectType = RejectType.Other;
                             reason = changeStatusDTO.RejectionReason;
                             break;
                     }

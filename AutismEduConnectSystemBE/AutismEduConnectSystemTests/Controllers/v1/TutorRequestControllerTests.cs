@@ -11,6 +11,7 @@ using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.RabbitMQSender;
 using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
@@ -26,6 +27,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using static AutismEduConnectSystem.SD;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -3266,11 +3268,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var tutorRequestCreateDTO = new TutorRequestCreateDTO
             {
                 ChildId = 1,
-                TutorId = "tutor-id"
+                TutorId = "tutor-id",
             };
             _mockResourceService
-             .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
-             .Returns("Unauthorized access.");
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
             // Simulate an unauthenticated user
             var claims = new List<Claim>(); // No NameIdentifier
             var identity = new ClaimsIdentity(claims);
@@ -3278,7 +3280,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = principal }
+                HttpContext = new DefaultHttpContext { User = principal },
             };
 
             // Act
@@ -3304,23 +3306,27 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var tutorRequestCreateDTO = new TutorRequestCreateDTO
             {
                 ChildId = 1,
-                TutorId = "tutor-id"
+                TutorId = "tutor-id",
             };
             _mockResourceService
-                 .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
-                 .Returns("Forbiden access.");
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbiden access.");
             // Simulate a user without the "Parent" role
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
-                new Claim(ClaimTypes.Role, "OtherRole") // Not "ParentRole"
+                new Claim(
+                    ClaimTypes.Role,
+                    "OtherRole"
+                ) // Not "ParentRole"
+                ,
             };
             var identity = new ClaimsIdentity(claims);
             var principal = new ClaimsPrincipal(identity);
 
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = principal }
+                HttpContext = new DefaultHttpContext { User = principal },
             };
 
             // Act
@@ -3345,42 +3351,1468 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var tutorRequestCreateDTO = new TutorRequestCreateDTO
             {
                 ChildId = 1,
-                TutorId = "tutor-id"
+                TutorId = "tutor-id",
             };
 
             // Simulate a valid user (Parent role)
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
-                new Claim(ClaimTypes.Role, SD.PARENT_ROLE)
+                new Claim(ClaimTypes.Role, SD.PARENT_ROLE),
             };
             var identity = new ClaimsIdentity(claims);
             var principal = new ClaimsPrincipal(identity);
 
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = principal }
+                HttpContext = new DefaultHttpContext { User = principal },
             };
             _mockResourceService
                 .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
                 .Returns("Internal server error");
 
             // Simulate an exception thrown during the process
-            _mockTutorRequestRepository.Setup(repo => repo.CreateAsync(It.IsAny<TutorRequest>()))
+            _mockTutorRequestRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<TutorRequest>()))
                 .ThrowsAsync(new Exception("Database error"));
-
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ThrowsAsync(new Exception("Database error"));
             // Act
             var result = await _controller.CreateAsync(tutorRequestCreateDTO);
-
+            var internalServerErrorResult = result.Result as ObjectResult;
             // Assert
-            var internalServerErrorResult = result.Should().BeOfType<ObjectResult>().Subject;
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var response = internalServerErrorResult.Value.Should().BeOfType<APIResponse>().Subject;
             response.IsSuccess.Should().BeFalse();
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
             response.ErrorMessages.Should().Contain("Internal server error");
         }
+
+        [Fact]
+        public async Task CreateAsync_ModelStateInvalid_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var tutorRequestCreateDTO = new TutorRequestCreateDTO
+            {
+                // Simulating invalid input, for example, an invalid or missing required field
+                ChildId = 0, // Assuming ChildId is required and must be greater than 0
+                TutorId = "tutor-id",
+            };
+
+            // Simulate a valid user with the "Parent" role
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
+                new Claim(ClaimTypes.Role, SD.PARENT_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            _mockResourceService
+                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST))
+                .Returns("Tutor request invalid.");
+
+            // Manually adding a validation error to the ModelState (simulate invalid model state)
+            _controller.ModelState.AddModelError(
+                "ChildId",
+                "ChildId is required and must be greater than 0"
+            );
+
+            // Act
+            var result = await _controller.CreateAsync(tutorRequestCreateDTO);
+            var badRequestResult = result.Result as ObjectResult;
+
+            // Assert
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var response = badRequestResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.ErrorMessages.Should().Contain("Tutor request invalid.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_ChildIdInvalid_ShouldReturnNotFound()
+        {
+            // Arrange
+            var tutorRequestCreateDTO = new TutorRequestCreateDTO
+            {
+                ChildId = 0, // Invalid ChildId, should trigger NotFound
+                TutorId = "tutor-id",
+            };
+
+            // Simulate a valid user with the "Parent" role
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
+                new Claim(ClaimTypes.Role, SD.PARENT_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            _mockResourceService
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Child not found.");
+            // Act
+            var result = await _controller.CreateAsync(tutorRequestCreateDTO);
+            var notFoundResult = result.Result as ObjectResult;
+
+            // Assert
+            notFoundResult.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
+            var response = notFoundResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            response.ErrorMessages.Should().Contain("Child not found.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_DuplicateRequest_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var tutorRequestCreateDTO = new TutorRequestCreateDTO
+            {
+                ChildId = 1, // Valid ChildId
+                TutorId = "tutor-id",
+            };
+
+            // Simulate a valid user with the "Parent" role
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
+                new Claim(ClaimTypes.Role, SD.PARENT_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Mock the repository to return a list indicating an existing request
+            var existingRequest = new List<TutorRequest>
+            {
+                new TutorRequest
+                {
+                    ParentId = "test-user-id",
+                    TutorId = "tutor-id",
+                    ChildId = 1,
+                    RequestStatus = SD.Status.PENDING,
+                },
+            };
+            _mockTutorRequestRepository
+                .Setup(r =>
+                    r.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<TutorRequest, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((existingRequest.Count, existingRequest));
+
+            // Mock the resource service to return the duplication error message
+            _mockResourceService
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Duplicate tutor request.");
+
+            // Act
+            var result = await _controller.CreateAsync(tutorRequestCreateDTO);
+            var badRequestResult = result.Result as ObjectResult;
+
+            // Assert
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+            var response = badRequestResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.ErrorMessages.Should().Contain("Duplicate tutor request.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_TutorNotFound_ShouldReturnNotFound()
+        {
+            // Arrange
+            var tutorRequestCreateDTO = new TutorRequestCreateDTO
+            {
+                ChildId = 1, // Valid ChildId
+                TutorId =
+                    "non-existing-tutor-id" // Invalid TutorId, should trigger NotFound
+                ,
+            };
+
+            // Simulate a valid user with the "Parent" role
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
+                new Claim(ClaimTypes.Role, SD.PARENT_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Mock the repository to return null indicating the tutor does not exist
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync((ApplicationUser)null); // No tutor found
+
+            // Mock the resource service to return the error message
+            _mockResourceService
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Tutor not found.");
+
+            // Act
+            var result = await _controller.CreateAsync(tutorRequestCreateDTO);
+            var notFoundResult = result.Result as ObjectResult;
+
+            // Assert
+            notFoundResult.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
+            var response = notFoundResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            response.ErrorMessages.Should().Contain("Tutor not found.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_ChildNotFound_ShouldReturnNotFound()
+        {
+            // Arrange
+            var tutorRequestCreateDTO = new TutorRequestCreateDTO
+            {
+                ChildId = 1, // Valid ChildId
+                TutorId = "tutor-id",
+            };
+
+            // Simulate a valid user with the "Parent" role
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
+                new Claim(ClaimTypes.Role, SD.PARENT_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Mock the repository to return null indicating the child does not exist for the given parent
+            _mockChildInformationRepository
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync((ChildInformation)null); // No child found for the provided ParentId and ChildId
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(new ApplicationUser());
+            // Mock the resource service to return the error message
+            _mockResourceService
+                .Setup(r => r.GetString(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("Child not found.");
+
+            // Act
+            var result = await _controller.CreateAsync(tutorRequestCreateDTO);
+            var notFoundResult = result.Result as ObjectResult;
+
+            // Assert
+            notFoundResult.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
+            var response = notFoundResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            response.ErrorMessages.Should().Contain("Child not found.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_ValidRequest_ShouldReturnSuccessWithSendingEmail()
+        {
+            // Arrange
+            var tutorRequestCreateDTO = new TutorRequestCreateDTO
+            {
+                ChildId = 1,
+                TutorId = "tutor-id",
+            };
+
+            // Simulate a valid user with the "Parent" role
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
+                new Claim(ClaimTypes.Role, SD.PARENT_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Mock the repository to return a valid child
+            var child = new ChildInformation { Id = 1, ParentId = "test-user-id" };
+            _mockChildInformationRepository
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(child);
+
+            // Mock the repository to return a valid tutor
+            var tutor = new ApplicationUser { Id = "tutor-id" };
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(tutor);
+
+            // Mock the repository to indicate no duplicate requests exist
+            _mockTutorRequestRepository
+                .Setup(r =>
+                    r.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<TutorRequest, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((0, new List<TutorRequest>()));
+
+            // Mock the creation of the tutor request
+            var createdTutorRequest = new TutorRequest
+            {
+                ParentId = "test-user-id",
+                ChildId = 1,
+                TutorId = "tutor-id",
+                RequestStatus = SD.Status.PENDING,
+            };
+            _mockTutorRequestRepository
+                .Setup(r => r.CreateAsync(It.IsAny<TutorRequest>()))
+                .ReturnsAsync(createdTutorRequest);
+
+            // Act
+            var result = await _controller.CreateAsync(tutorRequestCreateDTO);
+            var okResult = result.Result as ObjectResult;
+
+            // Assert
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+        }
+
+        [Fact]
+        public async Task CreateAsync_ValidRequest_ShouldReturnSuccessWithoutSendingEmail()
+        {
+            // Arrange
+            var tutorRequestCreateDTO = new TutorRequestCreateDTO
+            {
+                ChildId = 1,
+                TutorId = "tutor-id",
+            };
+
+            // Simulate a valid user with the "Parent" role
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
+                new Claim(ClaimTypes.Role, SD.PARENT_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Mock the repository to return a valid child
+            var child = new ChildInformation { Id = 1, ParentId = "test-user-id" };
+            _mockChildInformationRepository
+                .Setup(r =>
+                    r.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(child);
+
+            // Mock the repository to return a valid tutor
+            var tutor = new ApplicationUser { Id = "tutor-id" };
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(tutor);
+
+            // Mock the repository to indicate no duplicate requests exist
+            _mockTutorRequestRepository
+                .Setup(r =>
+                    r.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<TutorRequest, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((0, new List<TutorRequest>()));
+
+            // Mock the creation of the tutor request
+            var createdTutorRequest = new TutorRequest
+            {
+                ParentId = "test-user-id",
+                ChildId = 1,
+                TutorId = "tutor-id",
+                RequestStatus = SD.Status.PENDING,
+            };
+            _mockTutorRequestRepository
+                .Setup(r => r.CreateAsync(It.IsAny<TutorRequest>()))
+                .ReturnsAsync(createdTutorRequest);
+
+            // Mock the email service to ensure no email is sent
+
+            // Act
+            var result = await _controller.CreateAsync(tutorRequestCreateDTO);
+            var okResult = result.Result as ObjectResult;
+
+            // Assert
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_AuthenticationFailure_ShouldReturnUnauthorizedResponse()
+        {
+            // Arrange
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)Status.APPROVE,
+            };
+            _mockResourceService
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext =
+                    new DefaultHttpContext() // No user context is added
+                ,
+            };
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+            var unauthorizedResult = result.Result as ObjectResult;
+
+            // Assert
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_AuthorizationFailure_ShouldReturnForbiddenResponse()
+        {
+            // Arrange
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)Status.APPROVE,
+            };
+            _mockResourceService
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbiden access.");
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-user-id"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.PARENT_ROLE
+                ) // Invalid role for this action
+                ,
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+            var forbiddenResult = result.Result as ObjectResult;
+            // Assert
+            forbiddenResult.Should().NotBeNull();
+            forbiddenResult.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
+
+            var apiResponse = forbiddenResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            apiResponse.ErrorMessages.First().Should().Be("Forbiden access.");
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_InternalServerError_ShouldReturnInternalServerErrorResponse()
+        {
+            // Arrange
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)Status.APPROVE,
+            };
+            _mockResourceService
+                .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("Internal server error");
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-user-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Mock the repository to throw an exception
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ThrowsAsync(new Exception("Database connection error"));
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var internalServerErrorResult = result.Result as ObjectResult;
+
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
+
+            var response = internalServerErrorResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            response.ErrorMessages.Should().Contain("Internal server error");
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_BadRequest_ShouldReturnBadRequestResponse()
+        {
+            // Arrange
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)
+                    SD.Status.PENDING // Invalid status change
+                ,
+            };
+
+            _mockResourceService
+                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST))
+                .Returns("Bad request for tutor request.");
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-user-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Simulate an invalid model state
+            _controller.ModelState.AddModelError("StatusChange", "Invalid status change value.");
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var badRequestResult = result.Result as BadRequestObjectResult;
+
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var response = badRequestResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.ErrorMessages.Should().Contain("Bad request for tutor request.");
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ModelNotFoundOrInvalidStatus_ShouldReturnBadRequestResponse()
+        {
+            // Arrange
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)
+                    SD.Status.APPROVE // Valid status change
+                ,
+            };
+
+            _mockResourceService
+                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST))
+                .Returns("Bad request for tutor request.");
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-user-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Mock the repository to return null (model not found)
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync((TutorRequest)null);
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var badRequestResult = result.Result as BadRequestObjectResult;
+
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var response = badRequestResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeFalse();
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.ErrorMessages.Should().Contain("Bad request for tutor request.");
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ValidRequestStatusApprovedButNoMailSent_ShouldReturnOkResponse()
+        {
+            // Arrange
+            var tutor = new ApplicationUser { Id = "valid-tutor-id", FullName = "Tutor Name" };
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            var parent = new ApplicationUser
+            {
+                Id = "valid-parent-id",
+                Email = "parent@example.com",
+                FullName = "Parent Name",
+            };
+
+            var tutorRequest = new TutorRequest
+            {
+                Id = 1,
+                TutorId = "valid-tutor-id",
+                ParentId = "valid-parent-id",
+                RequestStatus = SD.Status.PENDING,
+                Parent = parent,
+            };
+
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)SD.Status.APPROVE,
+            };
+
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        "Parent,Tutor",
+                        null
+                    )
+                )
+                .ReturnsAsync(tutorRequest);
+
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(tutor);
+
+            // Simulate missing email template file
+            var templatePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "Templates",
+                "ChangeStatusTemplate.cshtml"
+            );
+
+            _mockResourceService
+                .Setup(r =>
+                    r.GetString(
+                        SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION,
+                        SD.STATUS_APPROVE_VIE,
+                        tutor.FullName
+                    )
+                )
+                .Returns($"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã được chấp nhận");
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that no email was sent
+            _mockMessageBus.Verify(
+                mb => mb.SendMessage(It.IsAny<EmailLogger>(), It.IsAny<string>()),
+                Times.Never
+            );
+
+            // Verify the repository was updated
+            _mockTutorRequestRepository.Verify(
+                repo => repo.UpdateAsync(It.IsAny<TutorRequest>()),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ValidRequestStatusApprovedAndMailSent_ShouldReturnOkResponse()
+        {
+            // Arrange
+            var tutor = new ApplicationUser { Id = "valid-tutor-id", FullName = "Tutor Name" };
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            var parent = new ApplicationUser
+            {
+                Id = "valid-parent-id",
+                Email = "parent@example.com",
+                FullName = "Parent Name",
+            };
+
+            var tutorRequest = new TutorRequest
+            {
+                Id = 1,
+                TutorId = "valid-tutor-id",
+                ParentId = "valid-parent-id",
+                RequestStatus = SD.Status.PENDING,
+                Parent = parent,
+            };
+
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)SD.Status.APPROVE,
+            };
+
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        "Parent,Tutor",
+                        null
+                    )
+                )
+                .ReturnsAsync(tutorRequest);
+
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(tutor);
+
+            // Simulate email template file exists
+            var templatePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "Templates",
+                "ChangeStatusTemplate.cshtml"
+            );
+
+            _mockResourceService
+                .Setup(r =>
+                    r.GetString(
+                        SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION,
+                        SD.STATUS_APPROVE_VIE,
+                        tutor.FullName
+                    )
+                )
+                .Returns($"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã được chấp nhận");
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ValidRequestStatusRejectedWithSchedulingConflicts_ShouldReturnOkResponseWithoutSendingMail()
+        {
+            // Arrange
+            var tutor = new ApplicationUser { Id = "valid-tutor-id", FullName = "Tutor Name" };
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            var parent = new ApplicationUser
+            {
+                Id = "valid-parent-id",
+                Email = "parent@example.com",
+                FullName = "Parent Name",
+            };
+
+            var tutorRequest = new TutorRequest
+            {
+                Id = 1,
+                TutorId = "valid-tutor-id",
+                ParentId = "valid-parent-id",
+                RequestStatus = SD.Status.PENDING,
+                Parent = parent,
+            };
+
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)SD.Status.REJECT,
+                RejectType = SD.RejectType.SchedulingConflicts,
+                RejectionReason = "reason",
+            };
+
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        "Parent,Tutor",
+                        null
+                    )
+                )
+                .ReturnsAsync(tutorRequest);
+
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(tutor);
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify the repository was updated
+            _mockTutorRequestRepository.Verify(
+                repo => repo.UpdateAsync(It.IsAny<TutorRequest>()),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ValidRequestStatusRejectedWithSchedulingConflicts_ShouldReturnOkResponseWithSendingMail()
+        {
+            // Arrange
+            var tutor = new ApplicationUser { Id = "valid-tutor-id", FullName = "Tutor Name" };
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            var parent = new ApplicationUser
+            {
+                Id = "valid-parent-id",
+                Email = "parent@example.com",
+                FullName = "Parent Name",
+            };
+
+            var tutorRequest = new TutorRequest
+            {
+                Id = 1,
+                TutorId = "valid-tutor-id",
+                ParentId = "valid-parent-id",
+                RequestStatus = SD.Status.PENDING,
+                Parent = parent,
+            };
+
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)SD.Status.REJECT,
+                RejectType = SD.RejectType.SchedulingConflicts,
+                RejectionReason = "reason",
+            };
+
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        "Parent,Tutor",
+                        null
+                    )
+                )
+                .ReturnsAsync(tutorRequest);
+
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(tutor);
+
+            // Simulate email template file exists
+            var templatePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "Templates",
+                "ChangeStatusTemplate.cshtml"
+            );
+
+            _mockResourceService
+                .Setup(r =>
+                    r.GetString(
+                        SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION,
+                        SD.STATUS_REJECT_VIE,
+                        tutor.FullName
+                    )
+                )
+                .Returns(
+                    $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối với lý do: {changeStatusDTO.RejectionReason}"
+                );
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify the repository was updated
+            _mockTutorRequestRepository.Verify(
+                repo => repo.UpdateAsync(It.IsAny<TutorRequest>()),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ValidRequestStatusRejectedWithIncompatibilityWithCurriculum_ShouldReturnOkResponseAndSendMail()
+        {
+            // Arrange
+            var tutor = new ApplicationUser { Id = "valid-tutor-id", FullName = "Tutor Name" };
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            var parent = new ApplicationUser
+            {
+                Id = "valid-parent-id",
+                Email = "parent@example.com",
+                FullName = "Parent Name",
+            };
+
+            var tutorRequest = new TutorRequest
+            {
+                Id = 1,
+                TutorId = "valid-tutor-id",
+                ParentId = "valid-parent-id",
+                RequestStatus = SD.Status.PENDING,
+                Parent = parent,
+            };
+
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)SD.Status.REJECT,
+                RejectType = SD.RejectType.IncompatibilityWithCurriculum, // Reject due to incompatibility with curriculum
+                RejectionReason = "Curriculum incompatibility reason",
+            };
+
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        "Parent,Tutor",
+                        null
+                    )
+                )
+                .ReturnsAsync(tutorRequest);
+
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(tutor);
+
+            // Simulate email template file exists
+            var templatePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "Templates",
+                "ChangeStatusTemplate.cshtml"
+            );
+
+            _mockResourceService
+                .Setup(r =>
+                    r.GetString(
+                        SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION,
+                        SD.STATUS_REJECT_VIE,
+                        tutor.FullName
+                    )
+                )
+                .Returns(
+                    $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối với lý do: {changeStatusDTO.RejectionReason}"
+                );
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify the repository was updated
+            _mockTutorRequestRepository.Verify(
+                repo => repo.UpdateAsync(It.IsAny<TutorRequest>()),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ValidRequestStatusRejectedWithIncompatibilityWithCurriculum_ShouldReturnOkResponseAndNotSendMail()
+        {
+            // Arrange
+            var tutor = new ApplicationUser { Id = "valid-tutor-id", FullName = "Tutor Name" };
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            var parent = new ApplicationUser
+            {
+                Id = "valid-parent-id",
+                Email = "parent@example.com",
+                FullName = "Parent Name",
+            };
+
+            var tutorRequest = new TutorRequest
+            {
+                Id = 1,
+                TutorId = "valid-tutor-id",
+                ParentId = "valid-parent-id",
+                RequestStatus = SD.Status.PENDING,
+                Parent = parent,
+            };
+
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)SD.Status.REJECT,
+                RejectType = SD.RejectType.IncompatibilityWithCurriculum, // Reject due to curriculum incompatibility
+                RejectionReason = "Curriculum incompatibility reason",
+            };
+
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        "Parent,Tutor",
+                        null
+                    )
+                )
+                .ReturnsAsync(tutorRequest);
+
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(tutor);
+
+            // Simulate email template file exists (but we won't send an email in this case)
+            var templatePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "Templates",
+                "ChangeStatusTemplate.cshtml"
+            );
+
+            _mockResourceService
+                .Setup(r =>
+                    r.GetString(
+                        SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION,
+                        SD.STATUS_REJECT_VIE,
+                        tutor.FullName
+                    )
+                )
+                .Returns(
+                    $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối với lý do: {changeStatusDTO.RejectionReason}"
+                );
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify the repository was updated
+            _mockTutorRequestRepository.Verify(
+                repo => repo.UpdateAsync(It.IsAny<TutorRequest>()),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ValidRequestStatusRejectedWithOtherReason_ShouldReturnOkResponseAndNotSendMail()
+        {
+            // Arrange
+            var tutor = new ApplicationUser { Id = "valid-tutor-id", FullName = "Tutor Name" };
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            var parent = new ApplicationUser
+            {
+                Id = "valid-parent-id",
+                Email = "parent@example.com",
+                FullName = "Parent Name",
+            };
+
+            var tutorRequest = new TutorRequest
+            {
+                Id = 1,
+                TutorId = "valid-tutor-id",
+                ParentId = "valid-parent-id",
+                RequestStatus = SD.Status.PENDING,
+                Parent = parent,
+            };
+
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)SD.Status.REJECT,
+                RejectType = SD.RejectType.Other, // Reject due to some other reason
+                RejectionReason = "Other reason",
+            };
+
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        "Parent,Tutor",
+                        null
+                    )
+                )
+                .ReturnsAsync(tutorRequest);
+
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(tutor);
+
+            // Simulate email template file exists (but no email will be sent in this case)
+            var templatePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "Templates",
+                "ChangeStatusTemplate.cshtml"
+            );
+
+            _mockResourceService
+                .Setup(r =>
+                    r.GetString(
+                        SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION,
+                        SD.STATUS_REJECT_VIE,
+                        tutor.FullName
+                    )
+                )
+                .Returns(
+                    $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối với lý do: {changeStatusDTO.RejectionReason}"
+                );
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify the repository was updated
+            _mockTutorRequestRepository.Verify(
+                repo => repo.UpdateAsync(It.IsAny<TutorRequest>()),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task UpdateStatusRequest_ValidRequestStatusRejectedWithOtherReason_ShouldReturnOkResponseWithSendingMail()
+        {
+            // Arrange
+            var tutor = new ApplicationUser { Id = "valid-tutor-id", FullName = "Tutor Name" };
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "valid-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            var parent = new ApplicationUser
+            {
+                Id = "valid-parent-id",
+                Email = "parent@example.com",
+                FullName = "Parent Name",
+            };
+
+            var tutorRequest = new TutorRequest
+            {
+                Id = 1,
+                TutorId = "valid-tutor-id",
+                ParentId = "valid-parent-id",
+                RequestStatus = SD.Status.PENDING,
+                Parent = parent,
+            };
+
+            var changeStatusDTO = new ChangeStatusTutorRequestDTO
+            {
+                Id = 1,
+                StatusChange = (int)SD.Status.REJECT,
+                RejectType = SD.RejectType.Other, // Reject due to some other reason
+                RejectionReason = "Other reason",
+            };
+
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        "Parent,Tutor",
+                        null
+                    )
+                )
+                .ReturnsAsync(tutorRequest);
+
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(It.IsAny<Expression<Func<ApplicationUser, bool>>>(), false, null)
+                )
+                .ReturnsAsync(tutor);
+
+            // Simulate email template file exists
+            var templatePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "Templates",
+                "ChangeStatusTemplate.cshtml"
+            );
+
+            _mockResourceService
+                .Setup(r =>
+                    r.GetString(
+                        SD.CHANGE_STATUS_TUTOR_REQUEST_PARENT_NOTIFICATION,
+                        SD.STATUS_REJECT_VIE,
+                        tutor.FullName
+                    )
+                )
+                .Returns(
+                    $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName} đã bị từ chối với lý do: {changeStatusDTO.RejectionReason}"
+                );
+
+            // Act
+            var result = await _controller.UpdateStatusRequest(1, changeStatusDTO);
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
+            response.IsSuccess.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify the repository was updated
+            _mockTutorRequestRepository.Verify(
+                repo => repo.UpdateAsync(It.IsAny<TutorRequest>()),
+                Times.Once
+            );
+        }
+
+
 
     }
 }
