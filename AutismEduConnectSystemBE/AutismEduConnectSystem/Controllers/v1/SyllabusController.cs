@@ -71,12 +71,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (id <= 0)
                 {
                     _logger.LogWarning($"Invalid syllabus ID: {id} provided by User: {userId}");
-                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                var model = await _syllabusRepository.GetAsync(x => x.Id == id && x.TutorId == userId, true, null);
+                var model = await _syllabusRepository.GetAsync(x => x.Id == id && x.TutorId == userId, true, null, null);
 
                 if (model == null)
                 {
@@ -95,11 +95,12 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An error occurred while deleting Syllabus ID: {id} for Tutor: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value}");
+                _logger.LogError(ex, "An error occurred while retrieving syllabi for Tutor: {userId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
-            return _response;
         }
 
         [HttpGet]
@@ -208,7 +209,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
                 model.SyllabusExercises = syllabusExercises;
-                _response.StatusCode = HttpStatusCode.Created;
+                _response.StatusCode = HttpStatusCode.OK;
                 _response.Result = _mapper.Map<SyllabusDTO>(model);
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -282,51 +283,57 @@ namespace AutismEduConnectSystem.Controllers.v1
                 model.AgeFrom = updateDTO.AgeFrom;
                 model.UpdatedDate = DateTime.Now;
                 await _syllabusRepository.UpdateAsync(model);
-                foreach (var exerciseTypeUpdate in updateDTO.SyllabusExercises)
+                if (updateDTO.SyllabusExercises != null)
                 {
-                    int exerciseTypeId = exerciseTypeUpdate.ExerciseTypeId;
-                    List<int> exerciseIds = exerciseTypeUpdate.ExerciseIds;
-                    var existingSyllabusExercises = await _syllabusExerciseRepository.GetAllNotPagingAsync(se => se.SyllabusId == updateDTO.Id && se.ExerciseTypeId == exerciseTypeId, null, null, x => x.CreatedDate, true);
-                    var exercisesToDelete = existingSyllabusExercises.list
-                        .Where(se => !exerciseIds.Contains(se.ExerciseId))
-                        .ToList();
-                    var existingExerciseIds = existingSyllabusExercises.list.Select(se => se.ExerciseId).ToList();
-                    var exercisesToAdd = exerciseIds
-                        .Where(e => !existingExerciseIds.Contains(e))
-                        .Select(e => new SyllabusExercise
+                    foreach (var exerciseTypeUpdate in updateDTO.SyllabusExercises)
+                    {
+                        int exerciseTypeId = exerciseTypeUpdate.ExerciseTypeId;
+                        List<int> exerciseIds = exerciseTypeUpdate.ExerciseIds;
+                        var existingSyllabusExercises = await _syllabusExerciseRepository.GetAllNotPagingAsync(se => se.SyllabusId == updateDTO.Id && se.ExerciseTypeId == exerciseTypeId, null, null, x => x.CreatedDate, true);
+                        var exercisesToDelete = existingSyllabusExercises.list
+                            .Where(se => !exerciseIds.Contains(se.ExerciseId))
+                            .ToList();
+                        var existingExerciseIds = existingSyllabusExercises.list.Select(se => se.ExerciseId).ToList();
+                        var exercisesToAdd = exerciseIds
+                            .Where(e => !existingExerciseIds.Contains(e))
+                            .Select(e => new SyllabusExercise
+                            {
+                                SyllabusId = updateDTO.Id,
+                                ExerciseTypeId = exerciseTypeId,
+                                ExerciseId = e,
+                                CreatedDate = DateTime.Now
+                            })
+                            .ToList();
+                        foreach (var deleteExercise in exercisesToDelete)
                         {
-                            SyllabusId = updateDTO.Id,
-                            ExerciseTypeId = exerciseTypeId,
-                            ExerciseId = e,
-                            CreatedDate = DateTime.Now
-                        })
-                        .ToList();
-                    foreach (var deleteExercise in exercisesToDelete)
-                    {
-                        await _syllabusExerciseRepository.RemoveAsync(deleteExercise);
-                    }
-                    foreach (var addExercise in exercisesToAdd)
-                    {
-                        await _syllabusExerciseRepository.CreateAsync(addExercise);
+                            await _syllabusExerciseRepository.RemoveAsync(deleteExercise);
+                        }
+                        foreach (var addExercise in exercisesToAdd)
+                        {
+                            await _syllabusExerciseRepository.CreateAsync(addExercise);
+                        }
                     }
                 }
 
 
                 var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
-                model.SyllabusExercises = syllabusExercises;
-                model.ExerciseTypes = syllabusExercises
-                .GroupBy(se => se.ExerciseTypeId)
-                .Select(group => new ExerciseTypeDTO
+                if(syllabusExercises != null && syllabusExercises.Any())
                 {
-                    Id = group.First().ExerciseType.Id,
-                    ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
-                    Exercises = group.Select(g => new ExerciseDTO
+                    model.SyllabusExercises = syllabusExercises;
+                    model.ExerciseTypes = syllabusExercises
+                    .GroupBy(se => se.ExerciseTypeId)
+                    .Select(group => new ExerciseTypeDTO
                     {
-                        Id = g.Exercise.Id,
-                        ExerciseName = g.Exercise.ExerciseName,
-                        Description = g.Exercise.Description
-                    }).ToList()
-                }).ToList();
+                        Id = group.First().ExerciseType.Id,
+                        ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
+                        Exercises = group.Select(g => new ExerciseDTO
+                        {
+                            Id = g.Exercise.Id,
+                            ExerciseName = g.Exercise.ExerciseName,
+                            Description = g.Exercise.Description
+                        }).ToList()
+                    }).ToList();
+                }
 
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.Result = _mapper.Map<SyllabusDTO>(model);
@@ -377,14 +384,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => createDTO.AgeFrom >= x.AgeFrom && createDTO.AgeEnd >= x.AgeEnd && x.TutorId == userId && !x.IsDeleted);
-                foreach (var item in list)
+                if(list != null && list.Any())
                 {
-                    if (item.AgeFrom == createDTO.AgeFrom && item.AgeEnd == createDTO.AgeEnd)
+                    foreach (var item in list)
                     {
-                        _response.StatusCode = HttpStatusCode.BadRequest;
-                        _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
-                        return BadRequest(_response);
+                        if (item.AgeFrom == createDTO.AgeFrom && item.AgeEnd == createDTO.AgeEnd)
+                        {
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            _response.IsSuccess = false;
+                            _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
+                            return BadRequest(_response);
+                        }
                     }
                 }
                 var syllabus = _mapper.Map<Syllabus>(createDTO);
@@ -405,20 +415,23 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
                 var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
-                model.SyllabusExercises = syllabusExercises;
-                model.ExerciseTypes = syllabusExercises
-                .GroupBy(se => se.ExerciseTypeId)
-                .Select(group => new ExerciseTypeDTO
+                if (syllabusExercises != null && syllabusExercises.Any())
                 {
-                    Id = group.First().ExerciseType.Id,
-                    ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
-                    Exercises = group.Select(g => new ExerciseDTO
+                    model.SyllabusExercises = syllabusExercises;
+                    model.ExerciseTypes = syllabusExercises
+                    .GroupBy(se => se.ExerciseTypeId)
+                    .Select(group => new ExerciseTypeDTO
                     {
-                        Id = g.Exercise.Id,
-                        ExerciseName = g.Exercise.ExerciseName,
-                        Description = g.Exercise.Description
-                    }).ToList()
-                }).ToList();
+                        Id = group.First().ExerciseType.Id,
+                        ExerciseTypeName = group.First().ExerciseType.ExerciseTypeName,
+                        Exercises = group.Select(g => new ExerciseDTO
+                        {
+                            Id = g.Exercise.Id,
+                            ExerciseName = g.Exercise.ExerciseName,
+                            Description = g.Exercise.Description
+                        }).ToList()
+                    }).ToList();
+                }
 
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.Result = _mapper.Map<SyllabusDTO>(model);
