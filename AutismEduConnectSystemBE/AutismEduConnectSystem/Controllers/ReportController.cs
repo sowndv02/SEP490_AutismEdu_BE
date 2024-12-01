@@ -287,8 +287,7 @@ namespace AutismEduConnectSystem.Controllers
                     filter = u => !string.IsNullOrEmpty(u.ReporterId) && u.ReporterId == userId;
                 }
 
-                if (search != null && !string.IsNullOrEmpty(search))
-                    filter = filter.AndAlso(x => x.Tutor!= null && x.Tutor.User != null && (x.Tutor.User.Email.ToLower().Contains(search.ToLower()) || x.Tutor.User.FullName.Contains(search.ToLower())));
+                
 
                 if (startDate != null)
                     filter.AndAlso(x => x.CreatedDate.Date >= startDate.Value.Date);
@@ -340,6 +339,8 @@ namespace AutismEduConnectSystem.Controllers
                         case "tutor":
                             filter = filter.AndAlso(x => x.ReportType == ReportType.TUTOR);
                             if (reportTutorType != 0) filter = filter.AndAlso(x => (int)x.ReportTutorType == reportTutorType);
+                            if (search != null && !string.IsNullOrEmpty(search))
+                                filter = filter.AndAlso(x => x.Tutor != null && x.Tutor.User != null && (x.Tutor.User.Email.ToLower().Contains(search.ToLower()) || x.Tutor.User.FullName.Contains(search.ToLower())));
                             break;
                         case "account":
                             filter = filter.AndAlso(x => x.ReportType == ReportType.UNLOCKREQUEST);
