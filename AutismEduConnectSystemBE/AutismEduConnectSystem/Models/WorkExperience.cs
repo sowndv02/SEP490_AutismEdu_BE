@@ -17,7 +17,7 @@ namespace AutismEduConnectSystem.Models
         public string CompanyName { get; set; }
         public string Position { get; set; }
         public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
         public Status RequestStatus { get; set; } = Status.PENDING;
         public string? ApprovedId { get; set; }
         public bool IsActive { get; set; } = false;

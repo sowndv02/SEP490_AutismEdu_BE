@@ -42,16 +42,20 @@ namespace AutismEduConnectSystem.Repository
                 if (!query.Any() && filterScore == defaultFilterScore)
                 {
                     query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
-                }
-                for (int i = 4; i >= 1; i--)
-                {
                     if (!query.Any())
                     {
-                        query = storageQuery;
-                        query = await GetTutorsWithReviews(query, i);
+                        for (int i = 4; i >= 1; i--)
+                        {
+                            if (!query.Any())
+                            {
+                                query = storageQuery;
+                                query = await GetTutorsWithReviews(query, i);
+                            }
+                            else break;
+                        }
                     }
-                    else break;
                 }
+                
             }
             int totalCount = query.Count();
             var tutorList = query.ToList();

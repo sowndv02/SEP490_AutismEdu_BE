@@ -9,7 +9,7 @@ namespace AutismEduConnectSystem.Models.DTOs
         public string CompanyName { get; set; }
         public string Position { get; set; }
         public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
         public Status RequestStatus { get; set; }
         public bool IsDeleted { get; set; }
         public string? RejectionReason { get; set; }

@@ -380,26 +380,25 @@ namespace AutismEduConnectSystem.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Unauthorized, _response);
                 }
-                var review = await _reviewRepository.GetAsync(x => x.Id == reviewId && x.ParentId == userId);
+                var review = await _reviewRepository.GetAsync(x => x.Id == reviewId);
 
                 if (review == null)
                 {
-                    _logger.LogWarning("Review not found for reviewId {ReviewId} by user {UserId}", reviewId, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
                     return NotFound(_response);
                 }
                 review.IsHide = true;
-                await _reviewRepository.RemoveAsync(review);
+                await _reviewRepository.UpdateAsync(review);
 
-                _response.StatusCode = HttpStatusCode.OK;
+                _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 _response.Result = SD.REVIEW_DELETE_SUCCESS;
                 return Ok(_response);

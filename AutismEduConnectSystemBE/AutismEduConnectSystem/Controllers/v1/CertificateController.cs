@@ -163,7 +163,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var newModel = _mapper.Map<Certificate>(createDTO);
-
+                if (newModel.ExpirationDate == DateTime.MinValue || string.IsNullOrEmpty(newModel.ExpirationDate?.ToString())) newModel.ExpirationDate = null;
                 newModel.SubmitterId = userId;
                 var certificate = await _certificateRepository.CreateAsync(newModel);
                 if (createDTO.Medias != null && createDTO.Medias.Any()) 

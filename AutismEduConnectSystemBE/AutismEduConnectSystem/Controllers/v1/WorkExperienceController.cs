@@ -245,6 +245,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var newModel = _mapper.Map<WorkExperience>(createDTO);
+                if (newModel.EndDate == DateTime.MinValue || string.IsNullOrEmpty(newModel.EndDate?.ToString())) newModel.EndDate = null;
                 newModel.SubmitterId = userId;
                 newModel.IsActive = false;
                 newModel.VersionNumber = await _workExperienceRepository.GetNextVersionNumberAsync(createDTO.OriginalId);
