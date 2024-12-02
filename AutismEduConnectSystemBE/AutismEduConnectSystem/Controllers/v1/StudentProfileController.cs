@@ -522,7 +522,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet("GetAllChildStudentProfile")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllChildStudentProfile([FromQuery] string? status = SD.STATUS_ALL)
+        public async Task<ActionResult<APIResponse>> GetAllChildStudentProfile([FromQuery] string? status = SD.STATUS_ALL, int pageNumber = 1)
         {
             try
             {
@@ -570,17 +570,26 @@ namespace AutismEduConnectSystem.Controllers.v1
                                 break;
                         }
                     }
-                    var profile = await _studentProfileRepository.GetAsync(filter, true, "Child,Tutor");
-                    if (profile != null)
+                    var profile = await _studentProfileRepository.GetAllNotPagingAsync(filter, "Child,Tutor");
+                    if (profile.list != null)
                     {
-                        profile.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(profile.TutorId), true, "User");
-                        studentProfiles.Add(profile);
+                        foreach(var studentProfile in profile.list)
+                        {
+                            studentProfile.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(studentProfile.TutorId), true, "User");
+                            studentProfiles.Add(studentProfile);
+                        }                     
                     }
                 }
 
-                _response.Result = _mapper.Map<List<ChildStudentProfileDTO>>(studentProfiles);
+                var result = studentProfiles.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
+                var totalCount = studentProfiles.Count();
+
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
+
+                _response.Result = _mapper.Map<List<ChildStudentProfileDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
+                _response.Pagination = pagination;
                 return Ok(_response);
             }
             catch (Exception ex)
