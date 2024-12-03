@@ -474,7 +474,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet("GetAllAssignedSchedule")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAssignedSchedule([FromQuery] int studentProfileId, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAssignedSchedule([FromQuery] int studentProfileId, string? status = SD.STATUS_ALL, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -501,35 +501,33 @@ namespace AutismEduConnectSystem.Controllers.v1
                     filter = u => u.TutorId.Equals(tutorId) && !u.IsHidden && u.ExerciseId != null;
                 }
 
+                if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
+                {
+                    switch (status.ToLower())
+                    {
+                        case "not_yet":
+                            filter = filter.AndAlso(x => x.PassingStatus == SD.PassingStatus.NOT_YET);
+                            break;
+                        case "not_passed":
+                            filter = filter.AndAlso(x => x.PassingStatus == SD.PassingStatus.NOT_PASSED);
+                            break;
+                        case "passed":
+                            filter = filter.AndAlso(x => x.PassingStatus == SD.PassingStatus.PASSED);
+                            break;
+                    }
+                }
+
                 var (count, result) = await _scheduleRepository.GetAllWithIncludeAsync(filter: filter,
                                                                                        includeProperties: "StudentProfile,Exercise,ExerciseType",
                                                                                        pageSize: pageSize,
                                                                                        pageNumber: pageNumber,
                                                                                        orderBy: x => x.ScheduleDate,
-                                                                                       isDesc: isDesc);
-                foreach (Schedule schedule in result)
-                {
-                    schedule.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == schedule.StudentProfileId);
-                    schedule.StudentProfile.Child = await _childInfoRepository.GetAsync(x => x.Id == schedule.StudentProfile.ChildId, true, "Parent");
-                    schedule.Syllabus = await _syllabusRepository.GetAsync(x => x.Id == schedule.SyllabusId);
-                }
-
-                list = result
-                    .OrderBy(x => x.ScheduleDate.Date)
-                    .ThenBy(x => x.Start)
-                    .ToList();
+                                                                                       isDesc: isDesc);                
+                list = result;
                 totalCount = count;
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalCount };
 
-                var model = new ListScheduleDTO();
-                var allTutorSchedule = await _scheduleRepository.GetAllNotPagingAsync(x => !x.IsHidden && studentProfileId != 0 ? (x.StudentProfileId == studentProfileId) : (x.TutorId.Equals(tutorId)));
-                if (allTutorSchedule.list != null && allTutorSchedule.list.Any())
-                {
-                    model.MaxDate = allTutorSchedule.list.Max(x => x.ScheduleDate.Date).Date;
-                    model.Schedules = _mapper.Map<List<ScheduleDTO>>(list);
-                }
-
-                _response.Result = model;
+                _response.Result = _mapper.Map<List<ScheduleDTO>>(list);
                 _response.Pagination = pagination;
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
