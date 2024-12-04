@@ -39,7 +39,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
         [HttpPut("{exerciseTypeId}")]
-        [Authorize(Roles = $"${SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
+        [Authorize(Roles = $"{SD.STAFF_ROLE},{SD.MANAGER_ROLE}")]
         public async Task<ActionResult<APIResponse>> UpdateAsync(int exerciseTypeId, ExerciseTypeUpdateDTO updateDTO)
         {
             try

@@ -35,7 +35,7 @@ namespace AutismEduConnectSystem.Repository
                 query = query.Where(filterAge);
             IQueryable<Tutor> storageQuery = query;
             
-            int defaultFilterScore = 5;
+            int defaultFilterScore = 0;
             if (filterScore != null)
             {
                 query = await GetTutorsWithReviews(query, (int)filterScore);
