@@ -12,7 +12,7 @@ using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
@@ -40,7 +40,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly IMapper _mockMapper;
         private readonly Mock<ILogger<TutorController>> _mockLogger;
         private readonly Mock<IResourceService> _mockResourceService;
-        private readonly Mock<IRabbitMQMessageSender> _mockMessageBus;
+        private readonly Mock<IEmailSender> _mockMessageBus;
         private readonly Mock<IHubContext<NotificationHub>> _mockHubContext;
         private readonly Mock<INotificationRepository> _mockNotificationRepository;
         private readonly TutorController _controller;
@@ -61,7 +61,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _mockMapper = config.CreateMapper();
             _mockLogger = new Mock<ILogger<TutorController>>();
             _mockResourceService = new Mock<IResourceService>();
-            _mockMessageBus = new Mock<IRabbitMQMessageSender>();
+            _mockMessageBus = new Mock<IEmailSender>();
             _mockHubContext = new Mock<IHubContext<NotificationHub>>();
             _mockNotificationRepository = new Mock<INotificationRepository>();
             _mockConfiguration = new Mock<IConfiguration>();

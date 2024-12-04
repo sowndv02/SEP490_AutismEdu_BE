@@ -14,7 +14,7 @@ using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutoMapper;
@@ -35,7 +35,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly Mock<IUserRepository> _mockUserRepository;
         private readonly Mock<IWorkExperienceRepository> _workExperienceRepositoryMock;
         private readonly IMapper _mockMapper;
-        private readonly Mock<IRabbitMQMessageSender> _mockMessageBus;
+        private readonly Mock<IEmailSender> _mockMessageBus;
         private readonly Mock<IResourceService> _resourceServiceMock;
         private readonly Mock<ILogger<WorkExperienceController>> _mockLogger;
         private readonly Mock<IConfiguration> _configurationMock = new Mock<IConfiguration>();
@@ -50,7 +50,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 cfg.AddProfile(new MappingConfig());
             });
             _mockMapper = config.CreateMapper();
-            _mockMessageBus = new Mock<IRabbitMQMessageSender>();
+            _mockMessageBus = new Mock<IEmailSender>();
             _resourceServiceMock = new Mock<IResourceService>();
             _mockLogger = new Mock<ILogger<WorkExperienceController>>();
 
@@ -3776,11 +3776,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeTrue();
 
-            // Verify email was not sent
-            _mockMessageBus.Verify(
-                bus => bus.SendMessage(It.IsAny<EmailLogger>(), It.IsAny<string>()),
-                Times.Never
-            );
         }
 
         [Fact]
@@ -3849,20 +3844,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .ReturnsAsync(workExperience);
 
             // Mock template reading
-
-            // Mock message bus
-            _mockMessageBus
-                .Setup(bus =>
-                    bus.SendMessage(
-                        It.Is<EmailLogger>(e =>
-                            e.Email == tutor.Email
-                            && e.Subject.Contains("đã bị từ chối")
-                            && e.Message.Contains(tutor.FullName)
-                        ),
-                        It.IsAny<string>()
-                    )
-                )
-                .Verifiable();
 
             // Act
             var result = await _controller.UpdateStatusRequest(changeStatusDTO);
@@ -3952,12 +3933,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var apiResponse = okResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeTrue();
-
-            // Verify email was not sent
-            _mockMessageBus.Verify(
-                bus => bus.SendMessage(It.IsAny<EmailLogger>(), It.IsAny<string>()),
-                Times.Never
-            );
         }
 
         [Fact]
@@ -4027,11 +4002,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _workExperienceRepositoryMock
                 .Setup(repo => repo.UpdateAsync(It.IsAny<WorkExperience>()))
                 .ReturnsAsync(workExperience);
-
-            // Mock message bus
-            _mockMessageBus
-                .Setup(bus => bus.SendMessage(It.IsAny<EmailLogger>(), It.IsAny<string>()))
-                .Verifiable();
 
             // Act
             var result = await _controller.UpdateStatusRequest(changeStatusDTO);

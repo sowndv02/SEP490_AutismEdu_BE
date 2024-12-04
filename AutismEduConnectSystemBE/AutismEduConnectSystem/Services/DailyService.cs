@@ -1,6 +1,6 @@
 ﻿using AutismEduConnectSystem.Data;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 
 namespace AutismEduConnectSystem.Services
@@ -77,7 +77,7 @@ namespace AutismEduConnectSystem.Services
             {
                 using var scope = _serviceProvider.CreateScope();
                 var tutorRequestRepository = scope.ServiceProvider.GetRequiredService<ITutorRequestRepository>();
-                var messageBus = scope.ServiceProvider.GetRequiredService<IRabbitMQMessageSender>();
+                var messageBus = scope.ServiceProvider.GetRequiredService<IEmailSender>();
 
                 var (total, list) = await tutorRequestRepository.GetAllNotPagingAsync(
                     t => t.CreatedDate.AddDays(2) >= DateTime.Now && t.RequestStatus == SD.Status.PENDING, "Parent", null, x => x.CreatedDate, true
@@ -100,12 +100,13 @@ namespace AutismEduConnectSystem.Services
 
                     try
                     {
-                        messageBus.SendMessage(new EmailLogger
-                        {
-                            Email = item.Parent?.Email,
-                            Subject = subject,
-                            Message = htmlMessage
-                        }, _queueName);
+                        //messageBus.SendMessage(new EmailLogger
+                        //{
+                        //    Email = item.Parent?.Email,
+                        //    Subject = subject,
+                        //    Message = htmlMessage
+                        //}, _queueName);
+                        await messageBus.SendEmailAsync(item.Parent?.Email, subject, htmlMessage);
 
                         _logger.LogInformation($"{total} tutor requests were automatically rejected due to expiration as of {DateTime.Now:dd/MM/yyyy HH:mm}. Requests rejected include IDs: {string.Join(", ", list.Select(x => x.Id))}");
                     }
@@ -132,7 +133,7 @@ namespace AutismEduConnectSystem.Services
                 using var scope = _serviceProvider.CreateScope();
                 var paymentHistoryRepository = scope.ServiceProvider.GetRequiredService<IPaymentHistoryRepository>();
                 var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-                var messageBus = scope.ServiceProvider.GetRequiredService<IRabbitMQMessageSender>();
+                var messageBus = scope.ServiceProvider.GetRequiredService<IEmailSender>();
 
                 var (total, list) = await paymentHistoryRepository.GetAllNotPagingAsync(
                     x => x.ExpirationDate <= DateTime.Now.AddDays(7) && x.ExpirationDate > DateTime.Now
@@ -154,13 +155,13 @@ namespace AutismEduConnectSystem.Services
 
                         try
                         {
-                            messageBus.SendMessage(new EmailLogger
-                            {
-                                Email = user.Email,
-                                Subject = subject,
-                                Message = htmlMessage
-                            }, _queueName);
-
+                            //messageBus.SendMessage(new EmailLogger
+                            //{
+                            //    Email = user.Email,
+                            //    Subject = subject,
+                            //    Message = htmlMessage
+                            //}, _queueName);
+                            await messageBus.SendEmailAsync(user.Email, subject, htmlMessage);
                             _logger.LogInformation($"Payment reminder sent to user {user.Email} for payment expiring on {paymentHistory.ExpirationDate}");
                         }
                         catch (Exception ex)

@@ -1363,7 +1363,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Mock fetching the duplicate time slot
             _scheduleTimeSlotRepositoryMock
                 .Setup(repo =>
-                    repo.GetAsync(It.IsAny<Expression<Func<ScheduleTimeSlot, bool>>>(), true, It.IsAny<string>(), It.IsAny<string>()))
+                    repo.GetAsync(It.IsAny<Expression<Func<ScheduleTimeSlot, bool>>>(), false, It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(duplicateTimeSlot);
 
             _resourceServiceMock

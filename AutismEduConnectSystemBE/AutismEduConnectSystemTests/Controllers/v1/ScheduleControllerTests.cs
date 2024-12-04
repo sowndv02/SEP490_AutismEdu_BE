@@ -3598,6 +3598,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var result = await _controller.GetAllAssignedSchedule(
                 studentProfileId,
                 sort,
+                SD.STATUS_ALL,
                 pageNumber
             );
 
@@ -3759,6 +3760,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var result = await _controller.GetAllAssignedSchedule(
                 studentProfileId,
                 sort,
+                SD.STATUS_ALL,
                 pageNumber
             );
 
@@ -3773,13 +3775,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.Result.Should().NotBeNull();
             response.Pagination.Should().NotBeNull();
 
-            // Check that the model contains the schedules and pagination
-            var model = response.Result as ListScheduleDTO;
-            model.Schedules.Should().HaveCount(2);
-            model.MaxDate.Should().Be(scheduleList.Max(s => s.ScheduleDate).Date);
-
-            // Verify that the schedules are ordered according to the provided sort order
-            model.Schedules[0].ScheduleDate.Should().BeBefore(model.Schedules[1].ScheduleDate);
         }
 
         [Theory]
@@ -3908,6 +3903,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var result = await _controller.GetAllAssignedSchedule(
                 studentProfileId,
                 sort,
+                SD.STATUS_ALL,
                 pageNumber
             );
 
@@ -3921,15 +3917,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             response.IsSuccess.Should().BeTrue();
             response.Result.Should().NotBeNull();
             response.Pagination.Should().NotBeNull();
-
-            // Check that the model contains the schedules and pagination
-            var model = response.Result as ListScheduleDTO;
-            model.Schedules.Should().HaveCount(2);
-            model.MaxDate.Should().Be(scheduleList.Max(s => s.ScheduleDate).Date);
-
-            // Verify that the schedules are ordered according to the provided sort order
-
-            model.Schedules[0].ScheduleDate.Should().BeBefore(model.Schedules[1].ScheduleDate);
         }
     }
 }

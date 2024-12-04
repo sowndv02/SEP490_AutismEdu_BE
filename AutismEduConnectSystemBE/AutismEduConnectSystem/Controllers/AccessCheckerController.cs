@@ -1,6 +1,6 @@
 ﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.SignalR;
@@ -19,12 +19,12 @@ namespace AutismEduConnectSystem.Controllers
     {
         protected APIResponse _response;
         private readonly ILogger<AccessCheckerController> _logger;
-        private IRabbitMQMessageSender _messageBus;
+        private IEmailSender _messageBus;
         private IConfiguration _configuration;
         private INotificationRepository _notificationRepository;
         private readonly IHubContext<NotificationHub> _hubContext;
         private IUserRepository _userRepository;
-        public AccessCheckerController(ILogger<AccessCheckerController> logger, IRabbitMQMessageSender messageBus, 
+        public AccessCheckerController(ILogger<AccessCheckerController> logger, IEmailSender messageBus, 
             IConfiguration configuration, IHubContext<NotificationHub> hubContext, IUserRepository userRepository, 
             INotificationRepository notificationRepository)
         {
@@ -84,22 +84,22 @@ namespace AutismEduConnectSystem.Controllers
         }
 
 
-        [HttpGet("SendMailRabbitMQ")]
-        [AllowAnonymous]
-        public object SendMailRabbitMQ()
-        {
-            try
-            {
-                _messageBus.SendMessage(new EmailLogger() { Email = "daoson03112002@gmail.com", Message = "Hello vietnam", Subject= "Test RabbitMQ"}, _configuration.GetValue<string>("RabbitMQSettings:QueueName"));
-                _response.Result = true;
-            }
-            catch (Exception ex)
-            {
-                _response.ErrorMessages = new List<string>() { ex.Message };
-                _response.IsSuccess = false;
-            }
-            return _response;
-        }
+        //[HttpGet("SendMailRabbitMQ")]
+        //[AllowAnonymous]
+        //public object SendMailRabbitMQ()
+        //{
+        //    try
+        //    {
+        //        _messageBus.SendMessage(new EmailLogger() { Email = "daoson03112002@gmail.com", Message = "Hello vietnam", Subject= "Test RabbitMQ"}, _configuration.GetValue<string>("RabbitMQSettings:QueueName"));
+        //        _response.Result = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _response.ErrorMessages = new List<string>() { ex.Message };
+        //        _response.IsSuccess = false;
+        //    }
+        //    return _response;
+        //}
 
         //Anyone can access this
         [HttpGet("all-access")]

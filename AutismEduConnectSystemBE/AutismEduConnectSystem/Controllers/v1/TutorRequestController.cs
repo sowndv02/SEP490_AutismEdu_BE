@@ -2,7 +2,7 @@
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
@@ -16,6 +16,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 using static AutismEduConnectSystem.SD;
+using Azure.Core;
 
 namespace AutismEduConnectSystem.Controllers.v1
 {
@@ -30,7 +31,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly IMapper _mapper;
         private string queueName = string.Empty;
         private readonly ILogger<TutorRequestController> _logger;
-        private readonly IRabbitMQMessageSender _messageBus;
+        private readonly IEmailSender _messageBus;
         protected APIResponse _response;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
@@ -39,7 +40,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         public TutorRequestController(IUserRepository userRepository, ITutorRequestRepository tutorRequestRepository,
             IMapper mapper, IConfiguration configuration,
-            IRabbitMQMessageSender messageBus, IResourceService resourceService, ILogger<TutorRequestController> logger,
+            IEmailSender messageBus, IResourceService resourceService, ILogger<TutorRequestController> logger,
             INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext, IChildInformationRepository childInformationRepository)
         {
             _messageBus = messageBus;
@@ -377,13 +378,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.TutorEmail", tutor.Email)
                         .Replace("@Model.TutorPhoneNumber", tutor.PhoneNumber)
                         .Replace("@Model.RequestDescription", model.Description);
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        UserId = parent.Id,
-                        Email = parent.Email,
-                        Subject = subjectForParent,
-                        Message = parentHtmlMessage
-                    }, queueName);
+                    //_messageBus.SendMessage(new EmailLogger()
+                    //{
+                    //    UserId = parent.Id,
+                    //    Email = parent.Email,
+                    //    Subject = subjectForParent,
+                    //    Message = parentHtmlMessage
+                    //}, queueName);
+                    await _messageBus.SendEmailAsync(parent.Email, subjectForParent, parentHtmlMessage);
                 }
 
 
@@ -397,8 +399,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.TutorFullName", tutor.FullName)
                         .Replace("@Model.ParentFullName", parent.FullName)
                         .Replace("@Model.RequestDescription", model.Description);
-                    _messageBus.SendMessage(
-                        new EmailLogger() { UserId = tutor.Id, Email = tutor.Email, Subject = subjectForTutor, Message = tutorHtmlMessage }, queueName);
+                    //_messageBus.SendMessage( new EmailLogger() 
+                    //{ 
+                    //    UserId = tutor.Id, 
+                    //    Email = tutor.Email, 
+                    //    Subject = subjectForTutor, 
+                    //    Message = tutorHtmlMessage 
+                    //}, queueName);
+                    await _messageBus.SendEmailAsync(tutor.Email, subjectForTutor, tutorHtmlMessage);
                     // Notification
                     var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
                     var notfication = new Notification()
@@ -496,13 +504,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.IsApprovedString", "Chấp nhận")
                             .Replace("@Model.RejectionReason", rejectionReasonHtml);
 
-                        _messageBus.SendMessage(new EmailLogger()
-                        {
-                            UserId = model.ParentId,
-                            Email = model.Parent.Email,
-                            Subject = subject,
-                            Message = htmlMessage
-                        }, queueName);
+                        //_messageBus.SendMessage(new EmailLogger()
+                        //{
+                        //    UserId = model.ParentId,
+                        //    Email = model.Parent.Email,
+                        //    Subject = subject,
+                        //    Message = htmlMessage
+                        //}, queueName);
+                        await _messageBus.SendEmailAsync(model.Parent.Email, subject, htmlMessage);
                         var connectionId = NotificationHub.GetConnectionIdByUserId(model.ParentId);
                         var notfication = new Notification()
                         {
@@ -560,13 +569,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
                             .Replace("@Model.IsApprovedString", "Từ chối")
                             .Replace("@Model.RejectionReason", rejectionReasonHtml);
-                        _messageBus.SendMessage(new EmailLogger()
-                        {
-                            UserId = model.ParentId,
-                            Email = model.Parent.Email,
-                            Subject = subject,
-                            Message = htmlMessage
-                        }, queueName);
+                        //_messageBus.SendMessage(new EmailLogger()
+                        //{
+                        //    UserId = model.ParentId,
+                        //    Email = model.Parent.Email,
+                        //    Subject = subject,
+                        //    Message = htmlMessage
+                        //}, queueName);
+                        await _messageBus.SendEmailAsync(model.Parent.Email, subject, htmlMessage);
                         var connectionId = NotificationHub.GetConnectionIdByUserId(model.ParentId);
                         var notfication = new Notification()
                         {

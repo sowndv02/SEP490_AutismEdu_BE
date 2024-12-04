@@ -13,7 +13,7 @@ using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
@@ -35,7 +35,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
     {
         private readonly Mock<IUserRepository> _mockUserRepository;
         private readonly Mock<ITutorRepository> _mockTutorRepository;
-        private readonly Mock<IRabbitMQMessageSender> _mockMessageBus;
+        private readonly Mock<IEmailSender> _mockMessageBus;
         private readonly Mock<ITutorRegistrationRequestRepository> _mockTutorRegistrationRequestRepository;
         private readonly Mock<ICurriculumRepository> _mockCurriculumRepository;
         private readonly Mock<IWorkExperienceRepository> _mockWorkExperienceRepository;
@@ -55,7 +55,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Initialize mocks
             _mockUserRepository = new Mock<IUserRepository>();
             _mockTutorRepository = new Mock<ITutorRepository>();
-            _mockMessageBus = new Mock<IRabbitMQMessageSender>();
+            _mockMessageBus = new Mock<IEmailSender>();
             _mockTutorRegistrationRequestRepository =
                 new Mock<ITutorRegistrationRequestRepository>();
             _mockCurriculumRepository = new Mock<ICurriculumRepository>();
@@ -551,7 +551,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock the resource service for bad request message related to age
             _mockResourceService
-                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.AGE))
+                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST))
                 .Returns("The start age cannot be greater than the end age.");
 
             // Act

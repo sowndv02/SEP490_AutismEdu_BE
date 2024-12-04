@@ -5,7 +5,7 @@ using System.Text;
 
 namespace AutismEduConnectSystem.RabbitMQSender
 {
-    public class RabbitMQMessageSender: IRabbitMQMessageSender
+    public class RabbitMQMessageSender: IEmailSender
     {
         private readonly string _hostName;
         private readonly string _userName;

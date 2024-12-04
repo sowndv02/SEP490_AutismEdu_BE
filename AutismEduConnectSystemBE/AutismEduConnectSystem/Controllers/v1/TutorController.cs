@@ -2,7 +2,7 @@
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
@@ -33,7 +33,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         protected APIResponse _response;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
-        private readonly IRabbitMQMessageSender _messageBus;
+        private readonly IEmailSender _messageBus;
         private string queueName = string.Empty;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly INotificationRepository _notificationRepository;
@@ -43,7 +43,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             FormatString formatString, ITutorProfileUpdateRequestRepository tutorProfileUpdateRequestRepository,
             ITutorRequestRepository tutorRequestRepository, IResourceService resourceService, ILogger<TutorController> logger,
             IHubContext<NotificationHub> hubContext, INotificationRepository notificationRepository,
-            IRabbitMQMessageSender messageBus)
+            IEmailSender messageBus)
         {
             _messageBus = messageBus;
             _notificationRepository = notificationRepository;
@@ -468,13 +468,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.IsApprovedString", "Chấp nhận")
                         .Replace("@Model.RejectionReason", rejectionReasonHtml);
 
-                        _messageBus.SendMessage(new EmailLogger()
-                        {
-                            UserId = tutor.Id,
-                            Email = tutor.Email,
-                            Subject = subject,
-                            Message = htmlMessage
-                        }, queueName);
+                        //_messageBus.SendMessage(new EmailLogger()
+                        //{
+                        //    UserId = tutor.Id,
+                        //    Email = tutor.Email,
+                        //    Subject = subject,
+                        //    Message = htmlMessage
+                        //}, queueName);
+                        await _messageBus.SendEmailAsync(tutor.Email, subject, htmlMessage);
                     }
                     var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
                     var notfication = new Notification()
@@ -518,13 +519,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.IssueName", $"Yêu cầu cập nhật thông tin của bạn")
                             .Replace("@Model.IsApprovedString", "Từ chối")
                             .Replace("@Model.RejectionReason", rejectionReasonHtml);
-                        _messageBus.SendMessage(new EmailLogger()
-                        {
-                            UserId = tutor.Id,
-                            Email = tutor.Email,
-                            Subject = subject,
-                            Message = htmlMessage
-                        }, queueName);
+                        //_messageBus.SendMessage(new EmailLogger()
+                        //{
+                        //    UserId = tutor.Id,
+                        //    Email = tutor.Email,
+                        //    Subject = subject,
+                        //    Message = htmlMessage
+                        //}, queueName);
+                        await _messageBus.SendEmailAsync(tutor.Email, subject, htmlMessage);
                     }
                     var connectionId = NotificationHub.GetConnectionIdByUserId(tutor.Id);
                     var notfication = new Notification()

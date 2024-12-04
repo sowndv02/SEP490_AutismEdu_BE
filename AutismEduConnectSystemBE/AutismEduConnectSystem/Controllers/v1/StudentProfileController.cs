@@ -2,7 +2,7 @@
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
@@ -31,7 +31,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly IChildInformationRepository _childInfoRepository;
         private readonly ITutorRequestRepository _tutorRequestRepository;
         private readonly ITutorRepository _tutorRepository;
-        private readonly IRabbitMQMessageSender _messageBus;
+        private readonly IEmailSender _messageBus;
         private string queueName = string.Empty;
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
@@ -49,7 +49,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         public StudentProfileController(IStudentProfileRepository studentProfileRepository, IAssessmentQuestionRepository assessmentQuestionRepository,
             IScheduleTimeSlotRepository scheduleTimeSlotRepository, IInitialAssessmentResultRepository initialAssessmentResultRepository
             , IChildInformationRepository childInfoRepository, ITutorRequestRepository tutorRequestRepository,
-            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IRabbitMQMessageSender messageBus,
+            IMapper mapper, IConfiguration configuration, ITutorRepository tutorRepository, IEmailSender messageBus,
             IUserRepository userRepository, IRoleRepository roleRepository, IBlobStorageRepository blobStorageRepository
             , IScheduleRepository scheduleRepository, IResourceService resourceService, ILogger<StudentProfileController> logger,
             INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
@@ -246,13 +246,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.Password", passsword)
                         .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
 
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        UserId = parent.Id,
-                        Email = parent.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                    //_messageBus.SendMessage(new EmailLogger()
+                    //{
+                    //    UserId = parent.Id,
+                    //    Email = parent.Email,
+                    //    Subject = subject,
+                    //    Message = htmlMessage
+                    //}, queueName);
+                    await _messageBus.SendEmailAsync(parent.Email, subject, htmlMessage);
 
                     // Tao child
                     using var mediaStream = createDTO.Media.OpenReadStream();
@@ -354,13 +355,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.Email", child.Parent.Email)
                         .Replace("@Model.Url", string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, model.Id))
                         .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        UserId = child.ParentId,
-                        Email = child.Parent.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                    //_messageBus.SendMessage(new EmailLogger()
+                    //{
+                    //    UserId = child.ParentId,
+                    //    Email = child.Parent.Email,
+                    //    Subject = subject,
+                    //    Message = htmlMessage
+                    //}, queueName);
+                    await _messageBus.SendEmailAsync(child.Parent.Email, subject, htmlMessage);
                 }
 
                 if (createDTO.TutorRequestId > 0)

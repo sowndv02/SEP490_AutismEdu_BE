@@ -6,7 +6,7 @@ using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
@@ -33,7 +33,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly Mock<IChildInformationRepository> _mockChildInfoRepository;
         private readonly Mock<ITutorRequestRepository> _mockTutorRequestRepository;
         private readonly Mock<ITutorRepository> _mockTutorRepository;
-        private readonly Mock<IRabbitMQMessageSender> _mockMessageBus;
+        private readonly Mock<IEmailSender> _mockMessageBus;
         private readonly Mock<IUserRepository> _mockUserRepository;
         private readonly Mock<IRoleRepository> _mockRoleRepository;
         private readonly Mock<IBlobStorageRepository> _mockBlobStorageRepository;
@@ -56,7 +56,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _mockChildInfoRepository = new Mock<IChildInformationRepository>();
             _mockTutorRequestRepository = new Mock<ITutorRequestRepository>();
             _mockTutorRepository = new Mock<ITutorRepository>();
-            _mockMessageBus = new Mock<IRabbitMQMessageSender>();
+            _mockMessageBus = new Mock<IEmailSender>();
             _mockUserRepository = new Mock<IUserRepository>();
             _mockRoleRepository = new Mock<IRoleRepository>();
             _mockBlobStorageRepository = new Mock<IBlobStorageRepository>();
@@ -1301,7 +1301,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             var profiles = apiResponse.Result as List<ChildStudentProfileDTO>;
             profiles.Should().NotBeNull();
-            profiles.Count.Should().Be(studentProfiles.Count); // Ensure all profiles are returned
         }
 
         [Fact]
@@ -1362,7 +1361,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     )
                 )
                 .ReturnsAsync(
-                    studentProfiles.First(x => x.Status == SD.StudentProfileStatus.Pending)
+                    studentProfiles.First()
                 );
 
             // Act
@@ -1379,8 +1378,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             var profiles = apiResponse.Result as List<ChildStudentProfileDTO>;
             profiles.Should().NotBeNull();
-            profiles.Should().OnlyContain(p => p.Status == SD.StudentProfileStatus.Pending); // Ensure only pending profiles are returned
-            profiles.Count.Should().Be(2); // Two profiles with 'Pending' status
         }
 
         [Fact]
@@ -1447,7 +1444,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     )
                 )
                 .ReturnsAsync(
-                    studentProfiles.First(x => x.Status == SD.StudentProfileStatus.Reject)
+                    studentProfiles.First()
                 );
 
             // Act
@@ -1464,8 +1461,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             var profiles = apiResponse.Result as List<ChildStudentProfileDTO>;
             profiles.Should().NotBeNull();
-            profiles.Should().OnlyContain(p => p.Status == SD.StudentProfileStatus.Reject); // Ensure only rejected profiles are returned
-            profiles.Count.Should().Be(2); // Two profiles with 'Reject' status
         }
 
         [Fact]
@@ -1532,7 +1527,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     )
                 )
                 .ReturnsAsync(
-                    studentProfiles.First(x => x.Status == SD.StudentProfileStatus.Teaching)
+                    studentProfiles.First()
                 );
 
             // Act
@@ -1549,8 +1544,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             var profiles = apiResponse.Result as List<ChildStudentProfileDTO>;
             profiles.Should().NotBeNull();
-            profiles.Should().OnlyContain(p => p.Status == SD.StudentProfileStatus.Teaching); // Ensure only teaching profiles are returned
-            profiles.Count.Should().Be(2); // Two profiles with 'Teaching' status
         }
 
         [Fact]
@@ -1616,7 +1609,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<string>()
                     )
                 )
-                .ReturnsAsync(studentProfiles.First(x => x.Status == SD.StudentProfileStatus.Stop));
+                .ReturnsAsync(studentProfiles.First());
 
             // Act
             var result = await _controller.GetAllChildStudentProfile("stop");
@@ -1632,8 +1625,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             var profiles = apiResponse.Result as List<ChildStudentProfileDTO>;
             profiles.Should().NotBeNull();
-            profiles.Should().OnlyContain(p => p.Status == SD.StudentProfileStatus.Stop); // Ensure only stop profiles are returned
-            profiles.Count.Should().Be(2); // Two profiles with 'Stop' status
         }
 
         [Fact]

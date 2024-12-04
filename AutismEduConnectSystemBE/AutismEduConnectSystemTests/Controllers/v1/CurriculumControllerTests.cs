@@ -6,7 +6,7 @@ using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
@@ -34,8 +34,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly Mock<ITutorRepository> _tutorRepositoryMock = new Mock<ITutorRepository>();
         private readonly Mock<ICurriculumRepository> _curriculumRepositoryMock =
             new Mock<ICurriculumRepository>();
-        private readonly Mock<IRabbitMQMessageSender> _messageBusMock =
-            new Mock<IRabbitMQMessageSender>();
+        private readonly Mock<IEmailSender> _messageBusMock =
+            new Mock<IEmailSender>();
         private readonly Mock<IResourceService> _resourceServiceMock = new Mock<IResourceService>();
         private readonly Mock<ILogger<CurriculumController>> _loggerMock =
             new Mock<ILogger<CurriculumController>>();

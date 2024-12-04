@@ -7,7 +7,7 @@ using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Messaging;
 using AutismEduConnectSystem.Middlewares;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services;
@@ -24,6 +24,7 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -116,9 +117,9 @@ builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddSignalR();
 // Config Message Queue
 var rabbitMQSettings = builder.Configuration.GetSection("RabbitMQSettings");
-builder.Services.AddHostedService<RabbitMQConsumer>();
-builder.Services.AddScoped<IRabbitMQMessageSender, RabbitMQMessageSender>();
-
+//builder.Services.AddHostedService<RabbitMQConsumer>();
+//builder.Services.AddScoped<IRabbitMQMessageSender, RabbitMQMessageSender>();
+builder.Services.AddTransient<IEmailSender, SendMailService>();
 //builder.Services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
 
 

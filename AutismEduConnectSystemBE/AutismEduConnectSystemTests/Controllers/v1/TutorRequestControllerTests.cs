@@ -12,7 +12,7 @@ using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
@@ -38,7 +38,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly Mock<IChildInformationRepository> _mockChildInformationRepository;
         private readonly IMapper _mockMapper;
         private readonly Mock<IConfiguration> _mockConfiguration;
-        private readonly Mock<IRabbitMQMessageSender> _mockMessageBus;
+        private readonly Mock<IEmailSender> _mockMessageBus;
         private readonly Mock<IResourceService> _mockResourceService;
         private readonly Mock<ILogger<TutorRequestController>> _mockLogger;
         private readonly Mock<INotificationRepository> _mockNotificationRepository;
@@ -56,7 +56,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             });
             _mockMapper = config.CreateMapper();
             _mockConfiguration = new Mock<IConfiguration>();
-            _mockMessageBus = new Mock<IRabbitMQMessageSender>();
+            _mockMessageBus = new Mock<IEmailSender>();
             _mockResourceService = new Mock<IResourceService>();
             _mockLogger = new Mock<ILogger<TutorRequestController>>();
             _mockNotificationRepository = new Mock<INotificationRepository>();
@@ -4155,12 +4155,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var response = okResult.Value.Should().BeOfType<APIResponse>().Subject;
             response.IsSuccess.Should().BeTrue();
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            // Verify that no email was sent
-            _mockMessageBus.Verify(
-                mb => mb.SendMessage(It.IsAny<EmailLogger>(), It.IsAny<string>()),
-                Times.Never
-            );
 
             // Verify the repository was updated
             _mockTutorRequestRepository.Verify(

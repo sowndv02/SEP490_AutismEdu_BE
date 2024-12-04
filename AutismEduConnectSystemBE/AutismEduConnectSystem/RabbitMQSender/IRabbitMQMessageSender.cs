@@ -2,7 +2,7 @@
 
 namespace AutismEduConnectSystem.RabbitMQSender
 {
-    public interface IRabbitMQMessageSender
+    public interface IEmailSender
     {
         void SendMessage(EmailLogger message, string queueName);
     }

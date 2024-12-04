@@ -1,6 +1,6 @@
 ﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
+using Azure.Core;
 
 namespace AutismEduConnectSystem.Controllers
 {
@@ -25,7 +26,7 @@ namespace AutismEduConnectSystem.Controllers
         private readonly IMapper _mapper;
         private string audience = string.Empty;
         private readonly FormatString _formatString;
-        private readonly IRabbitMQMessageSender _messageBus;
+        private readonly IEmailSender _messageBus;
         private static int validateTime = 0;
         private static string clientId = string.Empty;
         private static string queueName = string.Empty;
@@ -34,7 +35,7 @@ namespace AutismEduConnectSystem.Controllers
         private readonly IResourceService _resourceService;
 
         public AuthController(IUserRepository userRepository, IMapper mapper,
-            IConfiguration configuration, IRabbitMQMessageSender messageBus, DateTimeEncryption dateTimeEncryption,
+            IConfiguration configuration, IEmailSender messageBus, DateTimeEncryption dateTimeEncryption,
             TokenEcryption tokenEncryption, FormatString formatString, ILogger<AuthController> logger,
             IResourceService resourceService)
         {
@@ -79,7 +80,14 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
-                _messageBus.SendMessage(new EmailLogger() { UserId = user.Id, Email = user.Email, Subject = "Xác nhận Email", Message = $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>" }, queueName);
+                //_messageBus.SendMessage(new EmailLogger() 
+                //{ 
+                //    UserId = user.Id, 
+                //    Email = user.Email, 
+                //    Subject = "Xác nhận Email", 
+                //    Message = $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>" 
+                //}, queueName);
+                await _messageBus.SendEmailAsync(user.Email, "Xác nhận Email", $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>");
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);
@@ -251,13 +259,15 @@ namespace AutismEduConnectSystem.Controllers
 
                 var callbackUrl = $"{SD.URL_FE_FULL}/reset-password?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
 
-                _messageBus.SendMessage(new EmailLogger()
-                {
-                    UserId = user.Id,
-                    Email = forgotPasswordDTO.Email,
-                    Subject = "Đặt lại mật khẩu",
-                    Message = $"Thời gian hết hạn 5 phút. \nĐể đặt lại mật khẩu vui lòng click vào đường dẫn này: <a href='{callbackUrl}'>link</a>"
-                }, queueName);
+                //_messageBus.SendMessage(new EmailLogger()
+                //{
+                //    UserId = user.Id,
+                //    Email = forgotPasswordDTO.Email,
+                //    Subject = "Đặt lại mật khẩu",
+                //    Message = $"Thời gian hết hạn 5 phút. \nĐể đặt lại mật khẩu vui lòng click vào đường dẫn này: <a href='{callbackUrl}'>link</a>"
+                //}, queueName);
+
+                await _messageBus.SendEmailAsync(forgotPasswordDTO.Email, "Đặt lại mật khẩu", $"Thời gian hết hạn 5 phút. \nĐể đặt lại mật khẩu vui lòng click vào đường dẫn này: <a href='{callbackUrl}'>link</a>");
 
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -367,14 +377,14 @@ namespace AutismEduConnectSystem.Controllers
 
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
-                _messageBus.SendMessage(new EmailLogger()
-                {
-                    UserId = user.Id,
-                    Email = user.Email,
-                    Subject = "Xác nhận email",
-                    Message = $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>"
-                }, queueName);
-
+                //_messageBus.SendMessage(new EmailLogger()
+                //{
+                //    UserId = user.Id,
+                //    Email = user.Email,
+                //    Subject = "Xác nhận email",
+                //    Message = $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>"
+                //}, queueName);
+                await _messageBus.SendEmailAsync(user.Email, "Xác nhận email", $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>");
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);

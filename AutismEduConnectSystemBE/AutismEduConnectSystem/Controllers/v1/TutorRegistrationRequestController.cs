@@ -2,7 +2,7 @@
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
@@ -23,7 +23,7 @@ namespace AutismEduConnectSystem.Controllers.v1
     {
         private readonly IUserRepository _userRepository;
         private readonly ITutorRepository _tutorRepository;
-        private readonly IRabbitMQMessageSender _messageBus;
+        private readonly IEmailSender _messageBus;
         private readonly ITutorRegistrationRequestRepository _tutorRegistrationRequestRepository;
         private readonly ICurriculumRepository _curriculumRepository;
         private readonly IWorkExperienceRepository _workExperienceRepository;
@@ -45,7 +45,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             FormatString formatString, IWorkExperienceRepository workExperienceRepository,
             ICertificateRepository certificateRepository, ICertificateMediaRepository certificateMediaRepository,
             ITutorRegistrationRequestRepository tutorRegistrationRequestRepository, ICurriculumRepository curriculumRepository,
-            IRabbitMQMessageSender messageBus, IResourceService resourceService)
+            IEmailSender messageBus, IResourceService resourceService)
         {
             _messageBus = messageBus;
             _curriculumRepository = curriculumRepository;
@@ -129,7 +129,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<ActionResult<APIResponse>> CreateTutorRegistrationRequestAsync([FromForm] TutorRegistrationRequestCreateDTO tutorRegistrationRequestCreateDTO)
+        public async Task<ActionResult<APIResponse>> CreateAsync([FromForm] TutorRegistrationRequestCreateDTO tutorRegistrationRequestCreateDTO)
         {
             try
             {
@@ -204,17 +204,21 @@ namespace AutismEduConnectSystem.Controllers.v1
                 // TODO: Send email
                 var subject = "Xác nhận Đăng ký Gia sư Dạy Trẻ Tự Kỷ - Đang Chờ Duyệt";
                 var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TutorRegistrationRequestTemplate.cshtml");
-                var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                var htmlMessage = templateContent
-                    .Replace("@Model.FullName", model.FullName)
-                    .Replace("@Model.Email", model.Email)
-                    .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
-                _messageBus.SendMessage(new EmailLogger()
+                if (System.IO.File.Exists(templatePath))
                 {
-                    Email = model.Email,
-                    Subject = subject,
-                    Message = htmlMessage
-                }, queueName);
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", model.FullName)
+                        .Replace("@Model.Email", model.Email)
+                        .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
+                    //_messageBus.SendMessage(new EmailLogger()
+                    //{
+                    //    Email = model.Email,
+                    //    Subject = subject,
+                    //    Message = htmlMessage
+                    //}, queueName);
+                    await _messageBus.SendEmailAsync(model.Email, subject, htmlMessage);
+                }
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
@@ -477,22 +481,25 @@ namespace AutismEduConnectSystem.Controllers.v1
                     var subject = "Thông báo Chấp nhận Đơn Đăng ký Gia sư Dạy Trẻ Tự Kỷ";
 
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AcceptedTutorRegistrationRequest.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-
-                    var htmlMessage = templateContent
+                    if (System.IO.File.Exists(templatePath))
+                    {
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.FullName)
                         .Replace("@Model.Username", model.Email)
                         .Replace("@Model.Password", passsword)
                         .Replace("@Model.LoginUrl", SD.URL_FE_TUTOR_LOGIN);
 
 
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        UserId = user.Id,
-                        Email = model.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                        //_messageBus.SendMessage(new EmailLogger()
+                        //{
+                        //    UserId = user.Id,
+                        //    Email = model.Email,
+                        //    Subject = subject,
+                        //    Message = htmlMessage
+                        //}, queueName);
+                        await _messageBus.SendEmailAsync(model.Email, subject, htmlMessage);
+                    }
 
                     _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -552,17 +559,22 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                     var subject = "Thông báo Từ chối Đơn Đăng ký Gia sư và Hướng dẫn Tạo Đơn Mới";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "RejectTutorRegistrationRequest.cshtml");
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
+                    if (System.IO.File.Exists(templatePath))
+                    {
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.FullName)
                         .Replace("@Model.RejectionReason", model.RejectionReason ?? "Không có lý do cụ thể.");
 
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        Email = model.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                        //_messageBus.SendMessage(new EmailLogger()
+                        //{
+                        //    Email = model.Email,
+                        //    Subject = subject,
+                        //    Message = htmlMessage
+                        //}, queueName);
+                        await _messageBus.SendEmailAsync(model.Email, subject, htmlMessage);
+                    }
+                        
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.Result = _mapper.Map<TutorRegistrationRequestDTO>(model);
                     _response.IsSuccess = true;
