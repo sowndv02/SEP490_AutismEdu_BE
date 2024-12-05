@@ -51,7 +51,13 @@ builder.Services.AddCors(options =>
         });
 });
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
-
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5000, listenOptions =>
+    {
+        listenOptions.UseHttps();  // Enable HTTPS on port 5001
+    });
+});
 builder.Services.AddResponseCaching(options =>
 {
     options.MaximumBodySize = 1024;
