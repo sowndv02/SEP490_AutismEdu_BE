@@ -106,8 +106,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 new Claim(
                     ClaimTypes.Role,
                     "InvalidRole"
-                ) // User does not have STAFF_ROLE or MANAGER_ROLE
-                ,
+                ),
             };
             var identity = new ClaimsIdentity(claims);
             var principal = new ClaimsPrincipal(identity);
@@ -117,7 +116,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             };
             _mockResourceService
                 .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
-                .Returns("Forbiden access.");
+                .Returns("Người dùng không có quyền truy cập vầo tài nguyên.");
             // Act
             var result = await _controller.GetByIdAsync(1);
             var forbiddenResult = result.Result as ObjectResult;
@@ -129,7 +128,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var apiResponse = forbiddenResult.Value as APIResponse;
             apiResponse.Should().NotBeNull();
             apiResponse.IsSuccess.Should().BeFalse();
-            apiResponse.ErrorMessages.Should().Contain("Forbiden access."); // Replace with the actual mocked message if needed
+            apiResponse.ErrorMessages.Should().Contain("Người dùng không có quyền truy cập vầo tài nguyên.");
         }
 
         [Fact]

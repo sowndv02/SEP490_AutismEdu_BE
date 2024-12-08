@@ -12,7 +12,6 @@ using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
@@ -20,6 +19,7 @@ using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
@@ -81,6 +81,4513 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 _mockHubContext.Object,
                 _mockNotificationRepository.Object,
                 _mockMessageBus.Object
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithNoSearchAndSearchAddressNewYork_WithReviewScoreZero()
+        {
+            // Arrange
+            int ageFrom = 3;
+            int ageTo = 5;
+            var search = string.Empty; // No search term
+            var searchAddress = "New York"; // Search by address
+            int reviewScore = 0; // Review score set to 0
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 5, // Review score matches the filter (0)
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "Sample Tutor",
+                        Address =
+                            "New York" // Matches the search address
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 5, // Review score matches the filter (0)
+                    FullName = "Sample Tutor",
+                    Address = "New York", // Matches the search address
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Searching by address
+                        9,
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore, // Review score filter (0)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Search by address
+                        9,
+                        pageNumber,
+                        null,
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithNoSearchAndSearchAddressNewYork()
+        {
+            // Arrange
+            int ageFrom = 3;
+            int ageTo = 5;
+            var search = string.Empty; // No search term
+            var searchAddress = "New York"; // Search by address
+            int reviewScore = 4; // Review score set to 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 4,
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "Sample Tutor",
+                        Address =
+                            "New York" // Matches the search address
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 4,
+                    FullName = "Sample Tutor",
+                    Address = "New York", // Matches the search address
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Searching by address
+                        9,
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Search by address
+                        9,
+                        pageNumber,
+                        null,
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithNoSearchAndReviewScore4()
+        {
+            // Arrange
+            int ageFrom = 3;
+            int ageTo = 5;
+            var search = string.Empty; // No search term
+            var searchAddress = string.Empty; // No search address
+            int reviewScore = 4; // Review score set to 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 4,
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "Sample Tutor",
+                        Address = "Some Address",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 4,
+                    FullName = "Sample Tutor",
+                    Address = "Some Address",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Empty search term
+                        9,
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Empty search term
+                        9,
+                        pageNumber,
+                        null,
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithNoSearchAndReviewScoreZero()
+        {
+            // Arrange
+            int ageFrom = 3;
+            int ageTo = 5;
+            var search = string.Empty; // No search term
+            var searchAddress = string.Empty; // No search address
+            int reviewScore = 0; // Review score set to 0
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 5,
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "Sample Tutor",
+                        Address = "Some Address",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 5,
+                    FullName = "Sample Tutor",
+                    Address = "Some Address",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Empty search term
+                        9,
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Empty search term
+                        9,
+                        pageNumber,
+                        null,
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithAgeAndReviewScoreZero()
+        {
+            // Arrange
+            int ageFrom = 3;
+            int ageTo = 5;
+            var search = "Search";
+            var searchAddress = string.Empty; // No address provided
+            int reviewScore = 0; // Review score set to 0
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 5,
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "Search Tutor",
+                        Address = "Some Address",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 5,
+                    FullName = "Search Tutor",
+                    Address = "Some Address",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Search term "Search"
+                        9,
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Search term "Search"
+                        9,
+                        pageNumber,
+                        null,
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithAgeRangeReviewScore4_NoAddress()
+        {
+            // Arrange
+            int ageFrom = 3; // Age range from 3
+            int ageTo = 5; // Age range to 5
+            var search = "John"; // Name search filter
+            string searchAddress = null; // No address search filter
+            int reviewScore = 4; // Review score filter
+            int pageNumber = 1; // First page of results
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 3, // Tutor's start age is within the filter range
+                    EndAge = 5, // Tutor's end age is within the filter range
+                    ReviewScore = 4, // Review score matches the filter
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // Full name matches the search
+                        Address =
+                            "New York" // Address is irrelevant in this case since it's not being filtered
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Set up the repository mock to return a tutor matching the filters
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age range check
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Review score filter
+                        reviewScore, // Review score filter value
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Search for "John"
+                        It.IsAny<string>(), // No address filter applied
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // No explicit ordering
+                        true
+                    )
+                ) // Whether to include pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors)); // Return mock tutors list
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK); // Status code should be 200 OK
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs); // Check that result matches mock DTOs
+            response.Pagination.PageNumber.Should().Be(pageNumber); // Page number should be 1
+            response.Pagination.PageSize.Should().Be(9); // Page size should be 9
+            response.Pagination.Total.Should().Be(mockTutors.Count); // Total should be 1
+            response.StatusCode.Should().Be(HttpStatusCode.OK); // Status code should be OK
+
+            // Verify that the repository was called with the expected filters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age range check
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Review score filter
+                        reviewScore, // Review score filter value
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Search for "John"
+                        It.IsAny<string>(), // No address filter applied
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            ); // Verify repository call was made once with these parameters
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithAgeRangeReviewScore4()
+        {
+            // Arrange
+            int ageFrom = 3; // Age range from 3
+            int ageTo = 5; // Age range to 5
+            var search = "John"; // Name search filter
+            var searchAddress = "New York"; // Address search filter
+            int reviewScore = 4; // Review score filter
+            int pageNumber = 1; // First page of results
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 3, // Tutor's start age is within the filter range
+                    EndAge = 5, // Tutor's end age is within the filter range
+                    ReviewScore = 4, // Review score matches the filter
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // Full name matches the search
+                        Address =
+                            "New York" // Address matches the search
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Set up the repository mock to return a tutor matching the filters
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age range filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age range filter
+                        reviewScore, // Review score filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Search for name "John"
+                        It.IsAny<string>(), // Search for address "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Sorting expression
+                        It.IsAny<bool>()
+                    )
+                ) // Whether to include pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors)); // Return mock tutors list
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK); // Status code should be 200 OK
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs); // Check that result matches mock DTOs
+            response.Pagination.PageNumber.Should().Be(pageNumber); // Page number should be 1
+            response.Pagination.PageSize.Should().Be(9); // Page size should be 9
+            response.Pagination.Total.Should().Be(mockTutors.Count); // Total should be 1
+            response.StatusCode.Should().Be(HttpStatusCode.OK); // Status code should be OK
+
+            // Verify that the repository was called with the expected filters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age range check
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Review score filter
+                        It.Is<int>(score => score == reviewScore), // Review score filter value
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Search for "John"
+                        It.IsAny<string>(), // Address filter check
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            ); // Verify repository call was made once with these parameters
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithAgeRangeReviewScore0()
+        {
+            // Arrange
+            int ageFrom = 3; // Valid age range start
+            int ageTo = 5; // Valid age range end
+            var search = "John"; // Name to search for
+            var searchAddress = "New York"; // Address to filter by
+            int reviewScore = 0; // Review score filter set to 0
+            int pageNumber = 1; // First page of results
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 3, // Within the age range
+                    EndAge = 5, // Within the age range
+                    ReviewScore = 5, // Review score matches filter
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // Name matches search term
+                        Address =
+                            "New York" // Address matches search address
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 3,
+                    EndAge = 5,
+                    ReviewScore = 5,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Set up the repository to return the mock tutor based on the filters
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Search for name "John"
+                        It.IsAny<string>(), // Search address filter "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // No explicit sorting
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors)); // Return mock tutors
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs); // Should match mock DTOs
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count); // Total should match mock tutor count (1)
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called with the correct filters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age range filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Review score filter
+                        It.IsAny<int>(), // Check that review score filter was applied
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Search filter for name
+                        It.IsAny<string>(), // Address filter check
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            ); // Verify that the method was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnEmptyList_WhenAgeFromIsGreaterThanAgeToAndReviewScoreIsZero()
+        {
+            // Arrange
+            int ageFrom = 8; // Lower bound of age
+            int ageTo = 5; // Upper bound of age, invalid range (8 > 5)
+            var search = "Search"; // Search term for tutor's name
+            string searchAddress = null; // No address search filter
+            int reviewScore = 0; // Review score filter, looking for tutors with a score of 0
+            int pageNumber = 1; // First page of results
+
+            var mockTutors = new List<Tutor>(); // No tutors match the criteria
+
+            var mockTutorDTOs = new List<TutorDTO>(); // Should be an empty list
+
+            // Set up the repository to return no tutors for the invalid age range and other filters
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Search filter for name
+                        It.IsAny<string>(), // Search filter for address
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors)); // Return empty list of tutors
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs); // Should be empty
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count); // Total should be 0
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction to check if the method was called with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        It.IsAny<int>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // No address filter (searchAddress)
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            ); // Verify that it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnEmptyList_WhenAgeFromIsGreaterThanAgeToAndReviewScoreIsProvided()
+        {
+            // Arrange
+            int ageFrom = 8; // Lower bound of age
+            int ageTo = 5; // Upper bound of age, invalid range (8 > 5)
+            var search = "Search"; // Search term for tutor's name
+            string searchAddress = null; // No address search filter
+            int reviewScore = 4; // Review score filter, looking for tutors with a score of 4
+            int pageNumber = 1; // First page of results
+
+            var mockTutors = new List<Tutor>(); // No tutors match the criteria
+
+            var mockTutorDTOs = new List<TutorDTO>(); // Should be an empty list
+
+            // Set up the repository to return no tutors for the invalid age range and other filters
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Search filter for name
+                        It.IsAny<string>(), // Search filter for address
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors)); // Return empty list of tutors
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs); // Should be empty
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count); // Total should be 0
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction to check if the method was called with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        It.IsAny<int>(), // Ensure review score is 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No name filter (search)
+                        It.IsAny<string>(), // No address filter (searchAddress)
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            ); // Verify that it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnEmptyList_WhenAgeFromIsGreaterThanAgeTo()
+        {
+            // Arrange
+            int ageFrom = 8; // Lower age bound
+            int ageTo = 5; // Upper age bound (smaller than ageFrom, which makes it invalid)
+            var search = "John"; // Search term for the tutor's name
+            var searchAddress = "New York"; // Search term for the tutor's address
+            int reviewScore = 4; // Filter by review score of 4
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>(); // No tutors matching the criteria
+
+            var mockTutorDTOs = new List<TutorDTO>(); // No DTOs should be returned
+
+            // Set up the repository to return no tutors for the invalid age range
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Search filter for name
+                        It.IsAny<string>(), // Search filter for address
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors)); // Return empty list of tutors
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs); // Should be empty
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count); // Total should be 0
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction to check if the method was called with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        It.IsAny<int>(), // Ensure review score is 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No name filter (search)
+                        It.IsAny<string>(), // No address filter (searchAddress)
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenReviewScoreIsProvidedAndNoFiltersAreApplied()
+        {
+            // Arrange
+            int ageFrom = -1; // AgeFrom is -1 (no lower bound)
+            int? ageTo = null; // AgeTo is null (no upper bound)
+            string search = null; // No search term
+            string searchAddress = null; // No address provided
+            int reviewScore = 4; // Review score of 4
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score of 4 (filtering by review score)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter (null)
+                        It.IsAny<string>(), // No address search filter (null)
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter (-1)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter (null)
+                        It.IsAny<int>(), // Ensure review score is 4 (filtering by review score)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Ensure no name search filter (null)
+                        It.IsAny<string>(), // Ensure no address search filter (null)
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchAddressIsProvidedAndReviewScoreIsZero()
+        {
+            // Arrange
+            int ageFrom = -1; // AgeFrom is -1 (no lower bound)
+            int? ageTo = null; // AgeTo is null (no upper bound)
+            string search = null; // No search term
+            string searchAddress = "New York"; // Search by address
+            int reviewScore = 0; // Review score of 0 (no filtering based on review score)
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address matches search address
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score of 0 (no filtering)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter (null)
+                        It.IsAny<string>(), // Search by address ("New York")
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter (-1)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter (null)
+                        It.IsAny<int>(), // Ensure review score is 0 (no filtering)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Ensure no name search filter (null)
+                        It.IsAny<string>(), // Ensure address search filter is "New York"
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchAddressIsProvidedAndNoSearchWithReviewScoreFour()
+        {
+            // Arrange
+            int ageFrom = -1; // AgeFrom is -1 (no lower bound)
+            int? ageTo = null; // AgeTo is null (no upper bound)
+            string search = null; // No search term
+            string searchAddress = "New York"; // Search by address
+            int reviewScore = 4; // Review score of 4
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address matches search address
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score of 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter (null)
+                        It.IsAny<string>(), // Search by address ("New York")
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter (-1)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter (null)
+                        It.IsAny<int>(), // Ensure review score is 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Ensure no name search filter (null)
+                        It.IsAny<string>(), // Ensure address search filter is "New York"
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchIsProvidedAndNoSearchAddressWithReviewScoreFour()
+        {
+            // Arrange
+            int ageFrom = -1; // AgeFrom is -1 (no lower bound)
+            int? ageTo = null; // AgeTo is null (no upper bound)
+            string search = "John"; // Search term
+            string searchAddress = null; // No search address
+            int reviewScore = 4; // Review score of 4
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address won't be filtered since searchAddress is null
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score of 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter ("John")
+                        It.IsAny<string>(), // No address filter
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter (-1)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter (null)
+                        It.IsAny<int>(), // Ensure review score is 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Check name search filter ("John")
+                        It.IsAny<string>(), // Ensure address filter is null
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchIsProvidedAndNoSearchAddressWithReviewScoreZero()
+        {
+            // Arrange
+            int ageFrom = -1; // AgeFrom is -1 (no lower bound)
+            int? ageTo = null; // AgeTo is null (no upper bound)
+            string search = "John"; // Search term
+            string searchAddress = null; // No search address
+            int reviewScore = 0; // Review score of 0
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score of 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address won't be filtered since searchAddress is null
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score of 0
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score of 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter ("John")
+                        It.IsAny<string>(), // No address filter
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter (-1)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter (null)
+                        It.IsAny<int>(), // Ensure review score is 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Check name search filter ("John")
+                        It.IsAny<string>(), // Ensure address filter is null
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchAndSearchAddressAreProvidedWithReviewScoreZero()
+        {
+            // Arrange
+            int ageFrom = -1; // AgeFrom is -1 (no lower bound)
+            int? ageTo = null; // AgeTo is null (no upper bound)
+            string search = "John"; // Search term
+            string searchAddress = "New York"; // Search address
+            int reviewScore = 0; // Review score of 0
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score of 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score of 0
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score of 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter ("John")
+                        It.IsAny<string>(), // Address search filter ("New York")
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter (-1)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter (null)
+                        It.IsAny<int>(), // Ensure review score is 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Check name search filter ("John")
+                        It.IsAny<string>(), // Ensure address filter is "New York"
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchAndSearchAddressAreProvidedWithReviewScoreFour()
+        {
+            // Arrange
+            int ageFrom = -1; // AgeFrom is -1 (no lower bound)
+            int? ageTo = null; // AgeTo is null (no upper bound)
+            string search = "John"; // Search term
+            string searchAddress = "New York"; // Search address
+            int reviewScore = 4; // Review score of 4
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score of 4
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score of 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter ("John")
+                        It.IsAny<string>(), // Address search filter ("New York")
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter (-1)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter (null)
+                        It.IsAny<int>(), // Ensure review score is 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Check name search filter ("John")
+                        It.IsAny<string>(), // Ensure address filter is "New York"
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenNoSearchAndNoSearchAddressAreProvidedWithReviewScoreFour()
+        {
+            // Arrange
+            int? ageFrom = null; // AgeFrom is null
+            int ageTo = 0; // AgeTo is 0
+            string search = null; // No search term
+            string searchAddress = null; // No address provided
+            int reviewScore = 4; // Review score is 4
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score is 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score is 4
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter (null in this case)
+                        It.IsAny<string>(), // No address filter (null)
+                        9, // Default page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        It.IsAny<int>(), // Ensure review score is 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter (null)
+                        It.IsAny<string>(), // No address filter
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenNoSearchAndNoSearchAddressAreProvidedWithReviewScoreZero()
+        {
+            // Arrange
+            int? ageFrom = null; // AgeFrom is null
+            int ageTo = 0; // AgeTo is 0
+            string search = null; // No search term
+            string searchAddress = null; // No address provided
+            int reviewScore = 0; // Review score is 0
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score is 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score is 0
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        reviewScore, // Review score 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter (null in this case)
+                        It.IsAny<string>(), // No address filter (null)
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    )
+                ) // Apply pagination
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        It.IsAny<int>(), // Ensure review score is 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name search filter (null)
+                        It.IsAny<string>(), // No address filter
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenAgeFromIsNullAndSearchAddressIsProvidedWithReviewScoreZero()
+        {
+            // Arrange
+            int? ageFrom = null; // AgeFrom is null
+            int ageTo = 0; // AgeTo is 0
+            string search = null; // No search term
+            var searchAddress = "New York"; // Search address provided
+            int reviewScore = 0; // Review score is 0
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score is 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score is 0
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore, // Review score 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Ensure the address is "New York"
+                        9, // Default page size
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        It.IsAny<int>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenAgeFromIsNullAndSearchAddressIsProvidedWithReviewScoreFour()
+        {
+            // Arrange
+            int? ageFrom = null; // AgeFrom is null
+            int ageTo = 0; // AgeTo is 0
+            string search = null; // No search term
+            var searchAddress = "New York"; // Search address provided
+            int reviewScore = 4; // Review score is 4
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Ensure the address is "New York"
+                        9, // Default page size
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        It.IsAny<int>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenAgeFromIsNullAndNoSearchAddressWithReviewScoreFour()
+        {
+            // Arrange
+            int? ageFrom = null; // AgeFrom is null
+            int ageTo = 0; // AgeTo is 0
+            var search = "John"; // Search term provided
+            string searchAddress = null; // No search address
+            int reviewScore = 4; // ReviewScore is 4
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Ensure address is null
+                        9, // Default page size
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository interaction
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeFrom filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // AgeTo filter
+                        It.IsAny<int>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9, // Default page size
+                        pageNumber, // Page number
+                        null, // No explicit ordering
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenAgeFromIsNullAndNoSearchAddressAndReviewScoreIsZero()
+        {
+            // Arrange
+            int? ageFrom = null; // No lower age bound
+            int ageTo = 0; // Upper age bound is 0
+            string search = "John"; // Search term for tutor's name
+            string searchAddress = null; // No search address
+            int reviewScore = 0; // Review score is 0
+            int pageNumber = 1; // First page
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5,
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // Matches the search term
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9, // Page size
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository was called with correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter (null)
+                        It.IsAny<int>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenAgeFromIsNullAndReviewScoreIsZero()
+        {
+            // Arrange
+            int? ageFrom = null; // No lower age bound filter
+            int ageTo = 0; // Upper age bound is 0
+            string search = "John"; // Search term for tutor's name
+            string searchAddress = "New York"; // Search term for address
+            int reviewScore = 0; // Review score is zero
+            int pageNumber = 1; // Page number for pagination
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5, // Outside the age filter (ageTo = 0)
+                    EndAge = 10, // Outside the age filter (ageTo = 0)
+                    ReviewScore = 5, // Matches the review score
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // Matches the search term
+                        Address =
+                            "New York" // Matches the search address
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9, // Page size
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository was called with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter with ageFrom = null
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter
+                        It.IsAny<int>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenAgeFromIsNullAndFiltersAreProvided()
+        {
+            // Arrange
+            int? ageFrom = null; // No AgeFrom filter
+            int ageTo = 0; // AgeTo filter set to 0
+            string search = "John"; // Search term for tutor's name
+            string searchAddress = "New York"; // Search term for address
+            int reviewScore = 4; // Review score filter set to 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5, // Not filtered by ageFrom since it's null
+                    EndAge = 10, // Not filtered by ageTo as the logic might not match `ageTo = 0`
+                    ReviewScore = 4, // Review score matches the filter
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName matches the search term
+                        Address =
+                            "New York" // Address matches the search address
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return filtered data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Filters for age
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Filters for address
+                        reviewScore, // Review score filter matches 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Filters for name
+                        It.IsAny<string>(), // Address filter for "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Order descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify repository was called with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Filter for ageFrom = null and ageTo = 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter
+                        It.IsAny<int>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(), // Address matches "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (not specified in test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify method is called exactly once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenNoAgeFilterNoSearchWithSearchAddressAndReviewScore4()
+        {
+            // Arrange
+            int? ageFrom = null; // No ageFrom filter
+            int? ageTo = null; // No ageTo filter
+            string search = null; // No search term for tutor's name
+            string searchAddress = "New York"; // Search term for address is provided
+            int reviewScore = 4; // Review score filter set to 4 (should only include tutors with review score 4)
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score matches the filter of 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName does not need to match any search term
+                        Address =
+                            "New York" // Address matches the filter for "New York"
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score should match 4
+                    FullName = "John Doe", // FullName does not need to match any search term
+                    Address = "New York", // Address should match the search term "New York"
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter should match "New York"
+                        reviewScore, // Review score filter, should match tutors with score 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search filter for name
+                        It.IsAny<string>(), // Address filter should match "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter for "New York"
+                        It.IsAny<int>(), // Review score should match 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search filter for name
+                        It.IsAny<string>(), // Address filter should match "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenNoAgeFilterSearchNoSearchAndSearchAddressWithReviewScoreZero()
+        {
+            // Arrange
+            int? ageFrom = null; // No ageFrom filter
+            int? ageTo = null; // No ageTo filter
+            string search = null; // No search term for tutor's name
+            string searchAddress = "New York"; // Search term for address is provided
+            int reviewScore = 0; // Review score filter set to 0 (should only include tutors with review score 0)
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score matches the filter of 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName does not need to match any search term
+                        Address =
+                            "New York" // Address matches the filter for "New York"
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score should match 0
+                    FullName = "John Doe", // FullName does not need to match any search term
+                    Address = "New York", // Address should match the search term "New York"
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter should match "New York"
+                        reviewScore, // Review score filter, should match tutors with score 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search filter for name
+                        It.IsAny<string>(), // Address filter should match "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter for "New York"
+                        It.IsAny<int>(), // Review score should match 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search filter for name
+                        It.IsAny<string>(), // Address filter should match "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenNoSearchNoAddressAndReviewScoreZero()
+        {
+            // Arrange
+            int? ageFrom = null; // No ageFrom filter
+            int? ageTo = null; // No ageTo filter
+            string search = null; // No search term for tutor's name
+            string searchAddress = null; // No search address filter
+            int reviewScore = 0; // Review score filter set to 0 (should only include tutors with review score 0)
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 0, // Review score matches the filter of 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName does not need to match any search term
+                        Address =
+                            "New York" // Address does not need to match any address search term
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score should match 0
+                    FullName = "John Doe", // FullName does not need to match any search term
+                    Address = "New York", // Address does not need to match any address search term
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        reviewScore, // Review score filter, should match tutors with score 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search filter for name
+                        It.IsAny<string>(), // No search filter for address
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        It.IsAny<int>(), // Review score should match 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search filter for name
+                        It.IsAny<string>(), // No address filter
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenNoSearchNoAddressAndReviewScoreFour()
+        {
+            // Arrange
+            int? ageFrom = null; // No ageFrom filter
+            int? ageTo = null; // No ageTo filter
+            string search = null; // No search term for tutor's name
+            string searchAddress = null; // No search address filter
+            int reviewScore = 4; // Review score filter set to 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Should match because the review score filter is set to 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName does not need to match any search term
+                        Address =
+                            "New York" // Address does not need to match any address search term
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score should match 4
+                    FullName = "John Doe", // FullName does not need to match any search term
+                    Address = "New York", // Address does not need to match any address search term
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        reviewScore, // Review score filter, should match tutors with score 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search filter for name
+                        It.IsAny<string>(), // No search filter for address
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        It.IsAny<int>(), // Review score should match 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search filter for name
+                        It.IsAny<string>(), // No address filter
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchAndReviewScoreAreProvided_NoAgeAndAddressFilter()
+        {
+            // Arrange
+            int? ageFrom = null; // No ageFrom filter
+            int? ageTo = null; // No ageTo filter
+            string search = "John"; // Search term for tutor's name
+            string searchAddress = null; // No search address filter
+            int reviewScore = 4; // Review score filter, should match tutors with score 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Should match because the review score filter is set to 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName should match "John"
+                        Address =
+                            "New York" // No address filter, so this should be included
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Review score should match 4
+                    FullName = "John Doe", // FullName should match "John"
+                    Address = "New York", // Address should match "New York"
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        reviewScore, // Review score filter, should match tutors with score 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter for "John"
+                        It.IsAny<string>(), // No address filter
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        It.IsAny<int>(), // Review score should match 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter should be used for "John"
+                        It.IsAny<string>(), // No address filter
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchIsProvided_NoAddressFilter_ReviewScoreZero()
+        {
+            // Arrange
+            int? ageFrom = null; // No ageFrom filter
+            int? ageTo = null; // No ageTo filter
+            string search = "John"; // Search term for tutor's name
+            string searchAddress = null; // No search address filter
+            int reviewScore = 0; // Review score filter set to 0
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Should match because the review score filter is set to 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName should match "John"
+                        Address =
+                            "New York" // No address filter, so this should be included
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Review score should match 0
+                    FullName = "John Doe", // FullName should match "John"
+                    Address = "New York", // Address should match "New York"
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        reviewScore, // Review score filter, should match tutors with score 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter for "John"
+                        It.IsAny<string>(), // No address filter
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        It.IsAny<int>(), // Review score should match 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter should be used for "John"
+                        It.IsAny<string>(), // No address filter
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchIsProvided_NoAddressFilter_ReviewScoreFour()
+        {
+            // Arrange
+            int? ageFrom = null; // No ageFrom filter
+            int? ageTo = null; // No ageTo filter
+            string search = "John"; // Search term for tutor's name
+            string searchAddress = null; // No search address filter
+            int reviewScore = 4; // Review score filter set to 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Should match because the review score filter is set to 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName should match "John"
+                        Address =
+                            "New York" // No address filter, so this should be included
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe", // FullName should match "John"
+                    Address = "New York", // Address should match "New York"
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        reviewScore, // Review score filter, should match tutors with score 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter for "John"
+                        It.IsAny<string>(), // No address filter
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        It.IsAny<int>(), // Review score should match 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter should be used for "John"
+                        It.IsAny<string>(), // No address filter
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchAndSearchAddressAreProvided_ReviewScoreFour()
+        {
+            // Arrange
+            int? ageFrom = null; // No ageFrom filter
+            int? ageTo = null; // No ageTo filter
+            string search = "John"; // Search term for tutor's name
+            string searchAddress = "New York"; // Address filter
+            int reviewScore = 4; // Review score filter set to 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Should match because the review score filter is set to 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName should match "John"
+                        Address =
+                            "New York" // Address should match "New York"
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe", // FullName should match "John"
+                    Address = "New York", // Address should match "New York"
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        reviewScore, // Review score filter, should match tutors with score 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter for "John"
+                        It.IsAny<string>(), // Search address filter for "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<int>(), // Review score should match 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter should be used for "John"
+                        It.IsAny<string>(), // Address filter should match "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenSearchAndSearchAddressAreProvided_ReviewScoreZero()
+        {
+            // Arrange
+            int? ageFrom = null; // No ageFrom filter
+            int? ageTo = null; // No ageTo filter
+            string search = "John"; // Search term for tutor's name
+            string searchAddress = "New York"; // Address filter
+            int reviewScore = 0; // Review score filter set to 0
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Should match because the review score filter is set to 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe", // FullName should match "John"
+                        Address =
+                            "New York" // Address should match "New York"
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5,
+                    FullName = "John Doe", // FullName should match "John"
+                    Address = "New York", // Address should match "New York"
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        reviewScore, // Review score filter, should match tutors with score 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter for "John"
+                        It.IsAny<string>(), // Search address filter for "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No age filter
+                        It.IsAny<int>(), // Review score should match 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter should be used for "John"
+                        It.IsAny<string>(), // Address filter should match "New York"
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenNoSearchAndNoSearchAddress_ReviewScoreZero()
+        {
+            // Arrange
+            int ageFrom = -1; // Invalid ageFrom
+            int ageTo = 0; // Invalid ageTo
+            string search = null; // No search term
+            string searchAddress = null; // No search address
+            int reviewScore = 0; // Review score filter set to 0
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Should match because the review score filter is set to 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address is ignored in this case since no address filter is provided
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No name filter (search term is null)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        reviewScore, // Review score filter, should match tutors with score 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search term
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        It.IsAny<int>(), // Review score should match 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenNoSearchAndNoSearchAddress_ReviewScoreFour()
+        {
+            // Arrange
+            int ageFrom = -1; // Invalid ageFrom
+            int ageTo = 0; // Invalid ageTo
+            string search = null; // No search term
+            string searchAddress = null; // No search address
+            int reviewScore = 4; // Review score filter set to 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Should match because the review score filter is set to 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address is ignored in this case since no address filter is provided
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No name filter (search term is null)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        reviewScore, // Review score filter, should match tutors with score 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search term
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No address filter
+                        It.Is<int?>(score => score == reviewScore), // Review score should match 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithNoSearchAndSearchAddress_ReviewScoreFour()
+        {
+            // Arrange
+            int ageFrom = -1; // Invalid ageFrom
+            int ageTo = 0; // Invalid ageTo
+            string search = null; // No search term
+            string searchAddress = "New York"; // Search address filter
+            int reviewScore = 4; // Review score filter set to 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Should match because the review score filter is set to 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address filter should match this tutor's address
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No name filter (search term is null)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter (should contain 'New York')
+                        reviewScore, // Review score filter, should match tutors with score 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search term
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter matching 'New York'
+                        It.Is<int?>(score => score == reviewScore), // Review score should match 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithNoSearchAndSearchAddress_ReviewScoreZero()
+        {
+            // Arrange
+            int ageFrom = -1; // Invalid ageFrom
+            int ageTo = 0; // Invalid ageTo
+            string search = null; // No search term
+            string searchAddress = "New York"; // Search address filter
+            int reviewScore = 0; // Review score filter set to 0
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5, // Should match because the review score filter is set to 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address filter should match this tutor's address
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No name filter (search term is null)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter (should contain 'New York')
+                        reviewScore, // Review score filter, should match tutors with score 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // No search term
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter matching 'New York'
+                        It.Is<int?>(score => score == reviewScore), // Review score should match 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_WithReviewScoreZero_AndNoSearchAddress()
+        {
+            // Arrange
+            int ageFrom = -1; // Invalid ageFrom
+            int ageTo = 0; // Invalid ageTo
+            var search = "John"; // Valid search term
+            string searchAddress = null; // No address filter
+            int reviewScore = 0; // Review score filter set to 0
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 0, // Should match because the review score filter is set to 0
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address filter is null, so it shouldn't affect the result
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 5,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter (search term)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter (null here)
+                        reviewScore, // Review score filter, should match tutors with score 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid ages should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter (search term)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter (null here)
+                        It.Is<int?>(score => score == reviewScore), // Review score should match 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_AndNoSearchAddress()
+        {
+            // Arrange
+            int ageFrom = -1; // Invalid ageFrom
+            int ageTo = 0; // Invalid ageTo
+            var search = "John"; // Valid search term
+            string searchAddress = null; // No address filter
+            int reviewScore = 4; // Review score filter set to 4
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Should match because the review score filter is set to 4
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address filter is null, so it shouldn't affect the result
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            // Mock repository to return the tutor data
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter (search term)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter (null here)
+                        reviewScore, // Review score filter, should match tutors with score 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid ages should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Verify that the repository was called once with the correct parameters
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter (search term)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter (null here)
+                        It.Is<int?>(score => score == reviewScore), // Review score should match 4
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        null, // Order by (unspecified in the test)
+                        true
+                    ),
+                Times.Once
+            ); // Verify it was called once
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided_AndSearchAddressIsNull()
+        {
+            // Arrange
+            int ageFrom = -1; // Invalid ageFrom
+            int ageTo = 0; // Invalid ageTo
+            var search = "John"; // Valid search term
+            string searchAddress = null; // No address filter
+            int reviewScore = 0; // Review score is 0, should apply default value
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Should match because reviewScore filter is 0, so no filter is applied
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address =
+                            "New York" // Address filter is null, so it shouldn't affect the result
+                        ,
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter (null here)
+                        reviewScore, // Review score filter, should allow any tutors since it's 0
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid ages should be reset)
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<int?>(), // Review score filter (0 should pass through)
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter (invalid should be reset)
+                        It.IsAny<string>(),
+                        9,
+                        pageNumber,
+                        null,
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithDefaultAgeRange_WhenInvalidAgeRangeAndReviewScoreZeroAreProvided()
+        {
+            // Arrange
+            int ageFrom = -1; // Invalid ageFrom
+            int ageTo = 0; // Invalid ageTo
+            var search = "John";
+            var searchAddress = "New York";
+            int reviewScore = 0; // Default value should be applied
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4, // Should not filter out due to default review score
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Name filter
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Address filter
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(), // Age filter
+                        It.IsAny<string>(), // Include properties
+                        9, // Page size
+                        pageNumber, // Page number
+                        It.IsAny<Expression<Func<Tutor, object>>>(), // Order by
+                        It.IsAny<bool>()
+                    )
+                ) // Is descending
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<int?>(), // Review score
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9,
+                        pageNumber,
+                        null,
+                        true
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnTutorsWithPagination_WhenValidFiltersAreProvided()
+        {
+            // Arrange
+            int ageFrom = -1;
+            int ageTo = 0;
+            var search = "John";
+            var searchAddress = "New York";
+            int reviewScore = 4;
+            int pageNumber = 1;
+
+            var mockTutors = new List<Tutor>
+            {
+                new Tutor
+                {
+                    TutorId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    User = new ApplicationUser
+                    {
+                        Id = "tutorId",
+                        FullName = "John Doe",
+                        Address = "New York",
+                    },
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            var mockTutorDTOs = new List<TutorDTO>
+            {
+                new TutorDTO
+                {
+                    UserId = "tutorId",
+                    StartAge = 5,
+                    EndAge = 10,
+                    ReviewScore = 4,
+                    FullName = "John Doe",
+                    Address = "New York",
+                    Certificates = new List<CertificateDTO>(),
+                    Curriculums = new List<CurriculumDTO>(),
+                    WorkExperiences = new List<WorkExperienceDTO>(),
+                    CreatedDate = DateTime.Now.Date,
+                },
+            };
+
+            _mockTutorRepository
+                .Setup(repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        reviewScore,
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9,
+                        pageNumber,
+                        It.IsAny<Expression<Func<Tutor, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((mockTutors.Count, mockTutors));
+
+            // Act
+            var result = await _controller.GetAllAsync(
+                search,
+                searchAddress,
+                reviewScore,
+                ageFrom,
+                ageTo,
+                pageNumber
+            );
+
+            // Assert
+            var okResult = result.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var response = okResult.Value as APIResponse;
+            response.Should().NotBeNull();
+            response.Result.Should().BeEquivalentTo(mockTutorDTOs);
+            response.Pagination.PageNumber.Should().Be(pageNumber);
+            response.Pagination.PageSize.Should().Be(9);
+            response.Pagination.Total.Should().Be(mockTutors.Count);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            _mockTutorRepository.Verify(
+                repo =>
+                    repo.GetAllTutorAsync(
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<int?>(),
+                        It.IsAny<Expression<Func<Tutor, bool>>>(),
+                        It.IsAny<string>(),
+                        9,
+                        pageNumber,
+                        null,
+                        true
+                    ),
+                Times.Once
             );
         }
 
@@ -3310,11 +7817,18 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var changeStatusDTO = new ChangeStatusDTO
             {
                 Id = requestId,
-                StatusChange = (int)Status.APPROVE
+                StatusChange = (int)Status.APPROVE,
             };
 
             _mockTutorProfileUpdateRequestRepository
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<TutorProfileUpdateRequest, bool>>>(), false, null, null))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorProfileUpdateRequest, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync((TutorProfileUpdateRequest)null);
 
             _mockResourceService
@@ -3322,15 +7836,19 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Returns("The update profile request was not found.");
 
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "testUserId"),
-        new Claim(ClaimTypes.Role, SD.STAFF_ROLE) // Valid role
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testUserId"),
+                new Claim(
+                    ClaimTypes.Role,
+                    SD.STAFF_ROLE
+                ) // Valid role
+                ,
+            };
             var identity = new ClaimsIdentity(claims);
             var principal = new ClaimsPrincipal(identity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = principal }
+                HttpContext = new DefaultHttpContext { User = principal },
             };
 
             // Act
@@ -3346,7 +7864,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.IsSuccess.Should().BeFalse();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
             apiResponse.ErrorMessages.Should().Contain("The update profile request was not found.");
-
         }
 
         [Fact]
@@ -3357,38 +7874,44 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var changeStatusDTO = new ChangeStatusDTO
             {
                 Id = requestId,
-                StatusChange = (int)Status.APPROVE
+                StatusChange = (int)Status.APPROVE,
             };
 
             var mockRequest = new TutorProfileUpdateRequest
             {
                 Id = requestId,
-                RequestStatus = Status.PENDING
+                RequestStatus = Status.PENDING,
             };
             var mockRequestReturn = new TutorProfileUpdateRequest
             {
                 Id = requestId,
-                RequestStatus = Status.REJECT
+                RequestStatus = Status.REJECT,
             };
             _mockTutorProfileUpdateRequestRepository
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<TutorProfileUpdateRequest, bool>>>(), false, null, null))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorProfileUpdateRequest, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(mockRequest);
 
             _mockTutorProfileUpdateRequestRepository
                 .Setup(repo => repo.UpdateAsync(It.IsAny<TutorProfileUpdateRequest>()))
                 .ReturnsAsync(mockRequestReturn);
 
-
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "staffUserId"),
-        new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "staffUserId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+            };
             var identity = new ClaimsIdentity(claims);
             var principal = new ClaimsPrincipal(identity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = principal }
+                HttpContext = new DefaultHttpContext { User = principal },
             };
 
             // Act
@@ -3413,40 +7936,46 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var changeStatusDTO = new ChangeStatusDTO
             {
                 Id = requestId,
-                StatusChange = (int)Status.REJECT
+                StatusChange = (int)Status.REJECT,
             };
 
             var mockRequest = new TutorProfileUpdateRequest
             {
                 Id = requestId,
-                RequestStatus = Status.PENDING
+                RequestStatus = Status.PENDING,
             };
 
             var mockRequestReturn = new TutorProfileUpdateRequest
             {
                 Id = requestId,
-                RequestStatus = Status.REJECT
+                RequestStatus = Status.REJECT,
             };
 
             _mockTutorProfileUpdateRequestRepository
-                .Setup(repo => repo.GetAsync(It.IsAny<Expression<Func<TutorProfileUpdateRequest, bool>>>(), false, null, null))
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorProfileUpdateRequest, bool>>>(),
+                        false,
+                        null,
+                        null
+                    )
+                )
                 .ReturnsAsync(mockRequest);
 
             _mockTutorProfileUpdateRequestRepository
                 .Setup(repo => repo.UpdateAsync(It.IsAny<TutorProfileUpdateRequest>()))
                 .ReturnsAsync(mockRequestReturn);
 
-
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, "staffUserId"),
-        new Claim(ClaimTypes.Role, SD.STAFF_ROLE)
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, "staffUserId"),
+                new Claim(ClaimTypes.Role, SD.STAFF_ROLE),
+            };
             var identity = new ClaimsIdentity(claims);
             var principal = new ClaimsPrincipal(identity);
             _controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = principal }
+                HttpContext = new DefaultHttpContext { User = principal },
             };
 
             // Act
@@ -3462,7 +7991,5 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             apiResponse.IsSuccess.Should().BeTrue();
             apiResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
-
-
     }
 }
