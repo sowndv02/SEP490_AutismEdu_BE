@@ -3235,17 +3235,16 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             };
             _resourceServiceMock
                 .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
-                .Returns("Forbiden access.");
-            var userId = "12345"; // Simulated valid user ID
-            var invalidRoles = new List<string> { "STUDENT_ROLE" }; // Invalid role (not TUTOR_ROLE)
+                .Returns("Người dùng không có quyền truy cập vầo tài nguyên.");
+            var userId = "12345";
+            var invalidRoles = new List<string> { "INVALID_ROLE" }; 
 
-            // Mock claims principal to simulate an authenticated user with an invalid role
             var claimsPrincipal = new ClaimsPrincipal(
                 new ClaimsIdentity(
                     new[]
                     {
                         new Claim(ClaimTypes.NameIdentifier, userId),
-                        new Claim(ClaimTypes.Role, "STUDENT_ROLE"),
+                        new Claim(ClaimTypes.Role, "INVALID_ROLE"),
                     }
                 )
             );
@@ -3266,7 +3265,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var response = objectResult.Value as APIResponse;
             response.Should().NotBeNull();
             response.IsSuccess.Should().BeFalse();
-            response.ErrorMessages.Should().Contain("Forbiden access.");
+            response.ErrorMessages.Should().Contain("Người dùng không có quyền truy cập vầo tài nguyên.");
         }
 
         [Fact]
