@@ -36,7 +36,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             IEmailSender messageBus, IResourceService resourceService, ILogger<WorkExperienceController> logger)
         {
             _messageBus = messageBus;
-            pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            pageSize = 5;
             queueName = configuration["RabbitMQSettings:QueueName"];
             _response = new APIResponse();
             _mapper = mapper;

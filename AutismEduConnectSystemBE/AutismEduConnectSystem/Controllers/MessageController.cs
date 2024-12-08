@@ -111,7 +111,7 @@ namespace AutismEduConnectSystem.Controllers
 
         [HttpGet("{conversationId}")]
         [Authorize(Roles = $"{SD.TUTOR_ROLE},{SD.PARENT_ROLE}")]
-        public async Task<ActionResult<APIResponse>> GetAllAsync([FromRoute] int conversationId, [FromQuery] int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromRoute] int conversationId, [FromQuery] int pageNumber = 0)
         {
             try
             {
@@ -152,8 +152,20 @@ namespace AutismEduConnectSystem.Controllers
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.MESSAGE) };
                     return BadRequest(_response);
                 }
-                var (countMessages, messages) = await _messageRepository.GetAllAsync(x => x.ConversationId == conversationId, "Sender,Conversation", pageSize, pageNumber, x => x.CreatedDate, true);
-                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = countMessages };
+                var messages = new List<Message>();
+                int totalMessage = 0;
+                if(pageSize == 0 || pageNumber == 0)
+                {
+                    var (countNotPagingMessages, messagesNotPaging) = await _messageRepository.GetAllNotPagingAsync(x => x.ConversationId == conversationId, "Sender,Conversation", null, x => x.CreatedDate, true);
+                    totalMessage = countNotPagingMessages;
+                    messages = messagesNotPaging;
+                }else
+                {
+                    var (countMessagesPaging, messagesPaging) = await _messageRepository.GetAllAsync(x => x.ConversationId == conversationId, "Sender,Conversation", pageSize, pageNumber, x => x.CreatedDate, true);
+                    totalMessage = countMessagesPaging;
+                    messages = messagesPaging;
+                }
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize, Total = totalMessage };
                 _response.IsSuccess = true;
                 _response.Result = _mapper.Map<List<MessageDTO>>(messages);
                 _response.Pagination = pagination;
