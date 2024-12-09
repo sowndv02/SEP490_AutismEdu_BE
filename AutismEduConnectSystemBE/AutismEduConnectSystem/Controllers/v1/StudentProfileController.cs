@@ -232,19 +232,24 @@ namespace AutismEduConnectSystem.Controllers.v1
                     var subject = "Thông báo ";
 
                     var templatePathSendEmailForParent = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateParentAndChild.cshtml");
-                    if (!System.IO.File.Exists(templatePathSendEmailForParent))
+                    //if (!System.IO.File.Exists(templatePathSendEmailForParent))
+                    //{
+                    //    _response.StatusCode = HttpStatusCode.InternalServerError;
+                    //    _response.IsSuccess = false;
+                    //    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                    //    return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                    //}
+                    if (System.IO.File.Exists(templatePathSendEmailForParent))
                     {
-                        _response.StatusCode = HttpStatusCode.InternalServerError;
-                        _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
-                        return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePathSendEmailForParent);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", parent.FullName)
+                            .Replace("@Model.Username", parent.Email)
+                            .Replace("@Model.Password", passsword)
+                            .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
+                        await _messageBus.SendEmailAsync(parent.Email, subject, htmlMessage);
                     }
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePathSendEmailForParent);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", parent.FullName)
-                        .Replace("@Model.Username", parent.Email)
-                        .Replace("@Model.Password", passsword)
-                        .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
+                        
 
                     _messageBus.SendMessage(new EmailLogger()
                     {
@@ -281,7 +286,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _logger.LogWarning("Invalid ChildId: The ChildId ({ChildId}) is missing or invalid.", createDTO.ChildId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _response.ErrorMessages = new List<string> { SD.MISSING_2_INFORMATIONS, SD.PARENT, SD.CHILD };
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.MISSING_2_INFORMATIONS, SD.PARENT, SD.CHILD) };
                     return BadRequest(_response);
                 }
 

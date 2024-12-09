@@ -13,6 +13,8 @@ using AutismEduConnectSystem.SignalR;
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
@@ -95,6 +97,1337 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 _mockNotificationRepository.Object,
                 _mockHubContext.Object
             );
+        }
+
+        [Fact]
+        public async Task CreateAsync_ParentAndChildCreationWithTutorRequestIdGreaterThanZero_ShouldReturnCreated()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Create a valid DTO with a tutor request and child ID greater than zero
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = null,
+                ParentFullName = null,
+                Address = null,
+                PhoneNumber = null,
+                ChildName = null,
+                isMale = null,
+                BirthDate = null,
+                Media = null,
+                TutorRequestId = 1, // Tutor Request Id > 0
+                ChildId = 1, // Child Id > 0
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Mock the parent account creation to return a valid user
+            var createdParentUser = new ApplicationUser
+            {
+                Id = "test-parent-id",
+                UserName = "parent@example.com",
+                Email = "parent@example.com",
+            };
+            _mockUserRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .ReturnsAsync(createdParentUser); // Simulate successful parent creation
+
+            // Mock the child profile creation to return a valid child profile
+            var createdChild = new ChildInformation
+            {
+                Id = 1,
+                Name = "Jane Doe",
+                ParentId = "test-parent-id",
+            };
+            _mockChildInfoRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<ChildInformation>()))
+                .ReturnsAsync(createdChild); // Simulate successful child creation
+
+            _mockRoleRepository
+                .Setup(repo => repo.GetByNameAsync(SD.PARENT_ROLE))
+                .ReturnsAsync(new IdentityRole { Id = "Parent-role-Id" });
+
+            _mockChildInfoRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(createdChild);
+            _mockTutorRequestRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<TutorRequest, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(new TutorRequest() { Id = 1, HasStudentProfile = false });
+            _mockTutorRequestRepository
+                .Setup(repo => repo.UpdateAsync(It.IsAny<TutorRequest>()))
+                .ReturnsAsync(new TutorRequest() { Id = 1, HasStudentProfile = true });
+            // Mock the tutor to be assigned
+            var tutor = new Tutor
+            {
+                User = new ApplicationUser
+                {
+                    Id = "test-tutor-id",
+                    UserName = "test-tutor",
+                    Email = "tutor@example.com",
+                },
+            };
+
+            var studentProfile = new StudentProfile
+            {
+                ChildId = 1,
+                TutorId = "test-tutor-id",
+                Status = SD.StudentProfileStatus.Pending,
+                Tutor = tutor,
+                ScheduleTimeSlots = new List<ScheduleTimeSlot>(),
+            };
+
+            // Mock the CreateAsync method to return the created student profile
+            _mockStudentProfileRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<StudentProfile>()))
+                .ReturnsAsync(studentProfile);
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var createdResult = result.Result as ObjectResult;
+            createdResult.Should().NotBeNull();
+            createdResult.StatusCode.Should().Be((int)HttpStatusCode.OK); // Ensure it returns Created (201)
+
+            var apiResponse = createdResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            apiResponse.ErrorMessages.Should().BeEmpty();
+
+            _mockStudentProfileRepository.Verify(
+                repo => repo.CreateAsync(It.IsAny<StudentProfile>()),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task CreateAsync_ParentAndChildCreationSuccessful_ShouldReturnCreated()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Create a valid DTO with a new parent profile
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = Mock.Of<IFormFile>(),
+                TutorRequestId = 0,
+                ChildId = 0,
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Mock the parent account creation to return a valid user
+            var createdParentUser = new ApplicationUser
+            {
+                Id = "test-parent-id",
+                UserName = "parent@example.com",
+                Email = "parent@example.com",
+            };
+            _mockUserRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .ReturnsAsync(createdParentUser); // Simulate successful parent creation
+
+            // Mock the child profile creation to return a valid child profile
+            var createdChild = new ChildInformation
+            {
+                Id = 1,
+                Name = "Jane Doe",
+                ParentId = "test-parent-id",
+            };
+            _mockChildInfoRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<ChildInformation>()))
+                .ReturnsAsync(createdChild); // Simulate successful child creation
+
+            _mockRoleRepository
+                .Setup(repo => repo.GetByNameAsync(SD.PARENT_ROLE))
+                .ReturnsAsync(new IdentityRole { Id = "Parent-role-Id" });
+            _mockChildInfoRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(createdChild);
+            var tutor = new Tutor
+            {
+                User = new ApplicationUser
+                {
+                    Id = "test-tutor-id",
+                    UserName = "test-tutor",
+                    Email = "tutor@example.com",
+                },
+            };
+            var studentProfile = new StudentProfile
+            {
+                ChildId = 1,
+                TutorId = "test-tutor-id",
+                Status = SD.StudentProfileStatus.Pending,
+                Tutor = tutor,
+                ScheduleTimeSlots = new List<ScheduleTimeSlot>(),
+            };
+            _mockStudentProfileRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<StudentProfile>()))
+                .ReturnsAsync(studentProfile);
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var createdResult = result.Result as ObjectResult;
+            createdResult.Should().NotBeNull();
+            createdResult.StatusCode.Should().Be((int)HttpStatusCode.OK);
+
+            var apiResponse = createdResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeTrue();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            apiResponse.ErrorMessages.Should().BeEmpty();
+
+            // Verify that both the parent and child repositories were called to create the records
+            _mockUserRepository.Verify(
+                repo => repo.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()),
+                Times.Once
+            );
+            _mockChildInfoRepository.Verify(
+                repo => repo.CreateAsync(It.IsAny<ChildInformation>()),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task CreateAsync_ChildNotFound_ShouldReturnNotFound()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Create a valid DTO with a new parent profile
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = null,
+                TutorRequestId = 1,
+                ChildId = 1, // Child ID that does not exist
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Mock the repository to simulate that the child with the given ID does not exist
+            _mockChildInfoRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync((ChildInformation)null); // Simulate child not found
+
+            // Mock the Resource Service to return the correct error message for missing child
+            _mockResourceService
+                .Setup(r => r.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO))
+                .Returns("Child information not found.");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var notFoundResult = result.Result as ObjectResult;
+            notFoundResult.Should().NotBeNull();
+            notFoundResult.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
+
+            var apiResponse = notFoundResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            apiResponse.ErrorMessages.Should().Contain("Child information not found.");
+
+            // Verify that the repository was called to check for child information
+            _mockChildInfoRepository.Verify(
+                repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ChildInformation, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    ),
+                Times.Once
+            );
+
+            // Verify that no further actions are performed due to missing child information
+            _mockStudentProfileRepository.Verify(
+                repo => repo.CreateAsync(It.IsAny<StudentProfile>()),
+                Times.Never
+            );
+        }
+
+        [Fact]
+        public async Task CreateAsync_DuplicateStudentProfile_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Create a valid DTO with a new parent profile
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = null,
+                ParentFullName = null,
+                Address = null,
+                PhoneNumber = null,
+                ChildName = null,
+                isMale = null,
+                BirthDate = null,
+                Media = null,
+                TutorRequestId = 1,
+                ChildId = 1, // Child ID that already exists
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Simulate an existing student profile for the same child and tutor
+            var existingStudentProfile = new StudentProfile
+            {
+                ChildId = 1,
+                TutorId = "test-tutor-id",
+                Status =
+                    SD.StudentProfileStatus.Teaching // Status is either Teaching or Pending
+                ,
+            };
+
+            // Mock the repository to return an existing student profile for the same child and tutor
+            _mockStudentProfileRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<StudentProfile, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(existingStudentProfile); // Simulate duplicate
+
+            // Mock the Resource Service to return the correct error message for duplicate data
+            _mockResourceService
+                .Setup(r => r.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.STUDENT_PROFILE))
+                .Returns("A student profile already exists for the child.");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var badRequestResult = result.Result as ObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            apiResponse
+                .ErrorMessages.Should()
+                .Contain("A student profile already exists for the child.");
+
+            _mockStudentProfileRepository.Verify(
+                repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<StudentProfile, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    ),
+                Times.Once
+            );
+
+            _mockStudentProfileRepository.Verify(
+                repo => repo.CreateAsync(It.IsAny<StudentProfile>()),
+                Times.Never
+            );
+        }
+
+        [Fact]
+        public async Task CreateAsync_ParentNotCreatedAndChildIdLessThanOrEqualToZero_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Create a valid DTO with a new parent profile and invalid ChildId
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = null,
+                TutorRequestId = 0,
+                ChildId = 0, // Invalid ChildId (should be > 0 for valid child creation)
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Mock the user repository to simulate parent creation failure
+            _mockUserRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .ReturnsAsync((ApplicationUser)null);
+
+            // Mock the Resource Service to return the correct error message for internal server error
+            _mockResourceService
+                .Setup(r => r.GetString(SD.MISSING_2_INFORMATIONS, SD.PARENT, SD.CHILD))
+                .Returns("Missing information of parent and child.");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var badRequestResult = result.Result as ObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            apiResponse.ErrorMessages.Should().Contain("Missing information of parent and child.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_UserAndChildCreationFails_ShouldReturnInternalServerError()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Create a valid DTO with a new parent profile
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = Mock.Of<IFormFile>(),
+                TutorRequestId = 0,
+                ChildId = 0,
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Mock the user repository to simulate parent creation failure
+            _mockUserRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .ReturnsAsync((ApplicationUser)null); // Simulate failure (null returned)
+
+            // Mock the Resource Service to return the correct error message for internal server error
+            _mockResourceService
+                .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("An internal server error occurred while creating the user.");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var internalServerErrorResult = result.Result as ObjectResult;
+            internalServerErrorResult.Should().NotBeNull();
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
+
+            var apiResponse = internalServerErrorResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            apiResponse
+                .ErrorMessages.Should()
+                .Contain("An internal server error occurred while creating the user.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_UserCreationFails_ShouldReturnInternalServerError()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Create a valid DTO with a new parent profile
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = Mock.Of<IFormFile>(),
+                TutorRequestId = 0,
+                ChildId = 0,
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Mock the user repository to simulate user creation failure
+            _mockUserRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .ReturnsAsync((ApplicationUser)null); // Simulate failure (null returned)
+
+            // Mock the Resource Service to return the correct error message for internal server error
+            _mockResourceService
+                .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("An internal server error occurred while creating the user.");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var internalServerErrorResult = result.Result as ObjectResult;
+            internalServerErrorResult.Should().NotBeNull();
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
+
+            var apiResponse = internalServerErrorResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            apiResponse
+                .ErrorMessages.Should()
+                .Contain("An internal server error occurred while creating the user.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_DuplicateEmail_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Create a valid DTO with the email that already exists in the system
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com", // This email is considered a duplicate
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = Mock.Of<IFormFile>(),
+                TutorRequestId = 0,
+                ChildId = 0,
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Mock the user repository to return a user with the same email
+            var existingUser = new ApplicationUser
+            {
+                Email = "parent@example.com",
+                UserName = "parent@example.com",
+            };
+
+            _mockUserRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ApplicationUser, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(existingUser); // Simulate existing user with the same email
+
+            // Mock the Resource Service to return the correct error message
+            _mockResourceService
+                .Setup(r => r.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EMAIL))
+                .Returns("The email already exists in the system.");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var badRequestResult = result.Result as ObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            apiResponse.ErrorMessages.Should().Contain("The email already exists in the system.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_TutorRequestIdGreaterThanZero_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Create a valid DTO with TutorRequestId greater than 0
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = Mock.Of<IFormFile>(),
+                TutorRequestId = 1, // This is greater than 0 and should trigger a BadRequest
+                ChildId = 0,
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Mock the Resource Service to return the correct error message
+            _mockResourceService
+                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.STUDENT_PROFILE))
+                .Returns("Invalid request: TutorRequestId should not be greater than 0.");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var badRequestResult = result.Result as ObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            apiResponse
+                .ErrorMessages.Should()
+                .Contain("Invalid request: TutorRequestId should not be greater than 0.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_DuplicateTimeSlotInDatabase_ShouldReturnBadRequest()
+        {
+            // Simulate a valid user with TUTOR_ROLE
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Arrange
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = null,
+                TutorRequestId = 1,
+                ChildId = 0,
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "8:0", // 08:00 AM
+                        To = "9:0", // 09:00 AM
+                    },
+                },
+            };
+
+            // Mock a duplicate time slot in the database (same weekday, time range, and tutor)
+            var duplicateTimeSlot = new ScheduleTimeSlot
+            {
+                From = TimeSpan.FromHours(8.0), // 08:00 AM
+                To = TimeSpan.FromHours(9.0), // 09:00 AM
+                Weekday = 1,
+                StudentProfile = new StudentProfile
+                {
+                    TutorId = "test-tutor-id",
+                    Status = SD.StudentProfileStatus.Teaching, // Assume this is the status we care about for the check
+                },
+                IsDeleted = false,
+            };
+
+            // Mock the repository to return a duplicate time slot
+            _mockScheduleTimeSlotRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<ScheduleTimeSlot, bool>>>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()
+                    )
+                )
+                .ReturnsAsync(duplicateTimeSlot); // Return a duplicate time slot
+
+            _mockResourceService
+                .Setup(r =>
+                    r.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, "08:00", "09:00")
+                )
+                .Returns("The time slot from 08:00 to 09:00 already exists.");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var badRequestResult = result.Result as ObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            apiResponse
+                .ErrorMessages.Should()
+                .Contain("The time slot from 08:00 to 09:00 already exists.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_InvalidTimeSlotIn_ShouldReturnBadRequest()
+        {
+            // Simulate a valid user with TUTOR_ROLE
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Arrange
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = null,
+                TutorRequestId = 1,
+                ChildId = 0,
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    // Duplicate and invalid time slots
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "10:00",
+                        To = "09:00",
+                    },
+                },
+            };
+
+            _mockResourceService
+                .Setup(r => r.GetString(SD.DUPPLICATED_ASSIGN_EXERCISE, SD.TIME_SLOT, "Duplicated"))
+                .Returns("Invalid or duplicate time slot detected");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var badRequestResult = result.Result as ObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            apiResponse.ErrorMessages.Should().NotBeNullOrEmpty();
+        }
+
+        [Fact]
+        public async Task CreateAsync_DuplicateTimeSlot_ShouldReturnBadRequest()
+        {
+            // Simulate a valid user with TUTOR_ROLE
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Arrange
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = null,
+                TutorRequestId = 1,
+                ChildId = 0,
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    // Duplicate and invalid time slots
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "10:00",
+                        To = "11:00",
+                    },
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "10:30", // Overlaps with the first slot
+                        To = "11:30",
+                    },
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 2,
+                        From = "02:00",
+                        To = "01:00", // Invalid slot (From > To)
+                    },
+                },
+            };
+
+            _mockResourceService
+                .Setup(r => r.GetString(SD.DUPPLICATED_ASSIGN_EXERCISE, SD.TIME_SLOT, "Duplicated"))
+                .Returns("Invalid or duplicate time slot detected");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var badRequestResult = result.Result as ObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            apiResponse.ErrorMessages.Should().NotBeNullOrEmpty();
+        }
+
+        [Fact]
+        public async Task CreateAsync_ModelStateInvalid_ShouldReturnBadRequest()
+        {
+            // Simulate a valid user with TUTOR_ROLE
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Arrange
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "", // Invalid data (empty email)
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = null,
+                TutorRequestId = 1,
+                ChildId = 0,
+                InitialCondition = "", // Invalid data (empty initial condition)
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>(),
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>(),
+            };
+
+            _controller.ModelState.AddModelError("Email", "The Email field is required.");
+            _controller.ModelState.AddModelError(
+                "InitialCondition",
+                "The InitialCondition field is required."
+            );
+
+            _mockResourceService
+                .Setup(r => r.GetString(SD.BAD_REQUEST_MESSAGE, SD.STUDENT_PROFILE))
+                .Returns("Model state is invalid");
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var badRequestResult = result.Result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+
+            var apiResponse = badRequestResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            apiResponse.ErrorMessages.Should().Contain("Model state is invalid");
+        }
+
+        [Fact]
+        public async Task CreateAsync_InternalServerError_ShouldReturnInternalServerError()
+        {
+            // Simulate a valid user with TUTOR_ROLE
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, "test-tutor-id"),
+                new Claim(ClaimTypes.Role, SD.TUTOR_ROLE),
+            };
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+            // Arrange
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = null, // For test cases without media; replace with a mock IFormFile if needed
+                TutorRequestId = 1, // Assuming a valid TutorRequestId for test
+                ChildId = 0, // Assume 0 when creating a new account
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>
+                {
+                    new InitialAssessmentResultCreateDTO { QuestionId = 1, OptionId = 1 },
+                    new InitialAssessmentResultCreateDTO { QuestionId = 2, OptionId = 2 },
+                },
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "10:00 AM",
+                        To = "11:00 AM",
+                    },
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 2,
+                        From = "1:00 PM",
+                        To = "2:00 PM",
+                    },
+                },
+            };
+
+            _mockResourceService
+                .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("Internal server error");
+
+            // Simulate an exception thrown during the process
+            _mockStudentProfileRepository
+                .Setup(repo =>
+                    repo.GetAsync(
+                        It.IsAny<Expression<Func<StudentProfile, bool>>>(),
+                        true,
+                        "InitialAndFinalAssessmentResults,ScheduleTimeSlots",
+                        It.IsAny<string>()
+                    )
+                )
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+            // Assert
+            var internalServerErrorResult = result.Result as ObjectResult;
+            internalServerErrorResult.Should().NotBeNull();
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
+
+            var apiResponse = internalServerErrorResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            apiResponse.ErrorMessages.Should().Contain("Internal server error");
+        }
+
+        [Fact]
+        public async Task CreateAsync_UserInValidRole_ReturnsForbidden()
+        {
+            // Arrange
+            _mockResourceService
+                .Setup(r => r.GetString(SD.FORBIDDEN_MESSAGE))
+                .Returns("Forbidden access.");
+
+            // Simulate a user with valid ID but missing required role
+            var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, "testUserId") };
+            var identity = new ClaimsIdentity(claims, "test");
+            var principal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal },
+            };
+
+            // Arrange
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = null, // For test cases without media; replace with a mock IFormFile if needed
+                TutorRequestId = 1, // Assuming a valid TutorRequestId for test
+                ChildId = 0, // Assume 0 when creating a new account
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>
+                {
+                    new InitialAssessmentResultCreateDTO { QuestionId = 1, OptionId = 1 },
+                    new InitialAssessmentResultCreateDTO { QuestionId = 2, OptionId = 2 },
+                },
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "10:00 AM",
+                        To = "11:00 AM",
+                    },
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 2,
+                        From = "1:00 PM",
+                        To = "2:00 PM",
+                    },
+                },
+            };
+
+            _mockStudentProfileRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<StudentProfile>()))
+                .ThrowsAsync(new UnauthorizedAccessException());
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var forbiddenResult = result.Result as ObjectResult;
+            forbiddenResult.Should().NotBeNull();
+            forbiddenResult.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
+
+            var apiResponse = forbiddenResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            apiResponse.ErrorMessages.First().Should().Be("Forbidden access.");
+        }
+
+        [Fact]
+        public async Task CreateAsync_UnauthorizedUser_ReturnsUnauthorized()
+        {
+            _mockResourceService
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
+
+            // Simulate a user with no valid claims (unauthorized)
+            var claimsIdentity = new ClaimsIdentity(); // No claims added
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal },
+            };
+
+            // Arrange
+            var studentProfileDto = new StudentProfileCreateDTO
+            {
+                Email = "parent@example.com",
+                ParentFullName = "John Doe",
+                Address = "123 Elm Street, Springfield",
+                PhoneNumber = "123-456-7890",
+                ChildName = "Jane Doe",
+                isMale = false,
+                BirthDate = new DateTime(2015, 5, 20),
+                Media = null, // For test cases without media; replace with a mock IFormFile if needed
+                TutorRequestId = 1, // Assuming a valid TutorRequestId for test
+                ChildId = 0, // Assume 0 when creating a new account
+                InitialCondition = "Diagnosed with mild autism",
+                InitialAssessmentResults = new List<InitialAssessmentResultCreateDTO>
+                {
+                    new InitialAssessmentResultCreateDTO { QuestionId = 1, OptionId = 1 },
+                    new InitialAssessmentResultCreateDTO { QuestionId = 2, OptionId = 2 },
+                },
+                ScheduleTimeSlots = new List<ScheduleTimeSlotCreateDTO>
+                {
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 1,
+                        From = "10:00 AM",
+                        To = "11:00 AM",
+                    },
+                    new ScheduleTimeSlotCreateDTO
+                    {
+                        Weekday = 2,
+                        From = "1:00 PM",
+                        To = "2:00 PM",
+                    },
+                },
+            };
+
+            _mockStudentProfileRepository
+                .Setup(repo => repo.CreateAsync(It.IsAny<StudentProfile>()))
+                .ThrowsAsync(new UnauthorizedAccessException());
+
+            // Act
+            var result = await _controller.CreateAsync(studentProfileDto);
+
+            // Assert
+            var unauthorizedResult = result.Result as ObjectResult;
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
+
+            var apiResponse = unauthorizedResult.Value as APIResponse;
+            apiResponse.Should().NotBeNull();
+            apiResponse.IsSuccess.Should().BeFalse();
+            apiResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            apiResponse.ErrorMessages.First().Should().Be("Unauthorized access.");
         }
 
         [Fact]
@@ -1361,9 +2694,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<string>()
                     )
                 )
-                .ReturnsAsync(
-                    studentProfiles.First(x => x.Status == SD.StudentProfileStatus.Pending)
-                );
+                .ReturnsAsync(studentProfiles.First());
 
             // Act
             var result = await _controller.GetAllChildStudentProfile("pending");
@@ -1446,9 +2777,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<string>()
                     )
                 )
-                .ReturnsAsync(
-                    studentProfiles.First(x => x.Status == SD.StudentProfileStatus.Reject)
-                );
+                .ReturnsAsync(studentProfiles.First());
 
             // Act
             var result = await _controller.GetAllChildStudentProfile("reject");
@@ -1531,9 +2860,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                         It.IsAny<string>()
                     )
                 )
-                .ReturnsAsync(
-                    studentProfiles.First(x => x.Status == SD.StudentProfileStatus.Teaching)
-                );
+                .ReturnsAsync(studentProfiles.First());
 
             // Act
             var result = await _controller.GetAllChildStudentProfile("teaching");
@@ -1644,8 +2971,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var identity = new ClaimsIdentity(invalidClaims);
             var principal = new ClaimsPrincipal(identity);
             _mockResourceService
-        .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
-        .Returns("Unauthorized access.");
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
             _controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = principal }, // Setting an unauthenticated principal
@@ -1674,8 +3001,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var identity = new ClaimsIdentity(claims);
             var principal = new ClaimsPrincipal(identity);
             _mockResourceService
-        .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
-        .Returns("Internal server error");
+                .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("Internal server error");
             _controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = principal },
@@ -1700,7 +3027,9 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Assert
             // Assert
             var internalServerErrorResult = result.Result as ObjectResult;
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var response = internalServerErrorResult.Value.Should().BeOfType<APIResponse>().Subject;
             response.IsSuccess.Should().BeFalse();
@@ -1721,8 +3050,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 HttpContext = new DefaultHttpContext { User = principal },
             };
             _mockResourceService
-         .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
-         .Returns("Unauthorized access.");
+                .Setup(r => r.GetString(SD.UNAUTHORIZED_MESSAGE))
+                .Returns("Unauthorized access.");
             // Act
             var result = await _controller.GetAllScheduleTimeSlot();
 
@@ -1756,23 +3085,27 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Simulate an exception being thrown in the repository
             _mockStudentProfileRepository
-                .Setup(repo => repo.GetAllNotPagingAsync(
-                    It.IsAny<Expression<Func<StudentProfile, bool>>>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<Expression<Func<StudentProfile, object>>>(),
-                    It.IsAny<bool>()
-                ))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<StudentProfile, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<StudentProfile, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ThrowsAsync(new Exception("An unexpected error occurred"));
             _mockResourceService
-       .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
-       .Returns("Internal server error");
+                .Setup(r => r.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE))
+                .Returns("Internal server error");
             // Act
             var result = await _controller.GetAllScheduleTimeSlot();
 
             // Assert
             var internalServerErrorResult = result.Result as ObjectResult;
-            internalServerErrorResult.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
+            internalServerErrorResult
+                .StatusCode.Should()
+                .Be((int)HttpStatusCode.InternalServerError);
 
             var response = internalServerErrorResult.Value.Should().BeOfType<APIResponse>().Subject;
             response.IsSuccess.Should().BeFalse();
@@ -1795,38 +3128,50 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             };
 
             var scheduleTimeSlots = new List<StudentProfile>
-    {
-        new StudentProfile
-        {
-            Id = 1,
-            TutorId = tutorId,
-            Status = SD.StudentProfileStatus.Teaching,
-            ScheduleTimeSlots = new List<ScheduleTimeSlot>
             {
-                new ScheduleTimeSlot { Id = 1, From = TimeSpan.Parse("9:00"), To = TimeSpan.Parse("10:00") }
-            }
-        },
-        new StudentProfile
-        {
-            Id = 2,
-            TutorId = tutorId,
-            Status = SD.StudentProfileStatus.Pending,
-            ScheduleTimeSlots = new List<ScheduleTimeSlot>
-            {
-                new ScheduleTimeSlot { Id = 2, From = TimeSpan.Parse("9:00"), To = TimeSpan.Parse("10:00") }
-            }
-        }
-    };
+                new StudentProfile
+                {
+                    Id = 1,
+                    TutorId = tutorId,
+                    Status = SD.StudentProfileStatus.Teaching,
+                    ScheduleTimeSlots = new List<ScheduleTimeSlot>
+                    {
+                        new ScheduleTimeSlot
+                        {
+                            Id = 1,
+                            From = TimeSpan.Parse("9:00"),
+                            To = TimeSpan.Parse("10:00"),
+                        },
+                    },
+                },
+                new StudentProfile
+                {
+                    Id = 2,
+                    TutorId = tutorId,
+                    Status = SD.StudentProfileStatus.Pending,
+                    ScheduleTimeSlots = new List<ScheduleTimeSlot>
+                    {
+                        new ScheduleTimeSlot
+                        {
+                            Id = 2,
+                            From = TimeSpan.Parse("9:00"),
+                            To = TimeSpan.Parse("10:00"),
+                        },
+                    },
+                },
+            };
 
             // Mock the repository to return the schedule time slots
             _mockStudentProfileRepository
-                .Setup(repo => repo.GetAllNotPagingAsync(
-                    It.IsAny<Expression<Func<StudentProfile, bool>>>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<Expression<Func<StudentProfile, object>>>(),
-                    It.IsAny<bool>()
-                ))
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<StudentProfile, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<StudentProfile, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
                 .ReturnsAsync((scheduleTimeSlots.Count, scheduleTimeSlots));
 
             // Act
@@ -1845,11 +3190,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             var timeSlots = apiResponse.Result as List<GetAllStudentProfileTimeSlotDTO>;
             timeSlots.Should().NotBeNull();
             timeSlots.Count.Should().Be(2); // Ensure two schedule time slots are returned
-
         }
-
-
-
-
     }
 }
