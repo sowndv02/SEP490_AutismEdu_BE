@@ -54,7 +54,7 @@ namespace AutismEduConnectSystem.Repository
                         }
                     }
                     if(!query.Any())
-                        query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
+                     query = storageQuery.Include(x => x.Reviews).Where(x => !x.Reviews.Any());
                 }
                 
             }
@@ -90,7 +90,7 @@ namespace AutismEduConnectSystem.Repository
             if (filterScore == 0)
             {
                 var reviews = await _context.Reviews
-                .AsNoTracking()
+                .AsNoTracking().Where(x => !x.IsHide)
                 .GroupBy(r => r.TutorId)
                 .Select(g => new
                 {
@@ -126,7 +126,7 @@ namespace AutismEduConnectSystem.Repository
             else
             {
                 var reviews = await _context.Reviews
-                .AsNoTracking()
+                .AsNoTracking().Where(x => !x.IsHide)
                 .GroupBy(r => r.TutorId)
                 .Select(g => new
                 {
