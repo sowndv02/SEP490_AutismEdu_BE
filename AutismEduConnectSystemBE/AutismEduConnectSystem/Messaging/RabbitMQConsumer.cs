@@ -4,6 +4,8 @@ using RabbitMQ.Client;
 using System.Text;
 using Newtonsoft.Json;
 using AutismEduConnectSystem.Models;
+using RabbitMQ.Client.Events;
+using RabbitMQ.Client;
 
 namespace AutismEduConnectSystem.Messaging
 {

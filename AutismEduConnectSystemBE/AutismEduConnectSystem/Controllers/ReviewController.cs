@@ -250,7 +250,7 @@ namespace AutismEduConnectSystem.Controllers
                     return BadRequest(_response);
                 }
 
-                var existingReview = await _reviewRepository.GetAsync(x => x.TutorId == reviewCreateDTO.TutorId && x.ParentId == userId);
+                var existingReview = await _reviewRepository.GetAsync(x => x.TutorId == reviewCreateDTO.TutorId && x.ParentId == userId && !x.IsHide);
                 if (existingReview != null)
                 {
                     _logger.LogWarning("Duplicate review detected for tutor {TutorId} by user {UserId}", reviewCreateDTO.TutorId, userId);
@@ -396,6 +396,7 @@ namespace AutismEduConnectSystem.Controllers
                     return NotFound(_response);
                 }
                 review.IsHide = true;
+                review.UpdatedDate = DateTime.Now;
                 await _reviewRepository.UpdateAsync(review);
 
                 _response.StatusCode = HttpStatusCode.NoContent;
