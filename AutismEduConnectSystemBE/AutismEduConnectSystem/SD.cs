@@ -19,12 +19,12 @@
         public const string URL_IMAGE_USER = "UserImages";
         public const string URL_IMAGE_DEFAULT = "https://placehold.co/600x400";
         public const string IMAGE_DEFAULT_AVATAR_NAME = "default-avatar.png";
-        public const string URL_FE = "http://localhost:5173";
-        public const string URL_FE_TUTOR_REGISTRATION_REQUEST = "http://localhost:5173/autismedu/tutor-registration";
-        public const string URL_FE_FULL = "http://localhost:5173/autismedu";
-        public const string URL_FE_TUTOR_LOGIN = "http://localhost:5173/autismtutor/tutor-login";
+        public const string URL_FE = "http://20.205.21.17";
+        public const string URL_FE_TUTOR_REGISTRATION_REQUEST = "http://20.205.21.17/autismedu/tutor-registration";
+        public const string URL_FE_FULL = "http://20.205.21.17/autismedu";
+        public const string URL_FE_TUTOR_LOGIN = "http://20.205.21.17/autismtutor/tutor-login";
         public const string URL_IMAGE_DEFAULT_BLOB = "https://sep490g50v1.blob.core.windows.net/logos-public/default-avatar.png";
-        public const string URL_FE_STUDENT_PROFILE_DETAIL = "http://localhost:5173/autismedu/approve-student-profile/";
+        public const string URL_FE_STUDENT_PROFILE_DETAIL = "http://20.205.21.17/autismedu/approve-student-profile/";
         public const string URL_FE_PARENT_LOGIN = "";
         public const string URL_FE_TUTOR_SETTING = "/autismtutor/tutor-setting";
         public const string URL_FE_TUTOR = "/autismtutor";
