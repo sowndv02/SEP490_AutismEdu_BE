@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutismEduConnectSystem", "A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutismEduConnectSystemTests", "AutismEduConnectSystemTests\AutismEduConnectSystemTests.csproj", "{F072DC25-6CB7-4059-9C92-56F069BE5023}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{F4DAEF06-C816-4C91-871D-CEF14E011D7A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{F072DC25-6CB7-4059-9C92-56F069BE5023}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F072DC25-6CB7-4059-9C92-56F069BE5023}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F072DC25-6CB7-4059-9C92-56F069BE5023}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4DAEF06-C816-4C91-871D-CEF14E011D7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4DAEF06-C816-4C91-871D-CEF14E011D7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4DAEF06-C816-4C91-871D-CEF14E011D7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4DAEF06-C816-4C91-871D-CEF14E011D7A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
