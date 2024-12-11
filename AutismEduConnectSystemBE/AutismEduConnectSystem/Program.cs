@@ -24,6 +24,7 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -175,6 +176,23 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["ApiSettings:JWT:ValidAudience"],
         ValidIssuer = builder.Configuration["ApiSettings:JWT:ValidIssuer"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["ApiSettings:JWT:Secret"]))
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+            var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId != null)
+            {
+                var user = await userManager.FindByIdAsync(userId);
+                if (user?.LockoutEnd > DateTime.Now)
+                {
+                    context.Fail("Tài khoản của bạn đang bị khóa.");
+                }
+            }
+        }
     };
 }).AddGoogle(options =>
 {
