@@ -165,6 +165,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var newModel = _mapper.Map<Certificate>(createDTO);
                 if (newModel.ExpirationDate == DateTime.MinValue || string.IsNullOrEmpty(newModel.ExpirationDate?.ToString())) newModel.ExpirationDate = null;
                 newModel.SubmitterId = userId;
+
+                var certificateExtist = await _certificateRepository.GetAllNotPagingAsync(x => x.CertificateName.Equals(newModel.CertificateName));
+                if (certificateExtist.list.Any())
+                {
+                    _logger.LogError("Certificate with name {certificateName} already exist", newModel.CertificateName);
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
+                    return BadRequest(_response);
+                }
+
                 var certificate = await _certificateRepository.CreateAsync(newModel);
                 if (createDTO.Medias != null && createDTO.Medias.Any()) 
                 {

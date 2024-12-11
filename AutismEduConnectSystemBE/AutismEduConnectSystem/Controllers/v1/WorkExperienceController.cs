@@ -244,6 +244,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
+                var workExperienceExist = await _workExperienceRepository.GetAllNotPagingAsync(x => x.CompanyName.Equals(createDTO.CompanyName) && x.Position.Equals(createDTO.Position));
+                if (workExperienceExist.list.Any())
+                {
+                    _logger.LogWarning("Work experience already exist");
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
+                    return BadRequest(_response);
+                }
+
                 var newModel = _mapper.Map<WorkExperience>(createDTO);
                 if (newModel.EndDate == DateTime.MinValue || string.IsNullOrEmpty(newModel.EndDate?.ToString())) newModel.EndDate = null;
                 newModel.SubmitterId = userId;
