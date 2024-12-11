@@ -117,7 +117,8 @@ namespace AutismEduConnectSystem.Controllers
                         r.Parent.FullName,
                         r.Parent.ImageUrl
                     },
-                    r.CreatedDate
+                    r.CreatedDate,
+                    r.UpdatedDate
                 }).ToList();
 
                 _response.Result = new
