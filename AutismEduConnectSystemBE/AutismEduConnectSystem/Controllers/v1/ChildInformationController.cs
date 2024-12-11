@@ -7,6 +7,7 @@ using AutismEduConnectSystem.Services.IServices;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Net;
 using System.Security.Claims;
 
@@ -205,9 +206,9 @@ namespace AutismEduConnectSystem.Controllers.v1
                     {
                         string[] names = updateDTO.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                         studentProfile.StudentCode = "";
-                        foreach (var name in names)
+                        for (int i = 0; i < (names.Length > 6 ? 6 : names.Length); i++)
                         {
-                            studentProfile.StudentCode += name.ToUpper().ElementAt(0);
+                            studentProfile.StudentCode += names[i].ToUpper().ElementAt(0);
                         }
                         studentProfile.StudentCode += studentProfile.ChildId;
 
