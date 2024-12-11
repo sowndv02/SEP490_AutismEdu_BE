@@ -468,7 +468,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         var notfication = new Notification()
                         {
                             ReceiverId = child.ParentId,
-                            Message = _resourceService.GetString(SD.UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName, model.From.ToString("dd/mm/yyyy"), model.To.ToString("dd/mm/yyyy")),
+                            Message = _resourceService.GetString(SD.UPDATE_PROGRESS_REPORT_PARENT_NOTIFICATION, tutor.FullName, model.From.ToString("dd/MM/yyyy"), model.To.ToString("dd/MM/yyyy")),
                             UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST),
                             IsRead = false,
                             CreatedDate = DateTime.Now
