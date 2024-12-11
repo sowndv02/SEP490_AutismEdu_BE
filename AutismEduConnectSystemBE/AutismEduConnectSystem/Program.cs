@@ -24,7 +24,6 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,17 +39,7 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 Log.Logger = new LoggerConfiguration().MinimumLevel.Debug()
     .WriteTo.File("log/seplogs.txt", rollingInterval: RollingInterval.Day).CreateLogger();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigin",
-        builder =>
-        {
-            builder.WithOrigins(SD.URL_FE)
-                   .AllowAnyHeader()
-                   .AllowAnyMethod()
-                   .AllowCredentials();
-        });
-});
+builder.Services.AddCors(options =>{});
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
 builder.Services.AddResponseCaching(options =>
@@ -263,7 +252,12 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Autism Edu Connect System");
     //options.RoutePrefix = string.Empty;
 });
-app.UseCors("AllowSpecificOrigin");
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader();
+});
 
 //app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
 //app.UseMiddleware<RequestTimeLoggingMidleware>();
