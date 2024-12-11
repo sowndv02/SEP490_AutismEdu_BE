@@ -317,7 +317,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (!string.IsNullOrEmpty(child.Name))
                 {
                     string[] names = child.Name.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-                    for(int i = 0; i < 6; i++)
+                    for(int i = 0; i < (names.Length > 6 ? 6:names.Length); i++)
                     {
                         model.StudentCode += names[i].ToUpper().ElementAt(0);
                     }
