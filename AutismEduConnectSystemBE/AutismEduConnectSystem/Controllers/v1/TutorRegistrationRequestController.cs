@@ -555,6 +555,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.FullName)
+                        .Replace("@Model.RegistrationUrl", SD.URL_FE_TUTOR_REGISTRATION_REQUEST)
                         .Replace("@Model.RejectionReason", model.RejectionReason ?? "Không có lý do cụ thể.");
 
                     _messageBus.SendMessage(new EmailLogger()
