@@ -266,8 +266,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR) };
                     return NotFound(_response);
                 }
-                model.TotalReview = model.Reviews.Count;
-                model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Average(x => x.RateScore) : 5;
+                model.TotalReview = model.Reviews.Where(x => !x.IsHide).ToList().Count;
+                model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Where(x => !x.IsHide).ToList().Average(x => x.RateScore) : 5;
                 var result = _mapper.Map<TutorDTO>(model);
                 result.RejectChildIds = requests;
                 _response.Result = result;
