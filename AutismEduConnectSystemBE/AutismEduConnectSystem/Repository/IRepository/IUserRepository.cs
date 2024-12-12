@@ -1,5 +1,5 @@
-﻿using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
+﻿using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.Models;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using System.Linq.Expressions;

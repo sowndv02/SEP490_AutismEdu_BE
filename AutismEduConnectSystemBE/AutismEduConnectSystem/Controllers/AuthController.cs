@@ -1,5 +1,5 @@
-﻿using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
+﻿using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.RabbitMQSender;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;

@@ -1,7 +1,6 @@
-﻿using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+﻿using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.RabbitMQSender;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
@@ -11,7 +10,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;

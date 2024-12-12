@@ -1,6 +1,6 @@
-﻿using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+﻿using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
