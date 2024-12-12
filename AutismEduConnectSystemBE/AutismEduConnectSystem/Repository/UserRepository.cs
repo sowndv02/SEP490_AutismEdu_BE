@@ -1,6 +1,6 @@
 ﻿using AutismEduConnectSystem.Data;
+using AutismEduConnectSystem.DTOs;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using Google.Apis.Auth;

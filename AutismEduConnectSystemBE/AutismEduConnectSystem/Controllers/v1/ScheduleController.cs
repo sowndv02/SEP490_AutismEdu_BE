@@ -1,4 +1,6 @@
-﻿using AutismEduConnectSystem.Models;
+﻿using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.UpdateDTOs;
+using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Models.DTOs;
 using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
@@ -7,6 +9,7 @@ using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;

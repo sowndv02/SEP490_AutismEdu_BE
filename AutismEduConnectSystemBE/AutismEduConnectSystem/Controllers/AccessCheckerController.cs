@@ -1,14 +1,11 @@
 ﻿using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System.Net;
-using System.Security.Claims;
 
 namespace AutismEduConnectSystem.Controllers
 {
