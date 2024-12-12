@@ -267,4 +267,7 @@
   <data name="IN_STATUS_PENDING" xml:space="preserve">
     <value>{0} đang trong trạng thái chờ.</value>
   </data>
+  <data name="STOP_TUTORING" xml:space="preserve">
+    <value>Gia sư {0} đã kết thúc dạy trẻ {1}.</value>
+  </data>
 </root>

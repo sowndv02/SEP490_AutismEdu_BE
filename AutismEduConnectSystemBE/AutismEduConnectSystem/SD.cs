@@ -35,6 +35,7 @@
         public const string URL_FE_TUTOR_REVIEW_LIST = "/autismtutor/review-list";
         public const string URL_FE_TUTOR_TUTOR_REQUEST = "/autismtutor/tutor-request";
         public const string URL_FE_PAYMENT_QR = "/autismtutor/payment-package";
+        public const string URL_FE_TUTOR_PROFILE = "/autismedu/tutor-profile/";
 
         // Const folder mail save
         public const string FOLDER_NAME_LOG_EMAIL = "MailSave";
@@ -215,6 +216,7 @@
         public const string TUTOR_REQUEST_TUTOR_NOTIFICATION = "TUTOR_REQUEST_TUTOR_NOTIFICATION";
         public const string NEW_REVIEW_TUTOR_NOTIFICATION = "NEW_REVIEW_TUTOR_NOTIFICATION";
         public const string CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION = "CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION";
+        public const string STOP_TUTORING = "STOP_TUTORING";
 
 
         // DTO require message
