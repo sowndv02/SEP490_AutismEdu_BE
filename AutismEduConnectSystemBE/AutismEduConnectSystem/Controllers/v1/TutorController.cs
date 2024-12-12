@@ -373,7 +373,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     ageFrom = temp;
                 }
                 if (reviewScore < 0) reviewScore = 5;
-                Expression<Func<Tutor, bool>> filterAge = u => u.StartAge >= ageFrom || u.EndAge <= ageTo;
+                Expression<Func<Tutor, bool>> filterAge = u => u.StartAge <= ageTo && u.EndAge >= ageFrom;
                 Expression<Func<Tutor, bool>> searchNameFilter = null;
                 Expression<Func<Tutor, bool>> searchAddressFilter = null;
                 if (!string.IsNullOrEmpty(search))
