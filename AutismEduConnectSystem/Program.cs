@@ -268,7 +268,7 @@ app.UseSwaggerUI(options =>
 });
 app.UseCors("AllowSpecificOrigin");
 
-//app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
+app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
 //app.UseMiddleware<RequestTimeLoggingMidleware>();
 //app.UseMiddleware<ExceptionMiddleware>();
 //app.UseMiddleware<RequestLoggingMiddleware>();
