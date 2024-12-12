@@ -412,6 +412,15 @@ namespace AutismEduConnectSystem.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Gia sư {0} đã kết thúc dạy trẻ {1}..
+        /// </summary>
+        public static string STOP_TUTORING {
+            get {
+                return ResourceManager.GetString("STOP_TUTORING", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quá hạn xét duyệt hồ sơ học sinh.
         /// </summary>
         public static string STUDENT_PROFILE_EXPIRED {

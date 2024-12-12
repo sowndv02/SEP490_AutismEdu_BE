@@ -923,6 +923,51 @@ namespace AutismEduConnectSystem.Controllers.v1
                     await _scheduleRepository.RemoveAsync(schedule);
                 }
 
+                // Notification
+                var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, true, "Parent");
+                var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(tutorId), true, "User");
+
+                if (child != null && child.Parent != null && tutor != null && tutor.User != null)
+                {
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = child.ParentId,
+                        Message = _resourceService.GetString(SD.STOP_TUTORING, tutor.User.FullName, child.Name),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, studentProfile.Id),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
+                }
+
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AssignedExerciseTemplate.cshtml");
+                if (System.IO.File.Exists(templatePath) && child.Parent != null && tutor != null && tutor.User != null)
+                {
+                    var subject = "Thông Báo Kết Thúc Dạy";
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.ParentName", child.Parent.FullName)
+                        .Replace("@Model.TutorName", tutor.User.FullName)
+                        .Replace("@Model.StudentName", child.Name)
+                        .Replace("@Model.FeedBackUrl", string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_PROFILE, tutor.TutorId))
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+
+                    _messageBus.SendMessage(new EmailLogger()
+                    {
+                        UserId = child.ParentId,
+                        Email = child.Parent.Email,
+                        Subject = subject,
+                        Message = htmlMessage
+                    }, queueName);
+                }
+
                 _response.Result = _mapper.Map<StudentProfileDetailTutorDTO>(studentProfile);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;

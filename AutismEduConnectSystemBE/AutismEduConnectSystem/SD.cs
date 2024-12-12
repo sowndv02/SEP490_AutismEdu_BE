@@ -36,6 +36,7 @@
         public const string URL_FE_PAYMENT_QR = "/autismtutor/payment-package";
         public const string MAIL = "vuanh957@gmail.com";
         public const string PHONE_NUMBER = "024 7300 1866";
+        public const string URL_FE_TUTOR_PROFILE = "/autismedu/tutor-profile/";
 
         // Const folder mail save
         public const string FOLDER_NAME_LOG_EMAIL = "MailSave";
@@ -219,6 +220,7 @@
         public const string ASSIGNED_EXERCISE_NOTIFICATION = "ASSIGNED_EXERCISE_NOTIFICATION";
         public const string SCHEDULE_UPDATE_NOTIFICATION = "SCHEDULE_UPDATE_NOTIFICATION";
         public const string EXERCISE_NOT_ASSIGNED_NOTIFICATION = "EXERCISE_NOT_ASSIGNED_NOTIFICATION";
+        public const string STOP_TUTORING = "STOP_TUTORING";
 
 
         // DTO require message

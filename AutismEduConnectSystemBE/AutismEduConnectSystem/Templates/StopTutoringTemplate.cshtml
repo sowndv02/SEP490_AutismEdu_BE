@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông Báo Kết Thúc Dạy</title>
+</head>
+<body>
+    <h2>Kính gửi @Model.ParentName,</h2>
+
+    <p>Chúng tôi xin thông báo rằng gia sư <strong>@Model.TutorName</strong> đã kết thúc việc dạy trẻ <strong>@Model.StudentName</strong>.</p>
+
+    <p>Chúng tôi rất mong bạn dành chút thời gian để đánh giá chất lượng dạy học của gia sư <strong>@Model.TutorName</strong>:</p>
+    <ul>
+        <li>Bạn có thể thực hiện đánh giá thông qua đường dẫn sau:<a href="@Model.FeedBackUrl">Đánh giá ngay</a></li>
+    </ul>
+
+    <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi qua email <a href="mailto:@Model.Mail">@Model.Mail</a> hoặc số điện thoại <strong>@Model.Phone</strong>.</p>
+
+    <p>Trân trọng,</p>
+    <p>Đội ngũ Hỗ trợ</p>
+    <p>
+        <strong>Autism EduConnect System</strong><br />
+        Địa chỉ: Khu Công nghệ cao Hòa Lạc, Km29 Đại lộ Thăng Long, huyện Thạch Thất, Hà Nội<br />
+        <a href="@Model.WebsiteURL">Website</a>
+    </p>
+</body>
+</html>
