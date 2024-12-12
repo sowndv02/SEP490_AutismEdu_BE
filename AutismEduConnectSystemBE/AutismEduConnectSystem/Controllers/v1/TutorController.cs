@@ -267,7 +267,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return NotFound(_response);
                 }
                 model.TotalReview = model.Reviews.Where(x => !x.IsHide).ToList().Count;
-                model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Where(x => !x.IsHide).ToList().Average(x => x.RateScore) : 5;
+                //model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Where(x => !x.IsHide).ToList().Average(x => x.RateScore) : 5;
+
+                if(model.Reviews != null && model.Reviews.Any() && model.Reviews.Where(x => !x.IsHide).ToList().Any())
+                {
+                    model.ReviewScore = model.Reviews.Where(x => !x.IsHide).ToList().Average(x => x.RateScore);
+                }
+                else
+                {
+                    model.ReviewScore = 5;
+                }
+
                 var result = _mapper.Map<TutorDTO>(model);
                 result.RejectChildIds = requests;
                 _response.Result = result;
