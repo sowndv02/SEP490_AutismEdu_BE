@@ -19,6 +19,7 @@
         public const string URL_IMAGE_USER = "UserImages";
         public const string URL_IMAGE_DEFAULT = "https://placehold.co/600x400";
         public const string IMAGE_DEFAULT_AVATAR_NAME = "default-avatar.png";
+        public const string URL_FE_LOCAL = "http://localhost:5173/";
         public const string URL_FE = "http://20.205.21.17";
         public const string URL_FE_TUTOR_REGISTRATION_REQUEST = "/autismedu/tutor-registration";
         public const string URL_FE_FULL = "/autismedu";
