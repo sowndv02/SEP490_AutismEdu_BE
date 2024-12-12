@@ -29,9 +29,8 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     hmr: {
-      host: '20.205.21.17', // Use the public IP address of your VM for WebSockets
-      protocol: 'ws',        // WebSocket protocol
-      port: 5173,            // Same port as your dev server
+      host: '20.205.21.17',
+      protocol: 'ws'
     },
   }
 })
