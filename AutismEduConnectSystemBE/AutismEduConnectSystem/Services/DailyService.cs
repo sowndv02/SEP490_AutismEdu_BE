@@ -96,7 +96,10 @@ namespace AutismEduConnectSystem.Services
                     var htmlMessage = templateContent
                         .Replace("@Model.FullName", item.Parent?.FullName)
                         .Replace("@Model.RejectionReason", "Yêu cầu đã hết hạn xác nhận")
-                        .Replace("@Model.RejectType", SD.OtherMsg);
+                        .Replace("@Model.RejectType", SD.OtherMsg)
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
 
                     try
                     {
@@ -150,7 +153,10 @@ namespace AutismEduConnectSystem.Services
                         var htmlMessage = templateContent
                             .Replace("@Model.FullName", user.FullName)
                             .Replace("@Model.ExpirationDate", paymentHistory.ExpirationDate.ToString("dd/MM/yyyy"))
-                            .Replace("@Model.PaymentUrl", string.Concat(SD.URL_FE, SD.URL_FE_PAYMENT_QR));
+                            .Replace("@Model.PaymentUrl", string.Concat(SD.URL_FE, SD.URL_FE_PAYMENT_QR))
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
 
                         try
                         {

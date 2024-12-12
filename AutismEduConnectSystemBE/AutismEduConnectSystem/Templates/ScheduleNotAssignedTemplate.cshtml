@@ -2,21 +2,14 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Thông Báo Tạo Hồ Sơ Học Sinh</title>
+    <title>Thông Báo Chưa Gán Bài Tập</title>
 </head>
 <body>
-    <h2>Kính gửi @Model.ParentName,</h2>
+    <h2>Kính gửi @Model.TutorName,</h2>
 
-    <p>Chúng tôi xin thông báo rằng hồ sơ học sinh <strong>@Model.StudentName</strong> đã được tạo bởi gia sư <strong>@Model.TutorName</strong> trên hệ thống của chúng tôi.</p>
+    <p>Chúng tôi xin thông báo rằng lịch học ngày <strong>@Model.ScheduleDate</strong> vào khung giờ <strong>@Model.Start</strong>-<strong>@Model.End</strong> vẫn chưa được gán bài tập.</p>
 
-    <h3>Thông tin hồ sơ:</h3>
-    <ul>
-        <li><strong>Học sinh:</strong> @Model.StudentName</li>
-        <li><strong>Gia sư:</strong> @Model.TutorName</li>
-        <li><strong>Ngày tạo hồ sơ:</strong> @Model.ProfileCreationDate</li>
-    </ul>
-
-    <p>Bạn có thể xem thông tin chi tiết của hồ sơ qua đường link dưới đây:</p>
+    <p>Bạn có thể truy cập qua đường link dưới đây để thực hiện gán bài tập cho lịch học:</p>
     <ul>
         <li><a href="@Model.Url">Xem thông tin chi tiết</a></li>
     </ul>

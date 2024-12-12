@@ -88,6 +88,15 @@ namespace AutismEduConnectSystem.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Lịch học ngày {0} vào khung giờ {1}-{2} đã được gán bài tập..
+        /// </summary>
+        public static string ASSIGNED_EXERCISE_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("ASSIGNED_EXERCISE_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Không tìm thấy đánh giá hoặc bạn không có quyền thay đổi đánh giá này.
         /// </summary>
         public static string BAD_ACTION_REVIEW {
@@ -250,6 +259,15 @@ namespace AutismEduConnectSystem.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Lịch học ngày {0} vào khung giờ {1}-{2} chưa được gán bài tập..
+        /// </summary>
+        public static string EXERCISE_NOT_ASSIGNED_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("EXERCISE_NOT_ASSIGNED_NOTIFICATION", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Không có quyền truy cập vào tài nguyên..
         /// </summary>
         public static string FORBIDDEN_MESSAGE {
@@ -304,7 +322,7 @@ namespace AutismEduConnectSystem.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Phải đăng nhập ở phía {0}.
+        ///   Looks up a localized string similar to Không có quyền truy cập..
         /// </summary>
         public static string LOGIN_WRONG_SIDE {
             get {
@@ -381,6 +399,15 @@ namespace AutismEduConnectSystem.Resources {
         public static string REGISTER_FAILED_MESSAGE {
             get {
                 return ResourceManager.GetString("REGISTER_FAILED_MESSAGE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lịch học ngày {0} vào khung giờ {1}-{2} đã được đánh giá.
+        /// </summary>
+        public static string SCHEDULE_UPDATE_NOTIFICATION {
+            get {
+                return ResourceManager.GetString("SCHEDULE_UPDATE_NOTIFICATION", resourceCulture);
             }
         }
         

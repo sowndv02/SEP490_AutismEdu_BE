@@ -1,7 +1,4 @@
 ﻿@using AutismEduConnectSystem
-@{
-    var registrationUrl = SD.URL_FE_TUTOR_REGISTRATION_REQUEST;
-}
 
 <!DOCTYPE html>
 <html>
@@ -20,9 +17,9 @@
 
     <p>Tuy nhiên, chúng tôi rất mong bạn có thể cải thiện và tạo lại một đơn đăng ký mới. Hệ thống của chúng tôi đã mở lại quyền tạo đơn mới và bạn có thể bắt đầu quá trình đăng ký lại.</p>
 
-    <p>Để tạo đơn đăng ký mới, vui lòng truy cập vào <a href="@registrationUrl">liên kết này</a>.</p>
+    <p>Để tạo đơn đăng ký mới, vui lòng truy cập vào <a href="@Model.RegistrationUrl">liên kết này</a>.</p>
 
-    <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi qua email <a href="mailto:support@domain.com">support@domain.com</a> hoặc số điện thoại <strong>(+84) 123-456-789</strong>.</p>
+    <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi qua email <a href="mailto:@Model.Mail">@Model.Mail</a> hoặc số điện thoại <strong>@Model.Phone</strong>.</p>
 
     <p>Chúng tôi hy vọng nhận được đơn đăng ký mới của bạn sớm nhất.</p>
 
@@ -31,7 +28,7 @@
     <p>
         <strong>Autism EduConnect System</strong><br />
         Địa chỉ: Khu Công nghệ cao Hòa Lạc, Km29 Đại lộ Thăng Long, huyện Thạch Thất, Hà Nội<br />
-        <a href="https://www.domain.com">Website</a>
+        <a href="@Model.WebsiteURL">Website</a>
     </p>
 </body>
 </html>

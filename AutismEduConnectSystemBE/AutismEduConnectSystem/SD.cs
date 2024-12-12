@@ -20,11 +20,10 @@
         public const string URL_IMAGE_DEFAULT = "https://placehold.co/600x400";
         public const string IMAGE_DEFAULT_AVATAR_NAME = "default-avatar.png";
         public const string URL_FE = "http://localhost:5173";
-        public const string URL_FE_TUTOR_REGISTRATION_REQUEST = "http://localhost:5173/autismedu/tutor-registration";
-        public const string URL_FE_FULL = "http://localhost:5173/autismedu";
-        public const string URL_FE_TUTOR_LOGIN = "http://localhost:5173/autismtutor/tutor-login";
+        public const string URL_FE_TUTOR_REGISTRATION_REQUEST = "/autismedu/tutor-registration";
+        public const string URL_FE_FULL = "/autismedu";
+        public const string URL_FE_TUTOR_LOGIN = "/autismtutor/tutor-login";
         public const string URL_IMAGE_DEFAULT_BLOB = "https://sep490g50v1.blob.core.windows.net/logos-public/default-avatar.png";
-        public const string URL_FE_STUDENT_PROFILE_DETAIL = "http://localhost:5173/autismedu/approve-student-profile/";
         public const string URL_FE_PARENT_LOGIN = "";
         public const string URL_FE_TUTOR_SETTING = "/autismtutor/tutor-setting";
         public const string URL_FE_TUTOR = "/autismtutor";
@@ -35,6 +34,8 @@
         public const string URL_FE_TUTOR_REVIEW_LIST = "/autismtutor/review-list";
         public const string URL_FE_TUTOR_TUTOR_REQUEST = "/autismtutor/tutor-request";
         public const string URL_FE_PAYMENT_QR = "/autismtutor/payment-package";
+        public const string MAIL = "vuanh957@gmail.com";
+        public const string PHONE_NUMBER = "024 7300 1866";
 
         // Const folder mail save
         public const string FOLDER_NAME_LOG_EMAIL = "MailSave";
@@ -215,6 +216,9 @@
         public const string TUTOR_REQUEST_TUTOR_NOTIFICATION = "TUTOR_REQUEST_TUTOR_NOTIFICATION";
         public const string NEW_REVIEW_TUTOR_NOTIFICATION = "NEW_REVIEW_TUTOR_NOTIFICATION";
         public const string CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION = "CHANGE_STATUS_PROFILE_TUTOR_NOTIFICATION";
+        public const string ASSIGNED_EXERCISE_NOTIFICATION = "ASSIGNED_EXERCISE_NOTIFICATION";
+        public const string SCHEDULE_UPDATE_NOTIFICATION = "SCHEDULE_UPDATE_NOTIFICATION";
+        public const string EXERCISE_NOT_ASSIGNED_NOTIFICATION = "EXERCISE_NOT_ASSIGNED_NOTIFICATION";
 
 
         // DTO require message

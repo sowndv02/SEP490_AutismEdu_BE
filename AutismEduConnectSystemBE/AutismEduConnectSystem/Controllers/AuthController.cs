@@ -78,7 +78,7 @@ namespace AutismEduConnectSystem.Controllers
                     return NotFound(_response);
                 }
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
-                var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
+                var callbackUrl = $"{string.Concat(SD.URL_FE, SD.URL_FE_FULL)}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
                 _messageBus.SendMessage(new EmailLogger() { UserId = user.Id, Email = user.Email, Subject = "Xác nhận Email", Message = $"Thời gian hết hạn 5 phút. \nĐể xác nhận email hãy click vào đường dẫn: <a href='{callbackUrl}'>link</a>" }, queueName);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -249,7 +249,7 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 var code = await _userRepository.GeneratePasswordResetTokenAsync(user);
 
-                var callbackUrl = $"{SD.URL_FE_FULL}/reset-password?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
+                var callbackUrl = $"{string.Concat(SD.URL_FE, SD.URL_FE_FULL)}/reset-password?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
 
                 _messageBus.SendMessage(new EmailLogger()
                 {
@@ -366,7 +366,7 @@ namespace AutismEduConnectSystem.Controllers
                 await _userRepository.UpdateAsync(user);
 
                 string code = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
-                var callbackUrl = $"{SD.URL_FE_FULL}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
+                var callbackUrl = $"{string.Concat(SD.URL_FE, SD.URL_FE_FULL)}/confirm-register?userId={user.Id}&code={code}&security={_dateTimeEncryption.EncryptDateTime(DateTime.Now)}";
                 _messageBus.SendMessage(new EmailLogger()
                 {
                     UserId = user.Id,
