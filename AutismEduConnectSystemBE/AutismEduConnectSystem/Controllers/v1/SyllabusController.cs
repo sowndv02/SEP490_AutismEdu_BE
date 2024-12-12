@@ -52,7 +52,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -61,13 +61,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 if (id <= 0)
                 {
                     _logger.LogWarning($"Invalid syllabus ID: {id} provided by User: {userId}");
@@ -112,7 +112,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -122,13 +122,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                
+
                 Expression<Func<Syllabus, bool>> filter = u => !string.IsNullOrEmpty(u.TutorId) && u.TutorId == userId && !u.IsDeleted;
                 Expression<Func<Syllabus, object>> orderByQuery = u => true;
                 bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
@@ -190,7 +190,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         {
             try
             {
-                if(id <= 0)
+                if (id <= 0)
                 {
                     _logger.LogWarning("Syllabus not found for id: {id}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -235,7 +235,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -244,7 +244,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -285,6 +285,20 @@ namespace AutismEduConnectSystem.Controllers.v1
                 await _syllabusRepository.UpdateAsync(model);
                 if (updateDTO.SyllabusExercises != null)
                 {
+                    var updatedExerciseTypeIds = updateDTO.SyllabusExercises.Select(x => x.ExerciseTypeId).ToList();
+                    var existingExerciseTypes = await _syllabusExerciseRepository.GetAllNotPagingAsync(x => x.SyllabusId == updateDTO.Id);
+                    var existingExerciseTypeIds = existingExerciseTypes.list.Select(x => x.ExerciseTypeId).Distinct().ToList();
+                    var exerciseTypesIdToRemove = existingExerciseTypeIds.Where(x => !updatedExerciseTypeIds.Contains(x)).ToList();
+                    foreach(var exerciseTypeId in exerciseTypesIdToRemove)
+                    {
+                        var exerciseTypesToRemove = existingExerciseTypes.list.Where(se => se.ExerciseTypeId == exerciseTypeId).ToList();
+
+                        foreach (var exerciseTypeToRemove in exerciseTypesToRemove)
+                        {
+                            await _syllabusExerciseRepository.RemoveAsync(exerciseTypeToRemove);
+                        }
+                    }
+
                     foreach (var exerciseTypeUpdate in updateDTO.SyllabusExercises)
                     {
                         int exerciseTypeId = exerciseTypeUpdate.ExerciseTypeId;
@@ -317,7 +331,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
 
                 var (syllabusExerciseCount, syllabusExercises) = await _syllabusExerciseRepository.GetAllNotPagingAsync(filter: x => x.SyllabusId == model.Id, includeProperties: "Exercise,ExerciseType", excludeProperties: null);
-                if(syllabusExercises != null && syllabusExercises.Any())
+                if (syllabusExercises != null && syllabusExercises.Any())
                 {
                     model.SyllabusExercises = syllabusExercises;
                     model.ExerciseTypes = syllabusExercises
@@ -359,7 +373,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -368,7 +382,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
+
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -384,7 +398,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var (total, list) = await _syllabusRepository.GetAllNotPagingAsync(x => createDTO.AgeFrom >= x.AgeFrom && createDTO.AgeEnd >= x.AgeEnd && x.TutorId == userId && !x.IsDeleted);
-                if(list != null && list.Any())
+                if (list != null && list.Any())
                 {
                     foreach (var item in list)
                     {
