@@ -244,11 +244,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.FullName", parent.FullName)
                             .Replace("@Model.Username", parent.Email)
                             .Replace("@Model.Password", passsword)
-                            .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
+                            .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
                         await _messageBus.SendEmailAsync(parent.Email, subject, htmlMessage);
                     }
-                        
-
+                       
+x
                     //_messageBus.SendMessage(new EmailLogger()
                     //{
                     //    UserId = parent.Id,
@@ -333,7 +336,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     {
                         ReceiverId = child.ParentId,
                         Message = _resourceService.GetString(SD.CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION, model.Tutor?.User.FullName),
-                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_UPDATE_STATUS_STUDENT_PROFILE, model.Id),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, model.Id),
                         IsRead = false,
                         CreatedDate = DateTime.Now
                     };
@@ -349,7 +352,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateStudentProfileTemplate.cshtml");
                 if (System.IO.File.Exists(templatePath) && child.Parent != null && model.Tutor != null && model.Tutor.User != null)
                 {
-                    var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
+                    var subject = "Thông Báo Hồ Sơ Học Sinh Đã Được Tạo";
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
                     var htmlMessage = templateContent
                         .Replace("@Model.ParentName", child.Parent.FullName)
@@ -357,7 +360,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.StudentName", child.Name)
                         .Replace("@Model.Email", child.Parent.Email)
                         .Replace("@Model.Url", string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, model.Id))
-                        .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
+                        .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"))
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+                    
                     //_messageBus.SendMessage(new EmailLogger()
                     //{
                     //    UserId = child.ParentId,

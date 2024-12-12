@@ -204,13 +204,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                 // TODO: Send email
                 var subject = "Xác nhận Đăng ký Gia sư Dạy Trẻ Tự Kỷ - Đang Chờ Duyệt";
                 var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TutorRegistrationRequestTemplate.cshtml");
-                if (System.IO.File.Exists(templatePath))
-                {
-                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", model.FullName)
-                        .Replace("@Model.Email", model.Email)
-                        .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
+                var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                var htmlMessage = templateContent
+                    .Replace("@Model.FullName", model.FullName)
+                    .Replace("@Model.Email", model.Email)
+                    .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"))
+                    .Replace("@Model.Mail", SD.MAIL)
+                    .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                    .Replace("@Model.WebsiteURL", SD.URL_FE);
+                
                     //_messageBus.SendMessage(new EmailLogger()
                     //{
                     //    Email = model.Email,
@@ -488,7 +490,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.FullName", model.FullName)
                         .Replace("@Model.Username", model.Email)
                         .Replace("@Model.Password", passsword)
-                        .Replace("@Model.LoginUrl", SD.URL_FE_TUTOR_LOGIN);
+                        .Replace("@Model.LoginUrl", string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_LOGIN))                       
+                        .Replace("@Model.WebsiteURL", SD.URL_FE)
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER);
 
 
                         //_messageBus.SendMessage(new EmailLogger()
@@ -564,8 +569,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
                         var htmlMessage = templateContent
                         .Replace("@Model.FullName", model.FullName)
-                        .Replace("@Model.RegistrationUrl", SD.URL_FE_TUTOR_REGISTRATION_REQUEST)
-                        .Replace("@Model.RejectionReason", model.RejectionReason ?? "Không có lý do cụ thể.");
+                        .Replace("@Model.RegistrationUrl", string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_REGISTRATION_REQUEST))
+                        .Replace("@Model.RejectionReason", model.RejectionReason ?? "Không có lý do cụ thể.")
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
 
                         //_messageBus.SendMessage(new EmailLogger()
                         //{

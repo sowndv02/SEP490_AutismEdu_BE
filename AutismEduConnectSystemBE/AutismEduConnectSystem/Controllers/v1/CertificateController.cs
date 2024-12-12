@@ -268,8 +268,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.FullName", tutor.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật chứng chỉ {model.CertificateName} của bạn")
                         .Replace("@Model.IsApprovedString", "Chấp nhận")
-                        .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                        .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
 
+                      
                         //_messageBus.SendMessage(new EmailLogger()
                         //{
                         //    UserId = tutor.Id,
@@ -320,7 +324,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.FullName", tutor.FullName)
                             .Replace("@Model.IssueName", $"Yêu cầu cập nhật chứng chỉ {model.CertificateName} của bạn")
                             .Replace("@Model.IsApprovedString", "Từ chối")
-                            .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER);
+                       
                         //_messageBus.SendMessage(new EmailLogger()
                         //{
                         //    UserId = tutor.Id,

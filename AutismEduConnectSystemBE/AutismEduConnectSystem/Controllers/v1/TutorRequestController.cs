@@ -376,7 +376,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.TutorFullName", tutor.FullName)
                         .Replace("@Model.TutorEmail", tutor.Email)
                         .Replace("@Model.TutorPhoneNumber", tutor.PhoneNumber)
-                        .Replace("@Model.RequestDescription", model.Description);
+                        .Replace("@Model.RequestDescription", model.Description)
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+                   
                     //_messageBus.SendMessage(new EmailLogger()
                     //{
                     //    UserId = parent.Id,
@@ -397,7 +401,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                     var tutorHtmlMessage = tutorTemplateContent
                         .Replace("@Model.TutorFullName", tutor.FullName)
                         .Replace("@Model.ParentFullName", parent.FullName)
-                        .Replace("@Model.RequestDescription", model.Description);
+                        .Replace("@Model.RequestDescription", model.Description)
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+                
                     //_messageBus.SendMessage( new EmailLogger() 
                     //{ 
                     //    UserId = tutor.Id, 
@@ -501,7 +509,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.FullName", model.Parent.FullName)
                             .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
                             .Replace("@Model.IsApprovedString", "Chấp nhận")
-                            .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
 
                         //_messageBus.SendMessage(new EmailLogger()
                         //{
@@ -567,7 +578,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.FullName", model.Parent.FullName)
                             .Replace("@Model.IssueName", $"Yêu cầu dạy học của bạn đến gia sư {tutor.FullName}")
                             .Replace("@Model.IsApprovedString", "Từ chối")
-                            .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
+                       
                         //_messageBus.SendMessage(new EmailLogger()
                         //{
                         //    UserId = model.ParentId,
