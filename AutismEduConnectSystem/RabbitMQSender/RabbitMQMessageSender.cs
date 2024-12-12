@@ -26,6 +26,7 @@ namespace AutismEduConnectSystem.RabbitMQSender
                 channel.QueueDeclare(queueName, false, false, false, null);
                 var json = JsonConvert.SerializeObject(message);
                 var body = Encoding.UTF8.GetBytes(json);
+                Console.WriteLine($"Publishing email message to RabbitMQ: {body}");
                 channel.BasicPublish(exchange: "", routingKey: queueName, null, body: body);
             }
         }

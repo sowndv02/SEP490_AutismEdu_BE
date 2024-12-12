@@ -43,7 +43,7 @@ namespace AutismEduConnectSystem.Messaging
                 var content = Encoding.UTF8.GetString(ea.Body.ToArray());
                 EmailLogger emailLogger = JsonConvert.DeserializeObject<EmailLogger>(content);
                 HandleMessage(emailLogger);
-
+                Console.WriteLine($"HandleMessage to RabbitMQ: {emailLogger}");
                 _channel.BasicAck(ea.DeliveryTag, false);
             };
             _channel.BasicConsume(_configuration.GetValue<string>("RabbitMQSettings:QueueName"), false, consumer);
