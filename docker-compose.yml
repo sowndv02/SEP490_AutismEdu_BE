@@ -1,0 +1,50 @@
+version: '3.4'
+
+services:
+  autismeduconnectsystem:
+    image: ${DOCKER_REGISTRY-}autismeduconnectsystem
+    environment:
+      - ASPNETCORE_HTTP_PORT=5000
+    ports:
+      - "5000:5000"
+    build:
+      context: .
+      dockerfile: AutismEduConnectSystem/Dockerfile
+    depends_on:
+      - db
+      - rabbitmq
+    networks:
+      - app-network
+
+  db:
+    image: mcr.microsoft.com/mssql/server
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Sa123456@
+    ports:
+      - "1433:1433"
+    networks:
+      - app-network
+  react:
+    build:
+      context: ./SEP490_AutismEdu_FE
+      dockerfile: ./Dockerfile
+    ports:
+      - "5173:5173" 
+    networks:
+      - app-network
+    depends_on:
+      - autismeduconnectsystem
+  rabbitmq:
+    image: rabbitmq:management
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app-network
+networks:
+  app-network:
+    driver: bridge
