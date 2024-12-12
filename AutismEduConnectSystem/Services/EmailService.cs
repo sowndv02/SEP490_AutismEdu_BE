@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
+using System.Net;
+using System.Net.Mail;
 
 namespace AutismEduConnectSystem.Services
 {
@@ -70,6 +72,7 @@ namespace AutismEduConnectSystem.Services
                 smtp.Connect(_mailSettings.Host, _mailSettings.Port, SecureSocketOptions.StartTls);
                 smtp.Authenticate(_mailSettings.Mail, _mailSettings.Password);
                 await smtp.SendAsync(message);
+                Console.WriteLine("Send mail successful");
             }
             catch (Exception ex)
             {
@@ -77,15 +80,69 @@ namespace AutismEduConnectSystem.Services
                 System.IO.Directory.CreateDirectory("MailSave");
                 var emailsavefile = string.Format(@"MailSave/{0}.eml", Guid.NewGuid());
                 await message.WriteToAsync(emailsavefile);
-
+                Console.WriteLine(ex.Message);
                 _logger.LogInformation("Lỗi gửi mail, lưu tại - " + emailsavefile);
                 _logger.LogError(ex.Message);
             }
             smtp.Disconnect(true);
+            smtp.Dispose();
             _logger.LogInformation("send mail to: " + email);
         }
 
+        //public async Task SendEmailAsync(string email, string subject, string htmlMessage)
+        //{
+        //    try
+        //    {
+        //        // Setup SMTP client
+        //        var smtpClient = new SmtpClient(_mailSettings.Host, _mailSettings.Port)
+        //        {
+        //            Credentials = new NetworkCredential(_mailSettings.Mail, _mailSettings.Password),
+        //            EnableSsl = true, // Ensure SSL/TLS is enabled if needed
+        //        };
 
+        //        // Create the email message
+        //        var mailMessage = new MailMessage
+        //        {
+        //            From = new MailAddress(_mailSettings.Mail, _mailSettings.DisplayName),
+        //            Subject = subject,
+        //            Body = htmlMessage,
+        //            IsBodyHtml = true, // HTML content
+        //        };
+
+        //        mailMessage.To.Add(email);
+
+        //        // Send the email asynchronously
+        //        await smtpClient.SendMailAsync(mailMessage);
+        //        Console.WriteLine("Send mail successful");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Handle error and save email to file if needed
+        //        System.IO.Directory.CreateDirectory("MailSave");
+        //        var emailsavefile = $"MailSave/{Guid.NewGuid()}.eml";
+        //        //await SaveEmailAsync(mailMessage, emailsavefile);
+        //        Console.WriteLine(ex.Message);
+        //        _logger.LogInformation("Error sending email, saved to: " + emailsavefile);
+        //        _logger.LogError(ex.Message);
+        //    }
+        //}
+
+        private async Task SaveEmailAsync(MailMessage mailMessage, string filePath)
+        {
+            try
+            {
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                using (var writer = new StreamWriter(fileStream))
+                {
+                    await writer.WriteAsync(mailMessage.ToString());
+                }
+                _logger.LogInformation($"Email saved to {filePath}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save email");
+            }
+        }
 
 
     }

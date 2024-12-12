@@ -16,5 +16,9 @@ namespace AutismEduConnectSystem.Models
         public string Message { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
+        public override string? ToString()
+        {
+            return $"{Email}-{Subject}-{Message}";
+        }
     }
 }

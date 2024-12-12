@@ -22,6 +22,7 @@ namespace AutismEduConnectSystem.Messaging
             _serviceScopeFactory = serviceScopeFactory;
             _configuration = configuration;
             var rabbitMQSettings = configuration.GetSection("RabbitMQSettings");
+            var hostName = rabbitMQSettings["HostName"];
             var factory = new ConnectionFactory
             {
                 HostName = rabbitMQSettings["HostName"],
@@ -31,6 +32,7 @@ namespace AutismEduConnectSystem.Messaging
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
             _channel.QueueDeclare(_configuration.GetValue<string>("RabbitMQSettings:QueueName"), false, false, false, null);
+            Console.WriteLine ($"Connected to RabbitMQ at {hostName}");
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,7 +45,7 @@ namespace AutismEduConnectSystem.Messaging
                 var content = Encoding.UTF8.GetString(ea.Body.ToArray());
                 EmailLogger emailLogger = JsonConvert.DeserializeObject<EmailLogger>(content);
                 HandleMessage(emailLogger);
-                Console.WriteLine($"HandleMessage to RabbitMQ: {emailLogger}");
+                Console.WriteLine($"HandleMessage to RabbitMQ: {emailLogger.ToString()}");
                 _channel.BasicAck(ea.DeliveryTag, false);
             };
             _channel.BasicConsume(_configuration.GetValue<string>("RabbitMQSettings:QueueName"), false, consumer);
