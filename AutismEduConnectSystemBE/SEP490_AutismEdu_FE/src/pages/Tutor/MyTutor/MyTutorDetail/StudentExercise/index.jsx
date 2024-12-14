@@ -1,3 +1,4 @@
+import MinimizeIcon from '@mui/icons-material/Minimize';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import {
     Box, Button,
@@ -5,7 +6,9 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Divider, FormControl, IconButton, MenuItem, Pagination, Select, Stack, Typography
+    Divider, FormControl, IconButton, MenuItem, Pagination, Select, Stack,
+    TextField,
+    Typography
 } from '@mui/material';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -17,6 +20,7 @@ import TableRow from '@mui/material/TableRow';
 import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
 import emptyBook from '~/assets/images/icon/emptybook.gif';
+import LoadingComponent from '~/components/LoadingComponent';
 import services from '~/plugins/services';
 function StudentExcercise({ studentProfile }) {
     const [schedules, setSchedules] = useState([]);
@@ -25,6 +29,9 @@ function StudentExcercise({ studentProfile }) {
     const [currentPage, setCurrentPage] = useState(1);
     const [total, setTotal] = useState(1);
     const [passingStatus, setPassingStatus] = useState("ALL");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [loading, setLoading] = useState(false);
     useEffect(() => {
         handleGetSchedules();
     }, [currentPage]);
@@ -33,9 +40,10 @@ function StudentExcercise({ studentProfile }) {
         if (currentPage === 1) {
             handleGetSchedules();
         } else setCurrentPage(1);
-    }, [passingStatus])
+    }, [passingStatus, startDate, endDate])
     const handleGetSchedules = async () => {
         try {
+            setLoading(true);
             await services.ScheduleAPI.getAssignSchedule((res) => {
                 setTotal(Math.floor(res.pagination.total / 10) + 1);
                 setSchedules(res.result);
@@ -44,10 +52,14 @@ function StudentExcercise({ studentProfile }) {
             }, {
                 pageNumber: currentPage,
                 studentProfileId: studentProfile.id,
-                status: passingStatus
+                status: passingStatus,
+                startDate: startDate,
+                endDate: endDate
             })
         } catch (error) {
             console.log(error);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -67,20 +79,55 @@ function StudentExcercise({ studentProfile }) {
     return (
         <Box sx={{ width: "80%", mx: "auto", pt: 3 }}>
             <Typography variant='h4'>Lịch sử học tập của trẻ</Typography>
-            <FormControl sx={{ mt: 3, width: "200px" }}>
-                <Select value={passingStatus} onChange={(e) => setPassingStatus(e.target.value)}>
-                    <MenuItem value="ALL">Tất cả</MenuItem>
-                    <MenuItem value="NOT_YET">Chưa có đánh giá</MenuItem>
-                    <MenuItem value="PASSED">Đã đạt</MenuItem>
-                    <MenuItem value="NOT_PASSED">Chưa đạt</MenuItem>
-                </Select>
-            </FormControl>
+            <Box sx={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 2,
+                alignItems: "center"
+            }}
+                mt={3}
+            >
+                <FormControl sx={{ mt: 3, width: "200px" }}>
+                    <Select value={passingStatus} onChange={(e) => setPassingStatus(e.target.value)}>
+                        <MenuItem value="ALL">Tất cả</MenuItem>
+                        <MenuItem value="NOT_YET">Chưa có đánh giá</MenuItem>
+                        <MenuItem value="PASSED">Đã đạt</MenuItem>
+                        <MenuItem value="NOT_PASSED">Chưa đạt</MenuItem>
+                    </Select>
+                </FormControl>
+                <Stack direction='row' gap={3}>
+                    <Stack direction="row" gap={1} alignItems="center">
+                        <Typography>Từ ngày</Typography>
+                        <TextField
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            sx={{
+                                padding: "0"
+                            }} size='small'
+                            type='date'
+                        />
+                    </Stack>
+                    <MinimizeIcon />
+                    <Stack direction="row" gap={1} alignItems="center">
+                        <Typography>Đến ngày</Typography>
+                        <TextField
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            sx={{
+                                padding: "0"
+                            }} size='small'
+                            type='date'
+                        />
+                    </Stack>
+                </Stack>
+            </Box>
             {
                 (!schedules || schedules.length === 0) ? (
                     <Stack width="100%" alignItems="center" justifyContent="center" mt="100px">
                         <Box sx={{ textAlign: "center" }}>
                             <img src={emptyBook} style={{ height: "200px" }} />
-                            <Typography>Trẻ chưa có bài tập nào!</Typography>
+                            <Typography>Không có bài tập nào!</Typography>
                         </Box>
                     </Stack>
                 ) : (
@@ -109,7 +156,7 @@ function StudentExcercise({ studentProfile }) {
                                                 </TableCell>
                                                 <TableCell sx={{ maxWidth: "200px" }}>{row.exercise.exerciseName}</TableCell>
                                                 <TableCell sx={{ maxWidth: "200px" }}>{row.exerciseType.exerciseTypeName}</TableCell>
-                                                <TableCell>{format(new Date(row.scheduleDate), "dd-MM-yyyy")}</TableCell>
+                                                <TableCell>{format(new Date(row.scheduleDate), "dd/MM/yyyy")}</TableCell>
                                                 <TableCell>
                                                     <span
                                                         style={{
@@ -141,28 +188,31 @@ function StudentExcercise({ studentProfile }) {
                     </>
                 )
             }
-            {selectedExcercise && <Dialog open={openDialogE} onClose={() => setOpenDialogE(false)} maxWidth="md" fullWidth>
-                <DialogTitle textAlign={'center'}>{selectedExcercise.exercise.exerciseName}</DialogTitle>
-                <Divider />
-                <DialogContent>
-                    <Stack direction='row' gap={2}>
-                        <Typography sx={{ width: "25%" }}>Ghi chú từ giảng viên: </Typography>
-                        {
-                            !selectedExcercise.note ? (
-                                <Typography sx={{ color: "orange" }}><i>Không có ghi chú</i></Typography>
-                            ) : (
-                                <Typography sx={{ color: "orange", width: "70%" }}><i>{selectedExcercise.note}</i></Typography>
-                            )
-                        }
-                    </Stack>
-                    <Box mx={'auto'} width={'90%'} dangerouslySetInnerHTML={{ __html: selectedExcercise.exercise.description }} />
-                </DialogContent>
-                <Divider />
-                <DialogActions>
-                    <Button onClick={() => setOpenDialogE(false)} variant='contained' color="primary">Đóng</Button>
-                </DialogActions>
-            </Dialog>}
-        </Box>
+            {
+                selectedExcercise && <Dialog open={openDialogE} onClose={() => setOpenDialogE(false)} maxWidth="md" fullWidth>
+                    <DialogTitle textAlign={'center'}>{selectedExcercise.exercise.exerciseName}</DialogTitle>
+                    <Divider />
+                    <DialogContent>
+                        <Stack direction='row' gap={2}>
+                            <Typography sx={{ width: "25%" }}>Ghi chú từ giảng viên: </Typography>
+                            {
+                                !selectedExcercise.note ? (
+                                    <Typography sx={{ color: "orange" }}><i>Không có ghi chú</i></Typography>
+                                ) : (
+                                    <Typography sx={{ color: "orange", width: "70%" }}><i>{selectedExcercise.note}</i></Typography>
+                                )
+                            }
+                        </Stack>
+                        <Box mx={'auto'} width={'90%'} dangerouslySetInnerHTML={{ __html: selectedExcercise.exercise.description }} />
+                    </DialogContent>
+                    <Divider />
+                    <DialogActions>
+                        <Button onClick={() => setOpenDialogE(false)} variant='contained' color="primary">Đóng</Button>
+                    </DialogActions>
+                </Dialog>
+            }
+            <LoadingComponent open={loading} />
+        </Box >
     )
 }
 

@@ -165,7 +165,7 @@ function Header() {
     }, [newNotification])
 
     useEffect(() => {
-        if (chatBox && messages.length <= 10) {
+        if (chatBox) {
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     }, [messages, chatBox]);
@@ -248,7 +248,7 @@ function Header() {
             }, (error) => {
                 console.log(error);
             }, {
-                pageNumber: 1
+                pageNumber: 0
             })
         } catch (error) {
             console.log(error);
@@ -384,7 +384,7 @@ function Header() {
         try {
             await services.MessageAPI.sendMessages({
                 conversationId: currentChat?.id,
-                content: text.trim(),
+                content: text.trim()
             }, (res) => {
                 setMessages([...messages, res.result]);
                 const receiveConversation = conversations.find((c) => {
@@ -737,7 +737,7 @@ function Header() {
                                             })
                                         }
                                         <Box textAlign="center">
-                                            <Button>Xem thêm</Button>
+                                            <Button onClick={handleGetNotification}>Xem thêm</Button>
                                         </Box>
                                     </Paper>
                                 )

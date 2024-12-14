@@ -131,6 +131,7 @@ function TutorHeader({ openMenu, setOpenMenu }) {
             setNewNotification(notification);
         });
         connection.on(`Messages-${tutorInfo.id}`, (message) => {
+            console.log(message);
             setNewMessage(message)
         });
         return () => {
@@ -222,8 +223,7 @@ function TutorHeader({ openMenu, setOpenMenu }) {
             }, (error) => {
                 console.log(error);
             }, {
-                pageNumber: pageNumber,
-                pageSize: pageSize
+                pageNumber: 0
             })
         } catch (error) {
             console.log(error);
@@ -380,7 +380,7 @@ function TutorHeader({ openMenu, setOpenMenu }) {
     }
 
     useEffect(() => {
-        if (chatBox && messages.length <= 10) {
+        if (chatBox) {
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     }, [messages, chatBox]);
