@@ -248,7 +248,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid)
                 {
-                   Console.WriteLine("Invalid model state for CreateAsync method. Model state errors: {@ModelState}", ModelState);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CURRICULUM) };
@@ -258,7 +257,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var isExistedCurriculum = await _curriculumRepository.GetAllNotPagingAsync(x => x.OriginalCurriculumId == curriculumDto.OriginalCurriculumId && x.RequestStatus == SD.Status.PENDING, null, null, null, true);
                 if (isExistedCurriculum.TotalCount > 0)
                 {
-                   Console.WriteLine("Cannot spam update curriculum");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.IN_STATUS_PENDING, SD.CURRICULUM) };
@@ -272,7 +270,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     {
                         if (item.AgeFrom == curriculumDto.AgeFrom && item.AgeEnd == curriculumDto.AgeEnd)
                         {
-                           Console.WriteLine("Duplicate age range found for AgeFrom: {AgeFrom} and AgeEnd: {AgeEnd}", curriculumDto.AgeFrom, curriculumDto.AgeEnd);
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
                             _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.AGE) };
@@ -298,7 +295,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating curriculum for user ID: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -315,7 +311,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -324,7 +319,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE) && !userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -335,7 +329,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutor = await _userRepository.GetAsync(x => x.Id == model.SubmitterId, false, null);
                 if (model == null)
                 {
-                   Console.WriteLine("Curriculum not found for ID: {CurriculumId}", changeStatusDTO.Id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CURRICULUM) };
@@ -343,7 +336,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (model.RequestStatus != Status.PENDING)
                 {
-                   Console.WriteLine("Curriculum ID: {CurriculumId} has already been processed with status: {RequestStatus}", changeStatusDTO.Id, model.RequestStatus);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_UPDATE_BECAUSE_NOT_PENDING, SD.CURRICULUM) };
@@ -462,7 +454,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while approving or rejecting curriculum request for curriculum ID: {CurriculumId}", changeStatusDTO.Id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

@@ -60,7 +60,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 
                 if (createDTO == null || !ModelState.IsValid)
                 {
-                   Console.WriteLine("Received null createDTO for AssessmentScoreRange creation.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_SCORE_RANGE) };
@@ -69,7 +68,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (createDTO.MinScore > createDTO.MaxScore)
                 {
-                   Console.WriteLine("Invalid score range: MinScore ({MinScore}) is greater than MaxScore ({MaxScore}).", createDTO.MinScore, createDTO.MaxScore);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_GREATER, SD.MIN_SCORE, SD.MAX_SCORE) };
@@ -146,7 +144,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 
                 if (updateDTO == null || updateDTO.Id <= 0)
                 {
-                   Console.WriteLine("Invalid update request for AssessmentScoreRange with ID: {AssessmentScoreRangeId}", updateDTO?.Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ASSESSMENT_SCORE_RANGE) };
@@ -157,7 +154,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (model == null || !ModelState.IsValid)
                 {
-                   Console.WriteLine("Assessment score range with ID: {AssessmentScoreRangeId} not found for update.", updateDTO?.Id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ASSESSMENT_SCORE_RANGE) };
@@ -167,7 +163,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (updateDTO.MinScore > updateDTO.MaxScore)
                 {
-                   Console.WriteLine("Invalid score range. MinScore: {MinScore} is greater than MaxScore: {MaxScore}", updateDTO.MinScore, updateDTO.MaxScore);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_GREATER, SD.MIN_SCORE, SD.MAX_SCORE) };
@@ -188,7 +183,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating assessment score range with ID: {AssessmentScoreRangeId}", updateDTO?.Id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -205,7 +199,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -214,7 +207,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
                 {
-                   
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -222,7 +214,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (id <= 0)
                 {
-                   Console.WriteLine("Invalid delete request for AssessmentScoreRange with ID: {AssessmentScoreRangeId}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -233,7 +224,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (model == null)
                 {
-                   Console.WriteLine("Assessment score range with ID: {AssessmentScoreRangeId} not found for deletion.", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ASSESSMENT_SCORE_RANGE) };
@@ -247,7 +237,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while deleting assessment score range with ID: {AssessmentScoreRangeId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
