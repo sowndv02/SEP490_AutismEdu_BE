@@ -140,7 +140,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 int totalCount = 0;
                 List<Curriculum> list = new();
-                Expression<Func<Curriculum, bool>> filter = u => true;
+                Expression<Func<Curriculum, bool>> filter = u => u.TutorRegistrationRequestId <= 0 || u.TutorRegistrationRequestId == null;
 
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
@@ -187,14 +187,14 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (pageSize != 0)
                 {
                     var (count, result) = await _curriculumRepository.GetAllAsync(filter,
-                                "Submitter,TutorRegistrationRequest", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                                "Submitter", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                     list = result;
                     totalCount = count;
                 }
                 else
                 {
                     var (count, result) = await _curriculumRepository.GetAllNotPagingAsync(filter,
-                                "Submitter,TutorRegistrationRequest,OriginalCurriculum", null, orderByQuery, isDesc);
+                                "Submitter,OriginalCurriculum", null, orderByQuery, isDesc);
                     list = result;
                     totalCount = count;
                 }

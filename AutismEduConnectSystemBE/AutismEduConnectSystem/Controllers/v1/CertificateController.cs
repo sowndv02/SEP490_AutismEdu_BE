@@ -398,7 +398,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
 
-                Expression<Func<Certificate, bool>> filter = u => true;
+                Expression<Func<Certificate, bool>> filter = u => u.TutorRegistrationRequestId <= 0 || u.TutorRegistrationRequestId == null;
                 Expression<Func<Certificate, object>> orderByQuery = u => true;
 
                 if (userRoles.Contains(SD.TUTOR_ROLE))
@@ -445,7 +445,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 var (count, result) = await _certificateRepository.GetAllAsync(
                     filter,
-                    "Submitter,CertificateMedias,TutorRegistrationRequest",
+                    "Submitter,CertificateMedias",
                     pageSize: 5,
                     pageNumber: pageNumber,
                     orderByQuery,

@@ -133,7 +133,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                Expression<Func<WorkExperience, bool>> filter = u => true;
+                Expression<Func<WorkExperience, bool>> filter = u => u.TutorRegistrationRequestId <= 0 || u.TutorRegistrationRequestId == null;
                 Expression<Func<WorkExperience, object>> orderByQuery = u => true;
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
@@ -176,7 +176,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
                 var (count, result) = await _workExperienceRepository.GetAllAsync(filter,
-                                "Submitter,TutorRegistrationRequest,OriginalWorkExperience", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
+                                "Submitter,OriginalWorkExperience", pageSize: pageSize, pageNumber: pageNumber, orderByQuery, isDesc);
                 foreach (var item in result)
                 {
                     if (item.Submitter != null)
