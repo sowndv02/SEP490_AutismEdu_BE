@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutismEduConnectSystem", "AutismEduConnectSystem\AutismEduConnectSystem.csproj", "{2C9759F5-E399-4157-AC0F-21FA6A44EE63}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutismEduConnectSystemTests", "AutismEduConnectSystemTests\AutismEduConnectSystemTests.csproj", "{F072DC25-6CB7-4059-9C92-56F069BE5023}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutismEduConnectSystemTests", "AutismEduConnectSystemTests\AutismEduConnectSystemTests.csproj", "{E3BC1596-755E-4E88-B112-1AD5D7023BEF}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{F4DAEF06-C816-4C91-871D-CEF14E011D7A}"
 EndProject
@@ -19,10 +19,10 @@ Global
 		{2C9759F5-E399-4157-AC0F-21FA6A44EE63}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C9759F5-E399-4157-AC0F-21FA6A44EE63}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C9759F5-E399-4157-AC0F-21FA6A44EE63}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F072DC25-6CB7-4059-9C92-56F069BE5023}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F072DC25-6CB7-4059-9C92-56F069BE5023}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F072DC25-6CB7-4059-9C92-56F069BE5023}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F072DC25-6CB7-4059-9C92-56F069BE5023}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3BC1596-755E-4E88-B112-1AD5D7023BEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3BC1596-755E-4E88-B112-1AD5D7023BEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3BC1596-755E-4E88-B112-1AD5D7023BEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3BC1596-755E-4E88-B112-1AD5D7023BEF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F4DAEF06-C816-4C91-871D-CEF14E011D7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F4DAEF06-C816-4C91-871D-CEF14E011D7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4DAEF06-C816-4C91-871D-CEF14E011D7A}.Release|Any CPU.ActiveCfg = Release|Any CPU

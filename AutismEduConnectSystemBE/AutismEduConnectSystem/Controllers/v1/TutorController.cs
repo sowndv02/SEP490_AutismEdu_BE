@@ -1,7 +1,7 @@
-﻿using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+﻿using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.CreateDTOs;
+using AutismEduConnectSystem.DTOs.UpdateDTOs;
+using AutismEduConnectSystem.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
@@ -267,7 +267,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return NotFound(_response);
                 }
                 model.TotalReview = model.Reviews.Where(x => !x.IsHide).ToList().Count;
-                model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Where(x => !x.IsHide).ToList().Average(x => x.RateScore) : 5;
+                //model.ReviewScore = model.Reviews != null && model.Reviews.Any() ? model.Reviews.Where(x => !x.IsHide).ToList().Average(x => x.RateScore) : 5;
+
+                if(model.Reviews != null && model.Reviews.Any() && model.Reviews.Where(x => !x.IsHide).ToList().Any())
+                {
+                    model.ReviewScore = model.Reviews.Where(x => !x.IsHide).ToList().Average(x => x.RateScore);
+                }
+                else
+                {
+                    model.ReviewScore = 5;
+                }
+
                 var result = _mapper.Map<TutorDTO>(model);
                 result.RejectChildIds = requests;
                 _response.Result = result;
@@ -363,7 +373,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     ageFrom = temp;
                 }
                 if (reviewScore < 0) reviewScore = 5;
-                Expression<Func<Tutor, bool>> filterAge = u => u.StartAge >= ageFrom || u.EndAge <= ageTo;
+                Expression<Func<Tutor, bool>> filterAge = u => u.StartAge <= ageTo && u.EndAge >= ageFrom;
                 Expression<Func<Tutor, bool>> searchNameFilter = null;
                 Expression<Func<Tutor, bool>> searchAddressFilter = null;
                 if (!string.IsNullOrEmpty(search))
@@ -466,8 +476,12 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.FullName", tutor.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật thông tin của bạn")
                         .Replace("@Model.IsApprovedString", "Chấp nhận")
-                        .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                        .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
 
+                        
                         //_messageBus.SendMessage(new EmailLogger()
                         //{
                         //    UserId = tutor.Id,
@@ -518,7 +532,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.FullName", tutor.FullName)
                             .Replace("@Model.IssueName", $"Yêu cầu cập nhật thông tin của bạn")
                             .Replace("@Model.IsApprovedString", "Từ chối")
-                            .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
                         //_messageBus.SendMessage(new EmailLogger()
                         //{
                         //    UserId = tutor.Id,

@@ -66,6 +66,10 @@
      <Content Update="appsettings.json">
        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
      </Content>
+     <Content Update="Templates\StopTutoringTemplate.cshtml">
+       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+     </Content>
    </ItemGroup>
 
    <ItemGroup>

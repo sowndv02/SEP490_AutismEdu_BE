@@ -1,17 +1,15 @@
-﻿using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using Microsoft.AspNetCore.Identity.UI.Services;
+﻿using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.CreateDTOs;
+using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
 using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -246,11 +244,13 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.FullName", parent.FullName)
                             .Replace("@Model.Username", parent.Email)
                             .Replace("@Model.Password", passsword)
-                            .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN);
+                            .Replace("@Model.LoginUrl", SD.URL_FE_PARENT_LOGIN)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
                         await _messageBus.SendEmailAsync(parent.Email, subject, htmlMessage);
                     }
-                        
-
+                       
                     //_messageBus.SendMessage(new EmailLogger()
                     //{
                     //    UserId = parent.Id,
@@ -335,7 +335,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     {
                         ReceiverId = child.ParentId,
                         Message = _resourceService.GetString(SD.CREATE_STUDENT_PROFILE_PARENT_NOTIFICATION, model.Tutor?.User.FullName),
-                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_UPDATE_STATUS_STUDENT_PROFILE, model.Id),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, model.Id),
                         IsRead = false,
                         CreatedDate = DateTime.Now
                     };
@@ -351,7 +351,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CreateStudentProfileTemplate.cshtml");
                 if (System.IO.File.Exists(templatePath) && child.Parent != null && model.Tutor != null && model.Tutor.User != null)
                 {
-                    var subject = "Thông Báo Xét Duyệt Hồ Sơ Học Sinh";
+                    var subject = "Thông Báo Hồ Sơ Học Sinh Đã Được Tạo";
                     var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
                     var htmlMessage = templateContent
                         .Replace("@Model.ParentName", child.Parent.FullName)
@@ -359,7 +359,11 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.StudentName", child.Name)
                         .Replace("@Model.Email", child.Parent.Email)
                         .Replace("@Model.Url", string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, model.Id))
-                        .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"));
+                        .Replace("@Model.ProfileCreationDate", model.CreatedDate.ToString("dd/MM/yyyy"))
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+                    
                     //_messageBus.SendMessage(new EmailLogger()
                     //{
                     //    UserId = child.ParentId,
@@ -919,6 +923,45 @@ namespace AutismEduConnectSystem.Controllers.v1
                 foreach (var schedule in filteredSchedules)
                 {
                     await _scheduleRepository.RemoveAsync(schedule);
+                }
+
+                // Notification
+                var child = await _childInfoRepository.GetAsync(x => x.Id == studentProfile.ChildId, true, "Parent");
+                var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(tutorId), true, "User");
+
+                if (child != null && child.Parent != null && tutor != null && tutor.User != null)
+                {
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = child.ParentId,
+                        Message = _resourceService.GetString(SD.STOP_TUTORING, tutor.User.FullName, child.Name),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, studentProfile.Id),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
+                }
+
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AssignedExerciseTemplate.cshtml");
+                if (System.IO.File.Exists(templatePath) && child.Parent != null && tutor != null && tutor.User != null)
+                {
+                    var subject = "Thông Báo Kết Thúc Dạy";
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.ParentName", child.Parent.FullName)
+                        .Replace("@Model.TutorName", tutor.User.FullName)
+                        .Replace("@Model.StudentName", child.Name)
+                        .Replace("@Model.FeedBackUrl", string.Concat(SD.URL_FE, SD.URL_FE_TUTOR_PROFILE, tutor.TutorId))
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+
+                    await _messageBus.SendEmailAsync(child.Parent.Email, subject, htmlMessage);
                 }
 
                 _response.Result = _mapper.Map<StudentProfileDetailTutorDTO>(studentProfile);

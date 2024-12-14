@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Thông Báo Tạo Hồ Sơ Học Sinh - Gia sư Dạy Trẻ Tự Kỷ</title>
+    <title>Thông Báo Tạo Hồ Sơ Học Sinh</title>
 </head>
 <body>
     <h2>Kính gửi @Model.ParentName,</h2>
@@ -21,14 +21,14 @@
         <li><a href="@Model.Url">Xem thông tin chi tiết</a></li>
     </ul>
 
-    <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần thêm thông tin, vui lòng liên hệ với chúng tôi qua email <a href="mailto:support@domain.com">support@domain.com</a> hoặc số điện thoại <strong>(+84) 123-456-789</strong>.</p>
+    <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi qua email <a href="mailto:@Model.Mail">@Model.Mail</a> hoặc số điện thoại <strong>@Model.Phone</strong>.</p>
 
     <p>Trân trọng,</p>
     <p>Đội ngũ Hỗ trợ</p>
     <p>
         <strong>Autism EduConnect System</strong><br />
         Địa chỉ: Khu Công nghệ cao Hòa Lạc, Km29 Đại lộ Thăng Long, huyện Thạch Thất, Hà Nội<br />
-        <a href="https://www.domain.com">Website</a>
+        <a href="@Model.WebsiteURL">Website</a>
     </p>
 </body>
 </html>

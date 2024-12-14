@@ -1,4 +1,4 @@
-﻿using AutismEduConnectSystem.Models.DTOs;
+﻿using AutismEduConnectSystem.DTOs;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

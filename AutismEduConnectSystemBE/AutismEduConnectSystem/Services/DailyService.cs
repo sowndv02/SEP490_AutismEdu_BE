@@ -1,7 +1,6 @@
 ﻿using AutismEduConnectSystem.Data;
-using AutismEduConnectSystem.Models;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace AutismEduConnectSystem.Services
 {
@@ -70,7 +69,6 @@ namespace AutismEduConnectSystem.Services
             }
         }
 
-
         private async Task RejectTutorRequestAfter2Days()
         {
             try
@@ -90,29 +88,33 @@ namespace AutismEduConnectSystem.Services
                     item.RequestStatus = SD.Status.REJECT;
                     await tutorRequestRepository.UpdateAsync(item);
 
-                    var subject = "Thông Báo: Yêu Cầu Đăng Ký Gia Sư Đã Bị Từ Chối Do Hết Hạn";
                     var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AutoRejectTutorRequestTemplate.cshtml");
-                    var templateContent = await File.ReadAllTextAsync(templatePath);
-                    var htmlMessage = templateContent
-                        .Replace("@Model.FullName", item.Parent?.FullName)
-                        .Replace("@Model.RejectionReason", "Yêu cầu đã hết hạn xác nhận")
-                        .Replace("@Model.RejectType", SD.OtherMsg);
-
-                    try
+                    if (System.IO.File.Exists(templatePath))
                     {
-                        //messageBus.SendMessage(new EmailLogger
-                        //{
-                        //    Email = item.Parent?.Email,
-                        //    Subject = subject,
-                        //    Message = htmlMessage
-                        //}, _queueName);
-                        await messageBus.SendEmailAsync(item.Parent?.Email, subject, htmlMessage);
-
-                        _logger.LogInformation($"{total} tutor requests were automatically rejected due to expiration as of {DateTime.Now:dd/MM/yyyy HH:mm}. Requests rejected include IDs: {string.Join(", ", list.Select(x => x.Id))}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"Failed to send tutor requests to user {item.Parent?.Email}");
+                        var subject = "Thông Báo: Yêu Cầu Đăng Ký Gia Sư Đã Bị Từ Chối Do Hết Hạn";
+                        var templateContent = await File.ReadAllTextAsync(templatePath);
+                        var htmlMessage = templateContent
+                            .Replace("@Model.FullName", item.Parent?.FullName)
+                            .Replace("@Model.RejectionReason", "Yêu cầu đã hết hạn xác nhận")
+                            .Replace("@Model.RejectType", SD.OtherMsg)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
+                        try
+                        {
+                            //messageBus.SendMessage(new EmailLogger
+                            //{
+                            //    Email = item.Parent?.Email,
+                            //    Subject = subject,
+                            //    Message = htmlMessage
+                            //}, _queueName);
+                            await messageBus.SendEmailAsync(item.Parent?.Email, subject, htmlMessage);
+                            _logger.LogInformation($"{total} tutor requests were automatically rejected due to expiration as of {DateTime.Now:dd/MM/yyyy HH:mm}. Requests rejected include IDs: {string.Join(", ", list.Select(x => x.Id))}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Failed to send tutor requests to user {item.Parent?.Email}");
+                        }
                     }
 
                     await Task.Delay(2000);
@@ -145,29 +147,37 @@ namespace AutismEduConnectSystem.Services
 
                     if (user != null)
                     {
-                        var subject = "Thông Báo Gia Hạn Thanh Toán - Tài Khoản Của Bạn Sắp Hết Hạn";
-                        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "PaymentReminderEmail.cshtml");
-                        var templateContent = await File.ReadAllTextAsync(templatePath);
-                        var htmlMessage = templateContent
-                            .Replace("@Model.FullName", user.FullName)
-                            .Replace("@Model.ExpirationDate", paymentHistory.ExpirationDate.ToString("dd/MM/yyyy"))
-                            .Replace("@Model.PaymentUrl", string.Concat(SD.URL_FE, SD.URL_FE_PAYMENT_QR));
 
-                        try
+                        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "PaymentReminderEmail.cshtml");
+
+                        if (System.IO.File.Exists(templatePath))
                         {
-                            //messageBus.SendMessage(new EmailLogger
-                            //{
-                            //    Email = user.Email,
-                            //    Subject = subject,
-                            //    Message = htmlMessage
-                            //}, _queueName);
-                            await messageBus.SendEmailAsync(user.Email, subject, htmlMessage);
-                            _logger.LogInformation($"Payment reminder sent to user {user.Email} for payment expiring on {paymentHistory.ExpirationDate}");
+                            var subject = "Thông Báo Gia Hạn Thanh Toán - Tài Khoản Của Bạn Sắp Hết Hạn";
+                            var templateContent = await File.ReadAllTextAsync(templatePath);
+                            var htmlMessage = templateContent
+                                .Replace("@Model.FullName", user.FullName)
+                                .Replace("@Model.ExpirationDate", paymentHistory.ExpirationDate.ToString("dd/MM/yyyy"))
+                                .Replace("@Model.PaymentUrl", string.Concat(SD.URL_FE, SD.URL_FE_PAYMENT_QR))
+                                .Replace("@Model.Mail", SD.MAIL)
+                                .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                                .Replace("@Model.WebsiteURL", SD.URL_FE);
+                            try
+                            {
+                                //messageBus.SendMessage(new EmailLogger
+                                //{
+                                //    Email = user.Email,
+                                //    Subject = subject,
+                                //    Message = htmlMessage
+                                //}, _queueName);
+                                await messageBus.SendEmailAsync(user.Email, subject, htmlMessage);
+                                _logger.LogInformation($"Payment reminder sent to user {user.Email} for payment expiring on {paymentHistory.ExpirationDate}");
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, $"Failed to send payment reminder to user {user.Email}");
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"Failed to send payment reminder to user {user.Email}");
-                        }
+
                     }
                     await Task.Delay(2000);
                 }

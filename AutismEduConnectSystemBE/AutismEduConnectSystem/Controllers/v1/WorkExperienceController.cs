@@ -1,7 +1,7 @@
-﻿using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+﻿using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.CreateDTOs;
+using AutismEduConnectSystem.DTOs.UpdateDTOs;
+using AutismEduConnectSystem.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
@@ -348,7 +348,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.FullName", tutor.FullName)
                         .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
                         .Replace("@Model.IsApprovedString", "Chấp nhận")
-                        .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                        .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
 
                         //_messageBus.SendMessage(new EmailLogger()
                         //{
@@ -386,7 +389,10 @@ namespace AutismEduConnectSystem.Controllers.v1
                             .Replace("@Model.FullName", tutor.FullName)
                             .Replace("@Model.IssueName", $"Yêu cầu cập nhật kinh nghiệm làm việc của bạn tại {model.CompanyName}")
                             .Replace("@Model.IsApprovedString", "Từ chối")
-                            .Replace("@Model.RejectionReason", rejectionReasonHtml);
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
 
                         //_messageBus.SendMessage(new EmailLogger()
                         //{

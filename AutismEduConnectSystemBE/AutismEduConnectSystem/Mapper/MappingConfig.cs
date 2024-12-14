@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
 using Microsoft.AspNetCore.Identity;
+using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.CreateDTOs;
+using AutismEduConnectSystem.DTOs.UpdateDTOs;
 
 namespace AutismEduConnectSystem.Mapper
 {

@@ -39,7 +39,19 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 Log.Logger = new LoggerConfiguration().MinimumLevel.Debug()
     .WriteTo.File("log/seplogs.txt", rollingInterval: RollingInterval.Day).CreateLogger();
 
-builder.Services.AddCors(options =>{});
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder =>
+        {
+            builder.WithOrigins(SD.URL_FE, SD.URL_FE_LOCAL)
+                   .SetIsOriginAllowedToAllowWildcardSubdomains()
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .AllowCredentials();
+        });
+});
+
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
 builder.Services.AddResponseCaching(options =>
@@ -105,6 +117,9 @@ builder.Services.AddHostedService<DailyService>();
 builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
 builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<CheckAssignedExerciseForSchedule>();
+builder.Services.AddHostedService<EmailBackgroundService>();
+
 // Config Message Queue
 var rabbitMQSettings = builder.Configuration.GetSection("RabbitMQSettings");
 //builder.Services.AddHostedService<RabbitMQConsumer>();
@@ -252,12 +267,7 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Autism Edu Connect System");
     //options.RoutePrefix = string.Empty;
 });
-app.UseCors(builder =>
-{
-    builder.AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader();
-});
+app.UseCors("AllowSpecificOrigin");
 
 //app.UseMiddleware<UnauthorizedRequestLoggingMiddleware>();
 //app.UseMiddleware<RequestTimeLoggingMidleware>();
@@ -299,7 +309,19 @@ void ApplyMigration()
         using (var scope = app.Services.CreateScope())
         {
             var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            // Check if the database exists and delete it if it does
+            if (_db.Database.CanConnect())
+            {
+                Console.WriteLine("Database exists, attempting to delete...");
 
+                // Delete the database
+                _db.Database.EnsureDeleted();
+                Console.WriteLine("Database deleted successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Database does not exist.");
+            }
             // Check for pending migrations and apply them if any
             var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
             if (pendingMigrations.Count > 0)

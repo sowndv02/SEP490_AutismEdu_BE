@@ -585,9 +585,18 @@ namespace AutismEduConnectSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ErrorCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MaxRetries")
+                        .HasColumnType("int");
+
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("SendFirstTime")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Subject")
                         .IsRequired()

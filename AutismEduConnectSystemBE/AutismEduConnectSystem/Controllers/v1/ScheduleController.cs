@@ -1,12 +1,15 @@
-﻿using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+﻿using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.UpdateDTOs;
+using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
+using AutismEduConnectSystem.SignalR;
 using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -27,11 +30,17 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly ISyllabusRepository _syllabusRepository;
         private readonly ILogger<ScheduleController> _logger;
         protected int pageSize = 0;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IEmailSender _messageBus;
+        private string queueName = string.Empty;
+        private readonly ITutorRepository _tutorRepository;
 
         public ScheduleController(IScheduleRepository scheduleRepository, IMapper mapper
             , IStudentProfileRepository studentProfileRepository, IResourceService resourceService,
             IChildInformationRepository childInfoRepository, ISyllabusRepository syllabusRepository, 
-            ILogger<ScheduleController> logger, IConfiguration configuration)
+            ILogger<ScheduleController> logger, IConfiguration configuration, IEmailSender messageBus,
+            INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext, ITutorRepository tutorRepository)
         {
             _resourceService = resourceService;
             _scheduleRepository = scheduleRepository;
@@ -42,6 +51,11 @@ namespace AutismEduConnectSystem.Controllers.v1
             _syllabusRepository = syllabusRepository;
             _logger = logger;
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            queueName = configuration["RabbitMQSettings:QueueName"];
+            _messageBus = messageBus;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
+            _tutorRepository = tutorRepository;
         }
 
         [HttpGet("{id}")]
@@ -151,6 +165,51 @@ namespace AutismEduConnectSystem.Controllers.v1
                 await _scheduleRepository.UpdateAsync(model);
                 var result = await _scheduleRepository.GetAsync(x => x.Id == id, false, "ExerciseType,Exercise");
                 result.StudentProfile = await _studentProfileRepository.GetAsync(x => x.Id == model.StudentProfileId, true, "Child");
+                result.Tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(userId), false, "User");
+
+                // Notification
+                var child = await _childInfoRepository.GetAsync(x => x.Id == result.StudentProfile.ChildId, true, "Parent");
+
+                if (child != null && child.Parent != null)
+                {
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = child.ParentId,
+                        Message = _resourceService.GetString(SD.ASSIGNED_EXERCISE_NOTIFICATION, result.ScheduleDate.ToString("dd/MM/yyyy"), result.Start.ToString(@"hh\:mm"), result.End.ToString(@"hh\:mm")),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, result.StudentProfileId),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
+                }
+
+
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AssignedExerciseTemplate.cshtml");
+                if (System.IO.File.Exists(templatePath) && child.Parent != null && result.Tutor != null && result.Tutor.User != null)
+                {
+                    var subject = "Thông Báo Lịch Học Đã Được Gán Bài Tập";
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.ParentName", child.Parent.FullName)
+                        .Replace("@Model.TutorName", result.Tutor.User.FullName)
+                        .Replace("@Model.StudentName", child.Name)
+                        .Replace("@Model.ScheduleDate", result.ScheduleDate.ToString("dd/MM/yyyy"))
+                        .Replace("@Model.Start", result.Start.ToString(@"hh\:mm"))
+                        .Replace("@Model.End", result.End.ToString(@"hh\:mm"))
+                        .Replace("@Model.Url", string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, result.StudentProfileId))
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+
+                    await _messageBus.SendEmailAsync(child.Parent.Email, subject, htmlMessage);
+                    
+                }
+
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 _response.Result = _mapper.Map<ScheduleDTO>(result);
@@ -281,6 +340,50 @@ namespace AutismEduConnectSystem.Controllers.v1
                 {
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DUPPLICATED_ASSIGN_EXERCISE) };
                 }
+
+                // Notification
+                var child = await _childInfoRepository.GetAsync(x => x.Id == result.StudentProfile.ChildId, true, "Parent");
+
+                if (child != null && child.Parent != null)
+                {
+                    var connectionId = NotificationHub.GetConnectionIdByUserId(child.ParentId);
+                    var notfication = new Notification()
+                    {
+                        ReceiverId = child.ParentId,
+                        Message = _resourceService.GetString(SD.SCHEDULE_UPDATE_NOTIFICATION, result.ScheduleDate.ToString("dd/MM/yyyy"), result.Start.ToString(@"hh\:mm"), result.End.ToString(@"hh\:mm")),
+                        UrlDetail = string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, result.StudentProfileId),
+                        IsRead = false,
+                        CreatedDate = DateTime.Now
+                    };
+                    var notificationResult = await _notificationRepository.CreateAsync(notfication);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync($"Notifications-{child.ParentId}", _mapper.Map<NotificationDTO>(notificationResult));
+                    }
+                }
+
+                var tutor = await _tutorRepository.GetAsync(x => x.TutorId.Equals(userId), false, "User");
+
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ScheduleUpdatedTemplate.cshtml");
+                if (System.IO.File.Exists(templatePath) && child.Parent != null && tutor != null && tutor.User != null)
+                {
+                    var subject = "Thông Báo Lịch Học Đã Được Đánh Giá";
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.ParentName", child.Parent.FullName)
+                        .Replace("@Model.TutorName", tutor.User.FullName)
+                        .Replace("@Model.StudentName", child.Name)
+                        .Replace("@Model.ScheduleDate", result.ScheduleDate.ToString("dd/MM/yyyy"))
+                        .Replace("@Model.Start", result.Start.ToString(@"hh\:mm"))
+                        .Replace("@Model.End", result.End.ToString(@"hh\:mm"))
+                        .Replace("@Model.Url", string.Concat(SD.URL_FE, SD.URL_FE_PARENT_STUDENT_PROFILE_LIST, result.StudentProfileId))
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+
+                    await _messageBus.SendEmailAsync(child.Parent.Email, subject, htmlMessage);
+                }
+
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 _response.Result = _mapper.Map<ScheduleDTO>(result);
@@ -474,7 +577,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet("GetAllAssignedSchedule")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAssignedSchedule([FromQuery] int studentProfileId, string? status = SD.STATUS_ALL, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAssignedSchedule([FromQuery] int studentProfileId, string? status = SD.STATUS_ALL, DateTime? startDate = null, DateTime? endDate = null, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -499,6 +602,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                 else
                 {
                     filter = u => u.TutorId.Equals(tutorId) && !u.IsHidden && u.ExerciseId != null;
+                }
+
+                if (startDate != null)
+                {
+                    filter = filter.AndAlso(u => u.ScheduleDate.Date >= startDate.Value.Date);
+                }
+                if (endDate != null)
+                {
+                    filter = filter.AndAlso(u => u.ScheduleDate.Date <= endDate.Value.Date);
                 }
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)

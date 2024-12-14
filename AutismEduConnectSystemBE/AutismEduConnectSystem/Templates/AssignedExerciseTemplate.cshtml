@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông Báo Lịch Học Đã Được Gán Bài Tập</title>
+</head>
+<body>
+    <h2>Kính gửi @Model.ParentName,</h2>
+
+    <p>Chúng tôi xin thông báo rằng lịch học ngày <strong>@Model.ScheduleDate</strong> vào khung giờ <strong>@Model.Start</strong>-<strong>@Model.End</strong> đã được gán bài tập bởi gia sư <strong>@Model.TutorName</strong> trên hệ thống của chúng tôi cho học sinh <strong>@Model.StudentName</strong>.</p>
+
+    <p>Bạn có thể xem thông tin chi tiết trong hồ sơ học sinh qua đường link dưới đây:</p>
+    <ul>
+        <li><a href="@Model.Url">Xem thông tin chi tiết</a></li>
+    </ul>
+
+    <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi qua email <a href="mailto:@Model.Mail">@Model.Mail</a> hoặc số điện thoại <strong>@Model.Phone</strong>.</p>
+
+    <p>Trân trọng,</p>
+    <p>Đội ngũ Hỗ trợ</p>
+    <p>
+        <strong>Autism EduConnect System</strong><br />
+        Địa chỉ: Khu Công nghệ cao Hòa Lạc, Km29 Đại lộ Thăng Long, huyện Thạch Thất, Hà Nội<br />
+        <a href="@Model.WebsiteURL">Website</a>
+    </p>
+</body>
+</html>
