@@ -103,7 +103,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (createDTO == null || !ModelState.IsValid)
                 {
-                   Console.WriteLine("Received empty createDTO from tutor {TutorId}", tutorId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.STUDENT_PROFILE) };
@@ -123,10 +122,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     {
                         if (slot.From >= slot.To)
                         {
-                           Console.WriteLine("Invalid time slot detected: From time ({From}) is greater than or equal to To time ({To}) for the time slot {Weekday}.",
-                                slot.From.ToString(@"hh\:mm"),
-                                slot.To.ToString(@"hh\:mm"),
-                                slot.Weekday);
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
                             _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TIME_SLOT) };
@@ -142,10 +137,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                                                                                            , true, "StudentProfile");
                         if (isTimeSlotDuplicate != null)
                         {
-                           Console.WriteLine("Duplicate time slot detected: From time ({From}) to To time ({To}) already exists for the time slot on {Weekday}.",
-                                isTimeSlotDuplicate.From.ToString(@"hh\:mm"),
-                                isTimeSlotDuplicate.To.ToString(@"hh\:mm"),
-                                isTimeSlotDuplicate.Weekday);
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
                             _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm")) };
@@ -154,9 +145,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                     else
                     {
-                       Console.WriteLine("Duplicate time slot detected: From time ({From}) to To time ({To}) already exists.",
-                            isTimeSlotDuplicate.From.ToString(@"hh\:mm"),
-                            isTimeSlotDuplicate.To.ToString(@"hh\:mm"));
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TIMESLOT_DUPLICATED_MESSAGE, SD.TIME_SLOT, isTimeSlotDuplicate.From.ToString(@"hh\:mm"), isTimeSlotDuplicate.To.ToString(@"hh\:mm")) };
@@ -186,7 +174,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 {
                     if (createDTO.TutorRequestId > 0)
                     {
-                       Console.WriteLine("Invalid request: TutorRequestId ({TutorRequestId}) should not be greater than 0.", createDTO.TutorRequestId);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.STUDENT_PROFILE) };
@@ -197,7 +184,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     var parentEmailExist = await _userRepository.GetAsync(x => x.Email.Equals(createDTO.Email));
                     if (parentEmailExist != null)
                     {
-                       Console.WriteLine("Duplicate email attempt: The email ({Email}) already exists.", parentEmailExist.Email);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EMAIL) };
@@ -284,7 +270,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 else if (createDTO.ChildId <= 0)
                 {
-                   Console.WriteLine("Invalid ChildId: The ChildId ({ChildId}) is missing or invalid.", createDTO.ChildId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.MISSING_2_INFORMATIONS, SD.PARENT, SD.CHILD) };
@@ -296,7 +281,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (childTutorExist != null)
                 {
-                   Console.WriteLine("Duplicate student profile detected: The student profile already exists for the child with ID {ChildId}.", childTutorExist.ChildId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.STUDENT_PROFILE) };
@@ -306,7 +290,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var child = await _childInfoRepository.GetAsync(x => x.Id == model.ChildId, true, "Parent");
                 if (child == null)
                 {
-                    _logger.LogError("Child information not found: No child found with the given criteria.");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO) };
@@ -387,7 +370,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating student profile for tutor {TutorId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -490,7 +472,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while fetching student profiles.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -507,7 +488,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -523,7 +503,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while fetching schedule time slots.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -540,7 +519,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(parentId))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -550,7 +528,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (childs.list == null || !childs.list.Any())
                 {
-                    _logger.LogInformation("No children found for the parent. Returning empty result.");
                     _response.Result = new List<StudentProfile>();
                     _response.StatusCode = HttpStatusCode.OK;
                     _response.IsSuccess = true;
@@ -605,7 +582,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while fetching child student profiles.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -641,7 +617,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         //        if (studentProfile == null)
         //        {
-        //           Console.WriteLine("Bad Request: changeStatusDTO is null.");
         //            _response.StatusCode = HttpStatusCode.NotFound;
         //            _response.IsSuccess = false;
         //            _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
@@ -652,7 +627,6 @@ namespace AutismEduConnectSystem.Controllers.v1
         //        {
         //            if (studentProfile.CreatedDate.AddHours(24) <= DateTime.Now)
         //            {
-        //               Console.WriteLine($"Student profile with ID: {changeStatusDTO.Id} has expired. Cannot change status to Teaching.");
         //                _response.StatusCode = HttpStatusCode.BadRequest;
         //                _response.IsSuccess = false;
         //                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.STUDENT_PROFILE_EXPIRED) };
@@ -796,7 +770,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -858,7 +831,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -868,7 +840,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -877,7 +848,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (closeDTO == null || !ModelState.IsValid)
                 {
-                   Console.WriteLine($"CloseTutoringCreateDTO is null");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.END_TUTORING) };
@@ -971,7 +941,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An error occurred while fetching close tutoring");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -988,7 +957,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -1005,7 +973,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (scheduleTimeSlots == null)
                 {
-                   Console.WriteLine($"No schedule time slots found for Student Profile ID: {studentProfileId}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TIME_SLOT) };
@@ -1019,7 +986,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An error occurred while fetching schedule time slots for Student Profile ID: {studentProfileId}");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

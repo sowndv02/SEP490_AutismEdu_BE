@@ -318,7 +318,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                
                 if (!ModelState.IsValid)
                 {
-                   Console.WriteLine("Received null tutor request from user {UserId}.", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST) };
@@ -326,7 +325,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (tutorRequestCreateDTO.ChildId <= 0)
                 {
-                   Console.WriteLine("Duplicated request tutor {userId}-{childId}-{tutorId}.", userId, tutorRequestCreateDTO.ChildId, tutorRequestCreateDTO.TutorId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD) };
@@ -335,7 +333,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var isExistedRequest = await _tutorRequestRepository.GetAllNotPagingAsync(x => x.ParentId == userId && x.TutorId == tutorRequestCreateDTO.TutorId && x.ChildId == tutorRequestCreateDTO.ChildId && (x.RequestStatus == SD.Status.PENDING || x.RequestStatus == SD.Status.APPROVE));
                 if (isExistedRequest.list != null && isExistedRequest.list.Any())
                 {
-                   Console.WriteLine("Duplicated request tutor {userId}-{childId}-{tutorId}.", userId, tutorRequestCreateDTO.ChildId, tutorRequestCreateDTO.TutorId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.TUTOR_REQUEST) };
@@ -344,7 +341,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var tutor = await _userRepository.GetAsync(x => x.Id == tutorRequestCreateDTO.TutorId);
                 if (tutor == null)
                 {
-                   Console.WriteLine("Duplicated request tutor {userId}-{childId}-{tutorId}.", userId, tutorRequestCreateDTO.ChildId, tutorRequestCreateDTO.TutorId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR) };
@@ -353,7 +349,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var child = await _childInformationRepository.GetAsync(x => x.Id == tutorRequestCreateDTO.ChildId && x.ParentId == userId);
                 if (child == null)
                 {
-                   Console.WriteLine("Duplicated request tutor {userId}-{childId}-{tutorId}.", userId, tutorRequestCreateDTO.ChildId, tutorRequestCreateDTO.TutorId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD) };
@@ -484,7 +479,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 TutorRequest model = await _tutorRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, "Parent,Tutor", null);
                 if (model == null || model.RequestStatus != SD.Status.PENDING)
                 {
-                   Console.WriteLine($"Received a bad request for tutor request with ID {id}.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REQUEST) };
@@ -618,7 +612,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error processing tutor request with ID {changeStatusDTO.Id}: {ex.Message}");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
