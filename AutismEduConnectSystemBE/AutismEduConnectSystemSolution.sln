@@ -5,6 +5,8 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutismEduConnectSystem", "AutismEduConnectSystem\AutismEduConnectSystem.csproj", "{2C9759F5-E399-4157-AC0F-21FA6A44EE63}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutismEduConnectSystemTests", "AutismEduConnectSystemTests\AutismEduConnectSystemTests.csproj", "{E3BC1596-755E-4E88-B112-1AD5D7023BEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{2C9759F5-E399-4157-AC0F-21FA6A44EE63}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C9759F5-E399-4157-AC0F-21FA6A44EE63}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C9759F5-E399-4157-AC0F-21FA6A44EE63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3BC1596-755E-4E88-B112-1AD5D7023BEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3BC1596-755E-4E88-B112-1AD5D7023BEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3BC1596-755E-4E88-B112-1AD5D7023BEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3BC1596-755E-4E88-B112-1AD5D7023BEF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

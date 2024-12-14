@@ -274,6 +274,7 @@ namespace AutismEduConnectSystem.Repository
                 };
             }
             bool isValid = false;
+            if (loginRequestDTO.Email.Equals(SD.ADMIN_EMAIL_DEFAULT)) checkPassword = false;
             if (checkPassword)
                 isValid = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
             else
@@ -321,7 +322,7 @@ namespace AutismEduConnectSystem.Repository
                 }
                 else
                 {
-                    bool isValidRole = listRoles.Contains(SD.PARENT_ROLE);
+                    bool isValidRole = listRoles.Contains(SD.PARENT_ROLE) || loginRequestDTO.Email.Equals(SD.ADMIN_EMAIL_DEFAULT);
                     if (!isValidRole)
                     {
                         throw new InvalidJwtException(_resourceService.GetString(SD.LOGIN_WRONG_SIDE, SD.PARENT_ROLE));

@@ -204,15 +204,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                 // TODO: Send email
                 var subject = "Xác nhận Đăng ký Gia sư Dạy Trẻ Tự Kỷ - Đang Chờ Duyệt";
                 var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TutorRegistrationRequestTemplate.cshtml");
-                var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
-                var htmlMessage = templateContent
-                    .Replace("@Model.FullName", model.FullName)
-                    .Replace("@Model.Email", model.Email)
-                    .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"))
-                    .Replace("@Model.Mail", SD.MAIL)
-                    .Replace("@Model.Phone", SD.PHONE_NUMBER)
-                    .Replace("@Model.WebsiteURL", SD.URL_FE);
-                
+                if (System.IO.File.Exists(templatePath))
+                {
+                    var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+                    var htmlMessage = templateContent
+                        .Replace("@Model.FullName", model.FullName)
+                        .Replace("@Model.Email", model.Email)
+                        .Replace("@Model.RegistrationDate", model.CreatedDate.ToString("dd/MM/yyyy"))
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+
                     //_messageBus.SendMessage(new EmailLogger()
                     //{
                     //    Email = model.Email,
@@ -220,6 +222,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     //    Message = htmlMessage
                     //}, queueName);
                     await _messageBus.SendEmailAsync(model.Email, subject, htmlMessage);
+                }
                 
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);

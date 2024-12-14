@@ -7,6 +7,7 @@
         public static string ADMIN_PASSWORD_DEFAULT = "AQAAAAEAACcQAAAAEOjDDzJdPlquEhfypVX/5nwm9uhcqeJuN4AO5jXlmTQ+/Ql9BqVmT6x5hCi1eS1BsQ==";
         public static string ADMIN_ADDRESS_DEFAULT = "Khu Giáo dục và Đào tạo – Khu Công nghệ cao Hòa Lạc – Km29 Đại lộ Thăng Long, H. Thạch Thất, TP. Hà Nội";
         public static string ADMIN_PHONENUMBER_DEFAULT = "0999999999";
+        public static string SYSTEM_NAME_DEFAULT = "Autism Edu Connect System";
 
         // Const role
         public const string MANAGER_ROLE = "Manager";

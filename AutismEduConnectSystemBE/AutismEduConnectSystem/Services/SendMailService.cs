@@ -34,18 +34,18 @@ namespace AutismEduConnectSystem.Services
         }
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            var message = new MimeMessage();
-            message.Sender = new MailboxAddress(mailSettings.DisplayName, mailSettings.Mail);
-            message.From.Add(new MailboxAddress(mailSettings.DisplayName, mailSettings.Mail));
-            message.To.Add(MailboxAddress.Parse(email));
-            message.Subject = subject;
+            //var message = new MimeMessage();
+            //message.Sender = new MailboxAddress(mailSettings.DisplayName, mailSettings.Mail);
+            //message.From.Add(new MailboxAddress(mailSettings.DisplayName, mailSettings.Mail));
+            //message.To.Add(MailboxAddress.Parse(email));
+            //message.Subject = subject;
 
-            var builder = new BodyBuilder();
-            builder.HtmlBody = htmlMessage;
-            message.Body = builder.ToMessageBody();
+            //var builder = new BodyBuilder();
+            //builder.HtmlBody = htmlMessage;
+            //message.Body = builder.ToMessageBody();
 
-            // dùng SmtpClient của MailKit
-            using var smtp = new MailKit.Net.Smtp.SmtpClient();
+            //// dùng SmtpClient của MailKit
+            //using var smtp = new MailKit.Net.Smtp.SmtpClient();
 
             try
             {
@@ -65,12 +65,13 @@ namespace AutismEduConnectSystem.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 // Gửi mail thất bại, nội dung email sẽ lưu vào thư mục mailssave
-                System.IO.Directory.CreateDirectory("mailssave");
-                var emailsavefile = string.Format(@"mailssave/{0}.eml", Guid.NewGuid());
-                await message.WriteToAsync(emailsavefile);
+                //System.IO.Directory.CreateDirectory("mailssave");
+                //var emailsavefile = string.Format(@"mailssave/{0}.eml", Guid.NewGuid());
+                //await message.WriteToAsync(emailsavefile);
             }
-            smtp.Disconnect(true);
+            //smtp.Disconnect(true);
         }
     }
 }

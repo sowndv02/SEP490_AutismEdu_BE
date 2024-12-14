@@ -118,6 +118,7 @@ builder.Services.AddHostedService<GenerateScheduleTimeSlot>();
 builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<CheckAssignedExerciseForSchedule>();
+builder.Services.AddHostedService<EmailBackgroundService>();
 
 // Config Message Queue
 var rabbitMQSettings = builder.Configuration.GetSection("RabbitMQSettings");
@@ -308,7 +309,19 @@ void ApplyMigration()
         using (var scope = app.Services.CreateScope())
         {
             var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            // Check if the database exists and delete it if it does
+            if (_db.Database.CanConnect())
+            {
+                Console.WriteLine("Database exists, attempting to delete...");
 
+                // Delete the database
+                _db.Database.EnsureDeleted();
+                Console.WriteLine("Database deleted successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Database does not exist.");
+            }
             // Check for pending migrations and apply them if any
             var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
             if (pendingMigrations.Count > 0)

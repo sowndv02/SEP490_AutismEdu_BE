@@ -24,9 +24,9 @@ namespace AutismEduConnectSystem.Services
 
         private readonly List<EmailAccount> emailAccounts = new List<EmailAccount>
         {
-            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "primary@example.com", Password = "primarypassword" },
-            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "backup1@example.com", Password = "backuppassword1" },
-            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "backup2@example.com", Password = "backuppassword2" }
+            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "khaidqhe163770@fpt.edu.vn", Password = "iyrdweksgcrjokhw" },
+            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "sendotp1234@gmail.com", Password = "ifeahpwziexwuuqo" },
+            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "daoson03112002@gmail.com", Password = "ltowrdscqqcafmyu" }
         };
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -48,10 +48,7 @@ namespace AutismEduConnectSystem.Services
                     {
                         try
                         {
-                            // Attempt to send the email
                             await SendEmailAsync(email);
-
-                            // Update email log as sent
                             email.SendFirstTime = true;
                             email.MaxRetries = 0;
                             email.ErrorCode = null;
@@ -60,7 +57,8 @@ namespace AutismEduConnectSystem.Services
                         {
                             // Log failure and decrement retries
                             email.ErrorCode = ex.Message;
-                            email.MaxRetries--;
+                            email.MaxRetries = 0;
+                            email.SendFirstTime = true;
                         }
 
                         dbContext.EmailLoggers.Update(email);
@@ -70,11 +68,10 @@ namespace AutismEduConnectSystem.Services
                 }
                 catch (Exception ex)
                 {
-                    // Log any unexpected errors (implement logging as needed)
                     Console.WriteLine($"Unexpected error: {ex.Message}");
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // Wait before checking again
+                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken); 
             }
         }
 
@@ -97,7 +94,7 @@ namespace AutismEduConnectSystem.Services
 
                         var mailMessage = new MailMessage
                         {
-                            From = new MailAddress(account.Username),
+                            From = new MailAddress(account.Username, SD.SYSTEM_NAME_DEFAULT),
                             Subject = email.Subject,
                             Body = email.Message,
                             IsBodyHtml = true
@@ -116,7 +113,7 @@ namespace AutismEduConnectSystem.Services
                         if (IsTemporaryError(smtpEx) && attempt < maxRetries)
                         {
                             Console.WriteLine("Temporary error, retrying...");
-                            await Task.Delay(2000); // Wait before retrying
+                            await Task.Delay(1000); // Wait before retrying
                         }
                         else
                         {

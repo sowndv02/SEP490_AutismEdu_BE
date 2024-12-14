@@ -3,7 +3,7 @@ using System.Net;
 using System.Security.Claims;
 using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
+using AutismEduConnectSystem.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutoMapper;

@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 using AutismEduConnectSystem.Controllers.v1;
 using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutoMapper;
@@ -23,6 +23,9 @@ using Moq;
 using Xunit;
 using static AutismEduConnectSystem.SD;
 using static Org.BouncyCastle.Math.EC.ECCurve;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using AutismEduConnectSystem.SignalR;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AutismEduConnectSystem.Controllers.v1.Tests
 {
@@ -37,6 +40,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly Mock<ILogger<ScheduleController>> _loggerMock;
         private readonly Mock<IConfiguration> _configurationMock;
         private readonly ScheduleController _controller;
+        private readonly Mock<IEmailSender> _mockMessageBus;
+        private readonly Mock<INotificationRepository> _mockNotificationRepository;
+        private readonly Mock<IHubContext<NotificationHub>> _mockHubContext;
+        private readonly Mock<ITutorRepository> _mockTutorRepository;
 
         public ScheduleControllerTests()
         {
@@ -48,6 +55,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             _syllabusRepositoryMock = new Mock<ISyllabusRepository>();
             _loggerMock = new Mock<ILogger<ScheduleController>>();
             _configurationMock = new Mock<IConfiguration>();
+            _mockMessageBus = new Mock<IEmailSender>();
+            _mockNotificationRepository = new Mock<INotificationRepository>();
+            _mockHubContext = new Mock<IHubContext<NotificationHub>>();
+            _mockTutorRepository = new Mock<ITutorRepository>();
 
             // Setup for configuration
             _configurationMock.Setup(c => c["APIConfig:PageSize"]).Returns("10"); // Mock the PageSize value
@@ -65,7 +76,11 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 _childInfoRepositoryMock.Object,
                 _syllabusRepositoryMock.Object,
                 _loggerMock.Object,
-                _configurationMock.Object
+                _configurationMock.Object,
+                _mockMessageBus.Object,
+                _mockNotificationRepository.Object,
+                _mockHubContext.Object,
+                _mockTutorRepository.Object
             );
 
             var claims = new List<Claim>

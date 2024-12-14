@@ -3,9 +3,9 @@ using System.Net;
 using System.Security.Claims;
 using AutismEduConnectSystem.Mapper;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.CreateDTOs;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
+using AutismEduConnectSystem.DTOs;
+using AutismEduConnectSystem.DTOs.CreateDTOs;
+using AutismEduConnectSystem.DTOs.UpdateDTOs;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
@@ -633,7 +633,17 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 .Setup(b => b.Upload(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<bool>()))
                 .ReturnsAsync("http://blobstorage.url/path/to/media");
             _certificateMediaRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<CertificateMedia>()));
-
+            _certificateRepositoryMock
+                .Setup(repo =>
+                    repo.GetAllNotPagingAsync(
+                        It.IsAny<Expression<Func<Certificate, bool>>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<Expression<Func<Certificate, object>>>(),
+                        It.IsAny<bool>()
+                    )
+                )
+                .ReturnsAsync((0, new List<Certificate>()));
             // Setting up the User property in the ControllerContext
             _controller.ControllerContext = new ControllerContext
             {
