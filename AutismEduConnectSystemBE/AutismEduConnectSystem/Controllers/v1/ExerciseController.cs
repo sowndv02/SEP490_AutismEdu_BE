@@ -110,7 +110,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 _response.Result = resultMapping;
                 _response.StatusCode = HttpStatusCode.OK;
-                _response.Pagination = null;
                 _response.IsSuccess = true;
                 return Ok(_response);
             }
