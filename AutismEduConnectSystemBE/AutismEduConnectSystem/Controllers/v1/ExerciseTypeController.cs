@@ -261,7 +261,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     orderByQuery = x => x.CreatedDate;
                 }
 
-                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: "Original", pageSize: 10, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
+                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: null, pageSize: 10, pageNumber: pageNumber, orderBy: orderByQuery, isDesc: isDesc);
                 Pagination pagination = new() { PageNumber = pageNumber, PageSize = 10, Total = count };
                 _response.Result = _mapper.Map<List<ExerciseDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
