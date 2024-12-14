@@ -309,23 +309,22 @@ void ApplyMigration()
         using (var scope = app.Services.CreateScope())
         {
             var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            // Check if the database exists and delete it if it does
-            if (_db.Database.CanConnect())
-            {
-                Console.WriteLine("Database exists, attempting to delete...");
-
-                // Delete the database
-                _db.Database.EnsureDeleted();
-                Console.WriteLine("Database deleted successfully.");
-            }
-            else
-            {
-                Console.WriteLine("Database does not exist.");
-            }
             // Check for pending migrations and apply them if any
             var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
             if (pendingMigrations.Count > 0)
             {
+                if (_db.Database.CanConnect())
+                {
+                    Console.WriteLine("Database exists, attempting to delete...");
+
+                    // Delete the database
+                    _db.Database.EnsureDeleted();
+                    Console.WriteLine("Database deleted successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("Database does not exist.");
+                }
                 Console.WriteLine($"Applying {pendingMigrations.Count} pending migrations...");
                 _db.Database.Migrate();
                 Console.WriteLine("Migrations applied successfully.");
