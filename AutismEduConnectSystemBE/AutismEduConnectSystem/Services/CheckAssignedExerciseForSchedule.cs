@@ -1,12 +1,10 @@
-﻿using AutismEduConnectSystem.Data;
-using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.RabbitMQSender;
+﻿using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 
 namespace AutismEduConnectSystem.Services
 {
@@ -66,7 +64,7 @@ namespace AutismEduConnectSystem.Services
                     var tutorRepository = scope.ServiceProvider.GetRequiredService<ITutorRepository>();
                     var notificationRepository = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
                     var resourceService = scope.ServiceProvider.GetRequiredService<IResourceService>();
-                    var messageBus = scope.ServiceProvider.GetRequiredService<IRabbitMQMessageSender>();
+                    var messageBus = scope.ServiceProvider.GetRequiredService<IEmailSender>();
 
                     var scheduleNotAssigned = await scheduleRepository
                         .GetAllNotPagingAsync(x => (x.ScheduleDate.Date > DateTime.Today && x.ScheduleDate.Date <= DateTime.Today.AddDays(1))
@@ -113,13 +111,14 @@ namespace AutismEduConnectSystem.Services
                                 .Replace("@Model.Phone", SD.PHONE_NUMBER)
                                 .Replace("@Model.WebsiteURL", SD.URL_FE);
 
-                            messageBus.SendMessage(new EmailLogger()
-                            {
-                                UserId = tutor.TutorId,
-                                Email = tutor.User.Email,
-                                Subject = subject,
-                                Message = htmlMessage
-                            }, _queueName);
+                            await messageBus.SendEmailAsync(tutor.User.Email, subject, htmlMessage);
+                            //messageBus.SendMessage(new EmailLogger()
+                            //{
+                            //    UserId = tutor.TutorId,
+                            //    Email = tutor.User.Email,
+                            //    Subject = subject,
+                            //    Message = htmlMessage
+                            //}, _queueName);
                         }
                         totalGenerated++;
                     }

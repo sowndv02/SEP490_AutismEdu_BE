@@ -1,13 +1,13 @@
 ﻿using AutismEduConnectSystem.DTOs;
 using AutismEduConnectSystem.DTOs.CreateDTOs;
 using AutismEduConnectSystem.Models;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
 using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
@@ -251,7 +251,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                         await _messageBus.SendEmailAsync(parent.Email, subject, htmlMessage);
                     }
                        
-x
                     //_messageBus.SendMessage(new EmailLogger()
                     //{
                     //    UserId = parent.Id,
@@ -962,13 +961,7 @@ x
                         .Replace("@Model.Phone", SD.PHONE_NUMBER)
                         .Replace("@Model.WebsiteURL", SD.URL_FE);
 
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        UserId = child.ParentId,
-                        Email = child.Parent.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                    await _messageBus.SendEmailAsync(child.Parent.Email, subject, htmlMessage);
                 }
 
                 _response.Result = _mapper.Map<StudentProfileDetailTutorDTO>(studentProfile);

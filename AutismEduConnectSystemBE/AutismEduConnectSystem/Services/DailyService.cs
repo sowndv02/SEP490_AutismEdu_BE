@@ -1,7 +1,6 @@
 ﻿using AutismEduConnectSystem.Data;
-using AutismEduConnectSystem.Models;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace AutismEduConnectSystem.Services
 {

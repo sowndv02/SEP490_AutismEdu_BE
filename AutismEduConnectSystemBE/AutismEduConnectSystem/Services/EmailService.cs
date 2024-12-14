@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 
 namespace AutismEduConnectSystem.Services
@@ -67,9 +68,18 @@ namespace AutismEduConnectSystem.Services
 
             try
             {
-                smtp.Connect(_mailSettings.Host, _mailSettings.Port, SecureSocketOptions.StartTls);
-                smtp.Authenticate(_mailSettings.Mail, _mailSettings.Password);
-                await smtp.SendAsync(message);
+                //smtp.Connect(_mailSettings.Host, _mailSettings.Port, SecureSocketOptions.StartTls);
+                //smtp.Authenticate(_mailSettings.Mail, _mailSettings.Password);
+                //await smtp.SendAsync(message);
+                await using var _db = new ApplicationDbContext(_dbOptions);
+                await _db.EmailLoggers.AddAsync(new EmailLogger()
+                {
+                    //UserId = child.ParentId,
+                    Email = email,
+                    Subject = subject,
+                    Message = htmlMessage
+                });
+                await _db.SaveChangesAsync();
             }
             catch (Exception ex)
             {

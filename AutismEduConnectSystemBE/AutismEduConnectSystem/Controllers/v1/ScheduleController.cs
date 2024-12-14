@@ -1,19 +1,15 @@
 ﻿using AutismEduConnectSystem.DTOs;
 using AutismEduConnectSystem.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Models;
-using AutismEduConnectSystem.Models.DTOs;
-using AutismEduConnectSystem.Models.DTOs.UpdateDTOs;
-using AutismEduConnectSystem.RabbitMQSender;
-using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.SignalR;
 using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -36,14 +32,14 @@ namespace AutismEduConnectSystem.Controllers.v1
         protected int pageSize = 0;
         private readonly INotificationRepository _notificationRepository;
         private readonly IHubContext<NotificationHub> _hubContext;
-        private readonly IRabbitMQMessageSender _messageBus;
+        private readonly IEmailSender _messageBus;
         private string queueName = string.Empty;
         private readonly ITutorRepository _tutorRepository;
 
         public ScheduleController(IScheduleRepository scheduleRepository, IMapper mapper
             , IStudentProfileRepository studentProfileRepository, IResourceService resourceService,
             IChildInformationRepository childInfoRepository, ISyllabusRepository syllabusRepository, 
-            ILogger<ScheduleController> logger, IConfiguration configuration, IRabbitMQMessageSender messageBus,
+            ILogger<ScheduleController> logger, IConfiguration configuration, IEmailSender messageBus,
             INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext, ITutorRepository tutorRepository)
         {
             _resourceService = resourceService;
@@ -210,13 +206,8 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.Phone", SD.PHONE_NUMBER)
                         .Replace("@Model.WebsiteURL", SD.URL_FE);
 
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        UserId = child.ParentId,
-                        Email = child.Parent.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                    await _messageBus.SendEmailAsync(child.Parent.Email, subject, htmlMessage);
+                    
                 }
 
                 _response.StatusCode = HttpStatusCode.NoContent;
@@ -390,13 +381,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                         .Replace("@Model.Phone", SD.PHONE_NUMBER)
                         .Replace("@Model.WebsiteURL", SD.URL_FE);
 
-                    _messageBus.SendMessage(new EmailLogger()
-                    {
-                        UserId = child.ParentId,
-                        Email = child.Parent.Email,
-                        Subject = subject,
-                        Message = htmlMessage
-                    }, queueName);
+                    await _messageBus.SendEmailAsync(child.Parent.Email, subject, htmlMessage);
                 }
 
                 _response.StatusCode = HttpStatusCode.NoContent;

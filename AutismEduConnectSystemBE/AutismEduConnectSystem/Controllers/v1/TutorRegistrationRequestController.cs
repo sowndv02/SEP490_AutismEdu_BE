@@ -2,12 +2,12 @@
 using AutismEduConnectSystem.DTOs.CreateDTOs;
 using AutismEduConnectSystem.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Models;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
 using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Net;
@@ -220,7 +220,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     //    Message = htmlMessage
                     //}, queueName);
                     await _messageBus.SendEmailAsync(model.Email, subject, htmlMessage);
-                }
+                
                 _response.StatusCode = HttpStatusCode.Created;
                 return Ok(_response);
             }
