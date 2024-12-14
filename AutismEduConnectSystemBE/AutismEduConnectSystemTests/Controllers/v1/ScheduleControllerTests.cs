@@ -3611,8 +3611,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Act
             var result = await _controller.GetAllAssignedSchedule(
                 studentProfileId,
-                sort,
                 SD.STATUS_ALL,
+                DateTime.Now,
+                DateTime.Now.AddMinutes(10),
+                sort,
                 pageNumber
             );
 
@@ -3773,8 +3775,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Act
             var result = await _controller.GetAllAssignedSchedule(
                 studentProfileId,
-                sort,
                 SD.STATUS_ALL,
+                DateTime.Now,
+                DateTime.Now.AddMinutes(10),
+                sort,
                 pageNumber
             );
 
@@ -3916,8 +3920,10 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             // Act
             var result = await _controller.GetAllAssignedSchedule(
                 studentProfileId,
-                sort,
                 SD.STATUS_ALL,
+                DateTime.Now,
+                DateTime.Now.AddMinutes(10),
+                sort,
                 pageNumber
             );
 

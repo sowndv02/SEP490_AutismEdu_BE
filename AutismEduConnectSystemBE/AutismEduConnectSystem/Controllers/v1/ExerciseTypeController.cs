@@ -64,7 +64,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid || exerciseTypeId != updateDTO.Id)
                 {
-                    _logger.LogWarning("Invalid model state for ExerciseTypeCreateDTO. Returning BadRequest.");
+                   Console.WriteLine("Invalid model state for ExerciseTypeCreateDTO. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
@@ -74,7 +74,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var model = await _exerciseTypeRepository.GetAsync(x => x.Id == updateDTO.Id, true, null, null);
                 if (model == null)
                 {
-                    _logger.LogWarning("Exercise Type not found");
+                   Console.WriteLine("Exercise Type not found");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.EXERCISE_TYPE) };
@@ -84,7 +84,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var isExist = await _exerciseTypeRepository.GetAsync(x => x.ExerciseTypeName.ToLower().Equals(updateDTO.ExerciseTypeName.ToLower()) && x.Id != updateDTO.Id, false, null, null);
                 if (isExist != null)
                 {
-                    _logger.LogWarning("ExerciseTypeName already exists");
+                   Console.WriteLine("ExerciseTypeName already exists");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EXERCISE_TYPE) };
@@ -238,7 +238,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (id <= 0)
                 {
-                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                   Console.WriteLine("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -318,7 +318,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Invalid model state for ExerciseTypeCreateDTO. Returning BadRequest.");
+                   Console.WriteLine("Invalid model state for ExerciseTypeCreateDTO. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE_TYPE) };
@@ -327,7 +327,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var isExist = await _exerciseTypeRepository.GetAsync(x => x.ExerciseTypeName.ToLower().Equals(exerciseTypeCreateDTO.ExerciseTypeName.ToLower()), false, null, null);
                 if (isExist != null)
                 {
-                    _logger.LogWarning("ExerciseTypeName already exists");
+                   Console.WriteLine("ExerciseTypeName already exists");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EXERCISE_TYPE) };
@@ -379,7 +379,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (id <= 0)
                 {
-                    _logger.LogWarning("id invalid.");
+                   Console.WriteLine("id invalid.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -388,7 +388,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 ExerciseType exerciseType = await _exerciseTypeRepository.GetAsync(x => x.Id == id, true, "Submitter", null);
                 if (exerciseType == null)
                 {
-                    _logger.LogWarning("Not found exercise Type with Id: {@id}.", id);
+                   Console.WriteLine("Not found exercise Type with Id: {@id}.", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.EXERCISE_TYPE) };
@@ -396,7 +396,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!exerciseType.IsHide)
                 {
-                    _logger.LogWarning("exercise Type not hide cannot update hide or show with Id: {@id}.", id);
+                   Console.WriteLine("exercise Type not hide cannot update hide or show with Id: {@id}.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_ACTION, SD.HIDE, SD.EXERCISE_TYPE, SD.HIDE) };

@@ -37,6 +37,76 @@ namespace AutismEduConnectSystem.Controllers.v1
             _logger = logger;
         }
 
+
+        [HttpGet]
+        [Authorize(Roles = $"{SD.TUTOR_ROLE}")]
+        public async Task<ActionResult<APIResponse>> GetAllAsync([FromQuery] string? search, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+                Expression<Func<Exercise, bool>> filter = e => true;
+                Expression<Func<Exercise, object>> orderByQuery = u => true;
+
+                if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
+                {
+                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive && e.TutorId == userId);
+                }
+                if (!string.IsNullOrEmpty(search))
+                {
+                    filter = filter.AndAlso(e => e.ExerciseName.Contains(search));
+                }
+
+                bool isDesc = !string.IsNullOrEmpty(sort) && sort == SD.ORDER_DESC;
+
+                if (orderBy != null)
+                {
+                    switch (orderBy)
+                    {
+                        case SD.CREATED_DATE:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                        default:
+                            orderByQuery = x => x.CreatedDate;
+                            break;
+                    }
+                }
+
+                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: "ExerciseType,Original", pageNumber: pageNumber, pageSize: pageSize,orderBy: orderByQuery, isDesc: isDesc);
+
+                _response.Result = _mapper.Map<List<ExerciseNotPagingDTO>>(result);
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Pagination = null;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
         [HttpGet("{id}")]
         [Authorize(Roles = $"{SD.TUTOR_ROLE}")]
         public async Task<ActionResult<APIResponse>> GetExercisesByTypeAsync([FromRoute] int id, [FromQuery] string? search, string? orderBy = SD.CREATED_DATE, string? sort = SD.ORDER_DESC)
@@ -63,7 +133,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (id <= 0)
                 {
-                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                   Console.WriteLine("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -147,7 +217,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Received null ExerciseCreateDTO from user: {UserId}", userId);
+                   Console.WriteLine("Received null ExerciseCreateDTO from user: {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE) };
@@ -214,7 +284,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (id <= 0)
                 {
-                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                   Console.WriteLine("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -224,7 +294,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var exercise = await _exerciseRepository.GetAsync(x => x.Id == id && !x.IsDeleted && x.IsActive && x.TutorId == userId, true, null, null);
                 if (exercise == null)
                 {
-                    _logger.LogWarning("Exercise with ID {ExerciseId} not found for user: {UserId}", id, userId);
+                   Console.WriteLine("Exercise with ID {ExerciseId} not found for user: {UserId}", id, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.EXERCISE) };

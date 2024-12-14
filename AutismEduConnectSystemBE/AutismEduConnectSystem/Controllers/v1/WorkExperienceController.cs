@@ -75,7 +75,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (id == 0)
                 {
-                    _logger.LogWarning($"Invalid ID {id} provided for deletion.");
+                   Console.WriteLine($"Invalid ID {id} provided for deletion.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -85,7 +85,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (model == null)
                 {
-                    _logger.LogWarning($"Work experience with ID {id} not found for user {userId}.");
+                   Console.WriteLine($"Work experience with ID {id} not found for user {userId}.");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.WORK_EXPERIENCE) };
@@ -228,7 +228,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
+                   Console.WriteLine("Model state is invalid. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
@@ -237,7 +237,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var isExisted = await _workExperienceRepository.GetAllNotPagingAsync(x => createDTO.OriginalId != null && createDTO.OriginalId != 0 && x.OriginalId == createDTO.OriginalId && x.RequestStatus == SD.Status.PENDING, null, null, null, true);
                 if (isExisted.TotalCount > 0)
                 {
-                    _logger.LogWarning("Cannot spam update workex");
+                   Console.WriteLine("Cannot spam update workex");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.IN_STATUS_PENDING, SD.WORK_EXPERIENCE) };
@@ -247,7 +247,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var workExperienceExist = await _workExperienceRepository.GetAllNotPagingAsync(x => x.CompanyName.Equals(createDTO.CompanyName) && x.Position.Equals(createDTO.Position));
                 if (workExperienceExist.list.Any())
                 {
-                    _logger.LogWarning("Work experience already exist");
+                   Console.WriteLine("Work experience already exist");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.WORK_EXPERIENCE) };
@@ -308,7 +308,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
+                   Console.WriteLine("Model state is invalid. Returning BadRequest.");
 
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -319,7 +319,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 WorkExperience model = await _workExperienceRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
                 if (model == null || model.RequestStatus != Status.PENDING)
                 {
-                    _logger.LogWarning("Work experience with ID: {Id} is either not found or already processed. Returning BadRequest.", changeStatusDTO.Id);
+                   Console.WriteLine("Work experience with ID: {Id} is either not found or already processed. Returning BadRequest.", changeStatusDTO.Id);
 
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;

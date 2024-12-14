@@ -75,7 +75,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
                 {
-                    _logger.LogWarning("Forbidden access attempt detected.");
+                   Console.WriteLine("Forbidden access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -84,7 +84,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                   Console.WriteLine("Unauthorized access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -93,7 +93,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (id <= 0)
                 {
-                    _logger.LogWarning("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
+                   Console.WriteLine("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -102,7 +102,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var result = await _tutorRegistrationRequestRepository.GetAsync(x => x.Id == id, true, "ApprovedBy,Curriculums,WorkExperiences,Certificates", null);
                 if (result == null)
                 {
-                    _logger.LogWarning("Exercise with ID {ExerciseId} not found for user: {UserId}", id, userId);
+                   Console.WriteLine("Exercise with ID {ExerciseId} not found for user: {UserId}", id, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
@@ -135,7 +135,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 if (tutorRegistrationRequestCreateDTO == null)
                 {
-                    _logger.LogWarning("Tutor registration request is null.");
+                   Console.WriteLine("Tutor registration request is null.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
@@ -143,7 +143,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (_tutorRegistrationRequestRepository.GetAsync(x => x.Email.Equals(tutorRegistrationRequestCreateDTO.Email) && (x.RequestStatus == Status.PENDING || x.RequestStatus == Status.APPROVE), true, null).GetAwaiter().GetResult() != null)
                 {
-                    _logger.LogWarning("A tutor registration request already exists or is in pending/approved status for email: {Email}", tutorRegistrationRequestCreateDTO.Email);
+                   Console.WriteLine("A tutor registration request already exists or is in pending/approved status for email: {Email}", tutorRegistrationRequestCreateDTO.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.TUTOR_REGISTER_REQUEST_EXIST_OR_IS_TUTOR) };
@@ -151,7 +151,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (_userRepository.GetAsync(x => x.Email.ToLower().Equals(tutorRegistrationRequestCreateDTO.Email.ToLower()), true, null).GetAwaiter().GetResult() != null)
                 {
-                    _logger.LogWarning("Email already exists: {Email}", tutorRegistrationRequestCreateDTO.Email);
+                   Console.WriteLine("Email already exists: {Email}", tutorRegistrationRequestCreateDTO.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.EMAIL_EXISTING_MESSAGE) };
@@ -159,7 +159,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (tutorRegistrationRequestCreateDTO.StartAge > tutorRegistrationRequestCreateDTO.EndAge)
                 {
-                    _logger.LogWarning("Invalid age range for tutor registration: {StartAge} - {EndAge}", tutorRegistrationRequestCreateDTO.StartAge, tutorRegistrationRequestCreateDTO.EndAge);
+                   Console.WriteLine("Invalid age range for tutor registration: {StartAge} - {EndAge}", tutorRegistrationRequestCreateDTO.StartAge, tutorRegistrationRequestCreateDTO.EndAge);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
@@ -246,7 +246,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                   Console.WriteLine("Unauthorized access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -255,7 +255,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
                 {
-                    _logger.LogWarning("Forbidden access attempt detected.");
+                   Console.WriteLine("Forbidden access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -337,7 +337,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Unauthorized access attempt detected.");
+                   Console.WriteLine("Unauthorized access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -346,7 +346,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.STAFF_ROLE) && !userRoles.Contains(SD.MANAGER_ROLE)))
                 {
-                    _logger.LogWarning("Forbidden access attempt detected.");
+                   Console.WriteLine("Forbidden access attempt detected.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -354,7 +354,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
+                   Console.WriteLine("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -362,7 +362,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (tutorRegistrationRequestChange.StatusChange == (int)Status.PENDING)
                 {
-                    _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
+                   Console.WriteLine("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.TUTOR_UPDATE_STATUS_IS_PENDING) };
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -371,7 +371,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 TutorRegistrationRequest model = await _tutorRegistrationRequestRepository.GetAsync(x => x.Id == tutorRegistrationRequestChange.Id, false, "Curriculums,WorkExperiences,Certificates", null);
                 if (model == null)
                 {
-                    _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
+                   Console.WriteLine("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.NotFound;
@@ -379,7 +379,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (model.RequestStatus != Status.PENDING)
                 {
-                    _logger.LogWarning("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
+                   Console.WriteLine("Status change to PENDING is not allowed for Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TUTOR_REGISTRATION_REQUEST) };
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;

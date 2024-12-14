@@ -65,7 +65,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Received null ChildInformationCreateDTO. UserId: {UserId}", userId);
+                   Console.WriteLine("Received null ChildInformationCreateDTO. UserId: {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CHILD_INFO) };
@@ -74,7 +74,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(childInformationCreateDTO.Name) && x.ParentId.Equals(userId), false, null, null);
                 if (isChildExist != null)
                 {
-                    _logger.LogWarning("Duplicate child information found for Name: {ChildName}, ParentId: {ParentId}", childInformationCreateDTO.Name, userId);
+                   Console.WriteLine("Duplicate child information found for Name: {ChildName}, ParentId: {ParentId}", childInformationCreateDTO.Name, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME) };
@@ -122,7 +122,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (string.IsNullOrEmpty(parentId))
                 {
-                    _logger.LogWarning("parentId invalid.");
+                   Console.WriteLine("parentId invalid.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -169,7 +169,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Invalid model state for ExerciseTypeCreateDTO. Returning BadRequest.");
+                   Console.WriteLine("Invalid model state for ExerciseTypeCreateDTO. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CHILD_INFO) };
@@ -179,7 +179,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var model = await _childInfoRepository.GetAsync(x => x.Id == updateDTO.ChildId && x.ParentId == userId, true, null, null);
                 if (model == null)
                 {
-                    _logger.LogWarning("Child information not found for ParentId: {ParentId}, ChildId: {ChildId}", userId, updateDTO.ChildId);
+                   Console.WriteLine("Child information not found for ParentId: {ParentId}, ChildId: {ChildId}", userId, updateDTO.ChildId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CHILD_INFO) };
@@ -189,7 +189,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var isChildExist = await _childInfoRepository.GetAsync(x => x.Name.Equals(updateDTO.Name) && !x.Name.Equals(model.Name) && x.ParentId.Equals(model.ParentId), false, null, null);
                 if (isChildExist != null)
                 {
-                    _logger.LogWarning("Child name already exists for ParentId: {ParentId}, Name: {ChildName}", userId, updateDTO.Name);
+                   Console.WriteLine("Child name already exists for ParentId: {ParentId}, Name: {ChildName}", userId, updateDTO.Name);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.CHILD_NAME) };
