@@ -54,7 +54,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    _logger.LogWarning("Bad request: tutorId is null or empty.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -139,7 +138,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving tutor review information for tutorId: {TutorId}", tutorId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -207,7 +205,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving all reviews.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -243,7 +240,6 @@ namespace AutismEduConnectSystem.Controllers
                 
                 if (reviewCreateDTO == null)
                 {
-                    _logger.LogWarning("Received null ReviewCreateDTO");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
@@ -253,7 +249,6 @@ namespace AutismEduConnectSystem.Controllers
                 var existingReview = await _reviewRepository.GetAsync(x => x.TutorId == reviewCreateDTO.TutorId && x.ParentId == userId && !x.IsHide);
                 if (existingReview != null)
                 {
-                    _logger.LogWarning("Duplicate review detected for tutor {TutorId} by user {UserId}", reviewCreateDTO.TutorId, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.REVIEW) };
@@ -305,7 +300,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred in CreateReviewAsync");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -331,7 +325,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (reviewUpdateDTO == null || reviewId == 0)
                 {
-                    _logger.LogWarning("Invalid input: ReviewUpdateDTO is null or reviewId is 0");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REVIEW) };
@@ -342,7 +335,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (existingReview == null)
                 {
-                    _logger.LogWarning("Review not found for reviewId {ReviewId} by user {UserId}", reviewId, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_ACTION_REVIEW) };
@@ -362,7 +354,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred in EditReview for reviewId {ReviewId}", reviewId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -406,7 +397,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred in DeleteReview for reviewId {ReviewId}", reviewId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

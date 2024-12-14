@@ -61,7 +61,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
@@ -70,7 +69,6 @@ namespace AutismEduConnectSystem.Controllers
                 var existReport = await _reportRepository.GetAllNotPagingAsync(x => x.ReportType == SD.ReportType.UNLOCKREQUEST && x.Email == createDTO.Email && x.Status == SD.Status.PENDING);
                 if (existReport.list != null && existReport.list.Any())
                 {
-                    _logger.LogWarning("Cannot spam report");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.REPORT) };
@@ -79,7 +77,6 @@ namespace AutismEduConnectSystem.Controllers
                 var user = await _userRepository.GetAsync(x => x.Email == createDTO.Email);
                 if (user != null && user.LockoutEnd <= DateTime.Now)
                 {
-                    _logger.LogWarning("Cannot spam report");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
@@ -101,7 +98,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"An error occurred while creating payment history: {ex.Message}");
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -127,7 +123,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
@@ -136,7 +131,6 @@ namespace AutismEduConnectSystem.Controllers
                 var existReport = await _reportRepository.GetAllNotPagingAsync(x => x.ReportType == SD.ReportType.REVIEW && x.ReporterId == userId && x.Status == SD.Status.PENDING);
                 if (existReport.list != null && existReport.list.Any())
                 {
-                    _logger.LogWarning("Cannot spam report");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.REPORT) };
@@ -157,7 +151,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"An error occurred while creating payment history: {ex.Message}");
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -193,7 +186,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
@@ -202,7 +194,6 @@ namespace AutismEduConnectSystem.Controllers
                 var existReport = await _reportRepository.GetAllNotPagingAsync(x => x.ReportType == SD.ReportType.TUTOR && x.ReporterId == userId && x.Status == SD.Status.PENDING);
                 if (existReport.list != null && existReport.list.Any())
                 {
-                    _logger.LogWarning("Cannot spam report");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.REPORT) };
@@ -212,7 +203,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (child.list != null && !child.list.Any())
                 {
-                    _logger.LogWarning("Cannot report tutor");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
@@ -245,7 +235,6 @@ namespace AutismEduConnectSystem.Controllers
                         return Ok(_response);
                     }
                 }
-                _logger.LogWarning("Cannot report tutor");
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.REPORT) };
@@ -253,7 +242,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"An error occurred while creating payment history: {ex.Message}");
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -378,7 +366,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred in GetAllAsync Report");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -413,7 +400,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
 
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -425,7 +411,6 @@ namespace AutismEduConnectSystem.Controllers
                 List<Report> reports = new();
                 if (model == null || model.Status != Status.PENDING)
                 {
-                    _logger.LogWarning("Report with ID: {Id} is either not found or already processed. Returning BadRequest.", updateDTO.Id);
 
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
@@ -505,7 +490,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error occurred while processing the status change for work experience ID: {Id}. Error: {Error}", updateDTO.Id, ex.Message);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -571,7 +555,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error occurred while processing the retreive for report ID: {Id}. Error: {Error}", id, ex.Message);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

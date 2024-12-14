@@ -92,7 +92,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: "ExerciseType,Original", pageNumber: pageNumber, pageSize: pageSize,orderBy: orderByQuery, isDesc: isDesc);
                 
                 var resultMapping = _mapper.Map<List<ExerciseNotPagingDTO>>(result);
-                _response.Pagination = new Pagination()
+                _response.Pagination = new()
                 {
                     PageNumber = pageNumber,
                     PageSize = pageSize,
