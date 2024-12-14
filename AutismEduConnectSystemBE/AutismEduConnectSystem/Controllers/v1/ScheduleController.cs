@@ -606,11 +606,11 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (startDate != null)
                 {
-                    filter = filter.AndAlso(u => u.CreatedDate.Date >= startDate.Value.Date);
+                    filter = filter.AndAlso(u => u.ScheduleDate.Date >= startDate.Value.Date);
                 }
                 if (endDate != null)
                 {
-                    filter = filter.AndAlso(u => u.CreatedDate.Date <= endDate.Value.Date);
+                    filter = filter.AndAlso(u => u.ScheduleDate.Date <= endDate.Value.Date);
                 }
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
