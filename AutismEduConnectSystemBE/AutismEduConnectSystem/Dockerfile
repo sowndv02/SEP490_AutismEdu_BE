@@ -6,7 +6,7 @@ USER app
 WORKDIR /app
 
 EXPOSE 5000
-
+EXPOSE 587
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
