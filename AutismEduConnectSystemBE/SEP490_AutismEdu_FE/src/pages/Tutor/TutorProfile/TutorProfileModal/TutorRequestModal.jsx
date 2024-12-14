@@ -121,10 +121,10 @@ function TutorRequestModal({ rejectChildIds, tutorId, calculateAge }) {
                 enqueueSnackbar("Gửi yêu cầu tới gia sư thành công!", { variant: "success" });
                 handleClose();
             }, (error) => {
-                if (error?.code === 400) {
+                // if (error?.code === 400) {
                     enqueueSnackbar(error.error[0], { variant: "error" });
                     handleClose();
-                }
+                // }
             });
         } catch (error) {
             console.log(error);

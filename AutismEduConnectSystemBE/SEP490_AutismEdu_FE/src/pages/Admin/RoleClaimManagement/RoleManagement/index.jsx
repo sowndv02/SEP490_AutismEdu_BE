@@ -29,7 +29,7 @@ function RoleManagement() {
             boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px",
             marginTop: "30px"
         }}>
-            <Typography variant='h5'>Danh sách các vai trò</Typography>
+            <Typography variant='h4'>Danh sách các vai trò</Typography>
             <Box sx={{
                 width: "100%",
                 display: "flex",

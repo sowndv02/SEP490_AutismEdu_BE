@@ -6,15 +6,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LoadingComponent from '~/components/LoadingComponent';
 import ExerciseUpdateModal from './ExerciseModal/ExerciseUpdateModal';
-// import DeleteConfirmationModal from './ExerciseModal/DeleteConfirmationModal';
-import ExerciseCreation from './ExerciseModal/ExerciseCreation';
 import services from '~/plugins/services';
 import { format } from 'date-fns';
 import { enqueueSnackbar } from 'notistack';
 import emptyBook from '~/assets/images/icon/emptybook.gif'
 import DeleteConfirmationModal from './ExerciseModal/DeleteConfirmationModal';
 
-function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
+function ExerciseList() {
 
     const [dataFilter, setDataFilter] = useState({
         search: '',
@@ -40,16 +38,16 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
 
 
     useEffect(() => {
-        handleGetExerciseByTypeId();
+        handleGetAllExercise();
     }, [dataFilter, pagination.pageNumber]);
 
-    const handleGetExerciseByTypeId = async () => {
+    const handleGetAllExercise = async () => {
         try {
             setLoading(true);
-            await services.ExerciseManagementAPI.getExerciseByTypeId(selectedExerciseType?.id, (res) => {
+            await services.ExerciseManagementAPI.getAllExercise((res) => {
                 if (res?.result) {
                     setExercises(res.result);
-                    setPagination(res.pagination);
+                    // setPagination(res.pagination);
                 }
             }, (error) => {
                 console.log(error);
@@ -134,13 +132,14 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
 
     return (
         <Stack direction='column' sx={{ width: "90%", margin: "auto", gap: 2 }}>
-            <Box sx={{ display: 'flex' }} mt={1}>
+            {/* <Box sx={{ display: 'flex' }} mt={1}>
                 <Button variant='contained' startIcon={<ArrowBackIcon />} onClick={() => setShowExerciseList(false)}>Quay lại</Button>
-            </Box>
+            </Box> */}
             <Typography variant='h4' textAlign={'center'} my={2}>Danh sách bài tập</Typography>
 
-
             <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
+                <Box sx={{ width: '20%' }}>
+                </Box>
                 <TextField
                     disabled={(exercises.length === 0 && dataFilter.search === '')}
                     size='small'
@@ -158,8 +157,8 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
                     sx={{ backgroundColor: '#fff', borderRadius: '4px', width: '50%' }}
                 />
 
-                <Box sx={{ width: '50%', display: 'flex', justifyContent: 'flex-end' }} gap={2}>
-                    <FormControl fullWidth size='small' sx={{ width: '40%' }}>
+                <Box sx={{ width: '20%', display: 'flex', justifyContent: 'flex-end' }} gap={2}>
+                    <FormControl fullWidth size='small' sx={{ width: '80%' }}>
                         <InputLabel id="sort-select-label">Thứ tự</InputLabel>
                         <Select
                             disabled={exercises.length === 0}
@@ -174,12 +173,10 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
                             <MenuItem value="desc">Giảm dần theo ngày</MenuItem>
                         </Select>
                     </FormControl>
-                    <Button variant='contained' color='primary' onClick={() => setOpenCreation(true)}>Tạo bài tập</Button>
+                    {/* <Button variant='contained' color='primary' onClick={() => setOpenCreation(true)}>Tạo bài tập</Button> */}
                 </Box>
 
             </Box>
-
-            <Typography variant='h6'>Loại bài tập: <span style={{ fontWeight: '100' }}>{selectedExerciseType?.exerciseTypeName}</span></Typography>
 
 
             {done && ((done && exercises.length !== 0) ? <>
@@ -189,6 +186,7 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
                             <TableRow>
                                 <TableCell sx={{ fontWeight: 'bold' }}>STT</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Tên bài tập</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Tên loại bài tập</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Ngày tạo</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Hành động</TableCell>
                             </TableRow>
@@ -213,6 +211,18 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
                                             }
                                         }}>
                                             {exercise.exerciseName}
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell
+                                        sx={{ maxWidth: '350px' }}
+                                    >
+                                        <Box sx={{
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                            maxWidth: '100%',
+                                        }}>
+                                            {exercise?.exerciseType?.exerciseTypeName}
                                         </Box>
                                     </TableCell>
                                     <TableCell>{formatDate(exercise?.createdDate)}</TableCell>
@@ -270,8 +280,8 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
                 </DialogActions>
             </Dialog>
 
-            {openCreation && <ExerciseCreation setExercises={setExercises} exerciseType={selectedExerciseType} open={openCreation} handleClose={() => setOpenCreation(false)} />}
-            {openEditDialog && <ExerciseUpdateModal exercises={exercises} setExercises={setExercises} openEditDialog={openEditDialog} handleCloseEditDialog={handleCloseEditDialog} selectedExercise={selectedExercise} setSelectedExercise={setSelectedExercise} selectedExerciseType={selectedExerciseType} />}
+            {/* {openCreation && <ExerciseCreation setExercises={setExercises} exerciseType={selectedExerciseType} open={openCreation} handleClose={() => setOpenCreation(false)} />} */}
+            {openEditDialog && <ExerciseUpdateModal exercises={exercises} setExercises={setExercises} openEditDialog={openEditDialog} handleCloseEditDialog={handleCloseEditDialog} selectedExercise={selectedExercise} setSelectedExercise={setSelectedExercise} />}
             {openDeleteConfirm && <DeleteConfirmationModal open={openDeleteConfirm} handleClose={() => { setOpenDeleteConfirm(false) }} handleDelete={handleDeleteExercise} />}
         </Stack>
     );

@@ -108,7 +108,7 @@ function AdminHeader() {
                             <ListItemIcon>
                                 <Logout fontSize="small" />
                             </ListItemIcon>
-                            Logout
+                            Đăng xuất
                         </MenuItem>
                     </Menu>
                 </Box>

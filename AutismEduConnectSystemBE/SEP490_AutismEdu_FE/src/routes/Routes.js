@@ -13,7 +13,6 @@ import PaymentPackage from '~/pages/Admin/PaymentManagement/PaymentPackageManage
 import ReportTutorManagement from '~/pages/Admin/ReportManagement/ReportTutorManagement'
 import ReportDetail from '~/pages/Admin/ReportManagement/ReportTutorManagement/ReportDetail'
 import RoleClaimManagement from '~/pages/Admin/RoleClaimManagement'
-import TestManagement from '~/pages/Admin/TestManagement'
 import TutorRegistrationManagement from '~/pages/Admin/TutorRegistrationManagement'
 import TutorRegistrationDetail from '~/pages/Admin/TutorRegistrationManagement/TutorRegistrationDetail'
 import CertificateManagement from '~/pages/Admin/TutorSettingManagement/CertificateManagement'
@@ -35,10 +34,6 @@ import Home from '~/pages/Home'
 import MyChildren from '~/pages/MyChildren'
 import ChangePassword from '~/pages/Parent/ChangePassword'
 import ParentProfile from '~/pages/Parent/ParentProfile'
-import TestManage from '~/pages/Parent/TestManage'
-import DoTest from '~/pages/Parent/TestManage/DoTest'
-import TestHistory from '~/pages/Parent/TestManage/TestHistory'
-import TestResultDetail from '~/pages/Parent/TestManage/TestResultDetail'
 import TutorRequestHistory from '~/pages/Parent/TutorRequestHistory/TutorRequestHistory'
 import StudentCreation from '~/pages/StudentProfile/StudentCreation'
 import StudentProfileApprove from '~/pages/StudentProfile/StudentProfileApprove'
@@ -169,22 +164,6 @@ const publicRoutes = [
         element: BlogDetail
     },
     {
-        path: PAGES.ROOT + PAGES.TEST,
-        element: TestManage
-    },
-    {
-        path: PAGES.ROOT + PAGES.DO_TEST,
-        element: DoTest
-    },
-    {
-        path: PAGES.ROOT + PAGES.TEST_HISTORY,
-        element: TestHistory
-    },
-    {
-        path: PAGES.ROOT + PAGES.TEST_DETAIL_HISTORY,
-        element: TestResultDetail
-    },
-    {
         path: PAGES.ROOT + PAGES.ASSESSMENT_GUILD_CLIENT,
         element: AssessmentGuildClient
     }
@@ -260,10 +239,6 @@ const adminRoutes = [
     {
         path: PAGES.ASSESSMENT_CREATION,
         element: AssessmentCreation
-    },
-    {
-        path: PAGES.TEST_MANAGEMENT,
-        element: TestManagement
     },
     {
         path: PAGES.PAYMENT_PACKAGE_MANAGEMENT,

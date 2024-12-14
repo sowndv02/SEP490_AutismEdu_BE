@@ -87,7 +87,7 @@ function EditProfile() {
         if (priceEnd > 10000000) {
             newErrors.priceEnd = 'Học phí nhỏ hơn 10.000.000';
         }
-        if (priceEnd <= priceFrom) {
+        if (priceEnd < priceFrom) {
             newErrors.priceEnd = 'Học phí đến phải lớn hơn học phí từ';
         }
         if (sessionHours <= 0 || sessionHours > 10) {

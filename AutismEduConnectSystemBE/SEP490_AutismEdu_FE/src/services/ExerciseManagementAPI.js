@@ -16,6 +16,10 @@ const getExerciseByTypeId = async (endpoint, success, error, params) => {
     await get(API_CODE.API_GET_EXERCISE_BY_TYPE_ID + endpoint, success, error, params);
 };
 
+const getAllExercise = async (success, error, params) => {
+    await get(API_CODE.API_GET_EXERCISE, success, error, params);
+};
+
 const createExercise = async (params, success, error) => {
     await post(API_CODE.API_CREATE_EXERCISE, params, success, error);
 };
@@ -41,6 +45,7 @@ export const ExerciseManagementAPI = {
     getExerciseByType,
     getListExerciseType,
     getExerciseByTypeId,
+    getAllExercise,
     createExercise,
     deleteExercise,
     changeStatus,

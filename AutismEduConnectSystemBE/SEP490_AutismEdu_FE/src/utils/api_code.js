@@ -102,6 +102,7 @@ const API_CODE = {
   API_GET_EXERCISE_BY_TYPE: '/v1/Exercise/',
   API_GET_LIST_EXERCISE_TYPE: '/v1/ExerciseType',
   API_GET_EXERCISE_BY_TYPE_ID: '/v1/ExerciseType/exercise/',
+  API_GET_EXERCISE: '/v1/Exercise',
   API_CREATE_EXERCISE: '/v1/Exercise',
   API_DELETE_EXERCISE: '/v1/Exercise/',
   API_CHANGE_STATUS_ETYPE: '/v1/ExerciseType/changeStatus/',

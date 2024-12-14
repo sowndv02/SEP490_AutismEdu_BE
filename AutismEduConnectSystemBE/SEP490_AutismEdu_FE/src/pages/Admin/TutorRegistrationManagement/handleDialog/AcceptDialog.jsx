@@ -76,8 +76,8 @@ function AcceptDialog({ id, status, setTutorInformation, setCurriculums, setCert
                             </DialogContentText>
                         </DialogContent>
                         <DialogActions>
-                            <Button onClick={handleClose}>Huỷ bỏ</Button>
-                            <Button onClick={handleSubmit}>Chấp nhận</Button>
+                            <Button onClick={handleClose} variant='outlined' color='inherit'>Huỷ bỏ</Button>
+                            <Button onClick={handleSubmit} variant='contained' color='primary'>Chấp nhận</Button>
                         </DialogActions>
                         <LoadingComponent open={loading} setLoading={setLoading} />
                     </Dialog>
@@ -113,8 +113,8 @@ function AcceptDialog({ id, status, setTutorInformation, setCurriculums, setCert
                             />
                             <Typography sx={{ textAlign: "right" }}>{rejectReason.length} / 500</Typography>
                             <Box textAlign="right" mt={2}>
-                                <Button onClick={handleClose}>Huỷ bỏ</Button>
-                                <Button onClick={handleSubmit}>Từ chối</Button>
+                                <Button onClick={handleClose} variant='outlined' color='inherit'>Huỷ bỏ</Button>
+                                <Button onClick={handleSubmit} variant='contained' color='primary' sx={{ marginLeft: 1 }}>Từ chối</Button>
                             </Box>
                             <LoadingComponent open={loading} setLoading={setLoading} />
                         </Box>

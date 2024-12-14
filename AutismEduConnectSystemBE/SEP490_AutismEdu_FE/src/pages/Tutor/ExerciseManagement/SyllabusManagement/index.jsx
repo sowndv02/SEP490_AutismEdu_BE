@@ -177,7 +177,7 @@ export default function SyllabusManagement() {
                 </TabContext>
                 : <Box sx={{ textAlign: "center" }}>
                     <img src={emptyBook} style={{ height: "200px" }} />
-                    <Typography>Hiện không giáo trình nào!</Typography>
+                    <Typography>Hiện không có giáo trình nào!</Typography>
                 </Box>}
             <DeleteConfirmationModal
                 open={openDeleteConfirm}
