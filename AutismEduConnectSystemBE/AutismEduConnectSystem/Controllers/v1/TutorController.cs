@@ -233,7 +233,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 if (string.IsNullOrEmpty(id))
                 {
-                    _logger.LogWarning("Bad request. Missing or invalid TutorId.");
+                   Console.WriteLine("Bad request. Missing or invalid TutorId.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -260,7 +260,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 Tutor model = await _tutorRepository.GetAsync(x => x.TutorId == id, false, "User,Curriculums,AvailableTimeSlots,Certificates,WorkExperiences,Reviews");
                 if (model == null)
                 {
-                    _logger.LogWarning("Tutor with TutorId={TutorId} not found", id);
+                   Console.WriteLine("Tutor with TutorId={TutorId} not found", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TUTOR) };
@@ -322,7 +322,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid) 
                 {
-                    _logger.LogWarning("Duplicated Request.");
+                   Console.WriteLine("Duplicated Request.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.UPDATE_PROFILE_REQUEST) };
@@ -331,7 +331,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var existedRequest = await _tutorProfileUpdateRequestRepository.GetAllNotPagingAsync(x => x.TutorId == userId && x.RequestStatus == Status.PENDING, null, null, x => x.CreatedDate, true);
                 if(existedRequest.list != null && existedRequest.list.Any())
                 {
-                    _logger.LogWarning("Duplicated Request.");
+                   Console.WriteLine("Duplicated Request.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.IN_STATUS_PENDING, SD.UPDATE_PROFILE_REQUEST) };
@@ -435,7 +435,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 TutorProfileUpdateRequest model = await _tutorProfileUpdateRequestRepository.GetAsync(x => x.Id == changeStatusDTO.Id, false, null, null);
                 if (model == null)
                 {
-                    _logger.LogWarning("Duplicated Request.");
+                   Console.WriteLine("Duplicated Request.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.UPDATE_PROFILE_REQUEST) };

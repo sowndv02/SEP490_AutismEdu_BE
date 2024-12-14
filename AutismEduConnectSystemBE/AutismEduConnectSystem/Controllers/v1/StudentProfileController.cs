@@ -103,7 +103,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (createDTO == null || !ModelState.IsValid)
                 {
-                    _logger.LogWarning("Received empty createDTO from tutor {TutorId}", tutorId);
+                   Console.WriteLine("Received empty createDTO from tutor {TutorId}", tutorId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.STUDENT_PROFILE) };
@@ -123,7 +123,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     {
                         if (slot.From >= slot.To)
                         {
-                            _logger.LogWarning("Invalid time slot detected: From time ({From}) is greater than or equal to To time ({To}) for the time slot {Weekday}.",
+                           Console.WriteLine("Invalid time slot detected: From time ({From}) is greater than or equal to To time ({To}) for the time slot {Weekday}.",
                                 slot.From.ToString(@"hh\:mm"),
                                 slot.To.ToString(@"hh\:mm"),
                                 slot.Weekday);
@@ -142,7 +142,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                                                                                            , true, "StudentProfile");
                         if (isTimeSlotDuplicate != null)
                         {
-                            _logger.LogWarning("Duplicate time slot detected: From time ({From}) to To time ({To}) already exists for the time slot on {Weekday}.",
+                           Console.WriteLine("Duplicate time slot detected: From time ({From}) to To time ({To}) already exists for the time slot on {Weekday}.",
                                 isTimeSlotDuplicate.From.ToString(@"hh\:mm"),
                                 isTimeSlotDuplicate.To.ToString(@"hh\:mm"),
                                 isTimeSlotDuplicate.Weekday);
@@ -154,7 +154,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                     else
                     {
-                        _logger.LogWarning("Duplicate time slot detected: From time ({From}) to To time ({To}) already exists.",
+                       Console.WriteLine("Duplicate time slot detected: From time ({From}) to To time ({To}) already exists.",
                             isTimeSlotDuplicate.From.ToString(@"hh\:mm"),
                             isTimeSlotDuplicate.To.ToString(@"hh\:mm"));
                         _response.StatusCode = HttpStatusCode.BadRequest;
@@ -186,7 +186,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 {
                     if (createDTO.TutorRequestId > 0)
                     {
-                        _logger.LogWarning("Invalid request: TutorRequestId ({TutorRequestId}) should not be greater than 0.", createDTO.TutorRequestId);
+                       Console.WriteLine("Invalid request: TutorRequestId ({TutorRequestId}) should not be greater than 0.", createDTO.TutorRequestId);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.STUDENT_PROFILE) };
@@ -197,7 +197,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     var parentEmailExist = await _userRepository.GetAsync(x => x.Email.Equals(createDTO.Email));
                     if (parentEmailExist != null)
                     {
-                        _logger.LogWarning("Duplicate email attempt: The email ({Email}) already exists.", parentEmailExist.Email);
+                       Console.WriteLine("Duplicate email attempt: The email ({Email}) already exists.", parentEmailExist.Email);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EMAIL) };
@@ -284,7 +284,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 else if (createDTO.ChildId <= 0)
                 {
-                    _logger.LogWarning("Invalid ChildId: The ChildId ({ChildId}) is missing or invalid.", createDTO.ChildId);
+                   Console.WriteLine("Invalid ChildId: The ChildId ({ChildId}) is missing or invalid.", createDTO.ChildId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.MISSING_2_INFORMATIONS, SD.PARENT, SD.CHILD) };
@@ -296,7 +296,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (childTutorExist != null)
                 {
-                    _logger.LogWarning("Duplicate student profile detected: The student profile already exists for the child with ID {ChildId}.", childTutorExist.ChildId);
+                   Console.WriteLine("Duplicate student profile detected: The student profile already exists for the child with ID {ChildId}.", childTutorExist.ChildId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.STUDENT_PROFILE) };
@@ -641,7 +641,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         //        if (studentProfile == null)
         //        {
-        //            _logger.LogWarning("Bad Request: changeStatusDTO is null.");
+        //           Console.WriteLine("Bad Request: changeStatusDTO is null.");
         //            _response.StatusCode = HttpStatusCode.NotFound;
         //            _response.IsSuccess = false;
         //            _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.STUDENT_PROFILE) };
@@ -652,7 +652,7 @@ namespace AutismEduConnectSystem.Controllers.v1
         //        {
         //            if (studentProfile.CreatedDate.AddHours(24) <= DateTime.Now)
         //            {
-        //                _logger.LogWarning($"Student profile with ID: {changeStatusDTO.Id} has expired. Cannot change status to Teaching.");
+        //               Console.WriteLine($"Student profile with ID: {changeStatusDTO.Id} has expired. Cannot change status to Teaching.");
         //                _response.StatusCode = HttpStatusCode.BadRequest;
         //                _response.IsSuccess = false;
         //                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.STUDENT_PROFILE_EXPIRED) };
@@ -877,7 +877,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (closeDTO == null || !ModelState.IsValid)
                 {
-                    _logger.LogWarning($"CloseTutoringCreateDTO is null");
+                   Console.WriteLine($"CloseTutoringCreateDTO is null");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.END_TUTORING) };
@@ -1005,7 +1005,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (scheduleTimeSlots == null)
                 {
-                    _logger.LogWarning($"No schedule time slots found for Student Profile ID: {studentProfileId}");
+                   Console.WriteLine($"No schedule time slots found for Student Profile ID: {studentProfileId}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.TIME_SLOT) };

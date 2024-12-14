@@ -92,7 +92,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (id <= 0)
                 {
-                    _logger.LogWarning("Invalid certificate ID: {certificateId}. Returning BadRequest.", id);
+                   Console.WriteLine("Invalid certificate ID: {certificateId}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -505,7 +505,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 if (id <= 0)
                 {
-                    _logger.LogWarning("Invalid certificate ID: {certificateId}. Returning BadRequest.", id);
+                   Console.WriteLine("Invalid certificate ID: {certificateId}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -515,7 +515,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (model == null)
                 {
-                    _logger.LogWarning("Certificate not found for ID: {CertificateId} and User ID: {UserId}. Returning BadRequest.", id, userId);
+                   Console.WriteLine("Certificate not found for ID: {CertificateId} and User ID: {UserId}. Returning BadRequest.", id, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.CERTIFICATE) };

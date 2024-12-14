@@ -70,7 +70,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (id <= 0)
                 {
-                    _logger.LogWarning($"Invalid syllabus ID: {id} provided by User: {userId}");
+                   Console.WriteLine($"Invalid syllabus ID: {id} provided by User: {userId}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -80,7 +80,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (model == null)
                 {
-                    _logger.LogWarning($"Syllabus ID: {id} not found for Tutor: {userId}");
+                   Console.WriteLine($"Syllabus ID: {id} not found for Tutor: {userId}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SYLLABUS) };
@@ -192,7 +192,7 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 if (id <= 0)
                 {
-                    _logger.LogWarning("Syllabus not found for id: {id}", id);
+                   Console.WriteLine("Syllabus not found for id: {id}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -201,7 +201,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var model = await _syllabusRepository.GetAsync(x => x.Id == id && !x.IsDeleted);
                 if (model == null)
                 {
-                    _logger.LogWarning("Syllabus not found for id: {id}", id);
+                   Console.WriteLine("Syllabus not found for id: {id}", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SYLLABUS) };
@@ -252,7 +252,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid || id != updateDTO.Id)
                 {
-                    _logger.LogWarning("Invalid model state or mismatched id: {id}", id);
+                   Console.WriteLine("Invalid model state or mismatched id: {id}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SYLLABUS) };
@@ -262,7 +262,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var model = await _syllabusRepository.GetAsync(x => x.Id == id && x.TutorId == userId, false, null, null);
                 if (model == null)
                 {
-                    _logger.LogWarning("Syllabus not found for id: {id} and tutor: {userId}", id, userId);
+                   Console.WriteLine("Syllabus not found for id: {id} and tutor: {userId}", id, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.SYLLABUS) };
@@ -390,7 +390,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Invalid model state for CreateAsync. ModelState errors: {Errors}", string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+                   Console.WriteLine("Invalid model state for CreateAsync. ModelState errors: {Errors}", string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.SYLLABUS) };
