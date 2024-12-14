@@ -14,7 +14,7 @@ namespace AutismEduConnectSystem.Models
         public ApplicationUser User { get; set; }
         public string Subject { get; set; }
         public string Message { get; set; }
-        public int MaxRetries { get; set; } = 0;
+        public int MaxRetries { get; set; } = 3;
         public bool SendFirstTime { get; set; } = true;
         public string? ErrorCode { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;

@@ -1,8 +1,6 @@
 ﻿using AutismEduConnectSystem.Data;
 using AutismEduConnectSystem.Models;
-using MailKit.Security;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -51,9 +49,19 @@ namespace AutismEduConnectSystem.Services
 
             try
             {
-                smtp.Connect(mailSettings.Host, mailSettings.Port, SecureSocketOptions.StartTls);
-                smtp.Authenticate(mailSettings.Mail, mailSettings.Password);
-                await smtp.SendAsync(message);
+                //smtp.Connect(mailSettings.Host, mailSettings.Port, SecureSocketOptions.StartTls);
+                //smtp.Authenticate(mailSettings.Mail, mailSettings.Password);
+                //await smtp.SendAsync(message);
+                await using var _db = new ApplicationDbContext(_dbOptions);
+                await _db.EmailLoggers.AddAsync(new EmailLogger()
+                {
+                    MaxRetries = 3,
+                    SendFirstTime = false,
+                    Email = email,
+                    Subject = subject,
+                    Message = htmlMessage
+                });
+                await _db.SaveChangesAsync();
             }
             catch (Exception ex)
             {
