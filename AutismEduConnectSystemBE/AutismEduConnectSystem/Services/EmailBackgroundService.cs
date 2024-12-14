@@ -49,9 +49,6 @@ namespace AutismEduConnectSystem.Services
                         try
                         {
                             await SendEmailAsync(email);
-                            email.SendFirstTime = true;
-                            email.MaxRetries = 0;
-                            email.ErrorCode = null;
                         }
                         catch (Exception ex)
                         {
@@ -103,7 +100,10 @@ namespace AutismEduConnectSystem.Services
 
                         await smtpClient.SendMailAsync(mailMessage);
                         Console.WriteLine($"Email sent to {email.Email} using account {account.Username}");
-                        return; // Exit method when email is sent successfully
+                        email.SendFirstTime = true;
+                        email.MaxRetries = 0;
+                        email.ErrorCode = null;
+                        return;
                     }
                     catch (SmtpException smtpEx)
                     {

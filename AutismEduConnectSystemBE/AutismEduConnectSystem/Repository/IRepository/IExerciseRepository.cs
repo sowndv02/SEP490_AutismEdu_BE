@@ -6,7 +6,5 @@ namespace AutismEduConnectSystem.Repository.IRepository
     {
         Task<Exercise> UpdateAsync(Exercise model);
         Task<int> CountByExerciseType(int exerciseTypeId);
-        Task<int> GetNextVersionNumberAsync(int? originalId);
-        Task DeactivatePreviousVersionsAsync(int? originalId);
     }
 }

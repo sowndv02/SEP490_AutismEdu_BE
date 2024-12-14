@@ -301,6 +301,7 @@ namespace AutismEduConnectSystem.Mapper
 
             CreateMap<TutorRegistrationRequestInfoDTO, TutorRegistrationRequest>().ReverseMap();
             CreateMap<ExerciseNotPagingDTO, Exercise>().ReverseMap();
+            CreateMap<ExerciseUpdateDTO, Exercise>().ReverseMap();
         }
     }
 }

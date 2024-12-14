@@ -26,39 +26,6 @@ namespace AutismEduConnectSystem.Repository
             }
         }
 
-        public async Task DeactivatePreviousVersionsAsync(int? originalId)
-        {
-            if (originalId == 0 || originalId == null) return;
-            var previousVersions = await _context.Exercisese
-                .Where(c => (c.OriginalId == originalId || c.Id == originalId) && c.IsActive)
-                .ToListAsync();
-
-            if (previousVersions == null || !previousVersions.Any())
-            {
-                return;
-            }
-
-            foreach (var version in previousVersions)
-            {
-                version.IsActive = false;
-                _context.Exercisese.Update(version);
-            }
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<int> GetNextVersionNumberAsync(int? originalId)
-        {
-            var previousVersions = await _context.Exercisese
-                .Where(c => c.OriginalId == originalId)
-                .ToListAsync();
-
-            if (previousVersions == null || !previousVersions.Any())
-            {
-                return 1;
-            }
-
-            return previousVersions.Max(c => c.VersionNumber) + 1;
-        }
         public async Task<Exercise> UpdateAsync(Exercise model)
         {
             try

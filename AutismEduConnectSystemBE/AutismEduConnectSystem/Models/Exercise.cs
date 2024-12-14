@@ -12,12 +12,7 @@ namespace AutismEduConnectSystem.Models
         public int ExerciseTypeId { get; set; }
         public string Description { get; set; }
         public bool IsDeleted { get; set; } = false;
-        public bool IsActive { get; set; } = true;
         public string TutorId { get; set; }
-        public int VersionNumber { get; set; } = 1;
-        public int? OriginalId { get; set; }
-        [ForeignKey(nameof(OriginalId))]
-        public Exercise? Original { get; set; }
         [ForeignKey(nameof(ExerciseTypeId))]
         public ExerciseType ExerciseType { get; set; }
         public List<SyllabusExercise> SyllabusExercises { get; set; }

@@ -32,6 +32,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
         private readonly Mock<IResourceService> _resourceServiceMock;
         private readonly Mock<ILogger<ExerciseController>> _loggerMock;
         private readonly Mock<IConfiguration> _configurationMock;
+        private readonly Mock<ISyllabusExerciseRepository> _syllabusExerciseRepositoryMock;
         private ExerciseController _controller;
 
         public ExerciseControllerTests()
@@ -51,6 +52,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
 
             // Mock ILogger
             _loggerMock = new Mock<ILogger<ExerciseController>>();
+            _syllabusExerciseRepositoryMock = new Mock<ISyllabusExerciseRepository>();
 
             // Mock IConfiguration
             _configurationMock = new Mock<IConfiguration>();
@@ -61,7 +63,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 _configurationMock.Object,
                 _mapperMock,
                 _resourceServiceMock.Object,
-                _loggerMock.Object
+                _loggerMock.Object,
+                _syllabusExerciseRepositoryMock.Object
             );
             var claims = new List<Claim>
             {
@@ -81,7 +84,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 ExerciseName = "New Exercise",
                 Description = "Description of the exercise",
-                OriginalId = 0,
             };
 
             var exercise = new Exercise
@@ -89,18 +91,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = 1,
                 ExerciseName = "New Exercise",
                 Description = "Description of the exercise",
-                OriginalId = null,
-                VersionNumber = 1,
                 TutorId = "testUserId",
             };
-
-            _exerciseRepositoryMock
-                .Setup(repo => repo.GetNextVersionNumberAsync(It.IsAny<int?>()))
-                .ReturnsAsync(1);
-
-            _exerciseRepositoryMock
-                .Setup(repo => repo.DeactivatePreviousVersionsAsync(It.IsAny<int?>()))
-                .Returns(Task.CompletedTask);
 
             _exerciseRepositoryMock
                 .Setup(repo => repo.CreateAsync(It.IsAny<Exercise>()))
@@ -123,14 +115,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo => repo.CreateAsync(It.IsAny<Exercise>()),
                 Times.Once
             );
-            _exerciseRepositoryMock.Verify(
-                repo => repo.DeactivatePreviousVersionsAsync(It.IsAny<int?>()),
-                Times.Once
-            );
-            _exerciseRepositoryMock.Verify(
-                repo => repo.GetNextVersionNumberAsync(It.IsAny<int?>()),
-                Times.Once
-            );
         }
 
         [Fact]
@@ -142,7 +126,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 ExerciseName = "New Exercise",
                 Description = "Description of the exercise",
-                OriginalId = 0,
             };
             _exerciseRepositoryMock
                 .Setup(repo => repo.CreateAsync(It.IsAny<Exercise>()))
@@ -184,7 +167,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 ExerciseName = "New Exercise",
                 Description = "Description of the exercise",
-                OriginalId = 0,
             };
 
             // Act
@@ -222,7 +204,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 ExerciseName = "New Exercise",
                 Description = "Description of the exercise",
-                OriginalId = 0,
             };
 
             // Act
@@ -268,7 +249,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
             {
                 ExerciseName = "New Exercise",
                 Description = "Description of the exercise",
-                OriginalId = 1,
             };
 
             var exercise = new Exercise
@@ -276,18 +256,8 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 Id = 1,
                 ExerciseName = "New Exercise",
                 Description = "Description of the exercise",
-                OriginalId = 1,
-                VersionNumber = 1,
                 TutorId = "testUserId",
             };
-
-            _exerciseRepositoryMock
-                .Setup(repo => repo.GetNextVersionNumberAsync(It.IsAny<int?>()))
-                .ReturnsAsync(1);
-
-            _exerciseRepositoryMock
-                .Setup(repo => repo.DeactivatePreviousVersionsAsync(It.IsAny<int?>()))
-                .Returns(Task.CompletedTask);
 
             _exerciseRepositoryMock
                 .Setup(repo => repo.CreateAsync(It.IsAny<Exercise>()))
@@ -310,14 +280,7 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                 repo => repo.CreateAsync(It.IsAny<Exercise>()),
                 Times.Once
             );
-            _exerciseRepositoryMock.Verify(
-                repo => repo.DeactivatePreviousVersionsAsync(It.IsAny<int?>()),
-                Times.Once
-            );
-            _exerciseRepositoryMock.Verify(
-                repo => repo.GetNextVersionNumberAsync(It.IsAny<int?>()),
-                Times.Once
-            );
+            
         }
 
         [Fact]
@@ -701,7 +664,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     ExerciseName = "Math Basics",
                     TutorId = userId,
                     CreatedDate = DateTime.Now.AddDays(-2),
-                    IsActive = true,
                     IsDeleted = false,
                 },
                 new Exercise
@@ -711,7 +673,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     ExerciseName = "Advanced Math",
                     TutorId = userId,
                     CreatedDate = DateTime.Now.AddDays(-1),
-                    IsActive = true,
                     IsDeleted = false,
                 },
             };
@@ -767,7 +728,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                                         ExerciseTypeId = exerciseTypeId,
                                         ExerciseName = "Math Basics",
                                         TutorId = userId,
-                                        IsActive = true,
                                         IsDeleted = false,
                                     }
                                 )
@@ -814,7 +774,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     ExerciseName = "Math Basics",
                     TutorId = userId,
                     CreatedDate = DateTime.Now.AddDays(-2),
-                    IsActive = true,
                     IsDeleted = false,
                 },
                 new Exercise
@@ -824,7 +783,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     ExerciseName = "Advanced Math",
                     TutorId = userId,
                     CreatedDate = DateTime.Now.AddDays(-1),
-                    IsActive = true,
                     IsDeleted = false,
                 },
             };
@@ -880,7 +838,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                                         ExerciseTypeId = exerciseTypeId,
                                         ExerciseName = "Math Basics",
                                         TutorId = userId,
-                                        IsActive = true,
                                         IsDeleted = false,
                                     }
                                 )
@@ -926,7 +883,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     ExerciseName = "Math Basics",
                     TutorId = userId,
                     CreatedDate = DateTime.Now.AddDays(-2),
-                    IsActive = true,
                     IsDeleted = false,
                 },
                 new Exercise
@@ -936,7 +892,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     ExerciseName = "Advanced Math",
                     TutorId = userId,
                     CreatedDate = DateTime.Now.AddDays(-1),
-                    IsActive = true,
                     IsDeleted = false,
                 },
             };
@@ -991,7 +946,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                                     {
                                         ExerciseTypeId = exerciseTypeId,
                                         TutorId = userId,
-                                        IsActive = true,
                                         IsDeleted = false,
                                     }
                                 )
@@ -1037,7 +991,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     ExerciseName = "Math Basics",
                     TutorId = userId,
                     CreatedDate = DateTime.Now.AddDays(-2),
-                    IsActive = true,
                     IsDeleted = false,
                 },
                 new Exercise
@@ -1047,7 +1000,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                     ExerciseName = "Advanced Math",
                     TutorId = userId,
                     CreatedDate = DateTime.Now.AddDays(-1),
-                    IsActive = true,
                     IsDeleted = false,
                 },
             };
@@ -1102,7 +1054,6 @@ namespace AutismEduConnectSystem.Controllers.v1.Tests
                                     {
                                         ExerciseTypeId = exerciseTypeId,
                                         TutorId = userId,
-                                        IsActive = true,
                                         IsDeleted = false,
                                     }
                                 )

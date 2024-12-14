@@ -1,5 +1,6 @@
 ﻿using AutismEduConnectSystem.DTOs;
 using AutismEduConnectSystem.DTOs.CreateDTOs;
+using AutismEduConnectSystem.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Models;
 using AutismEduConnectSystem.Repository.IRepository;
 using AutismEduConnectSystem.Services.IServices;
@@ -24,12 +25,14 @@ namespace AutismEduConnectSystem.Controllers.v1
         private readonly ILogger<ExerciseController> _logger;
         protected int pageSize = 0;
         private readonly IResourceService _resourceService;
+        private readonly ISyllabusExerciseRepository _syllabusExerciseRepository;
 
 
         public ExerciseController(IExerciseRepository exerciseRepository, IConfiguration configuration, IMapper mapper
-            , IResourceService resourceService, ILogger<ExerciseController> logger)
+            , IResourceService resourceService, ILogger<ExerciseController> logger, ISyllabusExerciseRepository syllabusExerciseRepository)
         {
             pageSize = int.Parse(configuration["APIConfig:PageSize"]);
+            _syllabusExerciseRepository = syllabusExerciseRepository;
             _response = new APIResponse();
             _mapper = mapper;
             _exerciseRepository = exerciseRepository;
@@ -67,7 +70,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive && e.TutorId == userId);
+                    filter = filter.AndAlso(e => !e.IsDeleted && e.TutorId == userId);
                 }
                 if (!string.IsNullOrEmpty(search))
                 {
@@ -89,7 +92,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
 
-                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: "ExerciseType,Original", pageNumber: pageNumber, pageSize: pageSize,orderBy: orderByQuery, isDesc: isDesc);
+                var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: "ExerciseType", pageNumber: pageNumber, pageSize: pageSize,orderBy: orderByQuery, isDesc: isDesc);
                 
                 var resultMapping = _mapper.Map<List<ExerciseNotPagingDTO>>(result);
                 _response.Pagination = new()
@@ -98,16 +101,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     PageSize = pageSize,
                     Total = count
                 };
-                foreach (var item in resultMapping)
-                {
-                    if (item.Original != null)
-                    {
-                        if (item.Original.Id == 0)
-                        {
-                            item.Original = null;
-                        }
-                    }
-                }
                 _response.Result = resultMapping;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
@@ -158,7 +151,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (userRoles != null && userRoles.Contains(SD.TUTOR_ROLE))
                 {
-                    filter = filter.AndAlso(e => !e.IsDeleted && e.IsActive && e.TutorId == userId);
+                    filter = filter.AndAlso(e => !e.IsDeleted && e.TutorId == userId);
                 }
                 if (!string.IsNullOrEmpty(search))
                 {
@@ -235,23 +228,17 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var exerciseModel = _mapper.Map<Exercise>(exerciseCreateDTO);
-                if (exerciseCreateDTO.OriginalId == 0)
+                
+                var isExisted = await _exerciseRepository.GetAllNotPagingAsync(x => x.ExerciseName.ToLower().Equals(exerciseCreateDTO.ExerciseName.ToLower()) && x.ExerciseTypeId == exerciseCreateDTO.ExerciseTypeId && x.TutorId == userId, null, null, null, true);
+                if (isExisted.TotalCount > 0)
                 {
-                    var isExisted = await _exerciseRepository.GetAllNotPagingAsync(x => x.ExerciseName.ToLower().Equals(exerciseCreateDTO.ExerciseName.ToLower()) && x.ExerciseTypeId == exerciseCreateDTO.ExerciseTypeId && x.TutorId == userId, null, null, null, true);
-                    if (isExisted.TotalCount > 0)
-                    {
-                        _response.StatusCode = HttpStatusCode.BadRequest;
-                        _response.IsSuccess = false;
-                        _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EXERCISE) };
-                        return BadRequest(_response);
-                    }
-                    exerciseModel.OriginalId = null;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EXERCISE) };
+                    return BadRequest(_response);
                 }
-                exerciseModel.VersionNumber = await _exerciseRepository.GetNextVersionNumberAsync(exerciseCreateDTO.OriginalId);
-                await _exerciseRepository.DeactivatePreviousVersionsAsync(exerciseCreateDTO.OriginalId);
                 exerciseModel.TutorId = userId;
                 var createdExercise = await _exerciseRepository.CreateAsync(exerciseModel);
-                exerciseModel.Original = await _exerciseRepository.GetAsync(x => x.Id == exerciseModel.OriginalId, false, null, null);
                 _response.Result = _mapper.Map<ExerciseDTO>(exerciseModel);
                 _response.StatusCode = HttpStatusCode.Created;
                 _response.IsSuccess = true;
@@ -297,7 +284,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var exercise = await _exerciseRepository.GetAsync(x => x.Id == id && !x.IsDeleted && x.IsActive && x.TutorId == userId, true, null, null);
+                var exercise = await _exerciseRepository.GetAsync(x => x.Id == id && !x.IsDeleted && x.TutorId == userId, true, null, null);
                 if (exercise == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
@@ -308,7 +295,80 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 exercise.IsDeleted = true;
                 var model = await _exerciseRepository.UpdateAsync(exercise);
-                _response.Result = _mapper.Map<ExerciseDTO>(model);
+                var (count, syllabuses) = await _syllabusExerciseRepository.GetAllNotPagingAsync(x => x.ExerciseId == id, null, null, null, true);
+                if (syllabuses != null && syllabuses.Any())
+                {
+                   foreach(var item in syllabuses)
+                   {
+                        await _syllabusExerciseRepository.RemoveAsync(item);   
+                   } 
+                }
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = SD.TUTOR_ROLE)]
+        public async Task<ActionResult<APIResponse>> UpdateAsync(int id, ExerciseUpdateDTO exerciseUpdateDTO)
+        {
+            try
+            {
+
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Unauthorized;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Unauthorized, _response);
+                }
+
+                var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Forbidden;
+                    _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
+                    return StatusCode((int)HttpStatusCode.Forbidden, _response);
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE) };
+                    return BadRequest(_response);
+                }
+                if(id != exerciseUpdateDTO.Id)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
+                    return BadRequest(_response);
+                }
+                var exerciseModel = _mapper.Map<Exercise>(exerciseUpdateDTO);
+
+                var isExisted = await _exerciseRepository.GetAllNotPagingAsync(x => x.ExerciseName.ToLower().Equals(exerciseUpdateDTO.ExerciseName.ToLower()) && x.ExerciseTypeId == exerciseUpdateDTO.ExerciseTypeId && x.TutorId == userId && x.Id != exerciseUpdateDTO.Id, null, null, null, true);
+                if (isExisted.TotalCount > 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.EXERCISE) };
+                    return BadRequest(_response);
+                }
+                exerciseModel.TutorId = userId;
+                exerciseModel.UpdatedDate = DateTime.Now;
+                await _exerciseRepository.UpdateAsync(exerciseModel);
+                _response.Result = _mapper.Map<ExerciseDTO>(exerciseModel);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
