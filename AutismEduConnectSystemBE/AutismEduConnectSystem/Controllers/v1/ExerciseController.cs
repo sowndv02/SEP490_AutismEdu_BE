@@ -90,23 +90,25 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: "ExerciseType,Original", pageNumber: pageNumber, pageSize: pageSize,orderBy: orderByQuery, isDesc: isDesc);
-                foreach(var item in result)
-                {
-                    if(item.Original != null)
-                    {
-                        if(item.Original.OriginalId == 0)
-                        {
-                            item.Original = null;
-                        }
-                    }
-                }
+                
+                var resultMapping = _mapper.Map<List<ExerciseNotPagingDTO>>(result);
                 _response.Pagination = new Pagination()
                 {
                     PageNumber = pageNumber,
                     PageSize = pageSize,
                     Total = count
                 };
-                _response.Result = _mapper.Map<List<ExerciseNotPagingDTO>>(result);
+                foreach (var item in resultMapping)
+                {
+                    if (item.Original != null)
+                    {
+                        if (item.Original.Id == 0)
+                        {
+                            item.Original = null;
+                        }
+                    }
+                }
+                _response.Result = resultMapping;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = null;
                 _response.IsSuccess = true;
@@ -114,7 +116,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -148,7 +149,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (id <= 0)
                 {
-                   Console.WriteLine("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -195,7 +195,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching exercises for ExerciseTypeId: {ExerciseTypeId}, Search: {Search}", id, search);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -213,7 +212,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -223,7 +221,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -232,7 +229,6 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 if (!ModelState.IsValid)
                 {
-                   Console.WriteLine("Received null ExerciseCreateDTO from user: {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EXERCISE) };
@@ -264,7 +260,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating exercise for user: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -281,7 +276,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -291,7 +285,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -299,7 +292,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
                 if (id <= 0)
                 {
-                   Console.WriteLine("Invalid Exercise ID: {Id}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -309,7 +301,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var exercise = await _exerciseRepository.GetAsync(x => x.Id == id && !x.IsDeleted && x.IsActive && x.TutorId == userId, true, null, null);
                 if (exercise == null)
                 {
-                   Console.WriteLine("Exercise with ID {ExerciseId} not found for user: {UserId}", id, userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.EXERCISE) };
@@ -325,7 +316,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while deleting exercise with ID {ExerciseId} for user: {UserId}", id, User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
