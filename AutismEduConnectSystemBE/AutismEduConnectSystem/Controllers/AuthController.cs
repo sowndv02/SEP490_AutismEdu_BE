@@ -63,7 +63,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (model == null)
                 {
-                    _logger.LogWarning("ResendConfirmEmail called with a null model.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EMAIL) };
@@ -72,7 +71,6 @@ namespace AutismEduConnectSystem.Controllers
                 var user = await _userRepository.GetUserByEmailAsync(model.Email);
                 if (user == null)
                 {
-                    _logger.LogWarning($"User not found with email: {model.Email}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
@@ -94,7 +92,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while resending the confirmation email.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -112,7 +109,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (model == null)
                 {
-                    _logger.LogWarning("ConfirmEmail called with a null model.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.INFORMATION) };
@@ -121,7 +117,6 @@ namespace AutismEduConnectSystem.Controllers
                 var user = await _userRepository.GetAsync(x => x.Id == model.UserId);
                 if (user == null)
                 {
-                    _logger.LogWarning($"User not found with ID: {model.UserId}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
@@ -130,7 +125,6 @@ namespace AutismEduConnectSystem.Controllers
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
                 if (DateTime.Now > security.AddMinutes(validateTime))
                 {
-                    _logger.LogWarning($"Link expired for user: {model.UserId}. Expiry time: {security.AddMinutes(validateTime)}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.LINK_EXPIRED_MESSAGE) };
@@ -139,7 +133,6 @@ namespace AutismEduConnectSystem.Controllers
                 var result = await _userRepository.ConfirmEmailAsync(user, model.Code);
                 if (!result)
                 {
-                    _logger.LogError($"Email confirmation failed for user: {model.UserId}. Internal server error.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -151,7 +144,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while confirming the email.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -168,7 +160,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (model == null)
                 {
-                    _logger.LogWarning("ResetPassword called with a null model.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.INFORMATION) };
@@ -177,7 +168,6 @@ namespace AutismEduConnectSystem.Controllers
                 var user = await _userRepository.GetAsync(x => x.Id == model.UserId);
                 if (user == null)
                 {
-                    _logger.LogWarning($"User not found with UserId: {model.UserId}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
@@ -185,7 +175,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 else if (user.UserType == SD.GOOGLE_USER)
                 {
-                    _logger.LogWarning($"Google user with UserId: {model.UserId} attempted password reset.");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { $"Người dùng Google không thể sử dụng chức năng quên mật khẩu." };
@@ -194,7 +183,6 @@ namespace AutismEduConnectSystem.Controllers
                 DateTime security = _dateTimeEncryption.DecryptDateTime(model.Security);
                 if (DateTime.Now > security.AddMinutes(validateTime))
                 {
-                    _logger.LogWarning($"Reset password link expired for UserId: {model.UserId}. Expiry time: {security.AddMinutes(validateTime)}");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.LINK_EXPIRED_MESSAGE) };
@@ -203,7 +191,6 @@ namespace AutismEduConnectSystem.Controllers
                 var result = await _userRepository.ResetPasswordAsync(user, model.Code, model.Password);
                 if (!result)
                 {
-                    _logger.LogError($"Password reset failed for UserId: {model.UserId}. Internal server error.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -215,7 +202,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while resetting the password.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -232,7 +218,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (forgotPasswordDTO == null)
                 {
-                    _logger.LogWarning("ForgotPassword called with a null model.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { "Data invalid." };
@@ -241,7 +226,6 @@ namespace AutismEduConnectSystem.Controllers
                 var user = await _userRepository.GetUserByEmailAsync(forgotPasswordDTO.Email);
                 if (user == null)
                 {
-                    _logger.LogWarning($"User not found with email: {forgotPasswordDTO.Email}");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
@@ -249,7 +233,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 else if (user.UserType == SD.GOOGLE_USER)
                 {
-                    _logger.LogWarning($"Google user with email: {forgotPasswordDTO.Email} attempted password reset.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.GOOGLE_USER_INVALID_FORGOT_PASSWORD_MESSAGE) };
@@ -275,7 +258,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the forgot password request.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -292,7 +274,6 @@ namespace AutismEduConnectSystem.Controllers
                 var tokenDto = await _userRepository.Login(model);
                 if (tokenDto != null && string.IsNullOrEmpty(tokenDto.AccessToken))
                 {
-                    _logger.LogWarning("Login failed for user: {Email}. Incorrect username or password.", model.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.USERNAME_PASSWORD_INVALID_MESSAGE) };
@@ -300,7 +281,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (tokenDto == null)
                 {
-                    _logger.LogWarning("Login failed for user: {Email}. User is locked out.", model.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE) };
@@ -313,7 +293,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (MissingMemberException e)
             {
-                _logger.LogError(e, "Missing member exception occurred during login for user: {Email}", model.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.NotAcceptable;
                 _response.ErrorMessages = new List<string>() { e.Message };
@@ -321,7 +300,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (InvalidOperationException e)
             {
-                _logger.LogError(e, "Missing member exception occurred during login for user: {Email}", model.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.Locked;
                 _response.ErrorMessages = new List<string>() { e.Message };
@@ -329,7 +307,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (InvalidJwtException e)
             {
-                _logger.LogError(e, "Missing member exception occurred during login for user: {Email}", model.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.NotModified;
                 _response.ErrorMessages = new List<string>() { e.Message };
@@ -337,7 +314,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the login for user: {Email}", model.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -354,7 +330,6 @@ namespace AutismEduConnectSystem.Controllers
                 bool ifUserNameUnique = _userRepository.IsUniqueUser(model.Email);
                 if (!ifUserNameUnique)
                 {
-                    _logger.LogWarning("Registration failed. Email already exists: {Email}", model.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.EMAIL_EXISTING_MESSAGE) };
@@ -364,7 +339,6 @@ namespace AutismEduConnectSystem.Controllers
                 var user = await _userRepository.Register(model);
                 if (user == null)
                 {
-                    _logger.LogWarning("Registration failed for email: {Email}. Error while registering.", model.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.REGISTER_FAILED_MESSAGE) };
@@ -391,7 +365,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while registering user with email: {Email}", model.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -409,7 +382,6 @@ namespace AutismEduConnectSystem.Controllers
                     var tokenDTOResponse = await _userRepository.RefreshAccessToken(model);
                     if (tokenDTOResponse == null || string.IsNullOrEmpty(tokenDTOResponse.AccessToken))
                     {
-                        _logger.LogWarning("Token refresh failed: Invalid token for refresh request.");
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.APPLICATION_TOKEN) };
@@ -421,7 +393,6 @@ namespace AutismEduConnectSystem.Controllers
 
                         if (payload == null)
                         {
-                            _logger.LogWarning("Invalid Google token provided.");
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
                             _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_TOKEN) };
@@ -439,7 +410,6 @@ namespace AutismEduConnectSystem.Controllers
                         var refreshToken = await _userRepository.GetRefreshTokenGoogleValid(user.Id);
                         if (refreshToken == null)
                         {
-                            _logger.LogWarning("No valid refresh token found for Google user: {Email}", user.Email);
                             _response.StatusCode = HttpStatusCode.BadRequest;
                             _response.IsSuccess = false;
                             _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_REFRESH_TOKEN_STRING) };
@@ -455,7 +425,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 else
                 {
-                    _logger.LogWarning("Model state is invalid for token refresh request.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.REFRESH_TOKEN_ERROR_MESSAGE) };
@@ -464,7 +433,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (ArgumentException ex)
             {
-                _logger.LogError(ex, "An error occurred while trying to generate a new access token for Google.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { ex.Message };
@@ -472,7 +440,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the refresh token request.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -499,7 +466,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the revoke refresh token request.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -517,7 +483,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (payload == null)
                 {
-                    _logger.LogWarning("Invalid Google token received: {Token}", model?.Token);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_TOKEN) };
@@ -525,7 +490,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (payload.ExpirationTimeSeconds == 0)
                 {
-                    _logger.LogWarning("Google token expired for token: {Token}", model?.Token);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.TOKEN_EXPIRED_MESSAGE) };
@@ -547,7 +511,6 @@ namespace AutismEduConnectSystem.Controllers
 
                     if (user == null)
                     {
-                        _logger.LogError("Error while creating user with email {Email}.", payload.Email);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string>() { "Error while registering" };
@@ -565,7 +528,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (tokenDto == null)
                 {
-                    _logger.LogWarning("User login failed. User is locked out or invalid credentials for email: {Email}", user.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE) };
@@ -579,7 +541,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (MissingMemberException e)
             {
-                _logger.LogError(e, "Missing member exception occurred during external login.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.NotAcceptable;
                 _response.ErrorMessages = new List<string>() { e.Message };
@@ -595,7 +556,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the external login request.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -614,7 +574,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (tokenResponse == null)
                 {
-                    _logger.LogWarning("Invalid Google token received: {Token}", model?.Token);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_TOKEN) };
@@ -624,7 +583,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (payload == null)
                 {
-                    _logger.LogWarning("Invalid Google ID token: {IdToken}", tokenResponse?.IdToken);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.GOOGLE_TOKEN) };
@@ -632,7 +590,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (payload.ExpirationTimeSeconds == 0)
                 {
-                    _logger.LogWarning("Google token expired for token: {IdToken}", tokenResponse?.IdToken);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.TOKEN_EXPIRED_MESSAGE) };
@@ -654,7 +611,6 @@ namespace AutismEduConnectSystem.Controllers
 
                     if (user == null)
                     {
-                        _logger.LogError("Error while creating user with email {Email}.", payload.Email);
                         _response.StatusCode = HttpStatusCode.BadRequest;
                         _response.IsSuccess = false;
                         _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.REGISTER_FAILED_MESSAGE) };
@@ -672,7 +628,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (tokenDto == null)
                 {
-                    _logger.LogWarning("User login failed. User is locked out or invalid credentials for email: {Email}", user.Email);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.ACCOUNT_IS_LOCK_MESSAGE) };
@@ -687,7 +642,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (MissingMemberException e)
             {
-                _logger.LogError(e, "Missing member exception occurred during token exchange process.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.NotAcceptable;
                 _response.ErrorMessages = new List<string>() { e.Message };
@@ -695,7 +649,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (InvalidOperationException e)
             {
-                _logger.LogError(e, "Missing member exception occurred during login for user");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.NotAcceptable;
                 _response.ErrorMessages = new List<string>() { e.Message };
@@ -703,7 +656,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (ArgumentException ex)
             {
-                _logger.LogError(ex, "An error occurred while trying to generate a new access token for Google.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { ex.Message };
@@ -711,7 +663,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the external login token request.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -737,7 +688,6 @@ namespace AutismEduConnectSystem.Controllers
                 var refreshToken = await _userRepository.GetRefreshTokenGoogleValid(user.Id);
                 if (refreshToken == null)
                 {
-                    _logger.LogWarning("No valid refresh token found for user with ID: {UserId}", user.Id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.REFRESH_TOKEN_ERROR_MESSAGE) };
@@ -751,7 +701,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (ArgumentException ex)
             {
-                _logger.LogError(ex, "An error occurred while trying to generate a new access token for Google.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { ex.Message };
@@ -759,7 +708,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while trying to generate a new access token for Google.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -786,15 +734,12 @@ namespace AutismEduConnectSystem.Controllers
                     else
                     {
                         var errorResponse = await response.Content.ReadAsStringAsync();
-                        _logger.LogError("Failed to retrieve Google user info. Status code: {StatusCode}. Error: {ErrorResponse}",
-                                      response.StatusCode, errorResponse);
                         throw new ArgumentException("Đã xảy ra lỗi khi lấy thông tin người dùng từ Google");
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving Google user info.");
                 throw new ArgumentException("Đã xảy ra lỗi khi lấy thông tin người dùng từ Google");
             }
         }
@@ -827,8 +772,6 @@ namespace AutismEduConnectSystem.Controllers
                     {
                         var errorContent = await response.Content.ReadAsStringAsync();
 
-                        _logger.LogError("Failed to refresh Google access token. Status code: {StatusCode}. Error: {ErrorContent}",
-                                          response.StatusCode, errorContent);
                         throw new ArgumentException($"Đã xảy ra lỗi khi lấy accesstoken từ refresh token từ Google");
                     }
                 }
@@ -872,14 +815,11 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 else
                 {
-                    _logger.LogError("Failed to get token from Google. Status Code: {StatusCode}, Response: {ResponseContent}",
-                                      response.StatusCode, responseContent);
                     throw new ArgumentException($" Đã xảy ra lỗi khi lấy thông tin token từ Google");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while exchanging authorization code for Google token.");
                 throw new ArgumentException($" Đã xảy ra lỗi khi lấy thông tin token từ Google");
             }
         }

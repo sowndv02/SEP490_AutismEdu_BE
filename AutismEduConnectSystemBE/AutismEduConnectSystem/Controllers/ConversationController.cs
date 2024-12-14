@@ -60,7 +60,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CONVERSATION) };
@@ -121,7 +120,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"An error occurred while creating conversation: {ex.Message}");
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -212,7 +210,6 @@ namespace AutismEduConnectSystem.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);

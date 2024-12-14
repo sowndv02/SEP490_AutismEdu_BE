@@ -387,7 +387,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }, passsword);
                     if (user == null)
                     {
-                        _logger.LogError("An error occurred while processing Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
                         _response.IsSuccess = false;
                         _response.StatusCode = HttpStatusCode.InternalServerError;
                         _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -409,7 +408,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                     });
                     if (tutor == null)
                     {
-                        _logger.LogError("An error occurred while processing Tutor Registration Request {RequestId}.", tutorRegistrationRequestChange.Id);
                         _response.IsSuccess = false;
                         _response.StatusCode = HttpStatusCode.InternalServerError;
                         _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

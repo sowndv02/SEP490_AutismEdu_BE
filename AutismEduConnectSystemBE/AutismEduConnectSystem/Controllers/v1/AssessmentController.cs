@@ -93,7 +93,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
@@ -131,7 +130,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
@@ -203,7 +201,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }

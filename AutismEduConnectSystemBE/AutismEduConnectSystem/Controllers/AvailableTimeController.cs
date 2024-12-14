@@ -41,7 +41,6 @@ namespace AutismEduConnectSystem.Controllers
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -51,7 +50,6 @@ namespace AutismEduConnectSystem.Controllers
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -62,7 +60,6 @@ namespace AutismEduConnectSystem.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
-                    _logger.LogError("Bad request: AvailableTimeSlotCreateDTO is null or Tutor ID is missing.");
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.AVAILABLE_TIME) };
                     return BadRequest(_response);
                 }
@@ -70,7 +67,6 @@ namespace AutismEduConnectSystem.Controllers
                 if (TimeSpan.Parse(availableTimeSlotCreateDTO.From) >= TimeSpan.Parse(availableTimeSlotCreateDTO.To))
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _logger.LogError("Bad request: 'From' time ({FromTime}) is later than 'To' time ({ToTime}).", availableTimeSlotCreateDTO.From, availableTimeSlotCreateDTO.To);
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.TIME_SLOT) };
                     return BadRequest(_response);
@@ -104,7 +100,6 @@ namespace AutismEduConnectSystem.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
@@ -126,7 +121,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
-                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
@@ -142,7 +136,6 @@ namespace AutismEduConnectSystem.Controllers
                 var tutorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(tutorId))
                 {
-                    
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Unauthorized;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.UNAUTHORIZED_MESSAGE) };
@@ -152,7 +145,6 @@ namespace AutismEduConnectSystem.Controllers
                 var userRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
                 if (userRoles == null || (!userRoles.Contains(SD.TUTOR_ROLE)))
                 {
-                   
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.Forbidden;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
@@ -176,7 +168,6 @@ namespace AutismEduConnectSystem.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);

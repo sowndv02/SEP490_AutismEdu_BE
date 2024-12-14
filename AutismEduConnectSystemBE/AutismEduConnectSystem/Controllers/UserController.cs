@@ -63,7 +63,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (string.IsNullOrEmpty(id) || userId != id || userId != updatePasswordRequestDTO.Id)
                 {
-                    _logger.LogWarning("Invalid ID or mismatch. Request ID: {RequestId}, Authenticated User ID: {UserId}", id, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -76,7 +75,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (InvalidDataException ex)
             {
-                _logger.LogError(ex, "Error occurred while updating password for User ID: {UserId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.ErrorMessages = new List<string>() { ex.Message };
@@ -84,7 +82,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating password for User ID: {UserId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -119,7 +116,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (!userId.Equals(userRoleDTO.UserId))
                 {
-                    _logger.LogWarning("User ID mismatch. Request ID: {RequestId}, Provided DTO UserId: {UserRoleDTOUserId}", userId, userRoleDTO.UserId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -128,7 +124,6 @@ namespace AutismEduConnectSystem.Controllers
                 var result = await _userRepository.RemoveRoleByUserId(userId, userRoleDTO.UserRoleIds);
                 if (!result)
                 {
-                    _logger.LogError("Failed to remove roles for User ID: {UserId}", userId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -143,7 +138,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while removing roles for User ID: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -177,7 +171,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (!userId.Equals(userRoleDTO.UserId))
                 {
-                    _logger.LogWarning("User ID mismatch. Request ID: {RequestId}, Provided DTO UserId: {UserRoleDTOUserId}", userId, userRoleDTO.UserId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -203,7 +196,6 @@ namespace AutismEduConnectSystem.Controllers
                         {
                             if (userRoleDTO.UserRoleIds.Contains(restrictedRole))
                             {
-                                _logger.LogWarning("Attempt to add restricted role {RestrictedRole} to user with role {CurrentRole}", restrictedRole, role);
                                 _response.StatusCode = HttpStatusCode.BadRequest;
                                 _response.IsSuccess = false;
                                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.CANNOT_ADD_ROLE, restrictedRole, role) };
@@ -216,7 +208,6 @@ namespace AutismEduConnectSystem.Controllers
                 var result = await _userRepository.AddRoleToUser(userId, userRoleDTO.UserRoleIds);
                 if (!result)
                 {
-                    _logger.LogError("Failed to add roles for User ID: {UserId}", userId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -238,7 +229,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (InvalidDataException ex)
             {
-                _logger.LogError(ex, "Error occurred while updating password for User");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.ErrorMessages = new List<string>() { ex.Message };
@@ -246,7 +236,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while adding roles for User ID: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -281,7 +270,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (!userId.Equals(userClaimDTO.UserId))
                 {
-                    _logger.LogWarning("User ID mismatch. Request ID: {RequestId}, Provided DTO UserId: {UserClaimDTOUserId}", userId, userClaimDTO.UserId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -290,7 +278,6 @@ namespace AutismEduConnectSystem.Controllers
                 var result = await _userRepository.RemoveClaimByUserId(userId, userClaimDTO.UserClaimIds);
                 if (!result)
                 {
-                    _logger.LogError("Failed to remove claims for User ID: {UserId}", userId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -305,7 +292,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while removing claims for User ID: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -339,7 +325,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (!userId.Equals(userClaimDTO.UserId))
                 {
-                    _logger.LogWarning("User ID mismatch. Request ID: {RequestId}, Provided DTO UserId: {UserClaimDTOUserId}", userId, userClaimDTO.UserId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -348,7 +333,6 @@ namespace AutismEduConnectSystem.Controllers
                 var result = await _userRepository.AddClaimToUser(userId, userClaimDTO.UserClaimIds);
                 if (!result)
                 {
-                    _logger.LogError("Failed to add claims for User ID: {UserId}", userId);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -364,7 +348,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while adding claims for User ID: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -390,7 +373,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (createDTO == null)
                 {
-                    _logger.LogWarning("Received null DTO for user creation.");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.USER) };
@@ -399,7 +381,6 @@ namespace AutismEduConnectSystem.Controllers
                 var currentUser = await _userRepository.GetUserByEmailAsync(createDTO.Email);
                 if (currentUser != null)
                 {
-                    _logger.LogWarning("User with email {Email} already exists.", createDTO.Email);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.DATA_DUPLICATED_MESSAGE, SD.USER) };
@@ -417,7 +398,6 @@ namespace AutismEduConnectSystem.Controllers
                 var user = await _userRepository.CreateAsync(model, createDTO.Password);
                 if (user == null)
                 {
-                    _logger.LogError("Failed to create user with email: {Email}", createDTO.Email);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.InternalServerError;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -432,7 +412,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating user with email: {Email}", createDTO.Email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -448,7 +427,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (string.IsNullOrEmpty(id))
                 {
-                    _logger.LogWarning("Received empty or null user ID for claim retrieval.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -462,7 +440,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching claims for user with ID: {UserId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -486,7 +463,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (updateDTO == null || !id.Equals(userId))
                 {
-                    _logger.LogWarning("Bad Request: User ID mismatch or empty update data. UserId: {UserId}, RequestId: {RequestId}", userId, id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -496,7 +472,6 @@ namespace AutismEduConnectSystem.Controllers
                 var model = await _userRepository.GetAsync(x => x.Id == userId);
                 if (model == null)
                 {
-                    _logger.LogWarning("User not found: UserId: {UserId}", userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
@@ -521,7 +496,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating user information for UserId: {UserId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -607,7 +581,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving users.");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -635,7 +608,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (string.IsNullOrEmpty(id))
                 {
-                    _logger.LogWarning("Received a bad request with an empty or null id.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -644,7 +616,6 @@ namespace AutismEduConnectSystem.Controllers
                 ApplicationUser model = await _userRepository.GetAsync(x => x.Id == id, false, "TutorProfile");
                 if (model == null)
                 {
-                    _logger.LogWarning("User not found for Id: {UserId}", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
@@ -660,7 +631,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving user with Id: {UserId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -695,7 +665,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (string.IsNullOrEmpty(email))
                 {
-                    _logger.LogWarning("Received a bad request with an empty or null email.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.EMAIL) };
@@ -705,7 +674,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (model == null)
                 {
-                    _logger.LogWarning("User not found for email: {Email}", email);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
@@ -728,7 +696,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving user with email: {Email}", email);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -744,7 +711,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Received a bad request with an empty or null userId.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -753,7 +719,6 @@ namespace AutismEduConnectSystem.Controllers
                 ApplicationUser model = await _userRepository.LockoutUser(userId);
                 if (model == null)
                 {
-                    _logger.LogWarning("User with userId: {UserId} not found or unable to lockout.", userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
@@ -765,7 +730,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while locking out the user with userId: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -780,7 +744,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Received a bad request with an empty or null userId.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -789,7 +752,6 @@ namespace AutismEduConnectSystem.Controllers
                 ApplicationUser model = await _userRepository.UnlockUser(userId);
                 if (model == null)
                 {
-                    _logger.LogWarning("User with userId: {UserId} not found or unable to unlock.", userId);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.USER) };
@@ -801,7 +763,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while unlocking the user with userId: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -816,7 +777,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Received a bad request with an empty or null userId.");
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
@@ -825,7 +785,6 @@ namespace AutismEduConnectSystem.Controllers
                 List<IdentityRole> model = await _userRepository.GetRoleByUserId(userId);
                 if (model == null || model.Count == 0)
                 {
-                    _logger.LogWarning("User with userId: {UserId} has no roles.", userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.USER_HAVE_NO_ROLE, userId) };
@@ -837,7 +796,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (InvalidDataException ex)
             {
-                _logger.LogError(ex, "Error occurred while updating password for User");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.ErrorMessages = new List<string>() { ex.Message };
@@ -845,7 +803,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving roles for user with userId: {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

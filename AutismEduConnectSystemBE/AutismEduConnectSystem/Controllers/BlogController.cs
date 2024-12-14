@@ -66,7 +66,6 @@ namespace AutismEduConnectSystem.Controllers
                 
                 if (createDTO == null)
                 {
-                    _logger.LogWarning("Invalid BlogCreateDTO received. createDTO is null.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
@@ -91,7 +90,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error occurred while creating an blog: {Message}", ex.Message);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -178,9 +176,7 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving blogs.");
                 _response.IsSuccess = false;
-                _logger.LogError("Error occurred while get an blog: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
@@ -258,7 +254,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (id == 0 || id != updateDTO.Id)
                 {
-                    _logger.LogWarning("Invalid blog ID: {Id}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
@@ -267,7 +262,6 @@ namespace AutismEduConnectSystem.Controllers
                 var model = await _blogRepository.GetAsync(x => x.Id == id, true, "Author", null);
                 if (model == null)
                 {
-                    _logger.LogWarning("Blog not found for ID: {id} and User ID: {userId}. Returning BadRequest.", id, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
@@ -291,7 +285,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating blog status ID: {id}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -328,7 +321,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (id == 0 || id != updateActiveDTO.Id)
                 {
-                    _logger.LogWarning("Invalid blog ID: {Id}. Returning BadRequest.", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
@@ -337,7 +329,6 @@ namespace AutismEduConnectSystem.Controllers
                 var model = await _blogRepository.GetAsync(x => x.Id == id, true, "Author", null);
                 if (model == null)
                 {
-                    _logger.LogWarning("Blog not found for ID: {id} and User ID: {userId}. Returning BadRequest.", id, userId);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.BLOG) };
@@ -354,7 +345,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating blog status ID: {id}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

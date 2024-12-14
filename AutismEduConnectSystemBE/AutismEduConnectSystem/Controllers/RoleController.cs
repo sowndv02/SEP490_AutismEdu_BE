@@ -59,7 +59,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred in GetAllRolesAsync");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -74,7 +73,6 @@ namespace AutismEduConnectSystem.Controllers
             {
                 if (string.IsNullOrEmpty(id))
                 {
-                    _logger.LogWarning("Invalid Role ID provided: {RoleId}", id);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ROLE) }; 
@@ -83,7 +81,6 @@ namespace AutismEduConnectSystem.Controllers
                 IdentityRole model = await _roleRepository.GetByIdAsync(id);
                 if (model == null)
                 {
-                    _logger.LogWarning("Role with ID: {RoleId} not found", id);
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.ROLE) };
@@ -100,7 +97,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving role with ID: {RoleId}", id);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -134,7 +130,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (await _roleRepository.GetByNameAsync(roleDTO.Name.Trim()) != null)
                 {
-                    _logger.LogWarning("Role with name {RoleName} already exists", roleDTO.Name);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { $"{roleDTO.Name} tồn tại!" };
@@ -142,7 +137,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (roleDTO == null)
                 {
-                    _logger.LogWarning("RoleDTO is null, returning BadRequest");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ROLE) };
@@ -157,7 +151,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating role with name: {RoleName}", roleDTO?.Name);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

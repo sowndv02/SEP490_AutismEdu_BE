@@ -25,7 +25,6 @@ namespace AutismEduConnectSystem.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Something went while processing {context.Request.Path}");
                 await HandleExceptionAsync(context, ex);
             }
         }

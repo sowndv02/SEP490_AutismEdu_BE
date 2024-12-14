@@ -166,7 +166,6 @@ namespace AutismEduConnectSystem.Controllers.v1
                 var certificateExtist = await _certificateRepository.GetAllNotPagingAsync(x => x.CertificateName.Equals(newModel.CertificateName));
                 if (certificateExtist.list.Any())
                 {
-                    _logger.LogError("Certificate with name {certificateName} already exist", newModel.CertificateName);
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.CERTIFICATE) };
@@ -192,7 +191,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while creating a certificate for user {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -360,7 +358,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while changing the status of certificate ID {CertificateId} by user {UserId}", changeStatusDTO.Id, userId);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -466,7 +463,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred in GetAllAsync Certifcate");
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

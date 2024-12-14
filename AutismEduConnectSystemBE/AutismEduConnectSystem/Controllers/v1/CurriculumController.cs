@@ -104,7 +104,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while deleting curriculum ID: {CurriculumId}", id);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -213,7 +212,6 @@ namespace AutismEduConnectSystem.Controllers.v1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching curricula for user ID: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };

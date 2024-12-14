@@ -22,10 +22,6 @@
                     .Select(header => $"{header.Key}: {header.Value}")
                     .ToArray();
 
-                _logger.LogWarning("Unauthorized request to {Path} by {User} with headers: {Headers}",
-                    context.Request.Path,
-                    context.User.Identity?.Name ?? "Anonymous",
-                    string.Join(", ", headers));
             }
         }
     }

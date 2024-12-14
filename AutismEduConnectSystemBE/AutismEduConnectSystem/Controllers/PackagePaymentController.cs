@@ -52,7 +52,6 @@ namespace AutismEduConnectSystem.Controllers
                 }
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PACKAGE_PAYMENT) };
@@ -87,7 +86,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"An error occurred while creating payment history: {ex.Message}");
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.IsSuccess = false;
                 _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
@@ -135,7 +133,6 @@ namespace AutismEduConnectSystem.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _logger.LogError("Error occurred while creating an assessment question: {Message}", ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
@@ -171,8 +168,6 @@ namespace AutismEduConnectSystem.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state is invalid. Returning BadRequest.");
-
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.PACKAGE_PAYMENT) };
@@ -182,8 +177,6 @@ namespace AutismEduConnectSystem.Controllers
                 PackagePayment model = await _packagePaymentRepository.GetAsync(x => x.Id == updateActiveDTO.Id, true, "Submitter", null);
                 if (model == null)
                 {
-                    _logger.LogWarning("Package payment with ID: {Id} is either not found.", updateActiveDTO.Id);
-
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.IsSuccess = false;
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.NOT_FOUND_MESSAGE, SD.PACKAGE_PAYMENT) };
@@ -200,7 +193,6 @@ namespace AutismEduConnectSystem.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error occurred while processing the status change for package payment ID: {Id}. Error: {Error}", updateActiveDTO.Id, ex.Message);
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.INTERNAL_SERVER_ERROR_MESSAGE) };
