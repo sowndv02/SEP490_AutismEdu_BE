@@ -69,6 +69,23 @@ function CompleteTutoring({ studentProfile, setStudentProfile }) {
                 }
             });
             setSelectedAssessment(preData)
+        } else if (assessment) {
+            console.log(studentProfile);
+            const preData = assessment.map((a) => {
+                const choosenAss = studentProfile?.initialAssessmentResults?.assessmentResults.find((r) => r.questionId === a.id);
+                if (choosenAss) {
+                    return {
+                        questionId: choosenAss.questionId,
+                        optionId: choosenAss.optionId
+                    }
+                } else {
+                    return {
+                        questionId: a.id,
+                        optionId: a.assessmentOptions[0].id
+                    }
+                }
+            });
+            setSelectedAssessment(preData)
         }
     }, [assessment, finalAssessment])
     const handleGetAsessment = async () => {

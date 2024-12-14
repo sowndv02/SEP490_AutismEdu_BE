@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import { Avatar, Box, Button, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoadingComponent from '~/components/LoadingComponent';
@@ -6,7 +6,7 @@ import TablePagging from '~/components/TablePagging';
 import TutorContext from '~/Context/TutorContext';
 import services from '~/plugins/services';
 import PAGES from '~/utils/pages';
-
+import emptyForm from '~/assets/images/icon/emptyform.gif'
 function TutorRegistrationTable({ status, searchValue, submit, startDate, endDate }) {
     const [loading, setLoading] = useState(false);
     const [listTutor, setListTutor] = useState([]);
@@ -59,63 +59,74 @@ function TutorRegistrationTable({ status, searchValue, submit, startDate, endDat
     }
     return (
         <TutorContext.Provider value={{ listTutor, setListTutor }}>
-            <TableContainer component={Paper} sx={{ mt: "20px" }}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>STT</TableCell>
-                            <TableCell>Người đăng ký</TableCell>
-                            <TableCell align='left'>Số điện thoại</TableCell>
-                            <TableCell align='center'>Ngày tạo</TableCell>
-                            <TableCell align='center'>Trạng thái đơn</TableCell>
-                            <TableCell>Hành động</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {
-                            listTutor.length !== 0 && listTutor?.map((tutor, index) => {
-                                return (
-                                    <TableRow key={tutor.id}>
-                                        <TableCell>{index + 1 + (currentPage - 1) * 10}</TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", gap: 1 }}>
-                                                <Avatar alt={tutor.fullName} src={tutor.imageUrl} />
-                                                <Box>
-                                                    <Typography sx={{ fontWeight: "bold" }}>{tutor.fullName}</Typography>
-                                                    <Typography sx={{ fontSize: "12px" }}>{tutor.email}</Typography>
-                                                </Box>
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell align='left'>
-                                            {tutor.phoneNumber}
-                                        </TableCell>
-                                        <TableCell align='center'>
-                                            {formatDate(tutor.createdDate)}
-                                        </TableCell>
-                                        <TableCell align='center'>
-                                            {
-                                                tutor.requestStatus === 0 && <Typography color="red" sx={{ fontSize: "12px" }}>Từ chối</Typography>
-                                            }
-                                            {
-                                                tutor.requestStatus === 1 && <Typography color="green" sx={{ fontSize: "12px" }}>Đã chấp nhận</Typography>
-                                            }
-                                            {
-                                                tutor.requestStatus === 2 && <Typography color="blue" sx={{ fontSize: "12px" }}>Đang chờ</Typography>
-                                            }
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button onClick={() => { nav(PAGES.TUTORREGISTRATIONMANAGEMENT + "/" + tutor.id) }}>Xem chi tiết</Button>
-                                        </TableCell>
-                                    </TableRow>
-                                )
-                            })
-                        }
-                    </TableBody>
-                </Table>
-                <LoadingComponent open={loading} setOpen={setLoading} />
-                <TablePagging setCurrentPage={setCurrentPage} setPagination={setPagination} pagination={pagination} />
-            </TableContainer >
-        </TutorContext.Provider>
+            {
+                !listTutor || listTutor.length === 0 ? (
+                    <Stack width="100%" alignItems="center" justifyContent="center">
+                        <Box sx={{ textAlign: "center" }}>
+                            <img src={emptyForm} style={{ height: "200px" }} />
+                            <Typography mt={5} color="black">Không có bài viết nào!</Typography>
+                        </Box>
+                    </Stack>
+                ) : (
+                    <TableContainer component={Paper} sx={{ mt: "20px" }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>STT</TableCell>
+                                    <TableCell>Người đăng ký</TableCell>
+                                    <TableCell align='left'>Số điện thoại</TableCell>
+                                    <TableCell align='center'>Ngày tạo</TableCell>
+                                    <TableCell align='center'>Trạng thái đơn</TableCell>
+                                    <TableCell>Hành động</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {
+                                    listTutor.length !== 0 && listTutor?.map((tutor, index) => {
+                                        return (
+                                            <TableRow key={tutor.id}>
+                                                <TableCell>{index + 1 + (currentPage - 1) * 10}</TableCell>
+                                                <TableCell>
+                                                    <Box sx={{ display: "flex", gap: 1 }}>
+                                                        <Avatar alt={tutor.fullName} src={tutor.imageUrl} />
+                                                        <Box>
+                                                            <Typography sx={{ fontWeight: "bold" }}>{tutor.fullName}</Typography>
+                                                            <Typography sx={{ fontSize: "12px" }}>{tutor.email}</Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell align='left'>
+                                                    {tutor.phoneNumber}
+                                                </TableCell>
+                                                <TableCell align='center'>
+                                                    {formatDate(tutor.createdDate)}
+                                                </TableCell>
+                                                <TableCell align='center'>
+                                                    {
+                                                        tutor.requestStatus === 0 && <Typography color="red" sx={{ fontSize: "12px" }}>Từ chối</Typography>
+                                                    }
+                                                    {
+                                                        tutor.requestStatus === 1 && <Typography color="green" sx={{ fontSize: "12px" }}>Đã chấp nhận</Typography>
+                                                    }
+                                                    {
+                                                        tutor.requestStatus === 2 && <Typography color="blue" sx={{ fontSize: "12px" }}>Đang chờ</Typography>
+                                                    }
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button onClick={() => { nav(PAGES.TUTORREGISTRATIONMANAGEMENT + "/" + tutor.id) }}>Xem chi tiết</Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        )
+                                    })
+                                }
+                            </TableBody>
+                        </Table>
+                        <LoadingComponent open={loading} setOpen={setLoading} />
+                        <TablePagging setCurrentPage={setCurrentPage} setPagination={setPagination} pagination={pagination} />
+                    </TableContainer >
+                )
+            }
+        </TutorContext.Provider >
     )
 }
 

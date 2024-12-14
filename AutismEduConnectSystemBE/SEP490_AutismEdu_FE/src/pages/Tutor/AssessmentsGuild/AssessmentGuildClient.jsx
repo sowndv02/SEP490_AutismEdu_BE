@@ -9,7 +9,7 @@ import TableRow from '@mui/material/TableRow';
 import { useEffect, useState } from 'react';
 import services from '~/plugins/services';
 
-function AssessmentGuild() {
+function AssessmentGuildClient() {
     const [assessments, setAssessments] = useState([]);
     const [scoreRanges, setScoreRanges] = useState([]);
 
@@ -34,12 +34,12 @@ function AssessmentGuild() {
 
     return (
         <Box
-            px="100px"
+            px="200px"
             pt={2}
-            height="calc(100vh - 65px)"
+            mt="65px"
             overflow="auto"
             sx={{
-                backgroundColor: '#f5f5f5',
+                backgroundColor: '#f5f5f5'
             }}
         >
             <Typography variant="h4" sx={{ color: '#3c4ff4', fontWeight: 'bold' }}>
@@ -137,4 +137,4 @@ function AssessmentGuild() {
     );
 }
 
-export default AssessmentGuild;
+export default AssessmentGuildClient;

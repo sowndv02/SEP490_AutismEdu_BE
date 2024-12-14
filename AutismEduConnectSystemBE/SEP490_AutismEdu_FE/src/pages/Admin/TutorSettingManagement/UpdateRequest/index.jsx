@@ -261,7 +261,7 @@ const UpdateRequest = () => {
 
                                             </TableCell>
                                             <TableCell>
-                                                {request?.createdDate && format(request.createdDate, 'HH:mm dd-MM-yyyy')}
+                                                {request?.createdDate && format(request.createdDate, 'HH:mm dd/MM/yyyy')}
                                             </TableCell>
                                             <TableCell>
                                                 <Stack direction="row" spacing={1}>

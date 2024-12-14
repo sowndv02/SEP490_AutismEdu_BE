@@ -95,7 +95,7 @@ export default function CreateCertificateDialog({ open, onClose, certificateData
         },
         validationSchema: Yup.object({
             CertificateName: Yup.string().required('Tên chứng chỉ là bắt buộc').max(150, 'Tên chứng chỉ không được vượt quá 150 ký tự'),
-            IssuingInstitution: Yup.string().required('Nơi cấp là bắt buộc'),
+            IssuingInstitution: Yup.string().required('Nơi cấp là bắt buộc').max(100, 'Nơi cấp không được vượt quá 100 ký tự'),
             IssuingDate: Yup.date().required('Ngày cấp là bắt buộc'),
             ExpirationDate: Yup.date().nullable(),
             Medias: Yup.array()
@@ -111,12 +111,16 @@ export default function CreateCertificateDialog({ open, onClose, certificateData
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
+        const text = ['CertificateName', 'IssuingInstitution'];
+
+        const updatedValue = text.includes(name) ? value.trim() : value;
+
         setCertificateData({
             ...certificateData,
-            [name]: value,
+            [name]: updatedValue,
         });
 
-        formik.setFieldValue(name, value);
+        formik.setFieldValue(name, updatedValue);
     };
 
     const handleImageUploadWrapper = (event) => {

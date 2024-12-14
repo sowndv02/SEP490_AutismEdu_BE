@@ -6,10 +6,11 @@ import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import { Box, Button, Card, CardActions, CardContent, CardMedia, Grid, IconButton, Link, Rating, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import ButtonComponent from '~/components/ButtonComponent';
+import ButtonComponent from '~/Components/ButtonComponent';
 import LoadingComponent from '~/components/LoadingComponent';
 import services from '~/plugins/services';
 import FormSearch from './FormSearch/FormSearch';
+import { enqueueSnackbar } from 'notistack';
 
 function SearchTutor() {
 
@@ -31,7 +32,6 @@ function SearchTutor() {
     const [tutors, setTutors] = useState([]);
 
     const [pagination, setPagination] = useState(null);
-
 
     const [selected, setSelected] = useState('grid');
     const [showFilters, setShowFilters] = useState(false);
@@ -63,6 +63,7 @@ function SearchTutor() {
                     setPagination(res.pagination);
                 }
             }, (error) => {
+                enqueueSnackbar(error.error[0], { variant: "error" })
                 console.log(error);
             }, tutorData);
 

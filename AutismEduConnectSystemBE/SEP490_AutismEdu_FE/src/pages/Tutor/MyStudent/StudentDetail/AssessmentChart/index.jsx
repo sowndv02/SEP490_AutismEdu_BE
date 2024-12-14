@@ -1,20 +1,22 @@
-import { Box, Checkbox, colors, FormControl, IconButton, InputLabel, ListItemText, MenuItem, OutlinedInput, Select, Stack, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { Line } from "react-chartjs-2";
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import { Box, Button, Checkbox, FormControl, IconButton, InputLabel, ListItemText, MenuItem, OutlinedInput, Select, Stack, Typography } from "@mui/material";
 import {
-    Chart as ChartJS,
     CategoryScale,
+    Chart as ChartJS,
+    Legend,
     LinearScale,
-    PointElement,
     LineElement,
+    PointElement,
     Title,
     Tooltip,
-    Legend,
 } from "chart.js";
+import { useEffect, useState } from "react";
+import { Line } from "react-chartjs-2";
 import { useParams } from "react-router-dom";
+import emptyChart from '~/assets/images/icon/emptychart.gif';
 import services from "~/plugins/services";
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import PAGES from '~/utils/pages';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const generatedColors = new Set([
@@ -206,8 +208,11 @@ function AssessmentChart({ studentProfile }) {
         <Box px={5} pt={2} pb={3}>
             {
                 !chartData && (
-                    <Stack width="100%" alignItems="center" justifyContent="cente">
-                        <Typography>Học sinh này chưa có đánh giá nào!</Typography>
+                    <Stack width="100%" alignItems="center" justifyContent="center" mt="100px">
+                        <Box sx={{ textAlign: "center" }}>
+                            <img src={emptyChart} style={{ height: "200px" }} />
+                            <Typography>Học sinh này chưa có đánh giá nào!!</Typography>
+                        </Box>
                     </Stack>
                 )
             }
@@ -215,25 +220,10 @@ function AssessmentChart({ studentProfile }) {
                 assessments && assessments.length !== 0 && chartData && (
                     <>
                         <Stack direction='row'>
-                            <FormControl sx={{ m: 1, width: 300 }}>
-                                <InputLabel id="label-select">Đánh giá</InputLabel>
-                                <Select
-                                    labelId="label-select"
-                                    multiple
-                                    value={selectedAssessment}
-                                    onChange={handleChange}
-                                    input={<OutlinedInput label="Đánh giá" />}
-                                    renderValue={(selected) => selected.join(', ')}
-                                    MenuProps={MenuProps}
-                                >
-                                    {assessments.map((a) => (
-                                        <MenuItem key={a.id} value={a.question}>
-                                            <Checkbox checked={selectedAssessment.includes(a.question)} />
-                                            <ListItemText primary={a.question} />
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <a href={PAGES.ASSESSMENT_GUILD} target="_blank"
+                                rel="noopener noreferrer">
+                                <Button variant='outlined'>Xem cách thức đánh giá ?</Button>
+                            </a>
                         </Stack>
                         <Box sx={{ width: "100%", textAlign: "center" }}>
                             <IconButton disabled={pagination?.pageNumber * pagination?.pageSize >= pagination?.total}

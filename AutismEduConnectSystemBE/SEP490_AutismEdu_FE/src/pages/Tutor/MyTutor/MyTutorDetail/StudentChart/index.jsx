@@ -1,6 +1,6 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import { Box, Checkbox, FormControl, IconButton, InputLabel, ListItemText, MenuItem, OutlinedInput, Select, Stack, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControl, IconButton, InputLabel, ListItemText, MenuItem, OutlinedInput, Select, Stack, Typography } from "@mui/material";
 import {
     CategoryScale,
     Chart as ChartJS,
@@ -16,6 +16,7 @@ import { Line } from "react-chartjs-2";
 import { useParams } from "react-router-dom";
 import emptyChart from '~/assets/images/icon/emptychart.gif';
 import services from "~/plugins/services";
+import PAGES from '~/utils/pages';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const generatedColors = new Set([
@@ -218,25 +219,10 @@ function StudentChart({ studentProfile }) {
                 assessments && assessments.length !== 0 && chartData && (
                     <>
                         <Stack direction='row'>
-                            <FormControl sx={{ m: 1, width: 300 }}>
-                                <InputLabel id="label-select">Đánh giá</InputLabel>
-                                <Select
-                                    labelId="label-select"
-                                    multiple
-                                    value={selectedAssessment}
-                                    onChange={handleChange}
-                                    input={<OutlinedInput label="Đánh giá" />}
-                                    renderValue={(selected) => selected.join(', ')}
-                                    MenuProps={MenuProps}
-                                >
-                                    {assessments.map((a) => (
-                                        <MenuItem key={a.id} value={a.question}>
-                                            <Checkbox checked={selectedAssessment.includes(a.question)} />
-                                            <ListItemText primary={a.question} />
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <a href={PAGES.ROOT + PAGES.ASSESSMENT_GUILD_CLIENT} target="_blank"
+                                rel="noopener noreferrer">
+                                <Button variant='outlined'>Xem cách thức đánh giá ?</Button>
+                            </a>
                         </Stack>
                         <Box sx={{ width: "100%", textAlign: "center" }}>
                             <IconButton disabled={pagination?.pageNumber * pagination?.pageSize >= pagination?.total}

@@ -46,16 +46,21 @@ function LoginForm({ setVerify, setEmailVerify, onLoginSuccess }) {
         }
     }, [userId])
 
-    const handleGetUserInformation = () => {
-        services.UserManagementAPI.getUserById(userId, (res) => {
-            dispatch(setUserInformation(res.result))
-            enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });
-            onLoginSuccess();
-        }, (error) => {
-            enqueueSnackbar(error.error[0], { variant: "error" });
-        })
-        setLoading(false)
-    }
+    const handleGetUserInformation = async() => {
+        try {
+            await services.UserManagementAPI.getUserById(userId, (res) => {
+                dispatch(setUserInformation(res.result))
+                enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });
+                onLoginSuccess();
+            }, (error) => {
+                enqueueSnackbar(error.error[0], { variant: "error" });
+            })
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
+    };
     const handleSubmit = async () => {
         setLoading(true);
         if (passwordError !== null || emailError !== null) {
@@ -87,8 +92,8 @@ function LoginForm({ setVerify, setEmailVerify, onLoginSuccess }) {
                         setVerify(true);
                         setEmailVerify(email);
                     }
+                    setLoading(false);
                 })
-                setLoading(false)
             }
         }
     }

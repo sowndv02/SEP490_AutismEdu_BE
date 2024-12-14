@@ -334,9 +334,23 @@ function AssignExercise({ isOpen, setModalOpen, schedule, filterSchedule, setFil
                                         value={exercise}
                                         onChange={(e) => setExercise(e.target.value)}
                                         sx={{ borderRadius: '8px' }}
+                                        MenuProps={{
+                                            PaperProps: {
+                                                sx: {
+                                                    maxHeight: 200,
+                                                    overflowY: 'auto',
+                                                },
+                                            },
+                                        }}
                                     >
                                         {listExercise?.map((e, index) => (
-                                            <MenuItem value={e.id} key={index}>{e.exerciseName}</MenuItem>
+                                            <MenuItem value={e.id} key={index} sx={{
+                                                maxWidth: '450px',
+                                                whiteSpace: 'normal',
+                                                wordWrap: 'break-word',
+                                            }}>
+                                                {e.exerciseName}
+                                            </MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>

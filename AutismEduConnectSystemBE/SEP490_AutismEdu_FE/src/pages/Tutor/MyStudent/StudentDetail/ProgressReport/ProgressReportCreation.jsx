@@ -6,13 +6,14 @@ import services from '~/plugins/services';
 import { useFormik } from 'formik';
 import LoadingComponent from '~/components/LoadingComponent';
 import { enqueueSnackbar } from 'notistack';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import DoneIcon from '@mui/icons-material/Done';
 import CloseIcon from '@mui/icons-material/Close';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ConfirmDialog from '~/components/ConfirmDialog';
+import PAGES from '~/utils/pages';
 function ProgressReportCreation({ studentProfile, currentReport, setCurrentReport, setPreReport,
     progressReports, setProgressReports, currentPage, setSelectedItem, selectedItem, setSortType, setStartDate, setEndDate,
     startDate, endDate, setCurrentPage, sortType
@@ -328,7 +329,11 @@ function ProgressReportCreation({ studentProfile, currentReport, setCurrentRepor
                                     <ListAltIcon sx={{ color: "orange" }} />
                                     <Typography>Danh sách đánh giá</Typography>
                                 </Stack>
-                                <Stack direction='row' sx={{ width: "100%" }} flexWrap='wrap' rowGap={2}>
+                                <a href={PAGES.ASSESSMENT_GUILD} target="_blank"
+                                    rel="noopener noreferrer">
+                                    <Button variant='outlined' sx={{ mt: 2 }}>Xem cách thức đánh giá ?</Button>
+                                </a>
+                                <Stack direction='row' sx={{ width: "100%", mt: 3 }} flexWrap='wrap' rowGap={2}>
                                     {
                                         assessment && assessment.map((a, index) => {
                                             return (

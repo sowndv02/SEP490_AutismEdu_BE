@@ -266,13 +266,23 @@ function WorkExperienceManagement() {
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
                                                     whiteSpace: 'nowrap',
-                                                    maxWidth: '100px',
+                                                    maxWidth: '200px',
                                                 }} >
                                                     {certificate?.companyName}
                                                 </Box>
                                             </Tooltip>
                                         </TableCell>
-                                        <TableCell>{certificate?.position}</TableCell>
+                                        <TableCell>
+                                            <Tooltip title={certificate?.companyName || ''} placement="top"><Box sx={{
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                maxWidth: '200px',
+                                            }} >
+                                                {certificate?.position}
+                                            </Box>
+                                            </Tooltip>
+                                        </TableCell>
                                         <TableCell>{certificate?.startDate && formatDate(new Date(certificate.startDate), "dd/MM/yyyy")}</TableCell>
                                         <TableCell>{certificate?.endDate ? formatDate(new Date(certificate.endDate), "dd/MM/yyyy") : 'Hiện tại'}</TableCell>
                                         <TableCell>

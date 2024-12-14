@@ -395,7 +395,7 @@ function FormSearch({ selected, setSelected, showFilters, handleSearch, handleFi
                                         <Typography variant='subtitle1'>Độ tuổi</Typography>
                                         <Slider
                                             max={15}
-                                            min={0}
+                                            min={1}
                                             step={1}
                                             getAriaLabel={() => 'Temperature range'}
                                             value={searchCriteria?.ageRange}

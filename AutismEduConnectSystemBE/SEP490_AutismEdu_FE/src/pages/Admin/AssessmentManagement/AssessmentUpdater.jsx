@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormHelperText, IconButton, Stack, TextField, Typography } from '@mui/material';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -29,6 +29,9 @@ function AssessmentUpdater({ open, setOpen, currentAsssesment, assessments, setA
         }
     }, [open])
     const handleChange = (id) => {
+        if (updatedValue.length < 20 || updatedValue.length > 500) {
+            return;
+        }
         const arr = [...assessment.assessmentOptions];
         const updatedOption = arr.find((a) => {
             return a.id === id
@@ -99,10 +102,38 @@ function AssessmentUpdater({ open, setOpen, currentAsssesment, assessments, setA
                                         <TableCell align="left">
                                             {
                                                 currentEdit === index ? (
-                                                    <TextField multiline rows={5} fullWidth
-                                                        value={updatedValue}
-                                                        onChange={(e) => setUpdatedValue(e.target.value)}
-                                                    />
+                                                    <>
+                                                        <TextField multiline rows={5} fullWidth
+                                                            value={updatedValue}
+                                                            onChange={(e) => setUpdatedValue(e.target.value)}
+                                                        />
+                                                        <Stack direction='row' justifyContent='space-between'>
+                                                            <Box>
+                                                                {
+                                                                    updatedValue.length > 500 && (
+                                                                        <FormHelperText error>
+                                                                            Phải dưới 500 ký tự
+                                                                        </FormHelperText>
+                                                                    )
+                                                                }
+                                                                {
+                                                                    updatedValue.length !== 0 && updatedValue.length < 20 && (
+                                                                        <FormHelperText error>
+                                                                            Phải trên 20 ký tự
+                                                                        </FormHelperText>
+                                                                    )
+                                                                }
+                                                                {
+                                                                    updatedValue.length === 0 && (
+                                                                        <FormHelperText error>
+                                                                            Bắt buộc nhập
+                                                                        </FormHelperText>
+                                                                    )
+                                                                }
+                                                            </Box>
+                                                            <Typography> {updatedValue.length} / 500</Typography>
+                                                        </Stack>
+                                                    </>
                                                 ) : row.optionText
                                             }
                                         </TableCell>

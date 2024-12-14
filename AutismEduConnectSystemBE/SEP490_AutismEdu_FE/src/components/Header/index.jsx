@@ -21,7 +21,7 @@ import ButtonComponent from '../ButtonComponent';
 import Logo from '../Logo';
 import NavigationMobile from './NavigationMobile';
 import { jwtDecode } from 'jwt-decode';
-dayjs.locale('vi');
+
 function Header() {
     const [tab, setTab] = useState("1");
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -39,7 +39,6 @@ function Header() {
     const notificationRef = useRef(null);
     const notificationIconRef = useRef(null);
     const [unreadNoti, setUnreadNoti] = useState(0);
-    dayjs.extend(relativeTime);
     const [text, setText] = useState("");
     const [messages, setMessages] = useState([]);
     const [chatBox, setChatBox] = useState(null);
@@ -47,6 +46,8 @@ function Header() {
     const [unreadMessage, setUnreadMessage] = useState(true);
     const [newMessage, setNewMessage] = useState(null);
     const [newNotification, setNewNotification] = useState(null);
+    dayjs.extend(relativeTime);
+    dayjs.locale('vi');
     useEffect(() => {
         if (location.pathname.includes("/home-page")) {
             setTab("1");

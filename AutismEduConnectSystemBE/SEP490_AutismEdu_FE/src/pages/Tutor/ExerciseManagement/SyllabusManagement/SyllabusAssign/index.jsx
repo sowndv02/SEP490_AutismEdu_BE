@@ -8,6 +8,7 @@ import LoadingComponent from '~/components/LoadingComponent';
 import { enqueueSnackbar } from 'notistack';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function SyllabusAssign({ handleBack, selectedAssign, setListSyllabus, tutorProfile }) {
     const [loading, setLoading] = useState(false);
@@ -18,8 +19,9 @@ export default function SyllabusAssign({ handleBack, selectedAssign, setListSyll
 
     const [ageFrom, setAgeFrom] = useState(selectedAssign?.ageFrom ?? null);
     const [ageEnd, setAgeEnd] = useState(selectedAssign?.ageEnd ?? null);
-
     console.log(selectedList);
+    console.log(selectedClone);
+    console.log(selectedAssign);
 
     useEffect(() => {
         handleGetAllExerciseType();
@@ -117,8 +119,32 @@ export default function SyllabusAssign({ handleBack, selectedAssign, setListSyll
         if (selectedAssign) {
             setAgeFrom(selectedAssign.ageFrom ?? null);
             setAgeEnd(selectedAssign.ageEnd ?? null);
+            const transferObject = selectedAssign?.exerciseTypes?.map((s) => {
+                return {
+                    eType: { ...s },
+                    lsExercise: s.exercises
+                };
+            });
+            const trans = selectedAssign?.exerciseTypes?.map((s) => {
+                return {
+                    "exerciseTypeId": s?.id,
+                    "exerciseIds": s?.exercises?.map((e) => e.id)
+                };
+            })
+            console.log(trans);
+            console.log(transferObject);
+            setSelectedList(trans);
+            setSelectedClone(transferObject);
         }
     }, [selectedAssign]);
+
+    const handleDeleteItem = (id) => {
+        const newList = selectedList.filter((s) => s.exerciseTypeId !== id);
+        const newListClone = selectedClone.filter((s) => s.eType.id !== id);
+
+        setSelectedList(newList);
+        setSelectedClone(newListClone);
+    };
 
     return (
         <Stack direction={'column'} gap={3} sx={{ width: "80%", margin: "auto", padding: 3, backgroundColor: '#fff', borderRadius: 2, boxShadow: 3 }}>
@@ -170,6 +196,7 @@ export default function SyllabusAssign({ handleBack, selectedAssign, setListSyll
                                 />
                             </Grid>
                         </Grid>
+
                     </Grid>
 
                     <Grid item xs={4}>
@@ -204,6 +231,11 @@ export default function SyllabusAssign({ handleBack, selectedAssign, setListSyll
                                                         ))}
                                                     </Box>
                                                 </Box>
+                                                <Box sx={{ width: '5%' }}>
+                                                    <IconButton color='error' onClick={() => handleDeleteItem(s?.eType?.id)}>
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </Box>
                                             </Stack>
                                         ))}
                                     </Stack>
@@ -214,7 +246,35 @@ export default function SyllabusAssign({ handleBack, selectedAssign, setListSyll
                                     </Box>
                                 </Stack>
                             </Box>
-                        )}
+                        )
+                            // :
+                            //     <Grid item xs={12}>
+                            //         <Stack direction={'row'} p={5} borderRadius={3} bgcolor={'#fff8e3'}>
+                            //             <Stack sx={{ width: '80%' }} direction={'column'} gap={2}>
+                            //                 {selectedAssign?.exerciseTypes?.map((s, index) => (
+                            //                     <Stack direction={'row'} gap={2} sx={{ width: '100%' }} key={index}>
+                            //                         <Box sx={{ width: "5%" }}>
+                            //                             <CheckCircleIcon color='success' fontSize='large' />
+                            //                         </Box>
+                            //                         <Box key={index} sx={{ width: '95%' }} pt={0.5}>
+                            //                             <Typography variant='h5'>{`${index + 1}. `}{s.exerciseTypeName}</Typography>
+                            //                             <Box ml={2}>
+                            //                                 {s?.exercises?.map((e, index) => (
+                            //                                     <Typography key={index} variant='subtitle1'>{`${index + 1}. `}{e?.exerciseName}</Typography>
+                            //                                 ))}
+                            //                             </Box>
+                            //                         </Box>
+                            //                     </Stack>
+                            //                 ))}
+                            //             </Stack>
+                            //             <Stack direction={'column'} justifyContent={'space-between'} alignItems={'center'} sx={{ width: "20%" }}>
+                            //                 <img src='https://cdn-icons-png.freepik.com/256/4295/4295914.png?semt=ais_hybrid'
+                            //                     style={{ width: "60%", objectFit: "cover", objectPosition: "center" }}
+                            //                 />
+                            //             </Stack>
+                            //         </Stack>
+                            //     </Grid>
+                        }
                     </Grid>
                 </Grid>
 

@@ -11,6 +11,7 @@ import ConfirmDialog from '~/components/ConfirmDialog';
 import LoadingComponent from '~/components/LoadingComponent';
 import services from '~/plugins/services';
 import { format } from 'date-fns';
+import PAGES from '~/utils/pages';
 function UpdateProgressReport({ open, setOpen, report, progressReports, setProgressReports, setSelectedItem,
     currentReport, setCurrentReport
 }) {
@@ -147,14 +148,6 @@ function UpdateProgressReport({ open, setOpen, report, progressReports, setProgr
             });
         }
     }, [assessment, report])
-    const formatDate = (date) => {
-        if (!date) {
-            return "";
-        }
-        const d = new Date(date);
-        return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}`
-    }
-
     useEffect(() => {
         if (!report) {
             return;
@@ -279,7 +272,11 @@ function UpdateProgressReport({ open, setOpen, report, progressReports, setProgr
                                 <ListAltIcon sx={{ color: "orange" }} />
                                 <Typography>Danh sách đánh giá</Typography>
                             </Stack>
-                            <Stack direction='row' sx={{ width: "100%" }} flexWrap='wrap' rowGap={2}>
+                            <a href={PAGES.ASSESSMENT_GUILD} target="_blank"
+                                rel="noopener noreferrer">
+                                <Button variant='outlined' sx={{ mt: 2 }}>Xem cách thức đánh giá ?</Button>
+                            </a>
+                            <Stack direction='row' sx={{ width: "100%", mt: 3 }} flexWrap='wrap' rowGap={2}>
                                 {
                                     assessment && assessment.map((a, index) => {
                                         return (

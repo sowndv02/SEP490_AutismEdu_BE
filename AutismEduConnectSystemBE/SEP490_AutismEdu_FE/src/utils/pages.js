@@ -71,7 +71,8 @@ const PAGES = {
   REPORT_REVIEW_DETAIL: '/admin/report-review-management/:id',
 
   CHANGE_PASSWORD_TUTOR: '/autismtutor/change-password',
-  ASSESSMENT_GUILD: '/autismtutor/assessment-guild'
+  ASSESSMENT_GUILD: '/autismtutor/assessment-guild',
+  ASSESSMENT_GUILD_CLIENT: '/assessment-guild',
 };
 
 export default PAGES;

@@ -66,6 +66,7 @@ import ReportReviewDetail from '~/pages/Admin/ReportManagement/ReportReviewManag
 
 import ChangePasswordTutor from '~/pages/Tutor/TutorSetting/ChangePassword'
 import AssessmentGuild from '~/pages/Tutor/AssessmentsGuild'
+import AssessmentGuildClient from '~/pages/Tutor/AssessmentsGuild/AssessmentGuildClient'
 
 const UnLayoutRoutes = [
     {
@@ -182,6 +183,10 @@ const publicRoutes = [
     {
         path: PAGES.ROOT + PAGES.TEST_DETAIL_HISTORY,
         element: TestResultDetail
+    },
+    {
+        path: PAGES.ROOT + PAGES.ASSESSMENT_GUILD_CLIENT,
+        element: AssessmentGuildClient
     }
 ]
 

@@ -4,7 +4,6 @@ import StarIcon from '@mui/icons-material/Star';
 import { TextareaAutosize } from '@mui/base/TextareaAutosize';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-dayjs.locale('vi');
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -41,6 +40,7 @@ function TutorRating({ tutorId, userInfo }) {
 
 
     const [anchorEl, setAnchorEl] = useState(null);
+    const [anchorElR, setAnchorElR] = useState(null);
     const [isSaveDisabled, setIsSaveDisabled] = useState(true);
 
     const [isDisabled, setIsDisabled] = useState(true);
@@ -74,8 +74,10 @@ function TutorRating({ tutorId, userInfo }) {
 
     useEffect(() => {
         handleGetDataReviewStats();
-        handleGetStudyingList();
-    }, [tutorId]);
+        if (userInfo) {
+            handleGetStudyingList();
+        }
+    }, [tutorId, userInfo]);
 
     useEffect(() => {
         if (selectedReview) {
@@ -102,9 +104,15 @@ function TutorRating({ tutorId, userInfo }) {
     const handleOpenMenu = (event) => {
         setAnchorEl(event.currentTarget);
     };
+    const handleOpenMenuR = (event) => {
+        setAnchorElR(event.currentTarget);
+    };
 
     const handleCloseMenu = () => {
         setAnchorEl(null);
+    };
+    const handleCloseMenuR = () => {
+        setAnchorElR(null);
     };
 
     const handleEditClick = (r) => {
@@ -243,7 +251,7 @@ function TutorRating({ tutorId, userInfo }) {
     dayjs.locale('vi');
 
     console.log(dataReviewStats?.reviews);
-
+    console.log(userInfo);
 
     return (
         dataReviewStats && (
@@ -374,7 +382,8 @@ function TutorRating({ tutorId, userInfo }) {
                 </Stack>}
 
                 {
-                    (dataReviewStats && dataReviewStats?.reviews?.length !== 0) ? dataReviewStats?.reviews?.map((r, index) => (
+                    (dataReviewStats && dataReviewStats?.reviews?.length !== 0) ? dataReviewStats?.reviews?.map((r, index) =>
+                    (
                         <Box bgcolor="#e4e9fd" p={2} sx={{ borderRadius: "5px", mt: 3 }} key={index}>
                             <Stack direction='row' mb={2} sx={{ justifyContent: "space-between", alignItems: 'center' }}>
                                 <Stack direction='row' width={'80%'} sx={{ alignItems: "center", gap: 2 }}>
@@ -396,33 +405,29 @@ function TutorRating({ tutorId, userInfo }) {
                                 <Typography width={'15%'} textAlign={'right'}><small>{dayjs(new Date(r?.updatedDate ?? r?.createdDate))?.fromNow()}</small></Typography>
 
                                 {
-                                    userInfo && (
+                                    userInfo && ((userInfo?.id === r?.parent?.id) ? (
                                         <IconButton onClick={handleOpenMenu} size='medium'>
                                             <MoreHorizIcon />
                                         </IconButton>
-                                    )
+                                    ) : <IconButton onClick={handleOpenMenuR} size='medium'>
+                                        <MoreHorizIcon />
+                                    </IconButton>)
                                 }
                                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu}>
-                                    {userInfo?.id === r?.parent?.id && (
-                                        <>
-                                            <MenuItem onClick={() => handleEditClick(r)}>
-                                                <EditIcon fontSize="small" color='primary' sx={{ mr: 1 }} />
-                                                Chỉnh sửa
-                                            </MenuItem>
-                                            <MenuItem onClick={() => { handleClickOpen(r?.id); handleCloseMenu(); }}>
-                                                <DeleteIcon fontSize="small" color='error' sx={{ mr: 1 }} />
-                                                Xoá
-                                            </MenuItem>
-                                        </>
-                                    )}
-                                    {
-                                        userInfo && (userInfo?.id !== r?.parent?.id) && (
-                                            <MenuItem onClick={() => { setOpenReportReview(true); setCurrentReport(r); handleCloseMenu(); }}>
-                                                <ReportIcon fontSize="small" color='warning' sx={{ mr: 1 }} />
-                                                Tố cáo
-                                            </MenuItem>
-                                        )
-                                    }
+                                    <MenuItem onClick={() => handleEditClick(r)}>
+                                        <EditIcon fontSize="small" color='primary' sx={{ mr: 1 }} />
+                                        Chỉnh sửa
+                                    </MenuItem>
+                                    <MenuItem onClick={() => { handleClickOpen(r?.id); handleCloseMenu(); }}>
+                                        <DeleteIcon fontSize="small" color='error' sx={{ mr: 1 }} />
+                                        Xoá
+                                    </MenuItem>
+                                </Menu>
+                                <Menu anchorEl={anchorElR} open={Boolean(anchorElR)} onClose={handleCloseMenuR}>
+                                    <MenuItem onClick={() => { setOpenReportReview(true); setCurrentReport(r); handleCloseMenuR(); }}>
+                                        <ReportIcon fontSize="small" color='warning' sx={{ mr: 1 }} />
+                                        Tố cáo
+                                    </MenuItem>
                                 </Menu>
                             </Stack>
 
@@ -459,7 +464,8 @@ function TutorRating({ tutorId, userInfo }) {
 
                         </Box>
 
-                    )) : <Typography my={5} variant='subtitle1' textAlign={'center'}>Hiện tại chưa có đánh giá nào về gia sư.</Typography>
+                    )
+                    ) : <Typography my={5} variant='subtitle1' textAlign={'center'}>Hiện tại chưa có đánh giá nào về gia sư.</Typography>
                 }
 
                 {

@@ -17,6 +17,8 @@ function ExerciseTypeList() {
         pageSize: 10,
         total: 10,
     });
+    console.log(exerciseTypes);
+    
 
     useEffect(() => {
         handleGetAllExerciseType();

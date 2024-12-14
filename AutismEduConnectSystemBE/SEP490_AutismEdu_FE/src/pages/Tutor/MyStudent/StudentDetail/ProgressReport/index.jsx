@@ -1,4 +1,4 @@
-import { Assessment, Edit } from '@mui/icons-material';
+import { Assessment } from '@mui/icons-material';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import CloseIcon from '@mui/icons-material/Close';
@@ -6,17 +6,18 @@ import DoneIcon from '@mui/icons-material/Done';
 import EditIcon from '@mui/icons-material/Edit';
 import FindReplaceIcon from '@mui/icons-material/FindReplace';
 import SearchIcon from '@mui/icons-material/Search';
-import { Box, Button, Card, CardContent, Chip, Divider, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography } from '@mui/material';
-import ProgressReportCreation from './ProgressReportCreation';
-import { useParams } from 'react-router-dom';
+import { Box, Card, CardContent, Chip, Divider, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography } from '@mui/material';
+import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
-import services from '~/plugins/services';
-import CompareReport from './CompareReport';
-import ProgressReportDetail from './ProgressReportDetail';
+import { useParams } from 'react-router-dom';
+import emptyFolder from '~/assets/images/icon/emptyreport.gif';
 import AssessmentGuild from '~/components/AssessmentGuild';
 import TablePagging from '~/components/TablePagging';
+import services from '~/plugins/services';
+import CompareReport from './CompareReport';
+import ProgressReportCreation from './ProgressReportCreation';
+import ProgressReportDetail from './ProgressReportDetail';
 import UpdateProgressReport from './UpdateProgressReport';
-import { format } from 'date-fns';
 const ASC = 1;
 const DESC = 2;
 const NOT_CHANGE = 3;
@@ -157,56 +158,96 @@ function ProgressReport({ studentProfile }) {
             </Stack>
             {
                 !currentReport && (
-                    <Typography>Học sinh này chưa có đánh giá nào</Typography>
+                    <Stack direction="row" justifyContent="center" mt="100px">
+                        <Box sx={{ textAlign: "center" }}>
+                            <img src={emptyFolder} style={{ height: "200px" }} />
+                            <Typography>Học sinh này chưa có đánh giá nào</Typography>
+                        </Box>
+                    </Stack>
                 )
             }
             {
                 currentReport && (
                     <>
-                        <Typography mt={2}>Thời gian: {format(currentReport?.from, 'dd/MM/yyyy')} - {format(currentReport?.to, 'dd/MM/yyyy')}</Typography>
-                        <Stack direction="row" gap={2}>
-                            <Card sx={{ minWidth: "33%" }}>
+                        <Typography mt={2}>
+                            Thời gian: {format(currentReport?.from, 'dd/MM/yyyy')} - {format(currentReport?.to, 'dd/MM/yyyy')}
+                        </Typography>
+                        <Stack direction="row" gap={2} flexWrap="wrap" justifyContent="space-between">
+                            <Card sx={{
+                                width: "32%",
+                                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                                '&:hover': {
+                                    transform: "scale(1.05)",
+                                    boxShadow: "0 6px 12px rgba(0, 0, 0, 0.2)"
+                                }
+                            }}>
                                 <CardContent>
                                     <Chip icon={<DoneIcon />} label="Đã làm được" color="success" />
-                                    <Typography gutterBottom sx={{
-                                        color: 'text.secondary', fontSize: 14, mt: 2,
-                                        whiteSpace: "break-spaces",
-                                        wordBreak: 'break-word',
-                                        overflowWrap: 'break-word'
-                                    }}>
-                                        {
-                                            currentReport?.achieved
-                                        }
+                                    <Typography
+                                        gutterBottom
+                                        sx={{
+                                            color: 'text.secondary',
+                                            fontSize: 16,
+                                            mt: 2,
+                                            lineHeight: 1.6,
+                                            wordBreak: 'break-word',
+                                            whiteSpace: "pre-wrap"
+                                        }}
+                                    >
+                                        {currentReport?.achieved}
                                     </Typography>
                                 </CardContent>
                             </Card>
-                            <Card sx={{ minWidth: "33%" }}>
+                            <Card sx={{
+                                width: "32%",
+                                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                                '&:hover': {
+                                    transform: "scale(1.05)",
+                                    boxShadow: "0 6px 12px rgba(0, 0, 0, 0.2)"
+                                }
+                            }}>
                                 <CardContent>
                                     <Chip icon={<CloseIcon />} label="Chưa làm được" color="error" />
-                                    <Typography gutterBottom sx={{
-                                        color: 'text.secondary', fontSize: 14, mt: 2,
-                                        whiteSpace: "break-spaces",
-                                        wordBreak: 'break-word',
-                                        overflowWrap: 'break-word'
-                                    }}>
-                                        {
-                                            currentReport?.failed
-                                        }
+                                    <Typography
+                                        gutterBottom
+                                        sx={{
+                                            color: 'text.secondary',
+                                            fontSize: 16,
+                                            mt: 2,
+                                            lineHeight: 1.6,
+                                            wordBreak: 'break-word',
+                                            whiteSpace: "pre-wrap"
+                                        }}
+                                    >
+                                        {currentReport?.failed}
                                     </Typography>
                                 </CardContent>
                             </Card>
-                            <Card sx={{ minWidth: "33%" }}>
+                            <Card sx={{
+                                width: "32%",
+                                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                                '&:hover': {
+                                    transform: "scale(1.05)",
+                                    boxShadow: "0 6px 12px rgba(0, 0, 0, 0.2)"
+                                }
+                            }}>
                                 <CardContent>
                                     <Chip icon={<EditIcon />} label="Ghi chú thêm" color="info" />
-                                    <Typography gutterBottom sx={{
-                                        color: 'text.secondary', fontSize: 14, mt: 2,
-                                        whiteSpace: "break-spaces",
-                                        wordBreak: 'break-word',
-                                        overflowWrap: 'break-word'
-                                    }}>
-                                        {
-                                            currentReport?.noteFromTutor
-                                        }
+                                    <Typography
+                                        gutterBottom
+                                        sx={{
+                                            color: 'text.secondary',
+                                            fontSize: 16,
+                                            mt: 2,
+                                            lineHeight: 1.6,
+                                            wordBreak: 'break-word',
+                                            whiteSpace: "pre-wrap"
+                                        }}
+                                    >
+                                        {currentReport?.noteFromTutor}
                                     </Typography>
                                 </CardContent>
                             </Card>
@@ -217,13 +258,14 @@ function ProgressReport({ studentProfile }) {
                                     <Chip icon={<Assessment />} label="Đánh giá" color="secondary" />
                                     <AssessmentGuild />
                                 </Box>
-                                <Stack direction='row' gap={2} flexWrap='wrap'>
+                                <Stack direction="row" gap={2} flexWrap="wrap">
                                     {
-                                        currentReport && currentReport.assessmentResults.map((a) => {
-                                            return (
-                                                <Tooltip title={a.selectedOptionText} key={a.id}>
-                                                    <Box sx={{
-                                                        display: "flex", gap: 2,
+                                        currentReport && currentReport?.assessmentResults.map((a) => (
+                                            <Tooltip title={a.selectedOptionText} key={a.id}>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        gap: 2,
                                                         boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px",
                                                         p: 2,
                                                         cursor: "pointer",
@@ -234,30 +276,35 @@ function ProgressReport({ studentProfile }) {
                                                             transform: "scale(1.02) translateY(-5px)",
                                                             boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)"
                                                         }
-                                                    }}>
-                                                        <Typography width="65%">{a.question}</Typography>
-                                                        <Divider orientation='vertical' sx={{ height: "100%" }} />
-                                                        <Typography>{a.point} điểm</Typography>
-                                                        {
-                                                            getAssessmentChange(a.question) === DESC &&
-                                                            <ArrowDownwardIcon sx={{ color: "red" }} />
-                                                        }
-                                                        {
-                                                            getAssessmentChange(a.question) === ASC &&
-                                                            <ArrowUpwardIcon sx={{ color: "green" }} />
-                                                        }
-                                                    </Box>
-                                                </Tooltip>
-                                            )
-                                        })
+                                                    }}
+                                                >
+                                                    <Typography width="75%">{a.question}</Typography>
+                                                    <Divider orientation="vertical" sx={{ height: "100%" }} />
+                                                    <Typography>{a.point}</Typography>
+                                                    {
+                                                        getAssessmentChange(a.question) === DESC &&
+                                                        <ArrowDownwardIcon sx={{ color: "red" }} />
+                                                    }
+                                                    {
+                                                        getAssessmentChange(a.question) === ASC &&
+                                                        <ArrowUpwardIcon sx={{ color: "green" }} />
+                                                    }
+                                                </Box>
+                                            </Tooltip>
+                                        ))
                                     }
                                 </Stack>
                             </CardContent>
                         </Card>
-                        <Typography variant='h4' mt={5}>Lịch sử đánh giá</Typography>
+                        {currentReport?.assessmentResults?.length > 0 && (
+                            <Typography variant="h4" mt={5}>
+                                Lịch sử đánh giá
+                            </Typography>
+                        )}
                     </>
                 )
             }
+
             <Box mt={2}>
                 {
                     currentReport && (
@@ -315,9 +362,9 @@ function ProgressReport({ studentProfile }) {
                                                     key={p.id}
                                                 >
                                                     <TableCell>{index + 1 + (currentPage - 1) * 10}</TableCell>
-                                                    <TableCell>{formatDate(p.from)}</TableCell>
-                                                    <TableCell>{formatDate(p.to)}</TableCell>
-                                                    <TableCell>{formatDate(p.createdDate)}</TableCell>
+                                                    <TableCell>{format(p.from, 'dd/MM/yyyy')}</TableCell>
+                                                    <TableCell>{format(p.to, 'dd/MM/yyyy')}</TableCell>
+                                                    <TableCell>{format(p.createdDate, 'dd/MM/yyyy')}</TableCell>
                                                     <TableCell align='center'>
                                                         {
                                                             selectedItem.id === p.id ? <IconButton onClick={(e) => handleOpenDetail(e, index)}><SearchIcon /></IconButton>

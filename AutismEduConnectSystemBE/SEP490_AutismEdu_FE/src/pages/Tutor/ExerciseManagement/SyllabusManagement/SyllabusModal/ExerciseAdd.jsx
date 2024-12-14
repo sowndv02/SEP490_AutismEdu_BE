@@ -7,12 +7,12 @@ import { enqueueSnackbar } from 'notistack';
 
 function ExerciseAdd({ openModal, handleCloseModal, exerciseTypes, selectedList, setSelectedList, selectedClone, setSelectedClone }) {
     const [newData, setNewData] = useState({
-        exerciseTypeId: exerciseTypes[0]?.id || 1,
-        exerciseIds: selectedList?.find((s) => s.exerciseTypeId === exerciseTypes[0]?.id)?.exerciseIds ?? []
+        // exerciseTypeId: exerciseTypes[0]?.id || 1,
+        exerciseTypeId: selectedList[0]?.exerciseTypeId || 1,
+        exerciseIds: selectedList[0]?.exerciseIds ?? []
     });
 
     const [exercises, setExercises] = useState([]);
-
 
     useEffect(() => {
         if (newData.exerciseTypeId !== exerciseTypes[0].id) {
@@ -46,7 +46,7 @@ function ExerciseAdd({ openModal, handleCloseModal, exerciseTypes, selectedList,
         const { name, value, checked } = e.target;
 
         if (name === 'exerciseTypeId') {
-            setNewData({ [name]: value, exerciseIds: [] });
+            setNewData({ [name]: parseInt(value), exerciseIds: selectedList?.find((s) => s?.exerciseTypeId === parseInt(value))?.exerciseIds ?? [] });
         } else if (name === 'exerciseIds') {
             const exerciseId = parseInt(value);
 
@@ -101,13 +101,13 @@ function ExerciseAdd({ openModal, handleCloseModal, exerciseTypes, selectedList,
             const eType = exerciseTypes.find((e) => e.id === newData.exerciseTypeId);
             const lsExercise = exercises.filter((e) => newData.exerciseIds.includes(e.id));
             setSelectedClone((prev) => ([...prev, { eType, lsExercise }]));
-            setSelectedList((prev) => ([...prev, newData]))
+            setSelectedList((prev) => ([...prev, newData]));
         }
 
-        setNewData({
-            exerciseTypeId: 0,
-            exerciseIds: []
-        });
+        // setNewData({
+        //     exerciseTypeId: 0,
+        //     exerciseIds: []
+        // });
         handleCloseModal();
     };
 

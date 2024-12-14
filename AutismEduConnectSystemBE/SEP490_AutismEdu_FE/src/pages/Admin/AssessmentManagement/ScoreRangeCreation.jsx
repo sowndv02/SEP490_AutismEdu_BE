@@ -49,6 +49,15 @@ export default function ScoreRangeCreation({ scoreRanges, setScoreRanges }) {
         }, validate,
         onSubmit: async (values) => {
             try {
+                if (scoreRanges && scoreRanges.length !== 0) {
+                    const existSR = scoreRanges.find((s) => {
+                        return s.minScore === values.minScore && s.maxScore === values.maxScore;
+                    })
+                    if (existSR) {
+                        enqueueSnackbar("Đã tồn tại khung điểm này", { variant: "error" });
+                        return;
+                    }
+                }
                 await services.ScoreRangeAPI.createScoreRange(values, (res) => {
                     const sortedArr = [...scoreRanges, res.result].sort((a, b) => {
                         if (a.minScore === b.minScore) {
@@ -62,7 +71,6 @@ export default function ScoreRangeCreation({ scoreRanges, setScoreRanges }) {
                     formik.resetForm();
                     handleClose();
                 }, (error) => {
-                    console.log(error);
                     enqueueSnackbar(error.error[0], { variant: "error" })
                 })
             } catch (error) {

@@ -1,15 +1,13 @@
-import { Password } from '@mui/icons-material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { Button, Checkbox, Divider, FormControl, FormHelperText, IconButton, InputAdornment, ListItemText, MenuItem, OutlinedInput, Select } from '@mui/material';
+import { Button, Divider, FormControl, FormHelperText, IconButton, InputAdornment, MenuItem, OutlinedInput, Select } from '@mui/material';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 import { useFormik } from 'formik';
 import { enqueueSnackbar } from 'notistack';
 import * as React from 'react';
-import { useEffect } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import LoadingComponent from '~/components/LoadingComponent';
 import services from '~/plugins/services';
 const style = {
@@ -41,6 +39,11 @@ function UserCreation({ setUsers, currentPage }) {
             errors.email = 'Bắt buộc'
         } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(values.email)) {
             errors.email = 'Email không hợp lệ';
+        }
+        if (!values.phoneNumber) {
+            errors.phoneNumber = 'Bắt buộc';
+        } else if (!/^(0?)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$/.test(values.phoneNumber)) {
+            errors.phoneNumber = 'Số điện thoại không hợp lệ';
         }
         if (!values.password) {
             errors.password = 'Bắt buộc';
@@ -88,7 +91,6 @@ function UserCreation({ setUsers, currentPage }) {
                 })
             setLoading(false);
         } catch (error) {
-            console.log(error);
             setLoading(false);
         }
     }

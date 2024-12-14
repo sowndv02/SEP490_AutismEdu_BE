@@ -22,7 +22,7 @@ function AssessmentCreation() {
         else if (values.assessmentDetail.trim().length < 20) {
             errors.assessmentDetail = "Đánh giá phải trên 20 ký tự!";
         }
-        if (values.assessmentDetail.trim().length > 250) {
+        if (values.assessmentDetail.trim().length > 500) {
             errors.assessmentDetail = "Đánh giá phải dưới 250 ký tự!";
         }
         return errors
@@ -173,7 +173,7 @@ function AssessmentCreation() {
                                                         )
                                                     }
                                                 </Box>
-                                                <Typography> {optionFormik.values.assessmentDetail.length} / 250</Typography>
+                                                <Typography> {optionFormik.values.assessmentDetail.length} / 500</Typography>
                                             </Stack>
                                         }
                                         <Box mt={3}>

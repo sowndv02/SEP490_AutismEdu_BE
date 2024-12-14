@@ -41,17 +41,27 @@ function TutorLogin() {
 
     useEffect(() => {
         if (userId) {
-            services.UserManagementAPI.getUserById(userId, (res) => {
+            handleGetUserInformation();
+        }
+    }, [userId]);
+
+    const handleGetUserInformation = async () => {
+        try {
+            await services.UserManagementAPI.getUserById(userId, (res) => {
                 dispatch(setTutorInformation(res.result))
                 enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });
                 nav(PAGES.MY_STUDENT)
             }, (error) => {
                 enqueueSnackbar(error.error[0], { variant: "error" });
-                setLoading(false);
             })
-            setLoading(false)
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
         }
-    }, [userId])
+    };
+
+
     const handleSubmit = async () => {
         try {
             setLoading(true);
@@ -76,8 +86,8 @@ function TutorLogin() {
                         setUserId(decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'])
                     }, (err) => {
                         enqueueSnackbar(err.error[0], { variant: "error" });
+                        setLoading(false);
                     })
-                    setLoading(false)
                 }
             }
         } catch (error) {

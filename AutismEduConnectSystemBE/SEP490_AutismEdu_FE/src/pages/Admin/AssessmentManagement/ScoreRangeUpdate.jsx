@@ -46,6 +46,15 @@ export default function ScoreRangeUpdate({ scoreRanges, setScoreRanges, currentS
             maxScore: ''
         }, validate,
         onSubmit: async (values) => {
+            if (scoreRanges && scoreRanges.length !== 0) {
+                const existSR = scoreRanges.find((s) => {
+                    return s.minScore === values.minScore && s.maxScore === values.maxScore;
+                })
+                if (existSR) {
+                    enqueueSnackbar("Đã tồn tại khung điểm này", { variant: "error" });
+                    return;
+                }
+            }
             try {
                 await services.ScoreRangeAPI.updateScoreRange({
                     ...values,

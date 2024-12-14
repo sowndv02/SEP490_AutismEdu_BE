@@ -67,6 +67,12 @@ function CertificateDetailModal({ open, onClose, certificate }) {
                         <Grid item xs={8}>
                             <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>{certificate.certificateName}</Typography>
                         </Grid>
+                        <Grid item xs={4}>
+                            <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Nơi cấp:</Typography>
+                        </Grid>
+                        <Grid item xs={8}>
+                            <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>{certificate.issuingInstitution}</Typography>
+                        </Grid>
 
                         <Grid item xs={4}>
                             <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Ngày tạo:</Typography>

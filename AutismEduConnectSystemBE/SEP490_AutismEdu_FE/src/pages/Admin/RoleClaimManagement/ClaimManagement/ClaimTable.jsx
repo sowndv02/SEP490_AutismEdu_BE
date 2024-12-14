@@ -1,6 +1,6 @@
 import { Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { format } from 'date-fns';
-import TablePagging from '~/components/TablePagging';
+import TablePagging from '~/Components/TablePagging';
 import ListUserModal from '../RoleClaimModal/ListUserModal';
 function ClaimTable({totalUser, claim, setClaim, pagination, setPagination, currentPage, setCurrentPage }) {
 

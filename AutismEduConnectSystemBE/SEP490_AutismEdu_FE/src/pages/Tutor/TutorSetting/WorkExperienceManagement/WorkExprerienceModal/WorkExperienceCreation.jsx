@@ -63,7 +63,6 @@ const WorkExperienceCreation = ({ open, onClose, workExperienceList, setWorkExpe
                         setWorkExperienceList([res.result, ...workExperienceList]);
                         enqueueSnackbar('Kinh nghiệm làm việc của bạn đã được thêm thành công!', { variant: 'success' });
                     }
-                    onClose();
                     resetForm();
                 }, (error => {
                     enqueueSnackbar(error.error[0], { variant: "error" });
@@ -74,6 +73,7 @@ const WorkExperienceCreation = ({ open, onClose, workExperienceList, setWorkExpe
 
             } finally {
                 setLoading(false);
+                onClose();
             }
         },
     });

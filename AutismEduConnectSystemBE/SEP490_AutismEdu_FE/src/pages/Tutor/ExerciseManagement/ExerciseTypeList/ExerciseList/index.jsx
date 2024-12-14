@@ -48,7 +48,7 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
             await services.ExerciseManagementAPI.getExerciseByTypeId(selectedExerciseType?.id, (res) => {
                 if (res?.result) {
                     setExercises(res.result);
-                    setPagination((res.pagination));
+                    setPagination(res.pagination);
                 }
             }, (error) => {
                 console.log(error);
@@ -251,14 +251,14 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
                     <Box
                         width={'100%'}
                         maxHeight={'400px'}
-                        overflowY={'auto'} 
-                        overflowX={'hidden'} 
+                        overflowY={'auto'}
+                        overflowX={'hidden'}
                         sx={{
                             padding: 2,
-                            border: '1px solid #ccc', 
+                            border: '1px solid #ccc',
                             borderRadius: '4px',
                             wordBreak: 'break-word',
-                            overflowWrap: 'break-word', 
+                            overflowWrap: 'break-word',
                         }}
                         dangerouslySetInnerHTML={{ __html: selectedContent }}
                     />

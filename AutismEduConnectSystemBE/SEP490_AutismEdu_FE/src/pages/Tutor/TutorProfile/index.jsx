@@ -42,6 +42,7 @@ function TutorProfile() {
     const [tutor, setTutor] = useState(null);
     const [loading, setLoading] = useState(false);
     const userInfo = useSelector(userInfor);
+    console.log(userInfo);
 
     const handleChange = (event, newValue) => {
         switch (newValue) {
@@ -205,7 +206,6 @@ function TutorProfile() {
             </Grid>
         ));
     };
-
 
     return (
         <Grid container sx={{ height: 'auto', width: "100%" }} py={5}>
@@ -412,7 +412,7 @@ function TutorProfile() {
                                             </Box>
                                         </Stack>
                                         <Divider ref={reviewRef} />
-                                        {id && userInfo && <TutorRating tutorId={id} userInfo={userInfo} />}
+                                        {id && <TutorRating tutorId={id} userInfo={userInfo} />}
                                     </Box>
                                 </>
 

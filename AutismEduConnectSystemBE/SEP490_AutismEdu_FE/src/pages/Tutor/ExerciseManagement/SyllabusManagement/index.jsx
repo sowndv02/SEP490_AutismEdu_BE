@@ -40,7 +40,7 @@ export default function SyllabusManagement() {
             setLoading(true);
             await services.SyllabusManagementAPI.getListSyllabus((res) => {
                 if (res?.result) {
-                    // setListSyllabus(res.result);
+                    setListSyllabus(res.result);
                 }
             }, (error) => {
                 console.log(error);
@@ -97,9 +97,10 @@ export default function SyllabusManagement() {
         return (<SyllabusCreation handleBack={() => setOpenCreation(false)} setListSyllabus={setListSyllabus} tutorProfile={tutorProfile} />);
     }
 
-    if (openAssign && tutorProfile) {
+    if (openAssign && tutorProfile && selectedAssign) {
         return (<SyllabusAssign handleBack={() => setOpenAssign(false)} selectedAssign={selectedAssign} setListSyllabus={setListSyllabus} tutorProfile={tutorProfile} />);
     }
+
 
     return (
         <Stack direction='column' sx={{ width: "90%", margin: "auto", gap: 2 }}>
@@ -154,7 +155,7 @@ export default function SyllabusManagement() {
                                                 <CheckCircleIcon color='success' fontSize='large' />
                                             </Box>
                                             <Box key={index} sx={{ width: '95%' }} pt={0.5}>
-                                                <Typography variant='h5'>{`${index + 1}. `}{s.exerciseTypeName}</Typography>
+                                                <Typography variant='h5'>{`${index + 1}. `}{s?.exerciseTypeName}</Typography>
                                                 <Box ml={2}>
                                                     {s?.exercises?.map((e, index) => (
                                                         <Typography key={index} variant='subtitle1'>{`${index + 1}. `}{e?.exerciseName}</Typography>

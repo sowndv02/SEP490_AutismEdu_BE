@@ -39,7 +39,8 @@ function UserManagement() {
                 console.log(err);
             }, {
                 searchType: "all",
-                pageNumber: currentPage
+                pageNumber: currentPage,
+                searchValue: searchValue
             })
         } catch (error) {
             console.log(error);
