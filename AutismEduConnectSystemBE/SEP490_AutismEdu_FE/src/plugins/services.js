@@ -19,9 +19,6 @@ import { SyllabusManagementAPI } from "~/services/SyllabusManagementAPI";
 import { ReviewManagementAPI } from "~/services/ReviewManagementAPI";
 import { ScheduleAPI } from "~/services/ScheduleAPI";
 import { TimeSlotAPI } from "~/services/TimeSlotAPI";
-import { TestManagementAPI } from "~/services/TestManagementAPI";
-import { TestQuestionManagementAPI } from "~/services/TestQuestionManagementAPI"
-import { TestResultManagementAPI } from "~/services/TestResultManagementAPI"
 import { ScoreRangeAPI } from "~/services/ScoreRangeAPI";
 import { PackagePaymentAPI } from "~/services/PaymentPackageAPI";
 import { NotificationAPI } from "~/services/NotificationAPI";
@@ -56,9 +53,6 @@ const services = {
   ReviewManagementAPI,
   ScheduleAPI,
   TimeSlotAPI,
-  TestManagementAPI,
-  TestQuestionManagementAPI,
-  TestResultManagementAPI,
   ScoreRangeAPI,
   PackagePaymentAPI,
   BlogAPI,

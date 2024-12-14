@@ -166,11 +166,11 @@ function SearchTutor() {
                                 tutors.map((t, index) => (
                                     <Box key={index} sx={{ width: 'auto', padding: "20px", borderRadius: "5px", transition: "transform 0.3s ease, box-shadow 0.3s ease", '&:hover': { transform: "scale(1.05) translateY(-10px)", boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)" } }}>
                                         <Card sx={{ display: 'flex', justifyContent: 'center', minHeight: "400px", width: "1200px" }}>
-                                            <CardMedia sx={{ width: '40%', height: 'auto', borderRadius: '8px' }} image={t.imageUrl} title="Hanoi" />
+                                            <CardMedia sx={{ width: '40%', height: 'auto', borderRadius: '8px' }} image={t?.imageUrl || 'T'} title="Hanoi" />
                                             <Box sx={{ display: 'flex', flexDirection: 'column', width: '60%', padding: "20px" }}>
                                                 <CardContent sx={{ flexGrow: 1 }}>
                                                     <Box sx={{ display: "flex", alignItems: "center" }} my={1}>
-                                                        <Rating name="read-only" value={t.reviewScore} readOnly />
+                                                        <Rating name="read-only" value={t?.reviewScore || 0} readOnly />
                                                         <Typography ml={2}>({t.totalReview} Đánh giá)</Typography>
                                                     </Box>
                                                     <Typography gutterBottom variant="h4" component="div" sx={{ fontSize: "26px" }}>{t.fullName}</Typography>
@@ -188,7 +188,7 @@ function SearchTutor() {
                                                             <a href={`mailto:${t.email}`}><Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px', '&:hover': { color: "blue" } }}>{t.email}</Typography></a>
                                                         </Box>
                                                     </Box>
-                                                    <Typography mt={4} variant='h5' color={'green'}>{formatter.format(t.priceFrom)} - {formatter.format(t.priceEnd)}<Typography component="span" variant='subtitle1' color={'gray'}> / buổi <small>({t?.sessionHours} tiếng)</small></Typography></Typography>
+                                                    <Typography mt={4} variant='h5' color={'green'}>{formatter.format(t?.priceFrom)} - {formatter.format(t.priceEnd)}<Typography component="span" variant='subtitle1' color={'gray'}> / buổi <small>({t?.sessionHours} tiếng)</small></Typography></Typography>
                                                 </CardContent>
                                                 <CardActions>
                                                     <Button sx={{ fontSize: "20px" }} onClick={() => handleClickToProfile(t.userId)}>Tìm hiểu thêm <ArrowForwardIcon /></Button>

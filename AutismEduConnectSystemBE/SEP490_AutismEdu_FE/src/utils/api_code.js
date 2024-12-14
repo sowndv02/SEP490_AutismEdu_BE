@@ -136,18 +136,6 @@ const API_CODE = {
   API_DELETE_SCHEDULE: '/v1/ScheduleTimeSlot/',
   API_UPDATE_SCHEDULE: '/v1/Schedule/ChangeScheduleDateTime',
   API_UPDATE_TIME_SLOT: '/v1/ScheduleTimeSlot',
-  //Test
-  API_CREATE_TEST: '/v1/Test',
-  API_GET_LIST_TEST: '/v1/Test',
-
-  //Test question
-  API_CREATE_TEST_QUESTION: '/v1/TestQuestion',
-  API_GET_LIST_TEST_QUESTION_BY_TEST_ID: '/v1/TestQuestion/',
-
-  //Test result
-  API_CREATE_TEST_RESULT: '/v1/TestResult/SubmitTest',
-  API_GET_TEST_RESULT_HISTORY: '/v1/TestResult',
-  API_GET_TEST_RESULT_DETAIL_HISTORY: '/v1/TestResult/GetTestResultDetail/',
 
   //Score range
   API_CREATE_SCORE_RANGE: '/v1/AssessmentScoreRange',

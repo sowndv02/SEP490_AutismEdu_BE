@@ -177,7 +177,8 @@ const tutorRoutes = [
     }, {
         path: PAGES.STUDENT_DETAIL,
         element: StudentDetail
-    }, {
+    }, 
+    {
         path: PAGES.TUTOR_SETTING,
         element: TutorSetting
     },
