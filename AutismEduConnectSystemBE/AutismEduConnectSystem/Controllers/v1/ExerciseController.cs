@@ -90,7 +90,22 @@ namespace AutismEduConnectSystem.Controllers.v1
                 }
 
                 var (count, result) = await _exerciseRepository.GetAllAsync(filter: filter, includeProperties: "ExerciseType,Original", pageNumber: pageNumber, pageSize: pageSize,orderBy: orderByQuery, isDesc: isDesc);
-
+                foreach(var item in result)
+                {
+                    if(item.Original != null)
+                    {
+                        if(item.Original.OriginalId == 0)
+                        {
+                            item.Original = null;
+                        }
+                    }
+                }
+                _response.Pagination = new Pagination()
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    Total = count
+                };
                 _response.Result = _mapper.Map<List<ExerciseNotPagingDTO>>(result);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Pagination = null;
