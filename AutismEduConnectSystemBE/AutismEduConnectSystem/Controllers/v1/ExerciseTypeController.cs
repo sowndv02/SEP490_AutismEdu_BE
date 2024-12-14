@@ -234,7 +234,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string> { _resourceService.GetString(SD.BAD_REQUEST_MESSAGE, SD.ID) };
                     return BadRequest(_response);
                 }
-                Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == id && !e.IsDeleted && e.IsActive && e.TutorId == userId;
+                Expression<Func<Exercise, bool>> filter = e => e.ExerciseTypeId == id && !e.IsDeleted && e.TutorId == userId;
                 Expression<Func<Exercise, object>> orderByQuery = u => true;
                 
                 if (!string.IsNullOrEmpty(search))
