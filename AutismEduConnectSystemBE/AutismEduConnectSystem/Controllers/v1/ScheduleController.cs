@@ -577,7 +577,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
         [HttpGet("GetAllAssignedSchedule")]
         [Authorize]
-        public async Task<ActionResult<APIResponse>> GetAllAssignedSchedule([FromQuery] int studentProfileId, string? status = SD.STATUS_ALL, string? sort = SD.ORDER_DESC, int pageNumber = 1)
+        public async Task<ActionResult<APIResponse>> GetAllAssignedSchedule([FromQuery] int studentProfileId, string? status = SD.STATUS_ALL, DateTime? startDate = null, DateTime? endDate = null, string? sort = SD.ORDER_DESC, int pageNumber = 1)
         {
             try
             {
@@ -602,6 +602,15 @@ namespace AutismEduConnectSystem.Controllers.v1
                 else
                 {
                     filter = u => u.TutorId.Equals(tutorId) && !u.IsHidden && u.ExerciseId != null;
+                }
+
+                if (startDate != null)
+                {
+                    filter = filter.AndAlso(u => u.CreatedDate.Date >= startDate.Value.Date);
+                }
+                if (endDate != null)
+                {
+                    filter = filter.AndAlso(u => u.CreatedDate.Date <= endDate.Value.Date);
                 }
 
                 if (!string.IsNullOrEmpty(status) && status != SD.STATUS_ALL)
