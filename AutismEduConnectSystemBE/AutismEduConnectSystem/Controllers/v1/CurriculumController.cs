@@ -139,7 +139,7 @@ namespace AutismEduConnectSystem.Controllers.v1
 
                 int totalCount = 0;
                 List<Curriculum> list = new();
-                Expression<Func<Curriculum, bool>> filter = u => u.TutorRegistrationRequestId <= 0 || u.TutorRegistrationRequestId == null;
+                Expression<Func<Curriculum, bool>> filter = u => (u.TutorRegistrationRequestId <= 0 || u.TutorRegistrationRequestId == null) && u.SubmitterId != null;
 
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {

@@ -128,7 +128,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     _response.ErrorMessages = new List<string>() { _resourceService.GetString(SD.FORBIDDEN_MESSAGE) };
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
-                Expression<Func<WorkExperience, bool>> filter = u => u.TutorRegistrationRequestId <= 0 || u.TutorRegistrationRequestId == null;
+                Expression<Func<WorkExperience, bool>> filter = u => (u.TutorRegistrationRequestId <= 0 || u.TutorRegistrationRequestId == null) && u.SubmitterId != null;
                 Expression<Func<WorkExperience, object>> orderByQuery = u => true;
                 if (userRoles.Contains(SD.TUTOR_ROLE))
                 {
