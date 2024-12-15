@@ -236,7 +236,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return BadRequest(_response);
                 }
 
-                var workExperienceExist = await _workExperienceRepository.GetAllNotPagingAsync(x => x.CompanyName.Equals(createDTO.CompanyName) && x.Position.Equals(createDTO.Position));
+                var workExperienceExist = await _workExperienceRepository.GetAllNotPagingAsync(x => x.CompanyName.Equals(createDTO.CompanyName) && x.Position.Equals(createDTO.Position) && !x.IsDeleted && x.RequestStatus != SD.Status.REJECT);
                 if (workExperienceExist.list.Any())
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
@@ -324,7 +324,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     if (System.IO.File.Exists(templatePath) && tutor != null)
                     {
                         // Send mail
-                        var subject = "Yêu cập nhật kinh nghiệm làm việc của bạn đã được chấp nhận!";
+                        var subject = "Yêu cầu cập nhật kinh nghiệm làm việc của bạn đã được chấp nhận!";
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
 
                         var rejectionReasonHtml = string.Empty;
@@ -365,7 +365,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     if (System.IO.File.Exists(templatePath) && tutor != null)
                     {
                         //Send mail
-                        var subject = "Yêu cập nhật kinh nghiệm làm việc của bạn đã bị từ chối!";
+                        var subject = "Yêu cầu cập nhật kinh nghiệm làm việc của bạn đã bị từ chối!";
                         var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
 
                         var rejectionReasonHtml = $"<p><strong>Lý do từ chối:</strong> {changeStatusDTO.RejectionReason}</p>";

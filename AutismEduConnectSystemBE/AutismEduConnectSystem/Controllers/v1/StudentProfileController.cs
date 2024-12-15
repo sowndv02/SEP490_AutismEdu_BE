@@ -917,7 +917,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     }
                 }
 
-                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "AssignedExerciseTemplate.cshtml");
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "StopTutoringTemplate.cshtml");
                 if (System.IO.File.Exists(templatePath) && child.Parent != null && tutor != null && tutor.User != null)
                 {
                     var subject = "Thông Báo Kết Thúc Dạy";

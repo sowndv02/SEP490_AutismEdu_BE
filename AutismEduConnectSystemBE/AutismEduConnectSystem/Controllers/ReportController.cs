@@ -2,12 +2,17 @@
 using AutismEduConnectSystem.DTOs.CreateDTOs;
 using AutismEduConnectSystem.DTOs.UpdateDTOs;
 using AutismEduConnectSystem.Models;
+using AutismEduConnectSystem.Repository;
 using AutismEduConnectSystem.Repository.IRepository;
+using AutismEduConnectSystem.Resources;
 using AutismEduConnectSystem.Services.IServices;
+using AutismEduConnectSystem.SignalR;
 using AutismEduConnectSystem.Utils;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
@@ -31,6 +36,9 @@ namespace AutismEduConnectSystem.Controllers
         protected APIResponse _response;
         private readonly ILogger<ReportController> _logger;
         private readonly IResourceService _resourceService;
+        private string queueName = string.Empty;
+        private readonly IEmailSender _messageBus;
+
         public ReportController(IReportRepository reportRepository,
             IReportMediaRepository reportMediaRepository,
             IMapper mapper, IResourceService resourceService,
@@ -38,7 +46,9 @@ namespace AutismEduConnectSystem.Controllers
             IStudentProfileRepository studentProfileRepository,
             IChildInformationRepository childInformationRepository,
             IBlobStorageRepository blobStorageRepository,
-            IUserRepository userRepository, IReviewRepository reviewRepository)
+            IUserRepository userRepository, IReviewRepository reviewRepository, 
+            IConfiguration configuration,
+            IEmailSender messageBus)
         {
             _userRepository = userRepository;
             _blobStorageRepository = blobStorageRepository;
@@ -51,6 +61,8 @@ namespace AutismEduConnectSystem.Controllers
             _resourceService = resourceService;
             _logger = logger;
             _reviewRepository = reviewRepository;
+            queueName = configuration["RabbitMQSettings:QueueName"];
+            _messageBus = messageBus;
         }
 
 
@@ -425,6 +437,29 @@ namespace AutismEduConnectSystem.Controllers
                     model.Comments = updateDTO.Comment;
                     model.HandlerId = userId;
 
+                    // Send mail
+                    var user = await _userRepository.GetAsync(x => x.Id.Equals(model.ReporterId));
+                    var tutor = await _userRepository.GetAsync(x => x.Id.Equals(model.TutorId));
+
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    if (System.IO.File.Exists(templatePath) && user != null && tutor != null)
+                    {
+                        var subject = "Đơn tố cáo của bạn đã của bạn đã được chấp nhận!";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+
+                        var rejectionReasonHtml = string.Empty;
+                        var htmlMessage = templateContent
+                        .Replace("@Model.FullName", user.FullName)
+                        .Replace("@Model.IssueName", $"Đơn tố cáo gia sư {tutor.FullName}")
+                        .Replace("@Model.IsApprovedString", "Chấp nhận")
+                        .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+
+                        await _messageBus.SendEmailAsync(user.Email, subject, htmlMessage);
+                    }
+
                     await _reportRepository.UpdateAsync(model);
                     if (!string.IsNullOrEmpty(model.TutorId))
                     {
@@ -446,6 +481,29 @@ namespace AutismEduConnectSystem.Controllers
                         item.Comments = updateDTO.Comment;
                         item.HandlerId = userId;
                         await _reportRepository.UpdateAsync(item);
+
+                        // Send mail
+                        var otherUser = await _userRepository.GetAsync(x => x.Id.Equals(item.ReporterId));
+                        var otherTutor = await _userRepository.GetAsync(x => x.Id.Equals(item.TutorId));
+
+                        var otherTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                        if (System.IO.File.Exists(otherTemplatePath) && otherUser != null && otherTutor != null)
+                        {
+                            var subject = "Đơn tố cáo của bạn đã của bạn đã được chấp nhận!";
+                            var templateContent = await System.IO.File.ReadAllTextAsync(otherTemplatePath);
+
+                            var rejectionReasonHtml = string.Empty;
+                            var htmlMessage = templateContent
+                            .Replace("@Model.FullName", otherUser.FullName)
+                            .Replace("@Model.IssueName", $"Đơn tố cáo gia sư {otherTutor.FullName}")
+                            .Replace("@Model.IsApprovedString", "Chấp nhận")
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
+
+                            await _messageBus.SendEmailAsync(otherUser.Email, subject, htmlMessage);
+                        }
                     }
                     _response.Result = _mapper.Map<ReportDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;
@@ -459,6 +517,29 @@ namespace AutismEduConnectSystem.Controllers
                     model.UpdatedDate = DateTime.Now;
                     model.Comments = updateDTO.Comment;
                     model.HandlerId = userId;
+
+                    // Send mail
+                    var user = await _userRepository.GetAsync(x => x.Id.Equals(model.ReporterId));
+                    var tutor = await _userRepository.GetAsync(x => x.Id.Equals(model.TutorId));
+
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                    if (System.IO.File.Exists(templatePath) && user != null && tutor != null)
+                    {
+                        var subject = "Đơn tố cáo của bạn đã bị từ chối!";
+                        var templateContent = await System.IO.File.ReadAllTextAsync(templatePath);
+
+                        var rejectionReasonHtml = $"<p><strong>Lý do từ chối:</strong> {updateDTO.Comment}</p>";
+                        var htmlMessage = templateContent
+                        .Replace("@Model.FullName", user.FullName)
+                        .Replace("@Model.IssueName", $"Đơn tố cáo gia sư {tutor.FullName}")
+                        .Replace("@Model.IsApprovedString", "Từ chôi")
+                        .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                        .Replace("@Model.Mail", SD.MAIL)
+                        .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                        .Replace("@Model.WebsiteURL", SD.URL_FE);
+
+                        await _messageBus.SendEmailAsync(user.Email, subject, htmlMessage);
+                    }
 
                     await _reportRepository.UpdateAsync(model);
                     if (!string.IsNullOrEmpty(model.TutorId))
@@ -478,6 +559,29 @@ namespace AutismEduConnectSystem.Controllers
                         item.Comments = updateDTO.Comment;
                         item.HandlerId = userId;
                         await _reportRepository.UpdateAsync(item);
+
+                        // Send mail
+                        var otherUser = await _userRepository.GetAsync(x => x.Id.Equals(item.ReporterId));
+                        var otherTutor = await _userRepository.GetAsync(x => x.Id.Equals(item.TutorId));
+
+                        var otherTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ChangeStatusTemplate.cshtml");
+                        if (System.IO.File.Exists(otherTemplatePath) && otherUser != null && otherTutor != null)
+                        {                         
+                            var subject = "Đơn tố cáo của bạn đã bị từ chối!";
+                            var templateContent = await System.IO.File.ReadAllTextAsync(otherTemplatePath);
+
+                            var rejectionReasonHtml = $"<p><strong>Lý do từ chối:</strong> {updateDTO.Comment}</p>";
+                            var htmlMessage = templateContent
+                            .Replace("@Model.FullName", otherUser.FullName)
+                            .Replace("@Model.IssueName", $"Đơn tố cáo gia sư {otherTutor.FullName}")
+                            .Replace("@Model.IsApprovedString", "Từ chôi")
+                            .Replace("@Model.RejectionReason", rejectionReasonHtml)
+                            .Replace("@Model.Mail", SD.MAIL)
+                            .Replace("@Model.Phone", SD.PHONE_NUMBER)
+                            .Replace("@Model.WebsiteURL", SD.URL_FE);
+
+                            await _messageBus.SendEmailAsync(otherUser.Email, subject, htmlMessage);
+                        }
                     }
                     _response.Result = _mapper.Map<ReportDTO>(model);
                     _response.StatusCode = HttpStatusCode.OK;

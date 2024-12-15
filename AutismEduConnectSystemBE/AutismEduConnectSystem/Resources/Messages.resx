@@ -267,7 +267,7 @@
   <data name="IN_STATUS_PENDING" xml:space="preserve">
     <value>{0} đang trong trạng thái chờ.</value>
   </data>
-	<data name="STOP_TUTORING" xml:space="preserve">
+  <data name="STOP_TUTORING" xml:space="preserve">
     <value>Gia sư {0} đã kết thúc dạy trẻ {1}.</value>
   </data>
   <data name="ASSIGNED_EXERCISE_NOTIFICATION" xml:space="preserve">
@@ -278,5 +278,8 @@
   </data>
   <data name="EXERCISE_NOT_ASSIGNED_NOTIFICATION" xml:space="preserve">
     <value>Lịch học ngày {0} vào khung giờ {1}-{2} chưa được gán bài tập.</value>
+  </data>
+  <data name="REPORT_HANDLE" xml:space="preserve">
+    <value>Đơn tố cáo {0} đã {1}</value>
   </data>
 </root>

@@ -403,6 +403,15 @@ namespace AutismEduConnectSystem.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Đơn tố cáo {0} đã {1}.
+        /// </summary>
+        public static string REPORT_HANDLE {
+            get {
+                return ResourceManager.GetString("REPORT_HANDLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lịch học ngày {0} vào khung giờ {1}-{2} đã được đánh giá.
         /// </summary>
         public static string SCHEDULE_UPDATE_NOTIFICATION {
@@ -410,8 +419,8 @@ namespace AutismEduConnectSystem.Resources {
                 return ResourceManager.GetString("SCHEDULE_UPDATE_NOTIFICATION", resourceCulture);
             }
         }
-         /// <summary>
-
+        
+        /// <summary>
         ///   Looks up a localized string similar to Gia sư {0} đã kết thúc dạy trẻ {1}..
         /// </summary>
         public static string STOP_TUTORING {
@@ -419,6 +428,7 @@ namespace AutismEduConnectSystem.Resources {
                 return ResourceManager.GetString("STOP_TUTORING", resourceCulture);
             }
         }
+        
         /// <summary>
         ///   Looks up a localized string similar to Quá hạn xét duyệt hồ sơ học sinh.
         /// </summary>
