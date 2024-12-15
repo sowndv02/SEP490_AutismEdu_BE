@@ -371,7 +371,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 model.ExerciseTypeId = exerciseUpdateDTO.ExerciseTypeId;    
                 await _exerciseRepository.UpdateAsync(model);
                 model = await _exerciseRepository.GetAsync(x => x.Id == exerciseUpdateDTO.Id, true, "ExerciseType", null);
-                _response.Result = _mapper.Map<ExerciseDTO>(model);
+                _response.Result = _mapper.Map<ExerciseListDTO>(model);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
                 return Ok(_response);
