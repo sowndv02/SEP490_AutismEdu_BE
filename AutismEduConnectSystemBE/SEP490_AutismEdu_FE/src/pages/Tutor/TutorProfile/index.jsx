@@ -265,7 +265,9 @@ function TutorProfile() {
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1 }} mt={2}>
                                                 <PaidOutlinedIcon />
                                                 <Typography variant='subtitle1' sx={{ minWidth: '50px' }}>Học phí: </Typography>
-                                                <Typography variant='h6'>{formatter.format(tutor?.priceFrom ?? 0) + ' - ' + (tutor?.priceFrom !== tutor?.priceEnd) && (formatter.format(tutor?.priceEnd ?? 0))}<Typography component="span" variant='body1'> / buổi <small>({tutor?.sessionHours} tiếng)</small></Typography></Typography>
+                                                <Typography variant='h6'>{tutor?.priceFrom !== tutor?.priceEnd
+                                                    ? `${formatter.format(tutor?.priceFrom ?? 0)} - ${formatter.format(tutor?.priceEnd ?? 0)}`
+                                                    : `${formatter.format(tutor?.priceFrom ?? 0)}`}<Typography component="span" variant='body1'> / buổi <small>({tutor?.sessionHours} tiếng)</small></Typography></Typography>
                                             </Box>
 
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>

@@ -1,7 +1,6 @@
 import { Box, Button, Card, CardContent, CardMedia, Grid, InputAdornment, Pagination, Stack, TextField, Typography, Modal, FormControl, InputLabel, Select, MenuItem, Tooltip, IconButton } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
-
 import LoadingComponent from '~/components/LoadingComponent';
 import services from '~/plugins/services';
 import { enqueueSnackbar } from 'notistack';
@@ -9,6 +8,8 @@ import ConfirmShow from './Modal/ConfirmShow';
 import ExerciseTypeCreation from './Modal/ExerciseTypeCreation';
 import EditIcon from '@mui/icons-material/Edit';
 import ExerciseTypeEdit from './Modal/ExerciseTypeEdit';
+import imgExerciseType from '~/assets/images/exercisetype.jpg'
+
 const ExerciseTypeManagement = () => {
     const [loading, setLoading] = useState(false);
     const [exerciseTypeList, setExerciseTypeList] = useState([]);
@@ -230,7 +231,8 @@ const ExerciseTypeManagement = () => {
                                     <CardMedia
                                         component="img"
                                         height="240"
-                                        image="https://png.pngtree.com/png-vector/20190726/ourlarge/pngtree-college-education-graduation-cap-hat-university-icon-vector-desi-png-image_1588318.jpg"
+                                        image={imgExerciseType}
+                                        // image="https://png.pngtree.com/png-vector/20190726/ourlarge/pngtree-college-education-graduation-cap-hat-university-icon-vector-desi-png-image_1588318.jpg"
                                         alt="Exercise Icon"
                                     />
                                     <CardContent>

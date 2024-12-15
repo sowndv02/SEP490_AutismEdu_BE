@@ -11,7 +11,6 @@ import ViewDetailModal from './CalendarModal/ViewDetailModal';
 import CalenderButtons from './CalenderButtons/CalenderButtons';
 import ChangeSlotModal from './ScheduleUpdater';
 function Calendar() {
-    const { id } = useParams();
     const [isModalOpen, setModalOpen] = useState(false);
     const [isEvaluateModalOpen, setEvaluateModalOpen] = useState(false);
     const [selectedKey, setSelectedKey] = useState('');
@@ -38,12 +37,14 @@ function Calendar() {
                 if (listYears.length !== 0) {
                     const startYear = new Date(tutorInformation.createdDate).getFullYear();
                     const maxYear = new Date(res.result.maxDate).getFullYear();
-                    const years = [];
-                    for (let year = startYear; year <= maxYear; year++) {
-                        years.push(year);
+                    if (maxYear !== 1) {
+                        const years = [];
+                        for (let year = startYear; year <= maxYear; year++) {
+                            years.push(year);
+                        }
+                        years.reverse();
+                        setListYears(years);
                     }
-                    years.reverse();
-                    setListYears(years);
                 }
                 organizeSchedulesByDay(res.result.schedules)
             }, (err) => {

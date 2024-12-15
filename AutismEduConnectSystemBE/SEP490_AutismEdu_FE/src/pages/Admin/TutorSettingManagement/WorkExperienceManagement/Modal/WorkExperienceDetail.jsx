@@ -11,6 +11,7 @@ import {
     DialogTitle,
     Divider,
 } from '@mui/material';
+import { formatDate } from 'date-fns';
 
 const WorkExperienceDetail = ({ open, onClose, workExperience }) => {
     const statusText = (status) => {
@@ -81,7 +82,7 @@ const WorkExperienceDetail = ({ open, onClose, workExperience }) => {
                         <Grid item xs={8}>
                             <Typography>
                                 {workExperience.startDate
-                                    ? new Date(workExperience.startDate).toLocaleDateString()
+                                    ? formatDate(new Date(workExperience.startDate), "dd/MM/yyyy")
                                     : 'Không có'}
                             </Typography>
                         </Grid>
@@ -92,7 +93,7 @@ const WorkExperienceDetail = ({ open, onClose, workExperience }) => {
                         <Grid item xs={8}>
                             <Typography>
                                 {workExperience.endDate
-                                    ? new Date(workExperience.endDate).toLocaleDateString()
+                                    ? formatDate(new Date(workExperience.endDate), "dd/MM/yyyy")
                                     : 'Không có'}
                             </Typography>
                         </Grid>

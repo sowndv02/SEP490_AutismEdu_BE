@@ -3,6 +3,7 @@ import { Box, Typography, Stack, TableContainer, Table, TableHead, TableRow, Tab
 import services from '~/plugins/services';
 import LoadingComponent from '~/components/LoadingComponent';
 import emptyBook from '~/assets/images/icon/emptybook.gif'
+import { formatDate } from 'date-fns';
 
 const TutorRequestHistory = () => {
 
@@ -183,7 +184,7 @@ const TutorRequestHistory = () => {
                         : '-'}
 
                     </TableCell>
-                    <TableCell>{request.createdDate && new Date(request.createdDate)?.toLocaleDateString()}</TableCell>
+                    <TableCell>{request.createdDate && formatDate(new Date(request.createdDate), "dd/MM/yyyy")}</TableCell>
                     <TableCell sx={{ maxWidth: 200 }}>{statusTypeReject(request?.rejectType) || 'N/A'}</TableCell>
                     <TableCell>
 
@@ -239,9 +240,9 @@ const TutorRequestHistory = () => {
               color="primary"
             />
           </Stack></> : <Box sx={{ textAlign: "center" }}>
-                            <img src={emptyBook} style={{ height: "200px" }} />
-                            <Typography>Hiện tại chưa có lịch sử yêu cầu nào được gửi!</Typography>
-                        </Box>}
+          <img src={emptyBook} style={{ height: "200px" }} />
+          <Typography>Hiện tại chưa có lịch sử yêu cầu nào được gửi!</Typography>
+        </Box>}
       </Box>
       <Modal
         open={openDialog}

@@ -4,6 +4,7 @@ import LoadingComponent from '~/components/LoadingComponent';
 import services from '~/plugins/services';
 import { enqueueSnackbar } from 'notistack';
 import { useNavigate } from 'react-router-dom';
+import { formatDate } from 'date-fns';
 
 function AssignExercise({ isOpen, setModalOpen, schedule, filterSchedule, setFilterSchedule, selectedKey }) {
     const [syllabusId, setSyllabusId] = useState('');
@@ -118,7 +119,32 @@ function AssignExercise({ isOpen, setModalOpen, schedule, filterSchedule, setFil
                 }
             }
         }
+        if (listSyllabus?.length === 0 && schedule?.syllabusId && schedule?.exerciseType && schedule?.exercise) {
+            const newSyllabus = {
+                id: schedule.syllabusId,
+                ageFrom: schedule.ageFrom,
+                ageEnd: schedule.ageEnd,
+                exerciseTypes: [
+                    {
+                        id: schedule.exerciseType.id,
+                        exerciseTypeName: schedule.exerciseType.exerciseTypeName,
+                        exercises: [
+                            {
+                                id: schedule.exercise.id,
+                                exerciseName: schedule.exercise.exerciseName,
+                                description: schedule.exercise.description,
+                                createdDate: schedule.exercise.createdDate,
+                                updatedDate: schedule.exercise.updatedDate,
+                            },
+                        ],
+                    },
+                ],
+            };
+            setListSyllabus([...listSyllabus, newSyllabus]);
+        }
     }, [listSyllabus, schedule]);
+
+    console.log(schedule);
 
 
     useEffect(() => {
@@ -290,7 +316,7 @@ function AssignExercise({ isOpen, setModalOpen, schedule, filterSchedule, setFil
                                 <Typography variant='subtitle1' sx={{ fontWeight: '500' }}>Ngày học:</Typography>
                             </Grid>
                             <Grid item xs={7}>
-                                <Typography variant='subtitle1'>{new Date(schedule.scheduleDate).toLocaleDateString()}</Typography>
+                                <Typography variant='subtitle1'>{schedule?.scheduleDate ? formatDate(new Date(schedule.scheduleDate), "dd/MM/yyyy") : 'Chưa có'}</Typography>
                             </Grid>
                             <Grid item xs={5}>
                                 <Typography variant='subtitle1' sx={{ fontWeight: '500' }}>Khung thời gian:</Typography>
@@ -361,7 +387,7 @@ function AssignExercise({ isOpen, setModalOpen, schedule, filterSchedule, setFil
                             {listSyllabus.length === 0 && (<Grid item xs={12} display={'flex'} direction={'column'} gap={1}>
                                 <Typography variant='caption' color={'red'}>Hiện tại bạn chưa tạo giáo trình nào. Bạn có muốn tạo không?</Typography>
                                 <Box>
-                                    <Button variant='contained' color='primary' size='small' onClick={() => nav('/autismtutor/exercise', { state: { syllabus: '2' } })}>Có</Button>
+                                    <Button variant='contained' color='primary' size='small' onClick={() => nav('/autismtutor/exercise', { state: { syllabus: '3' } })}>Có</Button>
                                 </Box>
                             </Grid>)}
                         </Grid>

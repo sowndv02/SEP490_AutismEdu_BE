@@ -70,7 +70,6 @@ function CompleteTutoring({ studentProfile, setStudentProfile }) {
             });
             setSelectedAssessment(preData)
         } else if (assessment) {
-            console.log(studentProfile);
             const preData = assessment.map((a) => {
                 const choosenAss = studentProfile?.initialAssessmentResults?.assessmentResults.find((r) => r.questionId === a.id);
                 if (choosenAss) {
@@ -255,9 +254,9 @@ function CompleteTutoring({ studentProfile, setStudentProfile }) {
                                         })
                                     }
                                 </Stack>
-                                <Box sx={{ display: "flex", gap: 1 }}>
+                                <Box sx={{ display: "flex", gap: 1, justifyContent: "end" }}>
+                                    <Button sx={{ mt: 5 }} onClick={handleClose} variant='outlined'>Huỷ</Button>
                                     <Button variant='contained' sx={{ mt: 5 }} type='submit'>Kết thúc</Button>
-                                    <Button sx={{ mt: 5 }} onClick={handleClose}>Huỷ</Button>
                                 </Box>
                             </form>
                         </Stack>

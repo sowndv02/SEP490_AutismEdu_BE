@@ -7,14 +7,13 @@ import services from '~/plugins/services';
 import { enqueueSnackbar } from 'notistack';
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import ImageResize from 'quill-image-resize-module-react';
-Quill.register('modules/imageResize', ImageResize);
+
 function ExerciseUpdateModal({ exercises, setExercises, openEditDialog, handleCloseEditDialog, selectedExercise, setSelectedExercise, exerciseTypeName }) {
     const [loading, setLoading] = useState(false);
     const toolbarOptions = [
         ['bold', 'italic', 'underline', 'strike'],
         ['blockquote', 'code-block'],
-        ['link', 'image', 'video', 'formula'],
+        ['link', 'formula'],
         [{ 'header': 1 }, { 'header': 2 }],
         [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
         [{ 'script': 'sub' }, { 'script': 'super' }],
@@ -71,19 +70,20 @@ function ExerciseUpdateModal({ exercises, setExercises, openEditDialog, handleCl
             try {
                 setLoading(true);
                 const dataUpdate = {
+                    id: selectedExercise?.id,
                     exerciseName: values?.exerciseName?.trim(),
                     description: values.description,
                     exerciseTypeId: selectedExercise?.exerciseType?.id,
-                    originalId: selectedExercise?.original ? selectedExercise.original?.id : selectedExercise?.id
                 };
-                await services.ExerciseManagementAPI.createExercise(dataUpdate, (res) => {
+                await services.ExerciseManagementAPI.updateExercise(selectedExercise?.id, dataUpdate, (res) => {
                     if (res?.result) {
                         const indexExercise = exercises.findIndex((e) => e.id === selectedExercise.id);
-                        exercises.splice(indexExercise, 1, res.result);
+                        exercises.splice(indexExercise, 1, { ...res.result });
                         enqueueSnackbar("Chỉnh sửa bài tập thành công!", { variant: 'success' });
                         handleCloseEditDialog();
                     }
                 }, (error) => {
+                    enqueueSnackbar(error.error[0], { variant: 'error' });
                     console.log(error);
                 });
             } catch (error) {
@@ -134,10 +134,6 @@ function ExerciseUpdateModal({ exercises, setExercises, openEditDialog, handleCl
                                     clipboard: {
                                         matchVisual: false
                                     },
-                                    imageResize: {
-                                        parchment: Quill.import('parchment'),
-                                        modules: ['Resize', 'DisplaySize']
-                                    }
                                 }}
                                 value={formik.values.description}
                                 onChange={(value) => formik.setFieldValue('description', value)}

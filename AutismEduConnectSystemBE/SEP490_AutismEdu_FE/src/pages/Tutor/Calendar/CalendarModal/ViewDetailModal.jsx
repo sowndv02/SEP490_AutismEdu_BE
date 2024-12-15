@@ -13,6 +13,7 @@ import {
     Typography
 } from '@mui/material';
 import { enqueueSnackbar } from 'notistack';
+import { formatDate } from 'date-fns';
 
 function ViewDetailModal({ isOpen, setModalOpen, schedule, setSchedule, tutorName }) {
 
@@ -98,7 +99,7 @@ function ViewDetailModal({ isOpen, setModalOpen, schedule, setSchedule, tutorNam
                             <Typography variant='subtitle1' sx={{ fontWeight: '500' }}>Ngày học:</Typography>
                         </Grid>
                         <Grid item xs={7}>
-                            <Typography variant='subtitle1'>{new Date(schedule?.scheduleDate)?.toLocaleDateString()}</Typography>
+                            <Typography variant='subtitle1'>{schedule?.scheduleDate ? formatDate(new Date(schedule?.scheduleDate), "dd/MM/yyyy") : 'Chưa có'}</Typography>
                         </Grid>
                         <Grid item xs={5}>
                             <Typography variant='subtitle1' sx={{ fontWeight: '500' }}>Khung thời gian:</Typography>
@@ -184,11 +185,11 @@ function ViewDetailModal({ isOpen, setModalOpen, schedule, setSchedule, tutorNam
 
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
                 <DialogTitle variant='h5' textAlign={'center'}>Ghi chú</DialogTitle>
-                <Divider/>
+                <Divider />
                 <DialogContent>
                     <Typography>{selectedContent}</Typography>
                 </DialogContent>
-                <Divider/>
+                <Divider />
                 <DialogActions>
                     <Button onClick={handleCloseDialog} variant='contained' color="primary">Đóng</Button>
                 </DialogActions>

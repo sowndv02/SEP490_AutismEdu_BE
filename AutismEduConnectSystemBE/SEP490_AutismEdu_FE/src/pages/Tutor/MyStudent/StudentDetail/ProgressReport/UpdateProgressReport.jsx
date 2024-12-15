@@ -306,11 +306,11 @@ function UpdateProgressReport({ open, setOpen, report, progressReports, setProgr
                                     })
                                 }
                             </Stack>
-                            <Box sx={{ display: "flex", gap: 1 }}>
+                            <Box sx={{ display: "flex", gap: 1, justifyContent: "end" }}>
+                                <Button sx={{ mt: 5 }} onClick={handleClose} variant='outlined'>Huỷ</Button>
                                 <Button variant='contained' sx={{ mt: 5 }} type='submit'
                                     disabled={changes}
                                 >Lưu thay đổi</Button>
-                                <Button sx={{ mt: 5 }} onClick={handleClose}>Huỷ</Button>
                             </Box>
                         </form>
 

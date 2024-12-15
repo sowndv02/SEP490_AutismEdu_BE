@@ -224,8 +224,8 @@ function ReportTutor({ studentProfile }) {
                         </Stack>
                     </DialogContent>
                     <DialogActions>
+                        <Button onClick={() => setOpen(false)} variant='outlined'>Huỷ bỏ</Button>
                         <Button variant='contained' type='submit'>Tố cáo</Button>
-                        <Button onClick={() => setOpen(false)}>Huỷ bỏ</Button>
                     </DialogActions>
                 </form>
                 <LoadingComponent open={loading} />

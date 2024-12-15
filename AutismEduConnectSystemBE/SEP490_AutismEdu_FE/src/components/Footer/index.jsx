@@ -11,7 +11,7 @@ function Footer() {
             <Box>
                 <Typography variant='h5' mb={4}>Thông tin liên lạc</Typography>
                 <Typography fontSize={18}><b>Số điện thoại: </b> <a href='tel:0999999999'>0999999999</a></Typography>
-                <Typography fontSize={18}><b>Số điện thoại: </b> <a href='mailto:autism.edu.work@gmail.com'>autism.edu.work@gmail.com</a></Typography>
+                <Typography fontSize={18}><b>Email: </b> <a href='mailto:autism.edu.work@gmail.com'>autism.edu.work@gmail.com</a></Typography>
                 <Typography fontSize={18}><b>Địa chỉ: </b> Hoà Lạc, Hà Nội</Typography>
             </Box>
         </Stack>

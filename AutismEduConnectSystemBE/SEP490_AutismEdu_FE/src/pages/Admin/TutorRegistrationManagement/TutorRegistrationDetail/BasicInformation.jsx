@@ -114,7 +114,14 @@ function BasicInformation({ information, certificates }) {
                     <Typography mt={2}><span style={{ fontWeight: "bold", color: "black" }}>Số tiếng trên buổi:</span>
                         <span style={{ marginLeft: "20px" }}>{information?.sessionHours} tiếng / buổi</span></Typography>
                     <Typography mt={2}><span style={{ fontWeight: "bold", color: "black" }}>Giá:</span>
-                        <span style={{ marginLeft: "20px" }}>{formatter.format(information?.priceFrom)} - {formatter.format(information?.priceEnd)}</span></Typography>
+                        {
+                            information?.priceFrom !== information?.priceEnd ? (
+                                <span style={{ marginLeft: "20px" }}>{formatter.format(information?.priceFrom)} - {formatter.format(information?.priceEnd)}</span>
+                            ) : (
+                                <span style={{ marginLeft: "20px" }}>{formatter.format(information?.priceFrom)}</span>
+                            )
+                        }
+                    </Typography>
                     <Typography mt={2}><span style={{ fontWeight: "bold", color: "black" }}>Giới thiệu:</span> </Typography>
                     <Box sx={{ maxHeight: "420px", mt: 2, overflowY: "auto", p: 3, borderRadius: "5px", border: "1px gray solid" }}>
                         <Box sx={{ maxWidth: "100%" }} dangerouslySetInnerHTML={{ __html: information?.aboutMe }} />

@@ -7,8 +7,6 @@ import { enqueueSnackbar } from 'notistack';
 import LoadingComponent from '~/components/LoadingComponent';
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import ImageResize from 'quill-image-resize-module-react';
-Quill.register('modules/imageResize', ImageResize);
 
 function ExerciseCreation({ setExercises, exerciseType, open, handleClose }) {
     const [loading, setLoading] = useState(false);
@@ -16,7 +14,7 @@ function ExerciseCreation({ setExercises, exerciseType, open, handleClose }) {
     const toolbarOptions = [
         ['bold', 'italic', 'underline', 'strike'],
         ['blockquote', 'code-block'],
-        ['link', 'image', 'video', 'formula'],
+        ['link', 'formula'],
         [{ 'header': 1 }, { 'header': 2 }],
         [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
         [{ 'script': 'sub' }, { 'script': 'super' }],
@@ -134,10 +132,6 @@ function ExerciseCreation({ setExercises, exerciseType, open, handleClose }) {
                                     clipboard: {
                                         matchVisual: false
                                     },
-                                    imageResize: {
-                                        parchment: Quill.import('parchment'),
-                                        modules: ['Resize', 'DisplaySize']
-                                    }
                                 }}
                                 value={formik.values.description}
                                 onChange={(value) => formik.setFieldValue('description', value)}

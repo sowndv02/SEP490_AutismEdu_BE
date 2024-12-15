@@ -38,11 +38,11 @@ function ConfirmLockDialog({ isLock, name, id, handleChangeUserStatus }) {
                     {isLock ? `Bạn có muốn mở khoá tài khoản ${name}` : `Bạn có muốn khoá tài khoản ${name}`}
                 </DialogTitle>
                 <DialogActions>
-                    <Button onClick={handleSubmit}>
-                        {isLock ? "Mở khoá" : "Khoá"}
-                    </Button>
-                    <Button onClick={handleClose} autoFocus>
+                    <Button onClick={handleClose} autoFocus variant='outlined'>
                         Huỷ bỏ
+                    </Button>
+                    <Button onClick={handleSubmit} variant='contained'>
+                        {isLock ? "Mở khoá" : "Khoá"}
                     </Button>
                 </DialogActions>
             </Dialog>

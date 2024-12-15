@@ -35,7 +35,6 @@ function AdminLeftBar() {
     const [openInformation, setOpenInformation] = useState(false);
     const [openReport, setOpenReport] = useState(false);
     const location = useLocation();
-    const nav = useNavigate();
     const adminInformation = useSelector(adminInfor);
     const handleClick = () => {
         setOpen(!open);
@@ -95,16 +94,6 @@ function AdminLeftBar() {
             setSelectedIndex(17);
         }
     }, [location])
-
-    // useEffect(() => {
-    //     if (adminInformation?.role === 'Admin') {
-    //         nav(PAGES.USERMANAGEMENT);
-    //         setSelectedIndex(1);
-    //     } else if (adminInformation?.role === 'Staff') {
-    //         nav(PAGES.PARENT_TUTOR_MAMAGEMENT);
-    //         setSelectedIndex(1);
-    //     }
-    // }, [adminInformation])
     const handleListItemClick = (event, index) => {
         setSelectedIndex(index);
     };

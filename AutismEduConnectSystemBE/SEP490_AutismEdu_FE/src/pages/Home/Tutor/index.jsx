@@ -25,10 +25,13 @@ function Tutor() {
         try {
             setLoading(true);
             await services.TutorManagementAPI.handleGetTutors((res) => {
+                console.log(res);
                 setListTutor(res.result.slice(0, 6))
             }, (err) => {
                 console.log(err);
             }, {
+                reviewScore: 0,
+                pageNumber: 1
             })
             setLoading(false);
         } catch (error) {
@@ -119,7 +122,13 @@ function Tutor() {
                                                         >{listTutor[currentTutor].email}</Typography></a>
                                                     </Box>
                                                 </Box>
-                                                <Typography mt={4} variant='h5' color={'green'}>{formatter.format(listTutor[currentTutor].priceFrom)} - {formatter.format(listTutor[currentTutor].priceEnd)}<Typography component="span" variant='subtitle1' color={'gray'}> / buổi <small>({listTutor[currentTutor]?.sessionHours} tiếng)</small></Typography></Typography>
+                                                {
+                                                    listTutor[currentTutor].priceFrom !== listTutor[currentTutor].priceEnd ? (
+                                                        <Typography mt={4} variant='h5' color={'green'}>{formatter.format(listTutor[currentTutor].priceFrom)} - {formatter.format(listTutor[currentTutor].priceEnd)}<Typography component="span" variant='subtitle1' color={'gray'}> / buổi <small>({listTutor[currentTutor]?.sessionHours} tiếng)</small></Typography></Typography>
+                                                    ) : (
+                                                        <Typography mt={4} variant='h5' color={'green'}>{formatter.format(listTutor[currentTutor].priceFrom)}<Typography component="span" variant='subtitle1' color={'gray'}> / buổi <small>({listTutor[currentTutor]?.sessionHours} tiếng)</small></Typography></Typography>
+                                                    )
+                                                }
 
                                             </CardContent>
                                             <CardActions>
@@ -182,7 +191,7 @@ function Tutor() {
                     action={() => {
                         nav(PAGES.ROOT + PAGES.LISTTUTOR);
                     }}
-                    text={"XEM THÊM GiA SƯ"} width="400px" height="70px" fontSize="20px" />
+                    text={"XEM THÊM GIA SƯ"} width="400px" height="70px" fontSize="20px" />
             </Box>
             <LoadingComponent open={loading} />
         </Box >

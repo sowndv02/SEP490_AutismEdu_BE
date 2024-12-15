@@ -187,8 +187,8 @@ export default function Curriculum({ curriculum, setCurriculum, endAge, startAge
 
                         </Grid>
                         <Box sx={{ display: "flex", justifyContent: "end", gap: 2 }}>
+                            <Button onClick={handleClose} variant='outlined'>Huỷ</Button>
                             <Button variant='contained' type='submit'>Thêm</Button>
-                            <Button onClick={handleClose}>Huỷ</Button>
                         </Box>
                     </form>
 

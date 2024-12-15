@@ -10,7 +10,7 @@ import {
     DialogTitle,
     Box,
 } from '@mui/material';
-import { format } from 'date-fns';
+import { format, formatDate } from 'date-fns';
 
 const PaymentHistoryDetail = ({ open, onClose, paymentHistory }) => {
     if (!paymentHistory) {
@@ -57,7 +57,7 @@ const PaymentHistoryDetail = ({ open, onClose, paymentHistory }) => {
                             {
                                 label: 'Ngày hết hạn',
                                 value: paymentHistory.expirationDate
-                                    ? new Date(paymentHistory.expirationDate).toLocaleDateString()
+                                    ? formatDate(new Date(paymentHistory.expirationDate), "dd/MM/yyyy")
                                     : null,
                             },
                             { label: 'Mô tả', value: paymentHistory?.description },

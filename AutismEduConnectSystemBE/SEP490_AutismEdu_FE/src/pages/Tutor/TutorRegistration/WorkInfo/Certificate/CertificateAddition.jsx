@@ -1,18 +1,17 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Modal from '@mui/material/Modal';
-import { Dialog, FormHelperText, Grid, IconButton, Stack, TextField } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { useFormik } from 'formik';
-import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-import { enqueueSnackbar } from 'notistack';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import DeleteIcon from '@mui/icons-material/Delete';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import { milliseconds } from 'date-fns';
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
+import { FormHelperText, Grid, IconButton, Stack, TextField } from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Modal from '@mui/material/Modal';
+import Typography from '@mui/material/Typography';
+import { useFormik } from 'formik';
+import { enqueueSnackbar } from 'notistack';
+import * as React from 'react';
 const style = {
     position: 'absolute',
     top: '50%',
@@ -250,8 +249,8 @@ export default function CertificateAddition({ certificate, setCertificate }) {
                             </Grid>
                         </Grid>
                         <Box sx={{ display: "flex", justifyContent: "end", gap: 2 }}>
+                            <Button onClick={handleClose} variant='outlined'>Huỷ</Button>
                             <Button variant='contained' type='submit'>Thêm</Button>
-                            <Button onClick={handleClose}>Huỷ</Button>
                         </Box>
                     </form>
 

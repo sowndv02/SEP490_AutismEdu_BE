@@ -4,6 +4,7 @@ import services from '~/plugins/services';
 import LoadingComponent from '~/components/LoadingComponent';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import emptyBook from '~/assets/images/icon/emptybook.gif'
+import { formatDate } from 'date-fns';
 
 function CurriculumEditedTable({ setShowTable }) {
     const [selectedContent, setSelectedContent] = useState('');
@@ -218,7 +219,7 @@ function CurriculumEditedTable({ setShowTable }) {
                                             </Box>
 
                                         </TableCell>
-                                        <TableCell>{curriculum?.createdDate && new Date(curriculum.createdDate).toLocaleDateString()}</TableCell>
+                                        <TableCell>{curriculum?.createdDate && formatDate(new Date(curriculum.createdDate), "dd/MM/yyyy")}</TableCell>
                                         <TableCell>
                                             <Button
                                                 variant="outlined"

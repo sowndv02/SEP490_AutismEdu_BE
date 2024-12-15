@@ -109,11 +109,9 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
         try {
             setLoading(true);
             await services.ExerciseManagementAPI.deleteExercise(currentDeleteIndex, {}, (res) => {
-                if (res?.result) {
-                    const newExercise = exercises.filter((e) => e.id !== currentDeleteIndex);
-                    setExercises(newExercise);
-                    enqueueSnackbar("Xoá bài tập thành công thành công", { variant: 'success' });
-                }
+                const newExercise = exercises.filter((e) => e.id !== currentDeleteIndex);
+                setExercises(newExercise);
+                enqueueSnackbar("Xoá bài tập thành công thành công", { variant: 'success' });
             }, (error) => {
                 console.log(error);
             })

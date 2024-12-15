@@ -36,10 +36,16 @@ function ExerciseList() {
         total: 10,
     });
 
-
     useEffect(() => {
         handleGetAllExercise();
+    }, []);
+
+    useEffect(() => {
+        setTimeout(() => {
+            handleGetAllExercise();
+        }, 500);
     }, [dataFilter, pagination.pageNumber]);
+
 
     const handleGetAllExercise = async () => {
         try {
@@ -47,7 +53,7 @@ function ExerciseList() {
             await services.ExerciseManagementAPI.getAllExercise((res) => {
                 if (res?.result) {
                     setExercises(res.result);
-                    // setPagination(res.pagination);
+                    setPagination(res.pagination);
                 }
             }, (error) => {
                 console.log(error);
@@ -107,14 +113,12 @@ function ExerciseList() {
         try {
             setLoading(true);
             await services.ExerciseManagementAPI.deleteExercise(currentDeleteIndex, {}, (res) => {
-                if (res?.result) {
-                    const newExercise = exercises.filter((e) => e.id !== currentDeleteIndex);
-                    setExercises(newExercise);
-                    enqueueSnackbar("Xoá bài tập thành công thành công", { variant: 'success' });
-                }
+                const newExercise = exercises.filter((e) => e.id !== currentDeleteIndex);
+                setExercises(newExercise);
+                enqueueSnackbar("Xoá bài tập thành công thành công", { variant: 'success' });
             }, (error) => {
                 console.log(error);
-            })
+            });
         } catch (error) {
             console.log(error);
         } finally {

@@ -167,8 +167,8 @@ export default function Career({ career, setCareer }) {
                             </Grid>
                         </Grid>
                         <Box sx={{ display: "flex", justifyContent: "end", gap: 2 }}>
-                            <Button variant='contained' type='submit'>Thêm</Button>
                             <Button onClick={handleClose}>Huỷ</Button>
+                            <Button variant='contained' type='submit'>Thêm</Button>
                         </Box>
                     </form>
 

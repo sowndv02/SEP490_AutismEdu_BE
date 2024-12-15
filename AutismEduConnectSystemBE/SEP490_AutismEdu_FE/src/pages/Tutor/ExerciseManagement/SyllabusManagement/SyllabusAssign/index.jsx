@@ -103,7 +103,9 @@ export default function SyllabusAssign({ handleBack, selectedAssign, setListSyll
                         formik.resetForm();
                         handleBack();
                     }
-                }, (error) => console.log(error));
+                }, (error) => {
+                    enqueueSnackbar(error.error[0], { variant: 'error' });
+                    console.log(error)});
             } catch (error) {
                 console.log(error);
             } finally {

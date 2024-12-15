@@ -5,6 +5,7 @@ import ExerciseList from './ExerciseList';
 import services from '~/plugins/services';
 import LoadingComponent from '~/components/LoadingComponent';
 import emptyBook from '~/assets/images/icon/emptybook.gif'
+import imgExerciseType from '~/assets/images/exercisetype.jpg'
 
 function ExerciseTypeList() {
     const [loading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ function ExerciseTypeList() {
         total: 10,
     });
     console.log(exerciseTypes);
-    
+
 
     useEffect(() => {
         handleGetAllExerciseType();
@@ -124,7 +125,8 @@ function ExerciseTypeList() {
                             <CardMedia
                                 component="img"
                                 height="240"
-                                image="https://png.pngtree.com/png-vector/20190726/ourlarge/pngtree-college-education-graduation-cap-hat-university-icon-vector-desi-png-image_1588318.jpg"
+                                image={imgExerciseType}
+                                // image="https://png.pngtree.com/png-vector/20190726/ourlarge/pngtree-college-education-graduation-cap-hat-university-icon-vector-desi-png-image_1588318.jpg"
                                 alt="Exercise Icon"
                             />
                             <CardContent>

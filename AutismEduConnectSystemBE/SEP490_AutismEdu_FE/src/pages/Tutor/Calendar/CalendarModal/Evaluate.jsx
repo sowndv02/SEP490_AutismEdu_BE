@@ -22,6 +22,7 @@ import {
 import services from '~/plugins/services';
 import { enqueueSnackbar } from 'notistack';
 import LoadingComponent from '~/components/LoadingComponent';
+import { formatDate } from 'date-fns';
 
 function Evaluate({ isOpen, setModalOpen, schedule, selectedKey, filterSchedule, setFilterSchedule }) {
     console.log(schedule);
@@ -172,7 +173,7 @@ function Evaluate({ isOpen, setModalOpen, schedule, selectedKey, filterSchedule,
                             <Typography variant='subtitle1' sx={{ fontWeight: '500' }}>Ngày học:</Typography>
                         </Grid>
                         <Grid item xs={7}>
-                            <Typography variant='subtitle1'>{new Date(schedule?.scheduleDate)?.toLocaleDateString()}</Typography>
+                            <Typography variant='subtitle1'>{schedule?.scheduleDate ? formatDate(new Date(schedule?.scheduleDate), "dd/MM/yyyy") : 'Chưa có'}</Typography>
                         </Grid>
                         <Grid item xs={5}>
                             <Typography variant='subtitle1' sx={{ fontWeight: '500' }}>Khung thời gian:</Typography>

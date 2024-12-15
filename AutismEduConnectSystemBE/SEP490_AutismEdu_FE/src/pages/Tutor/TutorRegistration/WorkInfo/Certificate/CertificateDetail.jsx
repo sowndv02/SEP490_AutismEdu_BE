@@ -1,19 +1,17 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Modal from '@mui/material/Modal';
-import { Dialog, FormHelperText, Grid, IconButton, ListItemButton, ListItemIcon, Stack, TextField } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { useFormik } from 'formik';
-import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-import { enqueueSnackbar } from 'notistack';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import DeleteIcon from '@mui/icons-material/Delete';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import { milliseconds } from 'date-fns';
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import SchoolIcon from '@mui/icons-material/School';
+import { FormHelperText, Grid, IconButton, ListItemButton, ListItemIcon, Stack, TextField } from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Modal from '@mui/material/Modal';
+import Typography from '@mui/material/Typography';
+import { useFormik } from 'formik';
+import { enqueueSnackbar } from 'notistack';
+import * as React from 'react';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 const style = {
     position: 'absolute',
@@ -276,8 +274,8 @@ export default function CertificateDetail({ certificate, setCertificate, index, 
                             </Grid>
                         </Grid>
                         <Box sx={{ display: "flex", justifyContent: "end", gap: 2 }}>
-                            <Button variant='contained' type='submit'>Lưu</Button>
                             <Button onClick={handleClose}>Huỷ</Button>
+                            <Button variant='contained' type='submit'>Lưu</Button>
                         </Box>
                     </form>
 

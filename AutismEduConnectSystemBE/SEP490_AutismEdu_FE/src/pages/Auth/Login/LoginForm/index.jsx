@@ -46,7 +46,7 @@ function LoginForm({ setVerify, setEmailVerify, onLoginSuccess }) {
         }
     }, [userId])
 
-    const handleGetUserInformation = async() => {
+    const handleGetUserInformation = async () => {
         try {
             await services.UserManagementAPI.getUserById(userId, (res) => {
                 dispatch(setUserInformation(res.result))
@@ -113,7 +113,7 @@ function LoginForm({ setVerify, setEmailVerify, onLoginSuccess }) {
                             AutismEdu
                         </Typography>
                     </Box>
-                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>AutismEdu Xin Chào! 👋</Typography>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>AutismEdu Xin Chào Phụ Huynh! 👋</Typography>
                     <Typography sx={{ mt: "10px" }}>Vui lòng đăng nhập vào tài khoản của bạn và khám phá dịch vụ của chúng tôi</Typography>
                     <Box mt="30px">
                         <FormControl sx={{ ...INPUT_CSS }} variant="outlined">

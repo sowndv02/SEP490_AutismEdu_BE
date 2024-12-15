@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import services from '~/plugins/services';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { formatDate } from 'date-fns';
 
 function CertificateDetailModal({ open, onClose, certificate }) {
     const [selectedImage, setSelectedImage] = useState(null);
@@ -78,7 +79,7 @@ function CertificateDetailModal({ open, onClose, certificate }) {
                             <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Ngày tạo:</Typography>
                         </Grid>
                         <Grid item xs={8}>
-                            <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>{new Date(certificate.createdDate).toLocaleDateString()}</Typography>
+                            <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>{certificate.createdDate ? formatDate(new Date(certificate.createdDate), "dd/MM/yyyy") : 'Chưa có'}</Typography>
                         </Grid>
 
                         <Grid item xs={4}>
@@ -86,7 +87,7 @@ function CertificateDetailModal({ open, onClose, certificate }) {
                         </Grid>
                         <Grid item xs={8}>
                             <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>
-                                {certificate.issuingDate ? new Date(certificate.issuingDate).toLocaleDateString() : 'Chưa có'}
+                                {certificate.issuingDate ? formatDate(new Date(certificate.issuingDate), "dd/MM/yyyy") : 'Chưa có'}
                             </Typography>
                         </Grid>
 
@@ -96,7 +97,7 @@ function CertificateDetailModal({ open, onClose, certificate }) {
                         </Grid>
                         <Grid item xs={8}>
                             <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>
-                                {certificate.expirationDate ? new Date(certificate.expirationDate).toLocaleDateString() : 'Hiện tại'}
+                                {certificate.expirationDate ? formatDate(new Date(certificate.expirationDate), "dd/MM/yyyy") : 'Hiện tại'}
                             </Typography>
                         </Grid>
 

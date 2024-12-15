@@ -128,7 +128,7 @@ export default function SyllabusManagement() {
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                             Từ {syllabus.ageFrom} - {syllabus.ageEnd} tuổi
 
-                                            <IconButton
+                                            {/* <IconButton
                                                 size="small"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -137,7 +137,7 @@ export default function SyllabusManagement() {
                                                 color="error"
                                             >
                                                 <DeleteIcon />
-                                            </IconButton>
+                                            </IconButton> */}
                                         </Box>
                                     )}
                                 />

@@ -1,8 +1,7 @@
-import { Box, Button, Modal, TextField, Typography } from '@mui/material'
+import { Box, Button, Modal, TextField, Typography } from '@mui/material';
 import { enqueueSnackbar } from 'notistack';
-import React, { useState } from 'react'
-import LoadingComponent from '~/components/LoadingComponent'
-import { useTutorContext } from '~/Context/TutorContext';
+import { useState } from 'react';
+import LoadingComponent from '~/components/LoadingComponent';
 import services from '~/plugins/services';
 
 function RejectCurriculum({ curriculumId, curriculums, setCurriculums }) {
@@ -17,6 +16,10 @@ function RejectCurriculum({ curriculumId, curriculums, setCurriculums }) {
             if (rejectReason === "") {
                 setLoading(false);
                 enqueueSnackbar("Bạn chưa nhập lý do từ chối khung chương trình", { variant: "error" })
+                return;
+            } else if (rejectReason.length > 500) {
+                setLoading(false);
+                enqueueSnackbar("Lý do từ chối quá dài", { variant: "error" })
                 return;
             }
             await services.CurriculumManagementAPI.changeStatusCurriculum(curriculumId,
@@ -69,9 +72,10 @@ function RejectCurriculum({ curriculumId, curriculums, setCurriculums }) {
                         value={rejectReason}
                         onChange={(e) => { setRejectReason(e.target.value) }}
                     />
+                    <Typography textAlign="right">{rejectReason.length} / 500</Typography>
                     <Box textAlign="right" mt={2}>
-                        <Button onClick={handleClose}>Huỷ bỏ</Button>
-                        <Button onClick={handleSubmit}>Từ chối</Button>
+                        <Button onClick={handleClose} variant='outlined'>Huỷ bỏ</Button>
+                        <Button onClick={handleSubmit} variant='contained' sx={{ ml: 2 }}>Từ chối</Button>
                     </Box>
                     <LoadingComponent open={loading} setLoading={setLoading} />
                 </Box>

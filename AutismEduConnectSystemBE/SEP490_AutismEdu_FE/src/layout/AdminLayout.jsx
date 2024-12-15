@@ -8,7 +8,7 @@ function AdminLayout() {
             <AdminHeader />
             <Box marginTop={"65px"} sx={{ height: "calc(100vh - 65px)" }} component="main">
                 <Stack direction="row" sx={{ bgcolor: "#f5f5f9", height: "100%" }}>
-                    <Box width={"17%"} sx={{ height: "100%", overflow: "auto" }}>
+                    <Box width={"17%"} sx={{ height: "100%", overflow: "auto", bgcolor: "white" }}>
                         <AdminLeftBar />
                     </Box>
                     <Box width={"83%"} padding={3} sx={{ height: "100%", overflow: "auto" }}>

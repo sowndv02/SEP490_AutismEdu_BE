@@ -216,11 +216,10 @@ export default function CurriculumDetail({ curriculum, setCurriculum, endAge, st
 
                         </Grid>
                         <Box sx={{ display: "flex", justifyContent: "end", gap: 2 }}>
+                            <Button onClick={handleClose} variant='outlined'>Huỷ</Button>
                             <Button variant='contained' type='submit' disabled={change}>Lưu</Button>
-                            <Button onClick={handleClose}>Huỷ</Button>
                         </Box>
                     </form>
-
                 </Box>
             </Modal>
         </Box>

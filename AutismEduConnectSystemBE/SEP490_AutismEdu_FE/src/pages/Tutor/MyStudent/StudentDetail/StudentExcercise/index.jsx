@@ -196,7 +196,7 @@ function StudentExcercise({ studentProfile }) {
                     '& .MuiDialog-paper': {
                         borderRadius: '12px',
                         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-                        padding: '16px',
+                        padding: '16px'
                     }
                 }}
             >
@@ -205,7 +205,7 @@ function StudentExcercise({ studentProfile }) {
                     sx={{
                         fontSize: '1.5rem',
                         fontWeight: 'bold',
-                        color: '#3c4ff4',
+                        color: '#3c4ff4'
                     }}
                 >
                     {selectedExcercise.exercise.exerciseName}
@@ -217,14 +217,14 @@ function StudentExcercise({ studentProfile }) {
                         gap={2}
                         sx={{
                             marginBottom: '16px',
-                            alignItems: 'center',
+                            alignItems: 'center'
                         }}
                     >
                         <Typography
                             sx={{
                                 width: '25%',
                                 fontWeight: 'bold',
-                                color: '#b660ec',
+                                color: '#b660ec'
                             }}
                         >
                             Ghi chú từ giảng viên:
@@ -233,7 +233,7 @@ function StudentExcercise({ studentProfile }) {
                             <Typography
                                 sx={{
                                     color: 'orange',
-                                    fontStyle: 'italic',
+                                    fontStyle: 'italic'
                                 }}
                             >
                                 Không có ghi chú
@@ -244,7 +244,7 @@ function StudentExcercise({ studentProfile }) {
                                     color: 'orange',
                                     width: '70%',
                                     fontStyle: 'italic',
-                                    wordBreak: 'break-word',
+                                    wordBreak: 'break-word'
                                 }}
                             >
                                 {selectedExcercise.note}
@@ -259,7 +259,9 @@ function StudentExcercise({ studentProfile }) {
                             backgroundColor: '#f9f9f9',
                             borderRadius: '8px',
                             boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.1)',
-                            overflow: 'hidden',
+                            "& p": {
+                                whiteSpace: "break-spaces", wordBreak: 'break-word'
+                            }
                         }}
                         dangerouslySetInnerHTML={{ __html: selectedExcercise.exercise.description }}
                     />
@@ -272,7 +274,7 @@ function StudentExcercise({ studentProfile }) {
                         color="primary"
                         sx={{
                             padding: '8px 16px',
-                            borderRadius: '8px',
+                            borderRadius: '8px'
                         }}
                     >
                         Đóng

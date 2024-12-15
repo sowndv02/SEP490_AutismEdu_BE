@@ -41,7 +41,7 @@ function TutorCurriculum({ curriculums, id, setCurriculums }) {
                                 {
                                     c.requestStatus === 0 && (
                                         <>
-                                            <Typography sx={{ mt: 1, color: "red" }}>Lý do từ chối: {c.rejectionReason}</Typography>
+                                            <Typography>Lý do từ chối: <span style={{ mt: 1, color: "red" }}>{c.rejectionReason}</span></Typography>
                                         </>
                                     )
                                 }

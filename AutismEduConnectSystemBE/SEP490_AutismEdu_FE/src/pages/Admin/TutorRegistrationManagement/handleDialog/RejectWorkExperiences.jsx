@@ -1,7 +1,7 @@
-import { Box, Button, Modal, TextField, Typography } from '@mui/material'
+import { Box, Button, Modal, TextField, Typography } from '@mui/material';
 import { enqueueSnackbar } from 'notistack';
-import React, { useState } from 'react'
-import LoadingComponent from '~/components/LoadingComponent'
+import { useState } from 'react';
+import LoadingComponent from '~/components/LoadingComponent';
 import services from '~/plugins/services';
 
 function RejectWorkExperiences({ workExperiences, setWorkExperiences, workExperiencesId }) {
@@ -16,6 +16,10 @@ function RejectWorkExperiences({ workExperiences, setWorkExperiences, workExperi
             if (rejectReason === "") {
                 setLoading(false);
                 enqueueSnackbar("Bạn chưa nhập lý do từ chối kinh nghiệm làm việc", { variant: "error" })
+                return;
+            } else if (rejectReason.length > 500) {
+                setLoading(false);
+                enqueueSnackbar("Lý do từ chối quá dài", { variant: "error" })
                 return;
             }
             await services.WorkExperiencesAPI.changeWorkExperienceStatus(workExperiencesId,
@@ -68,9 +72,10 @@ function RejectWorkExperiences({ workExperiences, setWorkExperiences, workExperi
                         value={rejectReason}
                         onChange={(e) => { setRejectReason(e.target.value) }}
                     />
+                    <Typography textAlign="right">{rejectReason.length} / 500</Typography>
                     <Box textAlign="right" mt={2}>
-                        <Button onClick={handleClose}>Huỷ bỏ</Button>
-                        <Button onClick={handleSubmit}>Từ chối</Button>
+                        <Button onClick={handleClose} variant='outlined'>Huỷ bỏ</Button>
+                        <Button onClick={handleSubmit} variant='contained' sx={{ ml: 2 }}>Từ chối</Button>
                     </Box>
                     <LoadingComponent open={loading} setLoading={setLoading} />
                 </Box>

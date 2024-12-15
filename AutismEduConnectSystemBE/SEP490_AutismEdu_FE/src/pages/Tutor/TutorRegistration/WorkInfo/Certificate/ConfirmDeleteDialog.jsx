@@ -39,10 +39,10 @@ function ConfirmDeleteDialog({ certificate, setCertificate, index }) {
                     Bạn có muốn gỡ chứng chỉ này
                 </DialogTitle>
                 <DialogActions>
-                    <Button onClick={handleDelete}>Xoá</Button>
-                    <Button onClick={handleClose} autoFocus>
+                    <Button onClick={handleClose} autoFocus variant='outlined'>
                         Huỷ
                     </Button>
+                    <Button onClick={handleDelete} variant='contained' sx={{ ml: 2 }}>Xoá</Button>
                 </DialogActions>
             </Dialog>
         </React.Fragment>

@@ -108,6 +108,7 @@ const API_CODE = {
   API_CHANGE_STATUS_ETYPE: '/v1/ExerciseType/changeStatus/',
   API_CREATE_EXERICSE_TYPE: '/v1/ExerciseType',
   API_UPDATE_EXERCISE_TYPE: '/v1/ExerciseType/',
+  API_UPDATE_EXERCISE: '/v1/Exercise/',
 
   //Syllabus management
   API_CREATE_SYLLABUS: '/v1/Syllabus',

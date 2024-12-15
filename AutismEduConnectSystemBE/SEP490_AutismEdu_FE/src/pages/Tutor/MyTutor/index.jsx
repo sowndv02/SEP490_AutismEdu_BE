@@ -6,9 +6,10 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import services from '~/plugins/services';
 import PAGES from '~/utils/pages';
+import searchtutor from '~/assets/images/icon/searchtutor.gif'
 function MyTutor() {
     const [status, setStatus] = React.useState(1);
     const [listTutor, setListTutor] = React.useState([]);
@@ -63,6 +64,28 @@ function MyTutor() {
                         onClick={() => setStatus(2)}
                         sx={{ cursor: "pointer" }} />
                 </Box>
+                {
+                    (!listTutor || listTutor.length === 0) && status === 1 && (
+                        <Stack width="100%" alignItems="center" justifyContent="center" mt="100px">
+                            <Box sx={{ textAlign: "center" }}>
+                                <img src={searchtutor} style={{ height: "200px" }} />
+                                <Link to={PAGES.ROOT + PAGES.LISTTUTOR}>
+                                    <p style={{ color: "blue" }}>Tìm kiếm gia sư!</p>
+                                </Link>
+                            </Box>
+                        </Stack>
+                    )
+                }
+                {
+                    (!listTutor || listTutor.length === 0) && status === 2 && (
+                        <Stack width="100%" alignItems="center" justifyContent="center" mt="100px">
+                            <Box sx={{ textAlign: "center" }}>
+                                <img src={searchtutor} style={{ height: "200px" }} />
+                                <Typography>Không có dữ liệu!</Typography>
+                            </Box>
+                        </Stack>
+                    )
+                }
                 <Stack direction='row' mt={5} gap={5} flexWrap='wrap'>
                     {
                         listTutor && listTutor.length !== 0 && listTutor.map((l) => {
@@ -115,8 +138,8 @@ function MyTutor() {
                         )
                     }
                 </Box>
-            </Box>
-        </Stack>
+            </Box >
+        </Stack >
 
     )
 }

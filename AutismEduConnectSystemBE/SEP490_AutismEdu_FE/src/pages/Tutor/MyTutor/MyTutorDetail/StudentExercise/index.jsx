@@ -203,7 +203,11 @@ function StudentExcercise({ studentProfile }) {
                                 )
                             }
                         </Stack>
-                        <Box mx={'auto'} width={'90%'} dangerouslySetInnerHTML={{ __html: selectedExcercise.exercise.description }} />
+                        <Box mx={'auto'} width={'90%'} sx={{
+                            "& p": {
+                                whiteSpace: "break-spaces", wordBreak: 'break-word'
+                            }
+                        }} dangerouslySetInnerHTML={{ __html: selectedExcercise.exercise.description }} />
                     </DialogContent>
                     <Divider />
                     <DialogActions>

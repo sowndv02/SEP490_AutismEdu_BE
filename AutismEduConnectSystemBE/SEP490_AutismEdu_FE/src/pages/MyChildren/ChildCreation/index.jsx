@@ -202,8 +202,8 @@ function ChildCreation({ setChildren, setCurrentChild, currentChild }) {
                         </Grid>
                     </DialogContent>
                     <DialogActions>
+                        <Button onClick={handleClose} variant='outlined'>Huỷ</Button>
                         <Button variant='contained' type='submit'>Thêm</Button>
-                        <Button onClick={handleClose}>Huỷ</Button>
                     </DialogActions>
                 </form>
                 <LoadingComponent open={loading} />

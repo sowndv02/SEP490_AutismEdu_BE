@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Paper, Grid, Button, Divider, TextField, Dialog, DialogContent, DialogActions, IconButton, Stack } from '@mui/material';
 import services from '~/plugins/services';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { formatDate } from 'date-fns';
 
 function CertificateDetail() {
     const { id } = useParams();
@@ -65,14 +66,14 @@ function CertificateDetail() {
                     border: '1px solid #ddd',
                 }}
             >
-                {!certificate?.identityCardNumber ?<Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
+                {!certificate?.identityCardNumber ? <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
                     Chi tiết chứng chỉ
-                </Typography>:<Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
+                </Typography> : <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
                     Chi tiết căn cước công dân
                 </Typography>}
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={4}>
-                        <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Tên {!certificate?.identityCardNumber?'chứng chỉ':''}:</Typography>
+                        <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Tên {!certificate?.identityCardNumber ? 'chứng chỉ' : ''}:</Typography>
                     </Grid>
                     <Grid item xs={8}>
                         <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>{certificate.certificateName}</Typography>
@@ -89,7 +90,8 @@ function CertificateDetail() {
                         <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Ngày tạo:</Typography>
                     </Grid>
                     <Grid item xs={8}>
-                        <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>{new Date(certificate.createdDate).toLocaleDateString()}</Typography>
+
+                        <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>{certificate.createdDate ? formatDate(new Date(certificate.createdDate), "dd/MM/yyyy") : 'Chưa có'}</Typography>
                     </Grid>
 
                     <Grid item xs={4}>
@@ -97,7 +99,7 @@ function CertificateDetail() {
                     </Grid>
                     <Grid item xs={8}>
                         <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>
-                            {certificate.issuingDate ? new Date(certificate.issuingDate).toLocaleDateString() : 'Chưa có'}
+                            {certificate.issuingDate ? formatDate(new Date(certificate.issuingDate), "dd/MM/yyyy") : 'Chưa có'}
                         </Typography>
                     </Grid>
 
@@ -107,7 +109,7 @@ function CertificateDetail() {
                     </Grid>
                     <Grid item xs={8}>
                         <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>
-                            {certificate.expirationDate ? new Date(certificate.expirationDate).toLocaleDateString() : 'Hiện tại'}
+                            {certificate.expirationDate ? formatDate(new Date(certificate.expirationDate), "dd/MM/yyyy") : 'Hiện tại'}
                         </Typography>
                     </Grid>
 
@@ -144,7 +146,7 @@ function CertificateDetail() {
                         </Grid>
                     </Grid>
                     <Grid item xs={4}>
-                        <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Hình ảnh {!certificate?.identityCardNumber?'chứng chỉ':'căn cước'}:</Typography>
+                        <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Hình ảnh {!certificate?.identityCardNumber ? 'chứng chỉ' : 'căn cước'}:</Typography>
                     </Grid>
                     <Grid item xs={8}>
                         <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>{certificate?.certificateMedias?.length === 0 ? 'Không có hình ảnh' : `Hiện có ${certificate?.certificateMedias?.length} hình ảnh`}</Typography>

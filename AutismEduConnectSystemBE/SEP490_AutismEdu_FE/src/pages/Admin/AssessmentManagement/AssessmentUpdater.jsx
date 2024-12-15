@@ -161,8 +161,8 @@ function AssessmentUpdater({ open, setOpen, currentAsssesment, assessments, setA
                     </TableContainer>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpen(false)}>Đóng</Button>
-                    <Button onClick={handleUpdate}>Cập nhật</Button>
+                    <Button onClick={() => setOpen(false)} variant='outlined'>Đóng</Button>
+                    <Button onClick={handleUpdate} variant='contained'>Cập nhật</Button>
                 </DialogActions>
                 <LoadingComponent open={loading} />
             </Dialog >

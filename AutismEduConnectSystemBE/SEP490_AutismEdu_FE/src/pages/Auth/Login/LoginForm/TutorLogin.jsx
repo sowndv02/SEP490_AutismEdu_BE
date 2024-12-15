@@ -112,7 +112,7 @@ function TutorLogin() {
                             </Typography>
                         </Box>
                     </Link>
-                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>AutismEdu Xin Chào! 👋</Typography>
+                    <Typography variant='h5' sx={{ color: "text.secondary", mt: "20px" }}>AutismEdu Xin Chào Gia Sư! 👋</Typography>
                     <Typography sx={{ mt: "10px" }}>Vui lòng đăng nhập vào tài khoản của bạn và khám phá dịch vụ của chúng tôi</Typography>
                     <Box mt="30px">
                         <FormControl sx={{ ...INPUT_CSS }} variant="outlined">
@@ -181,6 +181,7 @@ function TutorLogin() {
                     </LoadingButton>
 
                     <Typography sx={{ textAlign: "center", mt: "20px" }}>Bạn chưa có tài khoản? <Link to={PAGES.TUTORREGISTRATION} style={{ color: "#666cff" }}>Tạo tài khoản mới</Link></Typography>
+                    <Typography sx={{ textAlign: "center", mt: "20px" }}>Đăng nhập với vai trò khác. <Link to={PAGES.ROOT + PAGES.LOGIN_OPTION} style={{ color: "#666cff" }}>Quay trở lại</Link></Typography>
                 </CardContent>
             </Card>
         </Box>
