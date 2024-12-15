@@ -163,7 +163,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 if (newModel.ExpirationDate == DateTime.MinValue || string.IsNullOrEmpty(newModel.ExpirationDate?.ToString())) newModel.ExpirationDate = null;
                 newModel.SubmitterId = userId;
 
-                var certificateExtist = await _certificateRepository.GetAllNotPagingAsync(x => x.CertificateName.Equals(newModel.CertificateName));
+                var certificateExtist = await _certificateRepository.GetAllNotPagingAsync(x => x.CertificateName.Equals(newModel.CertificateName) && !x.IsDeleted && x.RequestStatus != SD.Status.REJECT);
                 if (certificateExtist.list.Any())
                 {
                     _response.IsSuccess = false;

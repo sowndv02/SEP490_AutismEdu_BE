@@ -38,6 +38,10 @@ namespace AutismEduConnectSystem.Repository
             {
                 query = query.Where(filterName);
             }
+            if (filterOther != null)
+            {
+                query = query.Where(filterOther);
+            }
             if (orderBy != null)
             {
                 if (isDesc)

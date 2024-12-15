@@ -255,7 +255,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                 bool isDesc = sort != null && sort == SD.ORDER_DESC;
                 if (!string.IsNullOrEmpty(search))
                 {
-                    filter = u => !string.IsNullOrEmpty(u.Email) && !string.IsNullOrEmpty(u.FullName) && (u.Email.ToLower().Contains(search.ToLower()) && u.FullName.ToLower().Contains(search.ToLower()));
+                    filter = u => !string.IsNullOrEmpty(u.Email) && !string.IsNullOrEmpty(u.FullName) && ((u.Email.ToLower().Contains(search.ToLower()) || u.FullName.ToLower().Contains(search.ToLower())));
                 }
 
                 if (orderBy != null)

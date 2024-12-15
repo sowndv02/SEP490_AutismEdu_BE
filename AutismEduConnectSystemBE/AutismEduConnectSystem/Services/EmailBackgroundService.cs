@@ -26,7 +26,9 @@ namespace AutismEduConnectSystem.Services
         {
             new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "khaidqhe163770@fpt.edu.vn", Password = "iyrdweksgcrjokhw" },
             new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "sendotp1234@gmail.com", Password = "ifeahpwziexwuuqo" },
-            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "daoson03112002@gmail.com", Password = "ltowrdscqqcafmyu" }
+            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "daoson03112002@gmail.com", Password = "ltowrdscqqcafmyu" },
+            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "vuanh957@gmail.com", Password = "aoez sgyk fius ecjj" },
+            new EmailAccount { Host = "smtp.gmail.com", Port = 587, Username = "tutor11.work@gmail.com", Password = "dhes nhlp ftsg vlhu" }
         };
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

@@ -22,7 +22,7 @@
         public const string IMAGE_DEFAULT_AVATAR_NAME = "default-avatar.png";
         public const string URL_FE_LOCAL = "http://localhost:5173";
         public const string URL_FE = "http://20.205.21.17";
-        public const string URL_FE_TUTOR_REGISTRATION_REQUEST = "/autismedu/tutor-registration";
+        public const string URL_FE_TUTOR_REGISTRATION_REQUEST = "/autismtutor/tutor-registration";
         public const string URL_FE_FULL = "/autismedu";
         public const string URL_FE_TUTOR_LOGIN = "/autismtutor/tutor-login";
         public const string URL_IMAGE_DEFAULT_BLOB = "https://sep490g50v1.blob.core.windows.net/logos-public/default-avatar.png";
@@ -165,6 +165,8 @@
         public const string MAX_SCORE = "Điểm đánh giá tối đa";
         public const string MIN_SCORE = "Điểm đánh giá tối thiểu";
         public const string HIDE = "ẩn";
+        public const string BEEN_APPROVE = "được chấp thuận";
+        public const string BEEN_REJECT = "bị từ chối";
 
 
 
@@ -223,6 +225,7 @@
         public const string ASSIGNED_EXERCISE_NOTIFICATION = "ASSIGNED_EXERCISE_NOTIFICATION";
         public const string SCHEDULE_UPDATE_NOTIFICATION = "SCHEDULE_UPDATE_NOTIFICATION";
         public const string EXERCISE_NOT_ASSIGNED_NOTIFICATION = "EXERCISE_NOT_ASSIGNED_NOTIFICATION";
+        public const string REPORT_HANDLE = "REPORT_HANDLE";
 
 
         // DTO require message
