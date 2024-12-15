@@ -392,7 +392,7 @@ namespace AutismEduConnectSystem.Controllers.v1
                     return StatusCode((int)HttpStatusCode.Forbidden, _response);
                 }
 
-                Expression<Func<Certificate, bool>> filter = u => (u.TutorRegistrationRequestId <= 0 || u.TutorRegistrationRequestId == null) && u.SubmitterId != null ;
+                Expression<Func<Certificate, bool>> filter = u => u.SubmitterId != null;
                 Expression<Func<Certificate, object>> orderByQuery = u => true;
 
                 if (userRoles.Contains(SD.TUTOR_ROLE))
