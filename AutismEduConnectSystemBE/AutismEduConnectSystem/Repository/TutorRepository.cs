@@ -98,7 +98,7 @@ namespace AutismEduConnectSystem.Repository
                     AvgScore = g.Average(r => r.RateScore),
                     TotalReview = g.Count() // Use g.Count() to get the total review count
                 })
-                .Where(x => x.AvgScore == 5)
+                .Where(x => x.AvgScore > 0)
                 .ToListAsync();
 
                 // Now filter the tutors based on the reviews in memory

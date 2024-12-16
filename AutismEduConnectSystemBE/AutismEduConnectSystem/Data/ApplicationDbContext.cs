@@ -584,36 +584,6 @@ namespace AutismEduConnectSystem.Data
                         ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_25,
                         SubmitterId = adminUser.Id,
                         IsHide = false
-                    },
-                    new ExerciseType
-                    {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_26,
-                        SubmitterId = adminUser.Id,
-                        IsHide = false
-                    },
-                    new ExerciseType
-                    {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_27,
-                        SubmitterId = adminUser.Id,
-                        IsHide = false
-                    },
-                    new ExerciseType
-                    {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_28,
-                        SubmitterId = adminUser.Id,
-                        IsHide = false
-                    },
-                    new ExerciseType
-                    {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_29,
-                        SubmitterId = adminUser.Id,
-                        IsHide = false
-                    },
-                    new ExerciseType
-                    {
-                        ExerciseTypeName = SD.DEFAULT_EXERCISE_TYPE_30,
-                        SubmitterId = adminUser.Id,
-                        IsHide = false
                     }
                 );
 
@@ -1367,7 +1337,7 @@ namespace AutismEduConnectSystem.Data
                         {
                             QuestionId = 14,
                             OptionText = "Trí thông minh không bình thường ở mức độ nhẹ: Trẻ không thông minh như những trẻ bình thường cùng lứa tuổi; kỹ năng hơi chậm trên các lĩnh vực.",
-                            Point = 2,
+                            Point = 3,
                             CreatedDate = DateTime.Now,
                             UpdatedDate = DateTime.Now
                         },
