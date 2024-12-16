@@ -277,17 +277,17 @@
         public const string DEFAULT_EXERCISE_TYPE_17 = "Những tiếng nói đầu tiên - câu hỏi";
         public const string DEFAULT_EXERCISE_TYPE_18 = "Những tiếng nói đầu tiên - cấu trúc câu";
         public const string DEFAULT_EXERCISE_TYPE_19 = "Lắng nghe - Chú ý";
-        public const string DEFAULT_EXERCISE_TYPE_20 = "Bắt chước";
-        public const string DEFAULT_EXERCISE_TYPE_21 = "Chơi với các quyển sách tranh";
-        public const string DEFAULT_EXERCISE_TYPE_22 = "Đáp lại lời nói của người khác";
-        public const string DEFAULT_EXERCISE_TYPE_23 = "Lời nói ban đầu - Giao tiếp";
-        public const string DEFAULT_EXERCISE_TYPE_24 = "Những lời nói đầu tiên - sử dụng các khái niệm nhận thức";
-        public const string DEFAULT_EXERCISE_TYPE_25 = "Những tiếng nói đầu tiên - Câu hỏi";
-        public const string DEFAULT_EXERCISE_TYPE_26 = "Những tiếng nói đầu tiên - Cấu trúc câu";
-        public const string DEFAULT_EXERCISE_TYPE_27 = "Lắng nghe - Chú ý";
-        public const string DEFAULT_EXERCISE_TYPE_28 = "Bắt chước";
-        public const string DEFAULT_EXERCISE_TYPE_29 = "Trò chơi và sách tranh";
-        public const string DEFAULT_EXERCISE_TYPE_30 = "Đáp ứng ngôn ngữ";
+        //public const string DEFAULT_EXERCISE_TYPE_20 = "Bắt chước";
+        public const string DEFAULT_EXERCISE_TYPE_20 = "Chơi với các quyển sách tranh";
+        public const string DEFAULT_EXERCISE_TYPE_21 = "Đáp lại lời nói của người khác";
+        public const string DEFAULT_EXERCISE_TYPE_22 = "Lời nói ban đầu - Giao tiếp";
+        public const string DEFAULT_EXERCISE_TYPE_23 = "Những lời nói đầu tiên - sử dụng các khái niệm nhận thức";
+        //public const string DEFAULT_EXERCISE_TYPE_25 = "Những tiếng nói đầu tiên - Câu hỏi";
+        //public const string DEFAULT_EXERCISE_TYPE_26 = "Những tiếng nói đầu tiên - Cấu trúc câu";
+        //public const string DEFAULT_EXERCISE_TYPE_27 = "Lắng nghe - Chú ý";
+        //public const string DEFAULT_EXERCISE_TYPE_28 = "Bắt chước";
+        public const string DEFAULT_EXERCISE_TYPE_24 = "Trò chơi và sách tranh";
+        public const string DEFAULT_EXERCISE_TYPE_25 = "Đáp ứng ngôn ngữ";
 
         // enum status
         public enum Status
