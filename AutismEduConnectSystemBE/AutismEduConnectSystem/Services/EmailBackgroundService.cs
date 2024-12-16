@@ -99,7 +99,7 @@ namespace AutismEduConnectSystem.Services
                             IsBodyHtml = true
                         };
                         mailMessage.To.Add(email.Email);
-
+                        Console.WriteLine(email.Message);
                         await smtpClient.SendMailAsync(mailMessage);
                         Console.WriteLine($"Email sent to {email.Email} using account {account.Username}");
                         email.SendFirstTime = true;

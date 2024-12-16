@@ -44,7 +44,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins(SD.URL_FE, SD.URL_FE_LOCAL, "http://autismeduconnect.online")
+            builder.WithOrigins(SD.URL_FE, SD.URL_FE_LOCAL, SD.URL_FE_IP)
                    .SetIsOriginAllowedToAllowWildcardSubdomains()
                    .AllowAnyHeader()
                    .AllowAnyMethod()
