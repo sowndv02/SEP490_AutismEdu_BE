@@ -426,6 +426,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                             item.SubmitterId = tutor.TutorId;
                             await _curriculumRepository.UpdateAsync(item);
                         }
+
+                        var rejectedCuriculums = model.Curriculums.Where(x => x.RequestStatus == Status.REJECT).ToList();
+                        foreach (var rejectedcuriculums in rejectedCuriculums)
+                        {
+                            rejectedcuriculums.RequestStatus = Status.REJECT;
+                            rejectedcuriculums.SubmitterId = tutor.TutorId;
+                            rejectedcuriculums.ApprovedId = userId;
+                            rejectedcuriculums.UpdatedDate = DateTime.Now;
+                            await _curriculumRepository.UpdateAsync(rejectedcuriculums);
+                        }
                     }
 
                     // Update status certificate except certificate have status is reject
@@ -439,6 +449,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                             cert.ApprovedId = userId;
                             cert.UpdatedDate = DateTime.Now;
                             await _certificateRepository.UpdateAsync(cert);
+                        }
+
+                        var rejectedCertificate = model.Certificates.Where(x => x.RequestStatus == Status.REJECT).ToList();
+                        foreach (var rejectedCert in rejectedCertificate)
+                        {
+                            rejectedCert.RequestStatus = Status.REJECT;
+                            rejectedCert.SubmitterId = tutor.TutorId;
+                            rejectedCert.ApprovedId = userId;
+                            rejectedCert.UpdatedDate = DateTime.Now;
+                            await _certificateRepository.UpdateAsync(rejectedCert);
                         }
                     }
 
@@ -454,6 +474,16 @@ namespace AutismEduConnectSystem.Controllers.v1
                             workExperience.IsActive = true;
                             workExperience.UpdatedDate = DateTime.Now;
                             await _workExperienceRepository.UpdateAsync(workExperience);
+                        }
+
+                        var rejectedworkExperiences = model.WorkExperiences.Where(x => x.RequestStatus == Status.REJECT).ToList();
+                        foreach (var rejectedworkExperience in rejectedworkExperiences)
+                        {
+                            rejectedworkExperience.RequestStatus = Status.REJECT;
+                            rejectedworkExperience.SubmitterId = tutor.TutorId;
+                            rejectedworkExperience.ApprovedId = userId;
+                            rejectedworkExperience.UpdatedDate = DateTime.Now;
+                            await _workExperienceRepository.UpdateAsync(rejectedworkExperience);
                         }
                     }
 
