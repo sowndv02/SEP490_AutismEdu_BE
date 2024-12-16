@@ -1,7 +1,6 @@
-import { Box, Button, FormHelperText, IconButton, Modal, Typography } from '@mui/material'
-import React, { useEffect, useRef, useState } from 'react'
 import UploadIcon from '@mui/icons-material/Upload';
-import PermMediaIcon from '@mui/icons-material/PermMedia';
+import { Box, Button, FormHelperText, Modal } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 import ReactCrop, { centerCrop, convertToPixelCrop, makeAspectCrop } from 'react-image-crop';
 
 const ASPECT_RATIO = 3 / 4;
@@ -93,7 +92,7 @@ function ModalUploadAvatar({ setAvatar }) {
         const crop = makeAspectCrop(
             {
                 unit: "%",
-                width: cropWidthInPercent,
+                width: cropWidthInPercent
             },
             ASPECT_RATIO,
             width,

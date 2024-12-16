@@ -50,7 +50,6 @@ function StudentCreation() {
     }, [selectedRequest])
     const handleGetParent = async () => {
         if (email.current.value === "") {
-            console.log("zoday");
             setEmailError("Vui lòng nhập tài khoản của phụ huynh!");
             return;
         }
@@ -86,7 +85,6 @@ function StudentCreation() {
         setParent(null);
         setChildren([]);
         setSelectedRequest("");
-        // setInitialCondition('');
         setAvatar(null)
     };
     const handleGetChildren = async (id) => {

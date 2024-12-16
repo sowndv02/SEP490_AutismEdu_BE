@@ -279,7 +279,7 @@ function CertificateManagement() {
             {certificateList.length === 0 ?
                 <Box sx={{ textAlign: "center" }}>
                     <img src={emptyBook} style={{ height: "200px" }} />
-                    <Typography>Hiện không có lịch sử giao dịch nào!</Typography>
+                    <Typography>Hiện không có chứng chỉ nào!</Typography>
                 </Box>
                 : <Box>
                     <TableContainer component={Paper} sx={{ mt: 3, boxShadow: 3, borderRadius: 2 }}>
@@ -323,7 +323,7 @@ function CertificateManagement() {
                                                 {statusText(certificate?.requestStatus)}
                                             </Button>
                                         </TableCell>
-                                        <TableCell>{certificate?.feedback || 'Chưa có phản hồi'}</TableCell>
+                                        <TableCell>{certificate?.rejectionReason || 'Chưa có phản hồi'}</TableCell>
                                         <TableCell>
                                             <IconButton color="primary" aria-label="xem chi tiết" onClick={() => handleViewDetail(certificate.id)}>
                                                 <VisibilityIcon />

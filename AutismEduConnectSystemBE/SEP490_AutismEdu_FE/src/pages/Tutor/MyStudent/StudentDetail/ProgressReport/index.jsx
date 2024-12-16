@@ -329,6 +329,7 @@ function ProgressReport({ studentProfile }) {
                                 <Typography>Đến</Typography>
                                 <TextField type='date' value={endDate}
                                     onChange={(e) => { setEndDate(e.target.value) }} />
+                                <Typography>(Theo ngày bắt đầu)</Typography>
                             </Stack>
                         </Stack>
                     )

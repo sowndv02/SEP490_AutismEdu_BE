@@ -103,16 +103,20 @@ function CertificateDetail() {
                         </Typography>
                     </Grid>
 
-
-                    <Grid item xs={4}>
-                        <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Ngày hết hạn:</Typography>
-                    </Grid>
-                    <Grid item xs={8}>
-                        <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>
-                            {certificate.expirationDate ? formatDate(new Date(certificate.expirationDate), "dd/MM/yyyy") : 'Hiện tại'}
-                        </Typography>
-                    </Grid>
-
+                    {
+                        certificate?.expirationDate && (
+                            <>
+                                <Grid item xs={4}>
+                                    <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Ngày hết hạn:</Typography>
+                                </Grid>
+                                <Grid item xs={8}>
+                                    <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>
+                                        {certificate?.expirationDate && formatDate(new Date(certificate.expirationDate), "dd/MM/yyyy")}
+                                    </Typography>
+                                </Grid>
+                            </>
+                        )
+                    }
 
                     <Grid item xs={4}>
                         <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Trạng thái:</Typography>
@@ -135,7 +139,7 @@ function CertificateDetail() {
                         </Grid>
                         <Grid item xs={8}>
                             <TextField
-                                value={certificate.feedback || 'Không có phản hồi'}
+                                value={certificate?.rejectionReason || 'Không có phản hồi'}
                                 fullWidth
                                 multiline
                                 readOnly

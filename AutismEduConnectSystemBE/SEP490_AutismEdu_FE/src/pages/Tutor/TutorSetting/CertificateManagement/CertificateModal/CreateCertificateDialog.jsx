@@ -42,8 +42,8 @@ export default function CreateCertificateDialog({ open, onClose, certificateData
             setLoading(true);
             const formData = new FormData();
 
-            formData.append('CertificateName', certificateData.CertificateName);
-            formData.append('IssuingInstitution', certificateData.IssuingInstitution);
+            formData.append('CertificateName', certificateData.CertificateName.trim());
+            formData.append('IssuingInstitution', certificateData.IssuingInstitution.trim());
             formData.append('IdentityCardNumber', certificateData.IdentityCardNumber);
             formData.append('IssuingDate', certificateData.IssuingDate);
             formData.append('ExpirationDate', certificateData.ExpirationDate);
@@ -97,7 +97,14 @@ export default function CreateCertificateDialog({ open, onClose, certificateData
             CertificateName: Yup.string().required('Tên chứng chỉ là bắt buộc').max(150, 'Tên chứng chỉ không được vượt quá 150 ký tự'),
             IssuingInstitution: Yup.string().required('Nơi cấp là bắt buộc').max(100, 'Nơi cấp không được vượt quá 100 ký tự'),
             IssuingDate: Yup.date().required('Ngày cấp là bắt buộc'),
-            ExpirationDate: Yup.date().nullable(),
+            ExpirationDate: Yup.date().nullable().test(
+                'is-greater',
+                'Ngày hết hạn phải lớn hơn ngày cấp',
+                function (value) {
+                    const { IssuingDate } = this.parent;
+                    return !value || new Date(value) > new Date(IssuingDate);
+                }
+            ),
             Medias: Yup.array()
                 .min(1, 'Phải có ít nhất một ảnh')
                 .max(5, 'Không được tải lên quá 5 ảnh'),
@@ -113,11 +120,11 @@ export default function CreateCertificateDialog({ open, onClose, certificateData
         const { name, value } = event.target;
         const text = ['CertificateName', 'IssuingInstitution'];
 
-        const updatedValue = text.includes(name) ? value.trim() : value;
+        const updatedValue = value;
 
         setCertificateData({
             ...certificateData,
-            [name]: updatedValue,
+            [name]: updatedValue
         });
 
         formik.setFieldValue(name, updatedValue);

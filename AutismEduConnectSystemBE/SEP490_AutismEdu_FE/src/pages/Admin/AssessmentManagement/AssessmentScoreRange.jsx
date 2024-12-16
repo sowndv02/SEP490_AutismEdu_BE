@@ -1,17 +1,16 @@
-import { Button, IconButton, Paper, Typography } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { IconButton, Paper, Typography } from '@mui/material';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import ScoreRangeCreation from './ScoreRangeCreation';
-import { useEffect, useState } from 'react';
-import services from '~/plugins/services';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import { enqueueSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
 import ConfirmDialog from '~/components/ConfirmDialog';
+import services from '~/plugins/services';
+import ScoreRangeCreation from './ScoreRangeCreation';
 import ScoreRangeUpdate from './ScoreRangeUpdate';
 function AssessmentScoreRange() {
     const [scoreRanges, setScoreRanges] = useState([]);
@@ -101,6 +100,7 @@ function AssessmentScoreRange() {
                                                 onClick={() => { setOpenConfirm(true); setCurrentItem(s) }}
                                             ><DeleteIcon /></IconButton>
                                             <ScoreRangeUpdate currentScoreRange={s} scoreRanges={scoreRanges}
+                                                currentIndex={index}
                                                 setScoreRanges={setScoreRanges} />
                                         </TableCell>
                                     </TableRow>

@@ -19,9 +19,6 @@ export default function SyllabusAssign({ handleBack, selectedAssign, setListSyll
 
     const [ageFrom, setAgeFrom] = useState(selectedAssign?.ageFrom ?? null);
     const [ageEnd, setAgeEnd] = useState(selectedAssign?.ageEnd ?? null);
-    console.log(selectedList);
-    console.log(selectedClone);
-    console.log(selectedAssign);
 
     useEffect(() => {
         handleGetAllExerciseType();
@@ -133,8 +130,6 @@ export default function SyllabusAssign({ handleBack, selectedAssign, setListSyll
                     "exerciseIds": s?.exercises?.map((e) => e.id)
                 };
             })
-            console.log(trans);
-            console.log(transferObject);
             setSelectedList(trans);
             setSelectedClone(transferObject);
         }

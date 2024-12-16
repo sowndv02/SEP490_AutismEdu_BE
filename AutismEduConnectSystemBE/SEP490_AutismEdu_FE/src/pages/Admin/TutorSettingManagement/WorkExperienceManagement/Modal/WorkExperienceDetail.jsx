@@ -86,17 +86,18 @@ const WorkExperienceDetail = ({ open, onClose, workExperience }) => {
                                     : 'Không có'}
                             </Typography>
                         </Grid>
-
-                        <Grid item xs={4}>
-                            <Typography sx={{ fontWeight: 'bold', textAlign: 'right' }}>Thời gian kết thúc:</Typography>
-                        </Grid>
-                        <Grid item xs={8}>
-                            <Typography>
-                                {workExperience.endDate
-                                    ? formatDate(new Date(workExperience.endDate), "dd/MM/yyyy")
-                                    : 'Không có'}
-                            </Typography>
-                        </Grid>
+                        {workExperience?.endDate && (
+                            <>
+                                <Grid item xs={4}>
+                                    <Typography sx={{ fontWeight: 'bold', textAlign: 'right' }}>Thời gian kết thúc:</Typography>
+                                </Grid>
+                                <Grid item xs={8}>
+                                    <Typography>
+                                        {workExperience?.endDate && formatDate(new Date(workExperience?.endDate), "dd/MM/yyyy")}
+                                    </Typography>
+                                </Grid>
+                            </>
+                        )}
 
                         <Grid item xs={4}>
                             <Typography sx={{ fontWeight: 'bold', textAlign: 'right' }}>Trạng thái:</Typography>

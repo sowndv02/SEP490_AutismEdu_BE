@@ -4,6 +4,7 @@ import services from '~/plugins/services';
 import LoadingComponent from '~/components/LoadingComponent';
 import emptyBook from '~/assets/images/icon/emptybook.gif'
 import { formatDate } from 'date-fns';
+import { enqueueSnackbar } from 'notistack';
 
 const TutorRequestHistory = () => {
 
@@ -39,6 +40,7 @@ const TutorRequestHistory = () => {
           setPagination(res?.pagination);
         }
       }, (error) => {
+        enqueueSnackbar(error.error[0], { variant: 'error' });
         console.log(error);
       }, {
         status: filters.status,

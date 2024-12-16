@@ -5,12 +5,14 @@ import * as Yup from 'yup';
 
 const RejectRequestModal = ({ open, onClose, onConfirm }) => {
     const validationSchema = Yup.object().shape({
-        reason: Yup.string()
+        reason: Yup.string().trim()
             .required('Lý do không được để trống')
             .min(5, 'Lý do phải có ít nhất 5 ký tự')
             .max(500, 'Không được nhập quá 500 ký tự'),
         rejectType: Yup.string().required('Loại từ chối không được để trống'),
     });
+
+    const maxLength = 500;
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -22,7 +24,7 @@ const RejectRequestModal = ({ open, onClose, onConfirm }) => {
                     initialValues={{ rejectType: 1, reason: '' }}
                     validationSchema={validationSchema}
                     onSubmit={(values) => {
-                        onConfirm(values);
+                        onConfirm({ ...values, reason: values?.reason?.trim() });
                         onClose();
                     }}
                 >
@@ -75,6 +77,13 @@ const RejectRequestModal = ({ open, onClose, onConfirm }) => {
                                         error={touched.reason && Boolean(errors.reason)}
                                         helperText={touched.reason && errors.reason}
                                     />
+                                    <Typography
+                                        variant="body2"
+                                        color={values?.reason?.trim()?.length > maxLength ? 'error' : 'textSecondary'}
+                                        sx={{ mt: 1, textAlign: 'right' }}
+                                    >
+                                        {`${values?.reason?.trim()?.length} / ${maxLength} ký tự`}
+                                    </Typography>
                                 </Grid>
                             </Grid>
                             <DialogActions>

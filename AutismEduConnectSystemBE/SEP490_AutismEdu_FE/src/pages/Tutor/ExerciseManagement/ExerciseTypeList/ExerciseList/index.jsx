@@ -194,7 +194,7 @@ function ExerciseList({ selectedExerciseType, setShowExerciseList }) {
                         <TableBody>
                             {exercises.map((exercise, index) => (
                                 <TableRow key={exercise.id} hover>
-                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>{index + 1 + (pagination?.pageNumber - 1) * pagination?.pageSize}</TableCell>
                                     <TableCell
                                         onClick={() => handleOpenDialog(exercise.description)}
                                         sx={{ maxWidth: '350px' }}

@@ -122,8 +122,8 @@ function TutorRequestModal({ rejectChildIds, tutorId, calculateAge }) {
                 handleClose();
             }, (error) => {
                 // if (error?.code === 400) {
-                    enqueueSnackbar(error.error[0], { variant: "error" });
-                    handleClose();
+                enqueueSnackbar(error.error[0], { variant: "error" });
+                handleClose();
                 // }
             });
         } catch (error) {
@@ -135,11 +135,10 @@ function TutorRequestModal({ rejectChildIds, tutorId, calculateAge }) {
 
     const validationSchema = Yup.object({
         note: Yup.string()
-            .trim('Không được để trống hoặc chứa toàn khoảng trắng')
-            .strict()
+            .trim()
             .min(10, 'Phải nhập tối thiểu 10 ký tự')
             .max(1000, 'Không được nhập quá 1000 ký tự')
-            .required('Vui lòng nhập ghi chú')
+            .required('Vui lòng nhập tình trạng')
     });
 
     const formatDate = (dateString) => {
@@ -278,8 +277,8 @@ function TutorRequestModal({ rejectChildIds, tutorId, calculateAge }) {
                                                         fullWidth
                                                     />
                                                     <Box textAlign="right">
-                                                        <Typography variant="caption" color={values.note.length > 1000 ? 'error' : 'textSecondary'}>
-                                                            {`${values.note.length}/1000`}
+                                                        <Typography variant="caption" color={values?.note?.trim()?.length > 1000 ? 'error' : 'textSecondary'}>
+                                                            {`${values?.note?.trim()?.length}/1000`}
                                                         </Typography>
                                                     </Box>
                                                     <Box mt={3} display="flex" justifyContent="right">

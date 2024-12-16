@@ -13,7 +13,7 @@ function ExerciseCreation({ setExercises, exerciseType, open, handleClose }) {
 
     const toolbarOptions = [
         ['bold', 'italic', 'underline', 'strike'],
-        ['blockquote', 'code-block'],
+        ['blockquote'],
         ['link', 'formula'],
         [{ 'header': 1 }, { 'header': 2 }],
         [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
@@ -31,8 +31,6 @@ function ExerciseCreation({ setExercises, exerciseType, open, handleClose }) {
     const validationSchema = Yup.object({
         exerciseName: Yup.string()
             .required("Tên bài tập là bắt buộc")
-            .trim('Không được để trống hoặc chứa toàn khoảng trắng')
-            .strict()
             .min(3, "Tên bài tập phải có ít nhất 3 ký tự")
             .max(150, "Không được vượt quá 150 ký tự"),
         description: Yup.string()
@@ -65,11 +63,11 @@ function ExerciseCreation({ setExercises, exerciseType, open, handleClose }) {
             try {
                 setLoading(true);
                 const exerciseData = {
-                    ...values,
+                    exerciseName: values?.exerciseName?.trim(),
+                    description: values.description,
                     exerciseTypeId: exerciseType?.id,
                     originalId: 0
                 };
-                console.log(exerciseData);
 
                 await services.ExerciseManagementAPI.createExercise(exerciseData, (res) => {
                     if (res?.result) {

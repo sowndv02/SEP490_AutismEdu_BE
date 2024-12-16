@@ -19,10 +19,12 @@ const style = {
     p: 4
 };
 
-export default function ScoreRangeUpdate({ scoreRanges, setScoreRanges, currentScoreRange }) {
+export default function ScoreRangeUpdate({ scoreRanges, setScoreRanges, currentScoreRange, currentIndex }) {
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
+    const [maxTotal, setMaxTotal] = React.useState(0);
+    const [minTotal, setMinTotal] = React.useState(0);
     const validate = values => {
         const errors = {}
         if (!values.description) {
@@ -39,6 +41,27 @@ export default function ScoreRangeUpdate({ scoreRanges, setScoreRanges, currentS
         }
         return errors
     }
+
+    React.useEffect(() => {
+        if (open) {
+            const getAssessments = async () => {
+                try {
+                    await services.AssessmentManagementAPI.listAssessment(
+                        (res) => {
+                            setMaxTotal(res.result.questions.length * 4);
+                            setMinTotal(res.result.questions.length);
+                        },
+                        (err) => {
+                            console.log(err);
+                        }
+                    );
+                } catch (error) {
+                    console.log(error);
+                }
+            };
+            getAssessments();
+        }
+    }, [open]);
     const formik = useFormik({
         initialValues: {
             description: '',
@@ -47,8 +70,9 @@ export default function ScoreRangeUpdate({ scoreRanges, setScoreRanges, currentS
         }, validate,
         onSubmit: async (values) => {
             if (scoreRanges && scoreRanges.length !== 0) {
-                const existSR = scoreRanges.find((s) => {
-                    return s.minScore === values.minScore && s.maxScore === values.maxScore;
+                const existSR = scoreRanges.find((s, index) => {
+                    return s.minScore === values.minScore && s.maxScore === values.maxScore
+                        && currentIndex !== index;
                 })
                 if (existSR) {
                     enqueueSnackbar("Đã tồn tại khung điểm này", { variant: "error" });
@@ -133,8 +157,8 @@ export default function ScoreRangeUpdate({ scoreRanges, setScoreRanges, currentS
                                     type='Number'
                                     sx={{ width: "70%" }}
                                     inputProps={{
-                                        min: 0,
-                                        max: 500
+                                        min: minTotal,
+                                        max: maxTotal
                                     }}
                                 />
                             </Stack>
@@ -147,8 +171,8 @@ export default function ScoreRangeUpdate({ scoreRanges, setScoreRanges, currentS
                                     type='Number'
                                     sx={{ width: "70%" }}
                                     inputProps={{
-                                        min: 0,
-                                        max: 500
+                                        min: minTotal,
+                                        max: maxTotal
                                     }}
                                 />
                             </Stack>

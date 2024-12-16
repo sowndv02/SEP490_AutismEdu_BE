@@ -320,6 +320,7 @@ function TutorHeader({ openMenu, setOpenMenu }) {
         Cookies.remove("refresh_token");
         dispatch(setTutorInformation(null));
         dispatch(setPackagePayment(null));
+        setNotifications([]);
         nav(PAGES.TUTOR_LOGIN)
     };
 

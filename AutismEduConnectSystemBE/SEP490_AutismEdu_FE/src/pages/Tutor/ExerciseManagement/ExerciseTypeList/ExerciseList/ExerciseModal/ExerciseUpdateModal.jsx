@@ -14,7 +14,7 @@ function ExerciseUpdateModal({ exercises, setExercises, openEditDialog, handleCl
 
     const toolbarOptions = [
         ['bold', 'italic', 'underline', 'strike'],
-        ['blockquote', 'code-block'],
+        ['blockquote'],
         ['link', 'formula'],
         [{ 'header': 1 }, { 'header': 2 }],
         [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
@@ -36,8 +36,6 @@ function ExerciseUpdateModal({ exercises, setExercises, openEditDialog, handleCl
 
     const validationSchema = Yup.object({
         exerciseName: Yup.string()
-            .trim('Không được để trống hoặc chứa toàn khoảng trắng')
-            .strict()
             .required("Tên bài tập là bắt buộc")
             .min(3, "Tên bài tập phải có ít nhất 3 ký tự")
             .max(150, "Không được vượt quá 150 ký tự"),

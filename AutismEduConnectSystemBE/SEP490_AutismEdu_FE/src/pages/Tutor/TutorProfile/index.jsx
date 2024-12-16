@@ -318,7 +318,7 @@ function TutorProfile() {
                                                         <Box>
                                                             <Typography variant='h6' fontSize={'medium'}>{cer.certificateName}</Typography>
                                                             <Typography variant='body1'>Cơ quan phát hành: {cer.issuingInstitution}</Typography>
-                                                            <Typography variant='body1'>Từ ngày {formatDateCer(cer.issuingDate)} {cer?.expirationDate ? `đến ${formatDateCer(cer?.expirationDate)}` : 'đến hiện tại'}</Typography>
+                                                            {/* <Typography variant='body1'>Từ ngày {formatDateCer(cer.issuingDate)} {cer?.expirationDate ? `đến ${formatDateCer(cer?.expirationDate)}` : 'đến hiện tại'}</Typography> */}
                                                         </Box>
                                                     </Box>
                                                 ))

@@ -46,12 +46,20 @@ const WorkExperienceCreation = ({ open, onClose, workExperienceList, setWorkExpe
                 .required("Tên công ty không được để trống").max(150, 'Tên công ty không được vượt quá 150 ký tự'),
             position: Yup.string()
                 .required("Chức vụ không được để trống").max(100, 'Tên chức vụ không được vượt quá 100 ký tự'),
-                startDate: Yup.date()
+            startDate: Yup.date()
                 .required("Không được để trống")
                 .min(getMinDate(), `Thời gian bắt đầu phải sau ${getMinDate()?.split('-')?.reverse()?.join('-')}`)
                 .max(getCurrentDate(), `Thời gian bắt đầu không được sau ${getCurrentDate()}`),
             endDate: Yup.date()
-                .min(Yup.ref('startDate'), "Thời gian kết thúc phải sau thời gian bắt đầu")
+                // .min(Yup.ref('startDate'), "Thời gian kết thúc phải sau thời gian bắt đầu")
+                .test(
+                    "is-greater",
+                    "Thời gian kết thúc phải lớn hơn thời gian bắt đầu",
+                    function (value) {
+                        const { startDate } = this.parent;
+                        return !value || new Date(value) > new Date(startDate);
+                    }
+                )
                 .max(getMaxDate(), `Thời gian kết thúc không được sau ${getMaxDate()?.split('-')?.reverse()?.join('-')}`)
                 .typeError("Thời gian kết thúc không hợp lệ"),
         }),
@@ -77,7 +85,7 @@ const WorkExperienceCreation = ({ open, onClose, workExperienceList, setWorkExpe
             }
         },
     });
-    
+
     const handleClose = () => {
         formik.resetForm();
         onClose();

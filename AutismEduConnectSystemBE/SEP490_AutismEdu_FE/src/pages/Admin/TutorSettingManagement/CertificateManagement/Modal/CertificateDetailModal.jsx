@@ -91,16 +91,21 @@ function CertificateDetailModal({ open, onClose, certificate }) {
                             </Typography>
                         </Grid>
 
+                        {
+                            certificate?.expirationDate && (
+                                <>
+                                    <Grid item xs={4}>
+                                        <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Ngày hết hạn:</Typography>
+                                    </Grid>
+                                    <Grid item xs={8}>
+                                        <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>
+                                            {certificate?.expirationDate && formatDate(new Date(certificate?.expirationDate), "dd/MM/yyyy")}
+                                        </Typography>
+                                    </Grid>
+                                </>
 
-                        <Grid item xs={4}>
-                            <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Ngày hết hạn:</Typography>
-                        </Grid>
-                        <Grid item xs={8}>
-                            <Typography sx={{ fontWeight: 'bold', color: '#616161' }}>
-                                {certificate.expirationDate ? formatDate(new Date(certificate.expirationDate), "dd/MM/yyyy") : 'Hiện tại'}
-                            </Typography>
-                        </Grid>
-
+                            )
+                        }
 
                         <Grid item xs={4}>
                             <Typography sx={{ fontWeight: '500', textAlign: 'right' }}>Trạng thái:</Typography>

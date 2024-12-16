@@ -23,6 +23,8 @@ export default function ScoreRangeCreation({ scoreRanges, setScoreRanges }) {
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
+    const [maxTotal, setMaxTotal] = React.useState(0);
+    const [minTotal, setMinTotal] = React.useState(0);
     const validate = values => {
         const errors = {}
         if (!values.description) {
@@ -41,6 +43,27 @@ export default function ScoreRangeCreation({ scoreRanges, setScoreRanges }) {
         }
         return errors
     }
+
+    React.useEffect(() => {
+        if (open) {
+            const getAssessments = async () => {
+                try {
+                    await services.AssessmentManagementAPI.listAssessment(
+                        (res) => {
+                            setMaxTotal(res.result.questions.length * 4);
+                            setMinTotal(res.result.questions.length);
+                        },
+                        (err) => {
+                            console.log(err);
+                        }
+                    );
+                } catch (error) {
+                    console.log(error);
+                }
+            };
+            getAssessments();
+        }
+    }, [open]);
     const formik = useFormik({
         initialValues: {
             description: '',
@@ -118,8 +141,8 @@ export default function ScoreRangeCreation({ scoreRanges, setScoreRanges }) {
                                     type='Number'
                                     sx={{ width: "70%" }}
                                     inputProps={{
-                                        min: 0,
-                                        max: 500
+                                        min: minTotal,
+                                        max: maxTotal
                                     }}
                                 />
                             </Stack>
@@ -132,8 +155,8 @@ export default function ScoreRangeCreation({ scoreRanges, setScoreRanges }) {
                                     type='Number'
                                     sx={{ width: "70%" }}
                                     inputProps={{
-                                        min: 0,
-                                        max: 500
+                                        min: minTotal,
+                                        max: maxTotal
                                     }}
                                 />
                             </Stack>

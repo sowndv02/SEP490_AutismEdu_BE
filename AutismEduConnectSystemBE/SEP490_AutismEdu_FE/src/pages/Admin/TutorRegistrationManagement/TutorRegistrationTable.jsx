@@ -64,7 +64,7 @@ function TutorRegistrationTable({ status, searchValue, submit, startDate, endDat
                     <Stack width="100%" alignItems="center" justifyContent="center">
                         <Box sx={{ textAlign: "center" }}>
                             <img src={emptyForm} style={{ height: "200px" }} />
-                            <Typography mt={5} color="black">Không có bài viết nào!</Typography>
+                            <Typography mt={5} color="black">Không có dữ liệu!</Typography>
                         </Box>
                     </Stack>
                 ) : (

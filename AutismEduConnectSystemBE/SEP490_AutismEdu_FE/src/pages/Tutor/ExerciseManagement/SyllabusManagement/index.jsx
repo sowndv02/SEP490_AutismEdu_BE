@@ -149,21 +149,26 @@ export default function SyllabusManagement() {
                             {/* <Box ml={2} dangerouslySetInnerHTML={{ __html: curriculum.description }}></Box> */}
                             <Stack direction={'row'} p={5} borderRadius={3} bgcolor={'#fff8e3'}>
                                 <Stack sx={{ width: '80%' }} direction={'column'} gap={2}>
-                                    {syllabus?.exerciseTypes?.map((s, index) => (
-                                        <Stack direction={'row'} gap={2} sx={{ width: '100%' }} key={index}>
-                                            <Box sx={{ width: "5%" }}>
-                                                <CheckCircleIcon color='success' fontSize='large' />
-                                            </Box>
-                                            <Box key={index} sx={{ width: '95%' }} pt={0.5}>
-                                                <Typography variant='h5'>{`${index + 1}. `}{s?.exerciseTypeName}</Typography>
-                                                <Box ml={2}>
-                                                    {s?.exercises?.map((e, index) => (
-                                                        <Typography key={index} variant='subtitle1'>{`${index + 1}. `}{e?.exerciseName}</Typography>
-                                                    ))}
-                                                </Box>
-                                            </Box>
-                                        </Stack>
-                                    ))}
+                                    {syllabus?.exerciseTypes?.length === 0 ? <Typography variant='body1'>Hiện tại giáo trình chưa gán bài tập!</Typography> :
+                                        <>
+                                            {syllabus?.exerciseTypes?.map((s, index) => (
+                                                <Stack direction={'row'} gap={2} sx={{ width: '100%' }} key={index}>
+                                                    <Box sx={{ width: "5%" }}>
+                                                        <CheckCircleIcon color='success' fontSize='large' />
+                                                    </Box>
+                                                    <Box key={index} sx={{ width: '95%' }} pt={0.5}>
+                                                        <Typography variant='h5'>{`${index + 1}. `}{s?.exerciseTypeName}</Typography>
+                                                        <Box ml={2}>
+                                                            {s?.exercises?.map((e, index) => (
+                                                                <Typography key={index} variant='subtitle1'>{`${index + 1}. `}{e?.exerciseName}</Typography>
+                                                            ))}
+                                                        </Box>
+                                                    </Box>
+                                                </Stack>
+                                            ))}
+                                        </>
+                                    }
+
                                 </Stack>
                                 <Stack direction={'column'} gap={2} justifyContent={'space-between'} alignItems={'center'} sx={{ width: "20%" }}>
                                     <Button variant='contained' startIcon={<AssignmentIcon />} sx={{ width: '80%' }} onClick={() => handleAssign(syllabus)}>Gán bài tập</Button>

@@ -316,6 +316,7 @@ function Header() {
         Cookies.remove("access_token");
         Cookies.remove("refresh_token");
         dispatch(setUserInformation(null))
+        setNotifications([]);
         nav(PAGES.ROOT + PAGES.HOME)
     };
 

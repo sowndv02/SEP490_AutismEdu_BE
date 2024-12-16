@@ -120,7 +120,6 @@ function ScheduleCreation({ setListTimeSlots, id, listTimeSlots }) {
         nextMonday.setDate(today.getDate() + daysUntilNextMonday);
         try {
             await services.ScheduleAPI.getSchedule((res) => {
-                console.log(res);
                 setExistSlots(res.result.schedules);
             }, (error) => {
                 console.log(error);
